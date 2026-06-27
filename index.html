@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1A3A5C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Groomers YKF">
+<meta name="description" content="Aviation Grooming Team — YKF Operations">
+<title>Groomers YKF</title>
+<link rel="manifest" href="manifest.json">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --navy:#1A3A5C;--gold:#C8A000;--white:#FFFFFF;--lgray:#F7F7F7;
+  --mgray:#CCCCCC;--dkgray:#555555;--green:#1A6600;--red:#8B0000;
+  --lgreen:#E8F8EE;--lred:#FFF0F0;--done:#E0E0E0;
+  --area-aircraft:#1A4A5C;--area-cr:#1A3A5C;--area-croffice:#5C3A1A;
+  --area-mx:#2E5C1A;--area-misc:#4A4A4A;--area-charter:#5C1A4A;
+  --area-closure:#8B0000;
+}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Arial',sans-serif;background:#F0F2F5}
+
+/* ── SPLASH ── */
+#splash{
+  position:fixed;inset:0;background:var(--navy);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:1000;transition:opacity 0.4s
+}
+#splash.hidden{opacity:0;pointer-events:none}
+.splash-plane{font-size:64px;margin-bottom:16px;animation:float 2s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.splash-title{color:#fff;font-size:24px;font-weight:600;letter-spacing:1px}
+.splash-sub{color:#A8C4E0;font-size:13px;margin-top:6px}
+.splash-bar{width:200px;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:32px;overflow:hidden}
+.splash-fill{height:100%;background:#fff;border-radius:2px;width:0;animation:load 1.8s ease forwards}
+@keyframes load{to{width:100%}}
+
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity 0.3s}
+#app.visible{opacity:1}
+
+/* ── TOP BAR ── */
+.topbar{
+  background:var(--navy);color:#fff;
+  padding:env(safe-area-inset-top,0) 16px 0;
+  padding-top:calc(env(safe-area-inset-top,0px) + 10px);
+  padding-bottom:10px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;
+  position:relative;z-index:10
+}
+.topbar-plane{font-size:22px}
+.topbar-title{font-size:17px;font-weight:600;flex:1}
+.topbar-day{font-size:12px;color:#A8C4E0;background:rgba(255,255,255,0.1);
+            padding:3px 10px;border-radius:20px}
+.sync-btn{background:none;border:none;color:#A8C4E0;font-size:18px;padding:4px;cursor:pointer}
+
+/* ── BOTTOM NAV ── */
+.bottomnav{
+  background:#fff;border-top:1px solid var(--mgray);
+  display:flex;overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+  padding-bottom:env(safe-area-inset-bottom,0)
+}
+.bottomnav::-webkit-scrollbar{display:none}
+.nav-item{
+  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+  padding:8px 14px 6px;cursor:pointer;border-top:2px solid transparent;
+  transition:all 0.15s;min-width:60px
+}
+.nav-item.active{border-top-color:var(--navy)}
+.nav-item.active .nav-icon{color:var(--navy)}
+.nav-item.active .nav-label{color:var(--navy);font-weight:600}
+.nav-icon{font-size:20px;color:#999;margin-bottom:2px}
+.nav-label{font-size:10px;color:#999;white-space:nowrap}
+
+/* ── CONTENT ── */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.page{display:none;height:100%}
+.page.active{display:block}
+
+/* ── LOADING SPINNER ── */
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;
+              justify-content:center;height:200px;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid var(--mgray);
+         border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-label{font-size:13px;color:var(--dkgray)}
+
+/* ── DAILY TASKS ── */
+.day-header{
+  padding:12px 16px 8px;
+  background:#fff;border-bottom:1px solid var(--mgray);
+  position:sticky;top:0;z-index:5
+}
+.day-progress-label{font-size:12px;color:var(--dkgray);margin-bottom:6px;
+                     display:flex;justify-content:space-between}
+.day-progress-bar{height:6px;background:var(--mgray);border-radius:3px;overflow:hidden}
+.day-progress-fill{height:100%;background:var(--navy);border-radius:3px;
+                   transition:width 0.3s ease}
+.section-hdr{
+  padding:7px 16px;font-size:11px;font-weight:700;
+  letter-spacing:0.5px;text-transform:uppercase;color:#fff;
+  position:sticky;top:0
+}
+.task-row{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;background:#fff;border-bottom:1px solid #F0F0F0;
+  cursor:pointer;transition:background 0.1s;min-height:54px
+}
+.task-row:active{background:#F5F5F5}
+.task-row.done{background:var(--done)}
+.task-row.done .task-text{text-decoration:line-through;color:#999}
+.task-row.done .task-freq{color:#bbb}
+.task-check{
+  width:26px;height:26px;border-radius:50%;border:2px solid var(--mgray);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-size:14px;transition:all 0.15s
+}
+.task-check.checked{background:var(--navy);border-color:var(--navy);color:#fff}
+.task-info{flex:1;min-width:0}
+.task-text{font-size:14px;color:#111;line-height:1.3}
+.task-freq{font-size:11px;color:#888;margin-top:2px}
+.closure-row{background:#FFF8F8}
+.closure-row.done{background:#F5E8E8}
+
+/* ── SPECIAL NOTES ── */
+.notes-section{margin:12px;background:#fff;border-radius:10px;
+               border:1px solid var(--mgray);overflow:hidden}
+.notes-hdr{background:#555;color:#fff;padding:10px 14px;
+           font-size:12px;font-weight:700}
+.note-row{display:flex;align-items:flex-start;gap:10px;
+          padding:11px 14px;border-bottom:1px solid #F0F0F0;cursor:pointer}
+.note-row:last-child{border-bottom:none}
+.note-row.done .note-text{text-decoration:line-through;color:#999}
+.note-check{width:22px;height:22px;border-radius:4px;border:1.5px solid var(--mgray);
+            display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;margin-top:1px;font-size:12px;transition:all 0.15s}
+.note-check.checked{background:#555;border-color:#555;color:#fff}
+.note-content{flex:1}
+.note-text{font-size:13px;color:#111;line-height:1.4}
+.note-meta{font-size:11px;color:#888;margin-top:2px}
+.add-note-btn{
+  width:calc(100% - 24px);margin:0 12px 12px;padding:13px;
+  background:#fff;border:1.5px dashed var(--mgray);border-radius:10px;
+  font-size:13px;color:#888;cursor:pointer;text-align:center
+}
+
+/* ── SHOPPING AUDIT ── */
+.shop-toolbar{
+  background:#fff;border-bottom:1px solid var(--mgray);
+  padding:10px 12px;display:flex;gap:8px;overflow-x:auto;
+  scrollbar-width:none;position:sticky;top:0;z-index:5
+}
+.shop-toolbar::-webkit-scrollbar{display:none}
+.filter-chip{
+  flex:0 0 auto;padding:5px 12px;border-radius:20px;font-size:12px;
+  font-weight:600;cursor:pointer;border:none;transition:opacity 0.15s
+}
+.filter-chip:active{opacity:0.7}
+.shop-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 16px;background:#fff;border-bottom:1px solid #F0F0F0;
+  cursor:pointer;transition:background 0.1s
+}
+.shop-item:active{background:#F5F5F5}
+.shop-item.to-buy{background:var(--lred)}
+.shop-item.to-buy .shop-name{color:var(--red);font-weight:600}
+.shop-cb{
+  width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:14px;transition:all 0.15s
+}
+.shop-cb.checked{background:var(--red);border-color:var(--red);color:#fff}
+.shop-info{flex:1;min-width:0}
+.shop-name{font-size:14px;color:#111}
+.shop-meta{font-size:11px;color:#888;margin-top:2px;display:flex;gap:8px}
+.store-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}
+.shop-cabinet{font-size:11px;color:#aaa}
+.reset-bar{
+  padding:12px 16px;background:#fff;border-top:1px solid var(--mgray);
+  flex-shrink:0
+}
+.reset-btn{
+  width:100%;padding:13px;border-radius:10px;background:var(--lgreen);
+  color:var(--green);border:1.5px solid var(--green);font-size:14px;
+  font-weight:600;cursor:pointer
+}
+
+/* ── PROCEDURES ── */
+.proc-list{padding:12px}
+.proc-card{
+  background:#fff;border-radius:10px;border:1px solid var(--mgray);
+  margin-bottom:10px;overflow:hidden;cursor:pointer
+}
+.proc-card-hdr{
+  padding:14px 16px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid #F0F0F0
+}
+.proc-icon{font-size:22px}
+.proc-title{font-size:14px;font-weight:600;color:#111}
+.proc-sub{font-size:12px;color:#888;margin-top:2px}
+.proc-arrow{margin-left:auto;color:#ccc;font-size:18px}
+
+/* Procedure detail */
+.proc-detail{display:none;padding:0 16px 16px}
+.proc-detail.open{display:block}
+.proc-warning{
+  background:#FFF0F0;border-left:3px solid var(--red);
+  padding:10px 12px;border-radius:0 6px 6px 0;margin:12px 0;
+  font-size:12px;color:var(--red);font-weight:600;line-height:1.5
+}
+.proc-step{
+  display:flex;gap:12px;padding:11px 0;
+  border-bottom:1px solid #F5F5F5;cursor:pointer
+}
+.proc-step:last-child{border-bottom:none}
+.step-num{
+  width:26px;height:26px;border-radius:50%;background:var(--lgray);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;color:var(--navy);flex-shrink:0
+}
+.proc-step.done-step .step-num{background:var(--navy);color:#fff}
+.proc-step.done-step .step-text{text-decoration:line-through;color:#999}
+.step-text{font-size:13px;color:#111;line-height:1.5;flex:1}
+.step-note{font-size:11px;color:#888;margin-top:3px}
+
+/* ── CONTACTS ── */
+.contact-list{padding:12px}
+.contact-card{
+  background:#fff;border-radius:10px;border:1px solid var(--mgray);
+  margin-bottom:10px;overflow:hidden
+}
+.contact-row{padding:13px 16px;border-bottom:1px solid #F5F5F5}
+.contact-row:last-child{border-bottom:none}
+.contact-name{font-size:14px;font-weight:600;color:#111}
+.contact-addr{font-size:12px;color:#666;margin-top:3px;line-height:1.4}
+.contact-note{font-size:12px;color:var(--navy);margin-top:4px;font-style:italic}
+
+/* ── BORED BOARD ── */
+.bored-list{padding:12px}
+.bored-item{
+  display:flex;align-items:center;gap:12px;
+  background:#fff;border-radius:10px;border:1px solid var(--mgray);
+  padding:14px 16px;margin-bottom:8px;cursor:pointer
+}
+.bored-item.done{background:var(--done)}
+.bored-item.done .bored-text{text-decoration:line-through;color:#999}
+.bored-cb{
+  width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;font-size:14px;transition:all 0.15s
+}
+.bored-cb.checked{background:#555;border-color:#555;color:#fff}
+.bored-text{font-size:14px;color:#111;line-height:1.4;flex:1}
+
+/* ── ADD NOTE MODAL ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.5);
+  display:none;align-items:flex-end;z-index:200
+}
+.modal-overlay.open{display:flex}
+.modal{
+  background:#fff;border-radius:16px 16px 0 0;padding:20px;
+  width:100%;padding-bottom:calc(20px + env(safe-area-inset-bottom,0))
+}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
+.modal input,.modal textarea,.modal select{
+  width:100%;padding:11px 14px;border-radius:8px;
+  border:1px solid var(--mgray);font-size:14px;
+  font-family:inherit;margin-bottom:10px;background:#F9F9F9
+}
+.modal textarea{height:80px;resize:none}
+.modal-btns{display:flex;gap:8px;margin-top:4px}
+.modal-btn{flex:1;padding:13px;border-radius:10px;font-size:14px;
+           font-weight:600;cursor:pointer;border:none}
+.modal-btn.cancel{background:var(--lgray);color:var(--dkgray)}
+.modal-btn.save{background:var(--navy);color:#fff}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0));
+  left:50%;transform:translateX(-50%) translateY(20px);
+  background:#333;color:#fff;padding:9px 18px;border-radius:20px;
+  font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;
+  white-space:nowrap;z-index:300
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── END OF DAY ── */
+.eod-btn{
+  position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0));
+  right:16px;background:var(--navy);color:#fff;border:none;
+  border-radius:50%;width:52px;height:52px;font-size:22px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);cursor:pointer;
+  display:none;align-items:center;justify-content:center;z-index:50
+}
+.eod-btn.visible{display:flex}
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="splash-plane">✈</div>
+  <div class="splash-title">Groomers YKF</div>
+  <div class="splash-sub">Aviation Grooming Team</div>
+  <div class="splash-bar"><div class="splash-fill"></div></div>
+</div>
+
+<!-- App shell -->
+<div id="app">
+  <div class="topbar">
+    <span class="topbar-plane">✈</span>
+    <span class="topbar-title">Groomers YKF</span>
+    <span class="topbar-day" id="topDay">Loading...</span>
+    <button class="sync-btn" onclick="syncData()" title="Sync">↻</button>
+  </div>
+
+  <div class="content" id="content">
+    <div class="spinner-wrap" id="mainSpinner">
+      <div class="spinner"></div>
+      <div class="spinner-label">Loading...</div>
+    </div>
+  </div>
+
+  <div class="bottomnav" id="bottomNav"></div>
+</div>
+
+<!-- Add note modal -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <h3>Add Note / Carry-over Task</h3>
+    <input type="text" id="noteText" placeholder="Task or note...">
+    <input type="text" id="noteArea" placeholder="Area (e.g. MX Hangar, Aircraft...)">
+    <div class="modal-btns">
+      <button class="modal-btn cancel" onclick="closeNoteModal()">Cancel</button>
+      <button class="modal-btn save" onclick="saveNote()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- End of day button -->
+<button class="eod-btn" id="eodBtn" onclick="showEOD()" title="End of Day Summary">📋</button>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────
+// Replace SHEET_ID with your actual Google Sheet ID
+// (the long string in your sheet URL between /d/ and /edit)
+const SHEET_ID = '12vTTI_2UBH-yKDAdYL7k937EP1hCdJXFv8ml3nmsobQ';
+
+const DAYS = ['☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday',
+              '4️⃣ Thursday','5️⃣ Friday','🗓 Saturday'];
+const DAY_SHORTS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const TODAY_IDX = new Date().getDay();
+const TODAY_NAME = DAYS[TODAY_IDX];
+const DAY_NAMES_DISPLAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+const AREA_COLORS = {
+  'AIRCRAFT':           '#1A4A5C',
+  "CR GROOMERS' CORNER":'#1A3A5C',
+  'CR OFFICE':          '#5C3A1A',
+  'MX HANGAR':          '#2E5C1A',
+  'MISC':               '#4A4A4A',
+  'CHARTER':            '#5C1A4A',
+  'CLOSURE':            '#8B0000',
+};
+
+const STORE_COLORS = {
+  'Zehrs':            '#C0392B',
+  'Costco':           '#005DAA',
+  'A1 Cash & Carry':  '#D4860A',
+  'Home Depot':       '#E8500A',
+  'Canadian Tire':    '#C0181E',
+  'Monarch Oil':      '#1A6B8A',
+  'Crew House':       '#2E7D32',
+  'Supplier':         '#444444',
+};
+
+// ── STATE ────────────────────────────────────────────────────────
+let state = {
+  currentTab: 'today',
+  sheetData:  {},
+  tasks:      {},      // { tabName: [{task,freq,area,done}] }
+  notes:      {},      // { tabName: [{text,area,date,done}] }
+  shopping:   [],      // [{item,cabinet,store,status,notes}]
+  contacts:   [],
+  bored:      [],
+  procedures: {},
+  activeFilter: 'all',
+  currentNoteTab: TODAY_NAME,
+};
+
+// ── INIT ─────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('topDay').textContent =
+    DAY_NAMES_DISPLAY[TODAY_IDX];
+  setTimeout(initApp, 1800);
+});
+
+async function initApp() {
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  buildNav();
+  await loadFromSheet();
+  showTab('today');
+}
+
+// ── NAVIGATION ────────────────────────────────────────────────────
+const NAV_TABS = [
+  { id:'today',    icon:'📅', label:'Today'    },
+  { id:'week',     icon:'🗓', label:'Week'     },
+  { id:'shopping', icon:'🛒', label:'Shopping' },
+  { id:'procedures',icon:'📋',label:'Procs'   },
+  { id:'contacts', icon:'📞', label:'Contacts' },
+  { id:'bored',    icon:'💡', label:'Bored'    },
+];
+
+function buildNav() {
+  const nav = document.getElementById('bottomNav');
+  nav.innerHTML = NAV_TABS.map(t => `
+    <div class="nav-item ${t.id==='today'?'active':''}"
+         onclick="showTab('${t.id}')" id="nav-${t.id}">
+      <div class="nav-icon">${t.icon}</div>
+      <div class="nav-label">${t.label}</div>
+    </div>
+  `).join('');
+}
+
+function showTab(id) {
+  state.currentTab = id;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${id}`);
+  if (navEl) navEl.classList.add('active');
+  const eodBtn = document.getElementById('eodBtn');
+  eodBtn.classList.toggle('visible', id === 'today');
+
+  const content = document.getElementById('content');
+  switch(id) {
+    case 'today':      renderToday(content); break;
+    case 'week':       renderWeek(content);  break;
+    case 'shopping':   renderShopping(content); break;
+    case 'procedures': renderProcedures(content); break;
+    case 'contacts':   renderContacts(content); break;
+    case 'bored':      renderBored(content); break;
+    default:           renderToday(content);
+  }
+}
+
+// ── DATA LOADING ──────────────────────────────────────────────────
+async function loadFromSheet() {
+  showSpinner();
+  try {
+    // Load today's tasks
+    await loadDayTasks(TODAY_NAME);
+    // Pre-load shopping
+    await loadShopping();
+    // Load contacts
+    await loadContacts();
+    // Load bored board
+    await loadBoredBoard();
+    // Load procedures
+    await loadProcedures();
+    // Load notes from localStorage
+    loadLocalNotes();
+  } catch(e) {
+    console.error('Load error:', e);
+    loadFallbackData();
+  }
+}
+
+async function fetchSheet(sheetName) {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
+  const res = await fetch(url);
+  const text = await res.text();
+  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
+  return json.table;
+}
+
+function tableToRows(table) {
+  if (!table || !table.rows) return [];
+  return table.rows.map(row =>
+    (table.cols || []).reduce((acc, col, i) => {
+      acc[col.label || `col${i}`] = row.c[i] ? (row.c[i].v ?? row.c[i].f ?? '') : '';
+      return acc;
+    }, {})
+  );
+}
+
+async function loadDayTasks(dayName) {
+  try {
+    const table = await fetchSheet(dayName);
+    const rows = tableToRows(table);
+    const tasks = [];
+    let currentArea = '';
+
+    rows.forEach(row => {
+      const vals = Object.values(row).map(v => String(v || '').trim());
+      const taskVal = vals[1] || '';
+      const freqVal = vals[2] || '';
+
+      if (!taskVal) return;
+
+      // Section header detection
+      const isHeader = taskVal === taskVal.toUpperCase() && taskVal.length > 3 &&
+                       (vals[3] === '' || vals[3] === undefined);
+      if (isHeader) { currentArea = taskVal; return; }
+
+      // Notes section
+      if (taskVal.includes('SPECIAL NOTES') || taskVal.includes('📝')) return;
+
+      tasks.push({
+        task: taskVal,
+        freq: freqVal,
+        area: currentArea,
+        done: false,
+      });
+    });
+
+    state.tasks[dayName] = tasks;
+  } catch(e) {
+    state.tasks[dayName] = getFallbackTasks();
+  }
+}
+
+async function loadShopping() {
+  try {
+    const table = await fetchSheet('🛒 Shopping Audit');
+    const rows = tableToRows(table);
+    state.shopping = rows
+      .filter(r => {
+        const item = String(Object.values(r)[0] || '').trim();
+        return item && item !== 'Item' && !item.startsWith('Filter');
+      })
+      .map(r => {
+        const vals = Object.values(r).map(v => String(v || '').trim());
+        return {
+          item:    vals[0] || '',
+          cabinet: vals[1] || '',
+          store:   vals[2] || '',
+          status:  vals[3] || 'In Stock',
+          notes:   vals[4] || '',
+          checked: vals[3] === 'To Buy',
+        };
+      })
+      .filter(r => r.item);
+  } catch(e) { state.shopping = []; }
+}
+
+async function loadContacts() {
+  try {
+    const table = await fetchSheet('📞 Contacts & Info');
+    const rows = tableToRows(table);
+    state.contacts = rows
+      .filter(r => {
+        const name = String(Object.values(r)[0] || '').trim();
+        return name && name !== 'Name / Store' && name.length > 1;
+      })
+      .map(r => {
+        const vals = Object.values(r).map(v => String(v || '').trim());
+        return { name: vals[0], address: vals[1], notes: vals[2] };
+      });
+  } catch(e) { state.contacts = []; }
+}
+
+async function loadBoredBoard() {
+  try {
+    const table = await fetchSheet('💡 Bored Board');
+    const rows = tableToRows(table);
+    state.bored = rows
+      .filter(r => {
+        const task = String(Object.values(r)[1] || '').trim();
+        return task && task !== 'Task / Idea';
+      })
+      .map((r, i) => {
+        const vals = Object.values(r).map(v => String(v || '').trim());
+        return { id: i, task: vals[1] || '', done: false };
+      });
+  } catch(e) { state.bored = []; }
+}
+
+async function loadProcedures() {
+  state.procedures = {
+    o2: {
+      title: 'O₂ Med Beds — Filling',
+      icon: '🫁',
+      warning: '⚠ Fill oxygen SLOWLY. Do not start with dirty hands (oil). If unsure, ask a senior groomer.',
+      steps: [
+        { text: 'Confirm both valves on bed AND tank are fully CLOSED.', note: 'Safety check — never skip' },
+        { text: 'Connect hose to the bed fitting.', note: '' },
+        { text: 'Tighten with wrenches — firm, do not over-torque.', note: '' },
+        { text: 'Open both valves (bed valve and tank valve).', note: '' },
+        { text: 'Slowly equalize pressure via second valve; push O₂ SLOWLY with gold valve.', note: 'Gold valve = fill valve' },
+        { text: 'Once correct PSI reached — shut off BOTH valves immediately.', note: 'Confirm PSI with lead' },
+        { text: 'Disconnect hoses from bed.', note: '' },
+        { text: 'Release remaining pressure in tank line before storing.', note: '' },
+      ],
+      done: []
+    },
+    westwind: {
+      title: 'Westwind — Full Groom',
+      icon: '✈',
+      warning: '',
+      steps: [
+        { text: 'Leather seats — Citra or leather cleaner', note: '' },
+        { text: 'Vacuum floor / carpet', note: '' },
+        { text: 'Cockpit: dust instruments & CBs; panel & overhead plastic', note: '' },
+        { text: 'Windshields', note: 'Aviation-safe cleaner' },
+        { text: 'Tables', note: '' },
+        { text: 'Empty and clean coffee and tea kettle', note: '' },
+        { text: 'Walls with Citra', note: 'Diluted' },
+        { text: 'Rails ✦', note: '2nd groomer' },
+        { text: 'Under velcro seats ✦', note: '2nd groomer' },
+        { text: 'Deep clean cockpit with q-tips ✦', note: '2nd groomer' },
+        { text: 'Engines, under wings and landing gear', note: '' },
+        { text: 'Cargo compartments ✦', note: '2nd groomer' },
+        { text: 'Belly ✦', note: '2nd groomer' },
+        { text: 'Entire fuselage ✦', note: '2nd groomer' },
+        { text: 'Put sun shades on', note: 'Before leaving aircraft' },
+        { text: 'Mop floor (IAW)', note: '' },
+      ],
+      done: []
+    },
+    metro: {
+      title: 'Metro — Full Groom',
+      icon: '✈',
+      warning: '',
+      steps: [
+        { text: 'Leather seats — Citra or leather cleaner', note: '' },
+        { text: "Empty pilots' pockets", note: '' },
+        { text: 'Cockpit detail: CBs and instrument panel', note: '' },
+        { text: 'Cockpit plastic — clean with Citra', note: 'Diluted' },
+        { text: 'Windshields and nose area', note: 'Aviation-safe cleaner' },
+        { text: 'Clean and organize commissary and folders', note: '' },
+        { text: 'Vacuum floors', note: '' },
+        { text: 'Check O₂ levels', note: 'Log the reading' },
+        { text: 'Med beds — full clean ✦', note: '2nd groomer' },
+        { text: 'Rails ✦', note: '2nd groomer' },
+        { text: 'Brush main door steps ✦', note: '2nd groomer' },
+        { text: 'Mop floor — Citra and Pine Sol', note: 'Dilute per label' },
+        { text: 'Clean landing gear', note: '' },
+        { text: 'Outside: nose compartments, cargo door, main door', note: '' },
+        { text: 'Belly ✦', note: '2nd groomer' },
+        { text: 'Nose and rear cargo compartments ✦', note: '2nd groomer' },
+        { text: 'Fuselage and engine cowlings', note: '' },
+      ],
+      done: []
+    },
+  };
+}
+
+function loadLocalNotes() {
+  try {
+    const saved = localStorage.getItem('groomers_notes');
+    if (saved) state.notes = JSON.parse(saved);
+  } catch(e) { state.notes = {}; }
+}
+
+function saveLocalNotes() {
+  localStorage.setItem('groomers_notes', JSON.stringify(state.notes));
+}
+
+// ── TODAY RENDER ──────────────────────────────────────────────────
+function renderToday(el) {
+  const tasks = state.tasks[TODAY_NAME] || [];
+  const notes = state.notes[TODAY_NAME] || [];
+  const done  = tasks.filter(t => t.done).length;
+  const pct   = tasks.length ? Math.round(done/tasks.length*100) : 0;
+
+  let areas = {};
+  tasks.forEach(t => {
+    if (!areas[t.area]) areas[t.area] = [];
+    areas[t.area].push(t);
+  });
+
+  let html = `
+    <div class="day-header">
+      <div class="day-progress-label">
+        <span>${DAY_NAMES_DISPLAY[TODAY_IDX]}</span>
+        <span>${done} / ${tasks.length} tasks — ${pct}%</span>
+      </div>
+      <div class="day-progress-bar">
+        <div class="day-progress-fill" style="width:${pct}%"></div>
+      </div>
+    </div>
+  `;
+
+  Object.entries(areas).forEach(([area, areaTasks]) => {
+    const color = AREA_COLORS[area] || '#4A4A4A';
+    html += `<div class="section-hdr" style="background:${color}">${area}</div>`;
+    areaTasks.forEach((t, i) => {
+      const globalIdx = tasks.indexOf(t);
+      const isClosure = area === 'CLOSURE';
+      html += `
+        <div class="task-row ${t.done?'done':''} ${isClosure?'closure-row':''}"
+             onclick="toggleTask('${TODAY_NAME}',${globalIdx})">
+          <div class="task-check ${t.done?'checked':''}">
+            ${t.done ? '✓' : ''}
+          </div>
+          <div class="task-info">
+            <div class="task-text">${t.task}</div>
+            ${t.freq ? `<div class="task-freq">${t.freq}</div>` : ''}
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  // Special notes
+  html += `
+    <div class="notes-section" style="margin-top:12px">
+      <div class="notes-hdr">📝 Special Notes & Carry-over Tasks</div>
+  `;
+
+  if (notes.length === 0) {
+    html += `<div class="note-row"><div class="note-content">
+      <div class="note-text" style="color:#aaa;font-style:italic">No notes yet — add one below</div>
+    </div></div>`;
+  } else {
+    notes.forEach((note, i) => {
+      html += `
+        <div class="note-row ${note.done?'done':''}" onclick="toggleNote('${TODAY_NAME}',${i})">
+          <div class="note-check ${note.done?'checked':''}">${note.done?'✓':''}</div>
+          <div class="note-content">
+            <div class="note-text">${note.text}</div>
+            <div class="note-meta">${note.area ? note.area+' · ' : ''}${note.date || ''}</div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `</div>`;
+  html += `<button class="add-note-btn" onclick="openNoteModal('${TODAY_NAME}')">
+    + Add carry-over task or note
+  </button>`;
+  html += `<div style="height:80px"></div>`;
+
+  el.innerHTML = html;
+}
+
+// ── WEEK RENDER ───────────────────────────────────────────────────
+function renderWeek(el) {
+  let html = '<div style="padding:12px">';
+  DAYS.forEach((day, i) => {
+    const isToday = i === TODAY_IDX;
+    const tasks   = state.tasks[day] || [];
+    const done    = tasks.filter(t => t.done).length;
+    html += `
+      <div onclick="showDayDetail('${day}')" style="
+        background:#fff;border-radius:10px;border:1px solid ${isToday?'#1A3A5C':'#CCCCCC'};
+        padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
+        ${isToday?'box-shadow:0 2px 8px rgba(26,58,92,0.15)':''}
+      ">
+        <div style="font-size:24px">${['☀','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🗓'][i]}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:${isToday?700:400};color:${isToday?'#1A3A5C':'#111'}">
+            ${DAY_NAMES_DISPLAY[i]}${isToday?' — Today':''}
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:2px">
+            ${tasks.length ? `${done}/${tasks.length} tasks` : 'Tap to view'}
+          </div>
+        </div>
+        <div style="color:#ccc;font-size:18px">›</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function showDayDetail(dayName) {
+  if (!state.tasks[dayName]) await loadDayTasks(dayName);
+  const content = document.getElementById('content');
+  const tasks   = state.tasks[dayName] || [];
+  const notes   = state.notes[dayName] || [];
+  const dayIdx  = DAYS.indexOf(dayName);
+
+  let areas = {};
+  tasks.forEach(t => {
+    if (!areas[t.area]) areas[t.area] = [];
+    areas[t.area].push(t);
+  });
+
+  let html = `
+    <div style="background:${DAY_COLORS[dayIdx]||'#1A3A5C'};color:#fff;
+                padding:12px 16px;display:flex;align-items:center;gap:10px;
+                position:sticky;top:0;z-index:5">
+      <button onclick="showTab('week')"
+        style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0">‹</button>
+      <span style="font-size:16px;font-weight:600">${DAY_NAMES_DISPLAY[dayIdx]}</span>
+    </div>
+  `;
+
+  const DAY_COLORS = ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','#D4860A'];
+
+  Object.entries(areas).forEach(([area, areaTasks]) => {
+    const color = AREA_COLORS[area] || '#4A4A4A';
+    html += `<div class="section-hdr" style="background:${color}">${area}</div>`;
+    areaTasks.forEach(t => {
+      const idx = tasks.indexOf(t);
+      html += `
+        <div class="task-row ${t.done?'done':''}"
+             onclick="toggleTask('${dayName}',${idx});showDayDetail('${dayName}')">
+          <div class="task-check ${t.done?'checked':''}">${t.done?'✓':''}</div>
+          <div class="task-info">
+            <div class="task-text">${t.task}</div>
+            ${t.freq?`<div class="task-freq">${t.freq}</div>`:''}
+          </div>
+        </div>
+      `;
+    });
+  });
+
+  // Notes
+  html += `<div class="notes-section" style="margin-top:12px">
+    <div class="notes-hdr">📝 Special Notes & Carry-over Tasks</div>`;
+  if (!notes.length) {
+    html += `<div class="note-row"><div class="note-text" style="color:#aaa;font-style:italic">No notes yet</div></div>`;
+  } else {
+    notes.forEach((n,i) => html += `
+      <div class="note-row ${n.done?'done':''}"
+           onclick="toggleNote('${dayName}',${i});showDayDetail('${dayName}')">
+        <div class="note-check ${n.done?'checked':''}">${n.done?'✓':''}</div>
+        <div class="note-content">
+          <div class="note-text">${n.text}</div>
+          <div class="note-meta">${n.area?n.area+' · ':''}${n.date||''}</div>
+        </div>
+      </div>
+    `);
+  }
+  html += `</div>
+    <button class="add-note-btn" onclick="openNoteModal('${dayName}')">+ Add note</button>
+    <div style="height:80px"></div>`;
+
+  content.innerHTML = html;
+}
+
+// ── SHOPPING RENDER ───────────────────────────────────────────────
+function renderShopping(el) {
+  const items  = state.shopping;
+  const stores = ['all','To Buy',...new Set(items.map(i=>i.store).filter(Boolean))];
+
+  let html = `
+    <div class="shop-toolbar">
+      <button class="filter-chip" onclick="setFilter('all')"
+        style="background:${state.activeFilter==='all'?'#1A3A5C':'#eee'};
+               color:${state.activeFilter==='all'?'#fff':'#333'}">All</button>
+      <button class="filter-chip" onclick="setFilter('To Buy')"
+        style="background:${state.activeFilter==='To Buy'?'#8B0000':'#eee'};
+               color:${state.activeFilter==='To Buy'?'#fff':'#333'}">🔴 To Buy</button>
+  `;
+
+  Object.keys(STORE_COLORS).forEach(store => {
+    if (!items.find(i => i.store === store)) return;
+    const active = state.activeFilter === store;
+    html += `
+      <button class="filter-chip" onclick="setFilter('${store}')"
+        style="background:${active?STORE_COLORS[store]:'#eee'};
+               color:${active?'#fff':'#333'}">
+        ${store}
+      </button>
+    `;
+  });
+  html += `</div>`;
+
+  const filtered = items.filter(item => {
+    if (state.activeFilter === 'all')     return true;
+    if (state.activeFilter === 'To Buy')  return item.checked;
+    return item.store === state.activeFilter;
+  });
+
+  if (!filtered.length) {
+    html += `<div class="spinner-wrap">
+      <div style="font-size:32px">✅</div>
+      <div class="spinner-label">All items in stock!</div>
+    </div>`;
+  } else {
+    filtered.forEach((item, i) => {
+      const realIdx = items.indexOf(item);
+      const dotColor = STORE_COLORS[item.store] || '#888';
+      html += `
+        <div class="shop-item ${item.checked?'to-buy':''}"
+             onclick="toggleShopItem(${realIdx})">
+          <div class="shop-cb ${item.checked?'checked':''}">
+            ${item.checked?'✓':''}
+          </div>
+          <div class="shop-info">
+            <div class="shop-name">${item.item}</div>
+            <div class="shop-meta">
+              <span><span class="store-dot" style="background:${dotColor}"></span>${item.store}</span>
+              <span class="shop-cabinet">${item.cabinet}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  html += `<div style="height:80px"></div>`;
+  el.innerHTML = html;
+
+  // Reset bar
+  const resetBar = document.createElement('div');
+  resetBar.className = 'reset-bar';
+  resetBar.innerHTML = `<button class="reset-btn" onclick="resetShopping()">✅ Reset all to In Stock</button>`;
+  el.appendChild(resetBar);
+}
+
+// ── PROCEDURES RENDER ─────────────────────────────────────────────
+function renderProcedures(el) {
+  const procs = state.procedures;
+  let html = `<div class="proc-list">`;
+  Object.entries(procs).forEach(([key, proc]) => {
+    const done = (proc.done || []).length;
+    html += `
+      <div class="proc-card">
+        <div class="proc-card-hdr" onclick="toggleProc('${key}')">
+          <div class="proc-icon">${proc.icon}</div>
+          <div>
+            <div class="proc-title">${proc.title}</div>
+            <div class="proc-sub">${done}/${proc.steps.length} steps done</div>
+          </div>
+          <div class="proc-arrow" id="arr-${key}">›</div>
+        </div>
+        <div class="proc-detail" id="proc-${key}">
+          ${proc.warning ? `<div class="proc-warning">${proc.warning}</div>` : ''}
+          ${proc.steps.map((s,i) => `
+            <div class="proc-step ${(proc.done||[]).includes(i)?'done-step':''}"
+                 onclick="toggleProcStep('${key}',${i})">
+              <div class="step-num">${(proc.done||[]).includes(i)?'✓':i+1}</div>
+              <div>
+                <div class="step-text">${s.text}</div>
+                ${s.note?`<div class="step-note">${s.note}</div>`:''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+// ── CONTACTS RENDER ───────────────────────────────────────────────
+function renderContacts(el) {
+  if (!state.contacts.length) {
+    el.innerHTML = `<div class="spinner-wrap">
+      <div class="spinner-label">No contacts loaded</div></div>`;
+    return;
+  }
+  let html = `<div class="contact-list">`;
+  state.contacts.forEach(c => {
+    html += `
+      <div class="contact-card">
+        <div class="contact-row">
+          <div class="contact-name">${c.name}</div>
+          ${c.address?`<div class="contact-addr">📍 ${c.address}</div>`:''}
+          ${c.notes?`<div class="contact-note">${c.notes}</div>`:''}
+        </div>
+      </div>
+    `;
+  });
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+// ── BORED BOARD RENDER ────────────────────────────────────────────
+function renderBored(el) {
+  let html = `<div class="bored-list">`;
+  if (!state.bored.length) {
+    html += `<div class="spinner-wrap"><div class="spinner-label">Loading bored board...</div></div>`;
+  } else {
+    state.bored.forEach((item, i) => {
+      html += `
+        <div class="bored-item ${item.done?'done':''}" onclick="toggleBored(${i})">
+          <div class="bored-cb ${item.done?'checked':''}">${item.done?'✓':''}</div>
+          <div class="bored-text">${item.task}</div>
+        </div>
+      `;
+    });
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+// ── TOGGLE ACTIONS ────────────────────────────────────────────────
+function toggleTask(dayName, idx) {
+  if (!state.tasks[dayName]) return;
+  state.tasks[dayName][idx].done = !state.tasks[dayName][idx].done;
+  if (state.currentTab === 'today' && dayName === TODAY_NAME) {
+    renderToday(document.getElementById('content'));
+  }
+  showToast(state.tasks[dayName][idx].done ? '✓ Task done' : 'Task unchecked');
+}
+
+function toggleNote(dayName, idx) {
+  if (!state.notes[dayName]) return;
+  state.notes[dayName][idx].done = !state.notes[dayName][idx].done;
+  saveLocalNotes();
+  showToast(state.notes[dayName][idx].done ? '✓ Note done' : 'Note unchecked');
+}
+
+function toggleShopItem(idx) {
+  state.shopping[idx].checked = !state.shopping[idx].checked;
+  state.shopping[idx].status  = state.shopping[idx].checked ? 'To Buy' : 'In Stock';
+  renderShopping(document.getElementById('content'));
+  showToast(state.shopping[idx].checked ? '🔴 Marked To Buy' : '✅ Back to In Stock');
+}
+
+function toggleBored(idx) {
+  state.bored[idx].done = !state.bored[idx].done;
+  renderBored(document.getElementById('content'));
+  showToast(state.bored[idx].done ? '✓ Done!' : 'Unchecked');
+}
+
+function toggleProc(key) {
+  const detail = document.getElementById(`proc-${key}`);
+  const arrow  = document.getElementById(`arr-${key}`);
+  const isOpen = detail.classList.contains('open');
+  detail.classList.toggle('open', !isOpen);
+  arrow.textContent = isOpen ? '›' : '˅';
+}
+
+function toggleProcStep(key, idx) {
+  const proc = state.procedures[key];
+  if (!proc.done) proc.done = [];
+  const i = proc.done.indexOf(idx);
+  if (i > -1) proc.done.splice(i, 1);
+  else proc.done.push(idx);
+  renderProcedures(document.getElementById('content'));
+  showToast(proc.done.includes(idx) ? '✓ Step done' : 'Step unchecked');
+}
+
+function setFilter(f) {
+  state.activeFilter = f;
+  renderShopping(document.getElementById('content'));
+}
+
+function resetShopping() {
+  const checked = state.shopping.filter(i => i.checked).length;
+  if (!checked) { showToast('All already In Stock ✅'); return; }
+  if (confirm(`Reset ${checked} items to In Stock?`)) {
+    state.shopping.forEach(i => { i.checked = false; i.status = 'In Stock'; });
+    renderShopping(document.getElementById('content'));
+    showToast(`✅ ${checked} items reset`);
+  }
+}
+
+// ── NOTE MODAL ────────────────────────────────────────────────────
+function openNoteModal(dayName) {
+  state.currentNoteTab = dayName;
+  document.getElementById('noteModal').classList.add('open');
+  document.getElementById('noteText').focus();
+}
+function closeNoteModal() {
+  document.getElementById('noteModal').classList.remove('open');
+  document.getElementById('noteText').value = '';
+  document.getElementById('noteArea').value = '';
+}
+function saveNote() {
+  const text = document.getElementById('noteText').value.trim();
+  if (!text) return;
+  const area = document.getElementById('noteArea').value.trim();
+  const day  = state.currentNoteTab;
+  if (!state.notes[day]) state.notes[day] = [];
+  state.notes[day].push({
+    text, area,
+    date: new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'}),
+    done: false,
+  });
+  saveLocalNotes();
+  closeNoteModal();
+  showToast('Note added ✓');
+  if (state.currentTab === 'today') renderToday(document.getElementById('content'));
+}
+
+// ── END OF DAY SUMMARY ────────────────────────────────────────────
+function showEOD() {
+  const tasks   = state.tasks[TODAY_NAME] || [];
+  const done    = tasks.filter(t => t.done);
+  const missed  = tasks.filter(t => !t.done && !t.area.includes('CLOSURE'));
+  const closure = tasks.filter(t => t.area === 'CLOSURE');
+  const closureDone = closure.filter(t => t.done);
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
+  const timeStr = now.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+  const pct     = tasks.length ? Math.round(done.length/tasks.length*100) : 0;
+
+  let msg = `✈ *GROOMING TEAM — END OF DAY*\n`;
+  msg += `📅 ${dateStr} · ${timeStr}\n`;
+  msg += `${'─'.repeat(30)}\n\n`;
+  msg += `📊 *${done.length}/${tasks.length} tasks completed (${pct}%)*\n\n`;
+
+  if (missed.length) {
+    msg += `⚠️ *Incomplete:*\n${missed.map(t=>`  • ${t.task}`).join('\n')}\n\n`;
+  } else {
+    msg += `✅ All daily tasks completed!\n\n`;
+  }
+
+  if (closureDone.length === closure.length && closure.length > 0) {
+    msg += `🔐 *Closure: ✅ Complete*\n\n`;
+  } else if (closure.length > 0) {
+    const cm = closure.filter(t=>!t.done);
+    msg += `🔐 *Closure — pending:*\n${cm.map(t=>`  ❌ ${t.task}`).join('\n')}\n\n`;
+  }
+
+  msg += `${'─'.repeat(30)}\n_Sent from ✈ Groomers YKF_`;
+
+  const popup = window.open('','_blank','width=360,height=480');
+  if (popup) {
+    popup.document.write(`
+      <html><body style="font-family:Arial;padding:16px;background:#f5f5f5">
+      <h3 style="color:#1A3A5C">✈ End of Day Summary</h3>
+      <p style="font-size:12px;color:#666;margin-bottom:10px">Copy and paste into WhatsApp</p>
+      <textarea readonly style="width:100%;height:280px;font-size:12px;padding:10px;
+        border-radius:6px;border:1px solid #ccc;line-height:1.5">${msg}</textarea>
+      <button onclick="document.querySelector('textarea').select();document.execCommand('copy');
+        this.textContent='✅ Copied!'"
+        style="width:100%;padding:12px;margin-top:10px;background:#1A3A5C;color:#fff;
+        border:none;border-radius:8px;font-size:14px;cursor:pointer">
+        📋 Copy to clipboard
+      </button>
+      </body></html>
+    `);
+  } else {
+    alert(msg);
+  }
+}
+
+// ── SYNC ──────────────────────────────────────────────────────────
+async function syncData() {
+  showToast('Syncing...');
+  await loadFromSheet();
+  showTab(state.currentTab);
+  showToast('✅ Synced');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────
+function showSpinner() {
+  document.getElementById('content').innerHTML = `
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="spinner-label">Loading sheet data...</div>
+    </div>`;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function getFallbackTasks() {
+  return [
+    {task:'Clean aircraft (exterior & interior)',freq:'Daily',area:'AIRCRAFT',done:false},
+    {task:'Check O₂ beds & refill if needed',freq:'Daily',area:'AIRCRAFT',done:false},
+    {task:'Clean groomer corner\'s floor',freq:'Daily',area:"CR GROOMERS' CORNER",done:false},
+    {task:'Sweep hangar',freq:'Daily',area:'MX HANGAR',done:false},
+    {task:'Bathrooms',freq:'Daily',area:'MX HANGAR',done:false},
+    {task:'Connect groomer\'s phone',freq:'Daily',area:'CLOSURE',done:false},
+    {task:'Put back Credit Card',freq:'Daily',area:'CLOSURE',done:false},
+  ];
+}
+
+function loadFallbackData() {
+  state.tasks[TODAY_NAME] = getFallbackTasks();
+  state.shopping = [];
+  state.contacts = [];
+  state.bored    = [];
+}
+
+// Service Worker registration for offline use
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
