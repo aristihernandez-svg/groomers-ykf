@@ -629,7 +629,7 @@ async function syncAll() {
 }
 
 async function api(data) {
-  if(!BACKEND_URL||BACKEND_URL==='BACKEND_URL_HERE') return {error:'no backend'};
+  if(!BACKEND_URL||BACKEND_URL==='https://script.google.com/macros/s/AKfycbxR1D54W4UQrLXAnk0e2B8fCdf9TTzYI4qe4ijhsNDlOSESM1JExspP-0KBFsa9AmdTag/exec') return {error:'no backend'};
   try {
     const r=await fetch(BACKEND_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
     return await r.json();

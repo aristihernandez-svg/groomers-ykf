@@ -1,47 +1,28 @@
-/**
- * Groomers YKF — Service Worker
- * Enables offline use
- */
-const CACHE = 'groomers-ykf-v1';
-const ASSETS = [
-  './',
-  './index.html',
-  './manifest.json',
-];
+// Groomers YKF — Service Worker v2
+// Strategy: network-first, wipe all old caches on activate
 
-self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(ASSETS))
-  );
-  self.skipWaiting();
-});
+const CACHE = 'groomers-v2';
+
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
-    )
+    caches.keys()
+      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for sheet data, cache first for app shell
-  if (e.request.url.includes('docs.google.com')) {
-    e.respondWith(
-      fetch(e.request).catch(() =>
-        caches.match(e.request)
-      )
-    );
-  } else {
-    e.respondWith(
-      caches.match(e.request).then(cached =>
-        cached || fetch(e.request).then(res => {
-          const clone = res.clone();
-          caches.open(CACHE).then(c => c.put(e.request, clone));
-          return res;
-        })
-      )
-    );
-  }
+  // Always try network first; fall back to cache for offline
+  e.respondWith(
+    fetch(e.request)
+      .then(resp => {
+        // Cache a copy for offline fallback
+        const clone = resp.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return resp;
+      })
+      .catch(() => caches.match(e.request))
+  );
 });
