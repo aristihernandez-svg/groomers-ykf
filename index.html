@@ -597,7 +597,7 @@ async function fetchShopping() {
 
 async function fetchContacts() {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('📞 Contacts & Info')}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Contacts & Info')}`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
@@ -605,17 +605,25 @@ async function fetchContacts() {
       const v=cols.map((_,i)=>{const c=row.c?.[i];return c?String(c.v??c.f??'').trim():'';});
       return {name:v[0],address:v[1],notes:v[2]};
     }).filter(r => {
+      // Skip empty rows
       if (!r.name || r.name.length < 2) return false;
-      const skip = ['name / store','contacts & store','quick reference','fill in phone'];
+      // Skip known header/title rows
+      const skip = ['name / store','contacts & store information','quick reference'];
       if (skip.some(s => r.name.toLowerCase().includes(s))) return false;
+      // Skip the footer row
+      if (r.name.toLowerCase().includes('rev.')) return false;
       return true;
     });
-  } catch(e){S.contacts=[];}
+    console.log('Contacts loaded:', S.contacts.length, S.contacts.map(c=>c.name));
+  } catch(e){
+    console.error('Contacts error:', e);
+    S.contacts=[];
+  }
 }
 
 async function fetchBored() {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('💡 Bored Board')}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Bored Board')}`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
