@@ -557,9 +557,19 @@ function setupSwipe(el, onDelete) {
 }
 
 // ── FETCH ──────────────────────────────────────────────────────────
+const TAB_GIDS = {
+  '☀ Sunday':'988129596','1️⃣ Monday':'870064718','2️⃣ Tuesday':'967437930',
+  '3️⃣ Wednesday':'2051648255','4️⃣ Thursday':'966380382','5️⃣ Friday':'126145842',
+  '🗓 Saturday':'757095694','🛒 Shopping Audit':'441663137',
+  '📞 Contacts & Info':'1106791544','💡 Bored Board':'1981877526',
+};
+
 async function fetchDay(tabName) {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+    const gid = TAB_GIDS[tabName];
+    const url = gid
+      ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`
+      : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[];
@@ -584,7 +594,7 @@ async function fetchDay(tabName) {
 
 async function fetchShopping() {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('🛒 Shopping Audit')}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=441663137`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
@@ -597,7 +607,7 @@ async function fetchShopping() {
 
 async function fetchContacts() {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Contacts & Info')}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1106791544`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
@@ -623,7 +633,7 @@ async function fetchContacts() {
 
 async function fetchBored() {
   try {
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('Bored Board')}`;
+    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1981877526`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
@@ -1022,8 +1032,13 @@ function renderProcs(el) {
       </div>
       <div class="pbody">
         ${p.warn?`<div class="pwarn">${p.warn}</div>`:''}
-        ${p.video?`<a class="video-btn" href="${p.video}" target="_blank">
-          <span class="vicon">▶️</span><span>Watch procedure video</span></a>`:''}
+        ${p.video
+          ? `<a class="video-btn" href="${p.video}" target="_blank">
+               <span class="vicon">▶️</span><span>Watch procedure video</span>
+             </a>`
+          : `<div class="video-btn" style="opacity:0.4;cursor:default">
+               <span class="vicon">▶️</span><span>Video coming soon</span>
+             </div>`}
         ${p.steps.map((s,i)=>`
           <div class="pstep ${p.done.includes(i)?'done':''} ${s.g?'green-step':''}"
                onclick="toggleStep('${key}',${i})">
@@ -1070,13 +1085,14 @@ function renderContacts(el) {
     html+=`<div class="ccard"><div class="crow">
       <div class="cname">${c.name}</div>
       ${c.address?`
-        <div class="caddr" onclick="openMaps('${c.address}')">
+        <div class="caddr">
           <span>📍</span>
           <span class="caddr-text">${c.address}</span>
         </div>
+        ${/\d+\s+\w+/.test(c.address) && c.address.length > 8 ? `
         <a class="maps-btn" href="${mapsUrl}" target="_blank">
           🗺 Open in Maps
-        </a>`:''}
+        </a>` : ''}`:''}
       ${c.notes?`<div class="cnote">${c.notes}</div>`:''}
     </div></div>`;
   });
