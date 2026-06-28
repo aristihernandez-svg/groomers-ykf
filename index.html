@@ -2,1185 +2,1248 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#1A3A5C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Groomers YKF">
-<meta name="description" content="Aviation Grooming Team — YKF Operations">
 <title>Groomers YKF</title>
 <link rel="manifest" href="manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --navy:#1A3A5C;--gold:#C8A000;--white:#FFFFFF;--lgray:#F7F7F7;
-  --mgray:#CCCCCC;--dkgray:#555555;--green:#1A6600;--red:#8B0000;
-  --lgreen:#E8F8EE;--lred:#FFF0F0;--done:#E0E0E0;
-  --area-aircraft:#1A4A5C;--area-cr:#1A3A5C;--area-croffice:#5C3A1A;
-  --area-mx:#2E5C1A;--area-misc:#4A4A4A;--area-charter:#5C1A4A;
-  --area-closure:#8B0000;
+  --navy:#1A3A5C;--gold:#C8A000;--white:#fff;
+  --lgray:#F7F7F7;--mgray:#CCCCCC;--dkgray:#555;
+  --green:#1A6600;--red:#8B0000;
+  --lgreen:#E8F8EE;--lred:#FFF0F0;--done:#E8E8E8;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+  --safe-top:env(safe-area-inset-top,0px);
 }
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Arial',sans-serif;background:#F0F2F5}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,Arial,sans-serif;background:#F0F2F5}
 
-/* ── SPLASH ── */
-#splash{
-  position:fixed;inset:0;background:var(--navy);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  z-index:1000;transition:opacity 0.4s
-}
-#splash.hidden{opacity:0;pointer-events:none}
-.splash-plane{font-size:64px;margin-bottom:16px;animation:float 2s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-.splash-title{color:#fff;font-size:24px;font-weight:600;letter-spacing:1px}
-.splash-sub{color:#A8C4E0;font-size:13px;margin-top:6px}
-.splash-bar{width:200px;height:3px;background:rgba(255,255,255,0.2);border-radius:2px;margin-top:32px;overflow:hidden}
-.splash-fill{height:100%;background:#fff;border-radius:2px;width:0;animation:load 1.8s ease forwards}
-@keyframes load{to{width:100%}}
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--navy);display:flex;flex-direction:column;
+        align-items:center;justify-content:center;z-index:999;transition:opacity 0.5s}
+#splash.out{opacity:0;pointer-events:none}
+.sp-plane{font-size:72px;animation:bob 2s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
+.sp-title{color:#fff;font-size:26px;font-weight:700;letter-spacing:2px;margin-top:16px}
+.sp-sub{color:#A8C4E0;font-size:13px;margin-top:6px}
+.sp-bar{width:180px;height:3px;background:rgba(255,255,255,0.15);border-radius:2px;margin-top:36px;overflow:hidden}
+.sp-fill{height:100%;background:#fff;border-radius:2px;animation:prog 2s ease forwards}
+@keyframes prog{to{width:100%}}
 
-/* ── LAYOUT ── */
+/* APP SHELL */
 #app{display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity 0.3s}
-#app.visible{opacity:1}
+#app.show{opacity:1}
 
-/* ── TOP BAR ── */
-.topbar{
-  background:var(--navy);color:#fff;
-  padding:env(safe-area-inset-top,0) 16px 0;
-  padding-top:calc(env(safe-area-inset-top,0px) + 10px);
-  padding-bottom:10px;
-  display:flex;align-items:center;gap:10px;
-  box-shadow:0 2px 8px rgba(0,0,0,0.2);flex-shrink:0;
-  position:relative;z-index:10
-}
-.topbar-plane{font-size:22px}
-.topbar-title{font-size:17px;font-weight:600;flex:1}
-.topbar-day{font-size:12px;color:#A8C4E0;background:rgba(255,255,255,0.1);
-            padding:3px 10px;border-radius:20px}
-.sync-btn{background:none;border:none;color:#A8C4E0;font-size:18px;padding:4px;cursor:pointer}
+/* TOP BAR */
+.bar{background:var(--navy);color:#fff;display:flex;align-items:center;gap:10px;
+     padding:calc(var(--safe-top) + 10px) 16px 10px;flex-shrink:0;
+     box-shadow:0 2px 8px rgba(0,0,0,0.25);position:relative;z-index:20}
+.bar-title{font-size:17px;font-weight:700;flex:1}
+.bar-pill{background:rgba(255,255,255,0.12);padding:3px 10px;border-radius:20px;
+          font-size:12px;color:#A8C4E0}
+.bar-btn{background:none;border:none;color:#A8C4E0;font-size:20px;padding:4px 6px;cursor:pointer}
 
-/* ── BOTTOM NAV ── */
-.bottomnav{
-  background:#fff;border-top:1px solid var(--mgray);
-  display:flex;overflow-x:auto;scrollbar-width:none;flex-shrink:0;
-  padding-bottom:env(safe-area-inset-bottom,0)
-}
-.bottomnav::-webkit-scrollbar{display:none}
-.nav-item{
-  flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
-  padding:8px 14px 6px;cursor:pointer;border-top:2px solid transparent;
-  transition:all 0.15s;min-width:60px
-}
-.nav-item.active{border-top-color:var(--navy)}
-.nav-item.active .nav-icon{color:var(--navy)}
-.nav-item.active .nav-label{color:var(--navy);font-weight:600}
-.nav-icon{font-size:20px;color:#999;margin-bottom:2px}
-.nav-label{font-size:10px;color:#999;white-space:nowrap}
+/* CONTENT */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
+         padding-bottom:calc(60px + var(--safe-bottom))}
 
-/* ── CONTENT ── */
-.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
-.page{display:none;height:100%}
-.page.active{display:block}
+/* BOTTOM NAV */
+.nav{background:#fff;border-top:1px solid var(--mgray);display:flex;overflow-x:auto;
+     scrollbar-width:none;flex-shrink:0;
+     padding-bottom:var(--safe-bottom)}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+         padding:8px 16px 6px;cursor:pointer;border-top:2.5px solid transparent;
+         transition:all 0.15s;min-width:64px}
+.nav-btn.on{border-top-color:var(--navy)}
+.nav-btn.on .ni{color:var(--navy)}
+.nav-btn.on .nl{color:var(--navy);font-weight:700}
+.ni{font-size:21px;color:#999;margin-bottom:2px}
+.nl{font-size:10px;color:#999;white-space:nowrap}
 
-/* ── LOADING SPINNER ── */
-.spinner-wrap{display:flex;flex-direction:column;align-items:center;
-              justify-content:center;height:200px;gap:12px}
-.spinner{width:32px;height:32px;border:3px solid var(--mgray);
-         border-top-color:var(--navy);border-radius:50%;animation:spin 0.8s linear infinite}
+/* SPINNER */
+.spin-wrap{display:flex;flex-direction:column;align-items:center;
+           justify-content:center;min-height:200px;gap:12px}
+.spinner{width:30px;height:30px;border:3px solid var(--mgray);
+         border-top-color:var(--navy);border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.spinner-label{font-size:13px;color:var(--dkgray)}
+.spin-label{font-size:13px;color:var(--dkgray)}
 
-/* ── DAILY TASKS ── */
-.day-header{
-  padding:12px 16px 8px;
-  background:#fff;border-bottom:1px solid var(--mgray);
-  position:sticky;top:0;z-index:5
-}
-.day-progress-label{font-size:12px;color:var(--dkgray);margin-bottom:6px;
-                     display:flex;justify-content:space-between}
-.day-progress-bar{height:6px;background:var(--mgray);border-radius:3px;overflow:hidden}
-.day-progress-fill{height:100%;background:var(--navy);border-radius:3px;
-                   transition:width 0.3s ease}
-.section-hdr{
-  padding:7px 16px;font-size:11px;font-weight:700;
-  letter-spacing:0.5px;text-transform:uppercase;color:#fff;
-  position:sticky;top:0
-}
-.task-row{
-  display:flex;align-items:center;gap:12px;
-  padding:13px 16px;background:#fff;border-bottom:1px solid #F0F0F0;
-  cursor:pointer;transition:background 0.1s;min-height:54px
-}
-.task-row:active{background:#F5F5F5}
-.task-row.done{background:var(--done)}
-.task-row.done .task-text{text-decoration:line-through;color:#999}
-.task-row.done .task-freq{color:#bbb}
-.task-check{
-  width:26px;height:26px;border-radius:50%;border:2px solid var(--mgray);
-  display:flex;align-items:center;justify-content:center;flex-shrink:0;
-  font-size:14px;transition:all 0.15s
-}
-.task-check.checked{background:var(--navy);border-color:var(--navy);color:#fff}
-.task-info{flex:1;min-width:0}
-.task-text{font-size:14px;color:#111;line-height:1.3}
-.task-freq{font-size:11px;color:#888;margin-top:2px}
-.closure-row{background:#FFF8F8}
-.closure-row.done{background:#F5E8E8}
+/* PROGRESS BAR */
+.prog-wrap{background:#fff;border-bottom:1px solid var(--mgray);
+           padding:10px 16px;position:sticky;top:0;z-index:10}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;
+          color:var(--dkgray);margin-bottom:5px}
+.prog-bar{height:5px;background:var(--mgray);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--navy);border-radius:3px;transition:width 0.4s}
 
-/* ── SPECIAL NOTES ── */
-.notes-section{margin:12px;background:#fff;border-radius:10px;
-               border:1px solid var(--mgray);overflow:hidden}
-.notes-hdr{background:#555;color:#fff;padding:10px 14px;
-           font-size:12px;font-weight:700}
-.note-row{display:flex;align-items:flex-start;gap:10px;
-          padding:11px 14px;border-bottom:1px solid #F0F0F0;cursor:pointer}
-.note-row:last-child{border-bottom:none}
-.note-row.done .note-text{text-decoration:line-through;color:#999}
-.note-check{width:22px;height:22px;border-radius:4px;border:1.5px solid var(--mgray);
-            display:flex;align-items:center;justify-content:center;
-            flex-shrink:0;margin-top:1px;font-size:12px;transition:all 0.15s}
-.note-check.checked{background:#555;border-color:#555;color:#fff}
-.note-content{flex:1}
-.note-text{font-size:13px;color:#111;line-height:1.4}
-.note-meta{font-size:11px;color:#888;margin-top:2px}
-.add-note-btn{
-  width:calc(100% - 24px);margin:0 12px 12px;padding:13px;
-  background:#fff;border:1.5px dashed var(--mgray);border-radius:10px;
-  font-size:13px;color:#888;cursor:pointer;text-align:center
-}
+/* SECTION HEADER */
+.sec{padding:7px 16px;font-size:11px;font-weight:700;letter-spacing:0.6px;
+     text-transform:uppercase;color:#fff;margin-top:1px}
 
-/* ── SHOPPING AUDIT ── */
-.shop-toolbar{
-  background:#fff;border-bottom:1px solid var(--mgray);
-  padding:10px 12px;display:flex;gap:8px;overflow-x:auto;
-  scrollbar-width:none;position:sticky;top:0;z-index:5
-}
-.shop-toolbar::-webkit-scrollbar{display:none}
-.filter-chip{
-  flex:0 0 auto;padding:5px 12px;border-radius:20px;font-size:12px;
-  font-weight:600;cursor:pointer;border:none;transition:opacity 0.15s
-}
-.filter-chip:active{opacity:0.7}
-.shop-item{
-  display:flex;align-items:center;gap:12px;
-  padding:13px 16px;background:#fff;border-bottom:1px solid #F0F0F0;
-  cursor:pointer;transition:background 0.1s
-}
-.shop-item:active{background:#F5F5F5}
-.shop-item.to-buy{background:var(--lred)}
-.shop-item.to-buy .shop-name{color:var(--red);font-weight:600}
-.shop-cb{
-  width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;font-size:14px;transition:all 0.15s
-}
-.shop-cb.checked{background:var(--red);border-color:var(--red);color:#fff}
-.shop-info{flex:1;min-width:0}
-.shop-name{font-size:14px;color:#111}
-.shop-meta{font-size:11px;color:#888;margin-top:2px;display:flex;gap:8px}
-.store-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:3px}
-.shop-cabinet{font-size:11px;color:#aaa}
-.reset-bar{
-  padding:12px 16px;background:#fff;border-top:1px solid var(--mgray);
-  flex-shrink:0
-}
-.reset-btn{
-  width:100%;padding:13px;border-radius:10px;background:var(--lgreen);
-  color:var(--green);border:1.5px solid var(--green);font-size:14px;
-  font-weight:600;cursor:pointer
-}
+/* TASK ROW */
+.trow{display:flex;align-items:center;gap:12px;padding:13px 16px;
+      background:#fff;border-bottom:1px solid #F0F0F0;cursor:pointer;
+      transition:background 0.1s;min-height:52px;position:relative}
+.trow:active{background:#F5F5F5}
+.trow.done{background:var(--done)}
+.trow.done .ttxt{text-decoration:line-through;color:#999}
+.trow.done .tfreq{color:#bbb}
+.trow.closure{background:#FFF8F8}
+.trow.closure.done{background:#F0E8E8}
+.tcb{width:26px;height:26px;border-radius:50%;border:2px solid var(--mgray);
+     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+     font-size:13px;color:#fff;transition:all 0.15s}
+.tcb.on{background:var(--navy);border-color:var(--navy)}
+.tinfo{flex:1;min-width:0}
+.ttxt{font-size:14px;color:#111;line-height:1.3}
+.tfreq{font-size:11px;color:#888;margin-top:2px}
+.tdel{padding:6px 10px;color:#ccc;font-size:18px;cursor:pointer}
+.tdel:active{color:var(--red)}
 
-/* ── PROCEDURES ── */
-.proc-list{padding:12px}
-.proc-card{
-  background:#fff;border-radius:10px;border:1px solid var(--mgray);
-  margin-bottom:10px;overflow:hidden;cursor:pointer
-}
-.proc-card-hdr{
-  padding:14px 16px;display:flex;align-items:center;gap:10px;
-  border-bottom:1px solid #F0F0F0
-}
-.proc-icon{font-size:22px}
-.proc-title{font-size:14px;font-weight:600;color:#111}
-.proc-sub{font-size:12px;color:#888;margin-top:2px}
-.proc-arrow{margin-left:auto;color:#ccc;font-size:18px}
+/* ADD TASK BTN */
+.add-row{display:flex;align-items:center;gap:10px;padding:11px 16px;
+         background:#fff;border-bottom:1px solid #F0F0F0;cursor:pointer}
+.add-row span{font-size:13px;color:#999}
+.add-circle{width:26px;height:26px;border-radius:50%;border:2px dashed var(--mgray);
+            display:flex;align-items:center;justify-content:center;color:#bbb;font-size:16px}
 
-/* Procedure detail */
-.proc-detail{display:none;padding:0 16px 16px}
-.proc-detail.open{display:block}
-.proc-warning{
-  background:#FFF0F0;border-left:3px solid var(--red);
-  padding:10px 12px;border-radius:0 6px 6px 0;margin:12px 0;
-  font-size:12px;color:var(--red);font-weight:600;line-height:1.5
-}
-.proc-step{
-  display:flex;gap:12px;padding:11px 0;
-  border-bottom:1px solid #F5F5F5;cursor:pointer
-}
-.proc-step:last-child{border-bottom:none}
-.step-num{
-  width:26px;height:26px;border-radius:50%;background:var(--lgray);
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:700;color:var(--navy);flex-shrink:0
-}
-.proc-step.done-step .step-num{background:var(--navy);color:#fff}
-.proc-step.done-step .step-text{text-decoration:line-through;color:#999}
-.step-text{font-size:13px;color:#111;line-height:1.5;flex:1}
-.step-note{font-size:11px;color:#888;margin-top:3px}
+/* NOTES SECTION */
+.notes-wrap{margin:10px 12px 0;background:#fff;border-radius:10px;
+            border:1px solid var(--mgray);overflow:hidden}
+.notes-hdr{background:#555;color:#fff;padding:9px 14px;font-size:12px;font-weight:700;
+           display:flex;align-items:center;justify-content:space-between}
+.notes-hdr button{background:rgba(255,255,255,0.15);border:none;color:#fff;
+                  border-radius:6px;padding:3px 10px;font-size:11px;cursor:pointer}
+.nrow{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;
+      border-bottom:1px solid #F5F5F5;cursor:pointer}
+.nrow:last-child{border-bottom:none}
+.nrow.done .ntxt{text-decoration:line-through;color:#999}
+.ncb{width:22px;height:22px;border-radius:4px;border:1.5px solid var(--mgray);
+     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+     font-size:11px;color:#fff;transition:all 0.15s;margin-top:1px}
+.ncb.on{background:#555;border-color:#555}
+.ninfo{flex:1}
+.ntxt{font-size:13px;color:#111;line-height:1.4}
+.nmeta{font-size:11px;color:#888;margin-top:2px}
+.ndel{color:#ccc;font-size:16px;padding:2px 6px;cursor:pointer}
+.ndel:active{color:var(--red)}
 
-/* ── CONTACTS ── */
-.contact-list{padding:12px}
-.contact-card{
-  background:#fff;border-radius:10px;border:1px solid var(--mgray);
-  margin-bottom:10px;overflow:hidden
-}
-.contact-row{padding:13px 16px;border-bottom:1px solid #F5F5F5}
-.contact-row:last-child{border-bottom:none}
-.contact-name{font-size:14px;font-weight:600;color:#111}
-.contact-addr{font-size:12px;color:#666;margin-top:3px;line-height:1.4}
-.contact-note{font-size:12px;color:var(--navy);margin-top:4px;font-style:italic}
+/* SHOPPING */
+.shop-bar{background:#fff;border-bottom:1px solid var(--mgray);
+          padding:9px 12px;display:flex;gap:7px;overflow-x:auto;
+          scrollbar-width:none;position:sticky;top:0;z-index:10}
+.shop-bar::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;padding:5px 13px;border-radius:20px;font-size:12px;
+      font-weight:600;cursor:pointer;border:none;transition:opacity 0.15s}
+.chip:active{opacity:0.7}
+.srow{display:flex;align-items:center;gap:12px;padding:13px 16px;
+      background:#fff;border-bottom:1px solid #F0F0F0;cursor:pointer}
+.srow:active{background:#F5F5F5}
+.srow.tobuy{background:var(--lred)}
+.srow.tobuy .sname{color:var(--red);font-weight:600}
+.scb{width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
+     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+     font-size:13px;color:#fff;transition:all 0.15s}
+.scb.on{background:var(--red);border-color:var(--red)}
+.sinfo{flex:1;min-width:0}
+.sname{font-size:14px;color:#111}
+.smeta{font-size:11px;color:#888;margin-top:2px;display:flex;gap:8px}
+.sdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:3px;vertical-align:middle}
+.empty-state{display:flex;flex-direction:column;align-items:center;
+             justify-content:center;padding:40px 20px;gap:10px}
+.empty-state .ei{font-size:40px}
+.empty-state p{font-size:13px;color:#999;text-align:center}
 
-/* ── BORED BOARD ── */
-.bored-list{padding:12px}
-.bored-item{
-  display:flex;align-items:center;gap:12px;
-  background:#fff;border-radius:10px;border:1px solid var(--mgray);
-  padding:14px 16px;margin-bottom:8px;cursor:pointer
-}
-.bored-item.done{background:var(--done)}
-.bored-item.done .bored-text{text-decoration:line-through;color:#999}
-.bored-cb{
-  width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;font-size:14px;transition:all 0.15s
-}
-.bored-cb.checked{background:#555;border-color:#555;color:#fff}
-.bored-text{font-size:14px;color:#111;line-height:1.4;flex:1}
+/* PROCEDURES */
+.proc-list{padding:12px;display:flex;flex-direction:column;gap:10px}
+.pcard{background:#fff;border-radius:10px;border:1px solid var(--mgray);overflow:hidden}
+.pcard-hdr{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;
+           border-bottom:1px solid transparent;transition:border-color 0.15s}
+.pcard.open .pcard-hdr{border-color:#F0F0F0}
+.picon{font-size:22px}
+.ptitle{font-size:14px;font-weight:600;color:#111;flex:1}
+.psub{font-size:12px;color:#888;margin-top:2px}
+.parr{color:#ccc;font-size:20px;transition:transform 0.2s}
+.pcard.open .parr{transform:rotate(90deg)}
+.pbody{display:none;padding:0 16px 12px}
+.pcard.open .pbody{display:block}
+.pwarn{background:#FFF0F0;border-left:3px solid var(--red);border-radius:0 6px 6px 0;
+       padding:10px 12px;margin:10px 0 6px;font-size:12px;color:var(--red);
+       font-weight:600;line-height:1.5}
+.pstep{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #F8F8F8;cursor:pointer}
+.pstep:last-child{border:none}
+.pstep.done .stxt{text-decoration:line-through;color:#999}
+.pstep.done .snote{color:#bbb}
+.snum{width:26px;height:26px;border-radius:50%;background:var(--lgray);
+      display:flex;align-items:center;justify-content:center;
+      font-size:11px;font-weight:700;color:var(--navy);flex-shrink:0;transition:all 0.15s}
+.pstep.done .snum{background:var(--navy);color:#fff}
+.sinfo{flex:1}
+.stxt{font-size:13px;color:#111;line-height:1.5}
+.snote{font-size:11px;color:#888;margin-top:2px}
+.green-step .stxt{color:var(--green);font-weight:600}
 
-/* ── ADD NOTE MODAL ── */
-.modal-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,0.5);
-  display:none;align-items:flex-end;z-index:200
-}
-.modal-overlay.open{display:flex}
-.modal{
-  background:#fff;border-radius:16px 16px 0 0;padding:20px;
-  width:100%;padding-bottom:calc(20px + env(safe-area-inset-bottom,0))
-}
-.modal h3{font-size:16px;font-weight:600;margin-bottom:16px}
-.modal input,.modal textarea,.modal select{
-  width:100%;padding:11px 14px;border-radius:8px;
-  border:1px solid var(--mgray);font-size:14px;
-  font-family:inherit;margin-bottom:10px;background:#F9F9F9
-}
-.modal textarea{height:80px;resize:none}
-.modal-btns{display:flex;gap:8px;margin-top:4px}
-.modal-btn{flex:1;padding:13px;border-radius:10px;font-size:14px;
-           font-weight:600;cursor:pointer;border:none}
-.modal-btn.cancel{background:var(--lgray);color:var(--dkgray)}
-.modal-btn.save{background:var(--navy);color:#fff}
+/* CONTACTS */
+.con-list{padding:12px;display:flex;flex-direction:column;gap:8px}
+.ccard{background:#fff;border-radius:10px;border:1px solid var(--mgray);overflow:hidden}
+.crow{padding:14px 16px}
+.cname{font-size:14px;font-weight:600;color:#111}
+.caddr{font-size:12px;color:#555;margin-top:4px;line-height:1.4}
+.cnote{font-size:12px;color:var(--navy);margin-top:4px;font-style:italic}
 
-/* ── TOAST ── */
-.toast{
-  position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0));
-  left:50%;transform:translateX(-50%) translateY(20px);
-  background:#333;color:#fff;padding:9px 18px;border-radius:20px;
-  font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;
-  white-space:nowrap;z-index:300
-}
+/* BORED BOARD */
+.bored-list{padding:12px;display:flex;flex-direction:column;gap:8px}
+.bitem{display:flex;align-items:center;gap:12px;background:#fff;
+       border-radius:10px;border:1px solid var(--mgray);padding:14px 16px;cursor:pointer}
+.bitem:active{background:#F5F5F5}
+.bitem.done{background:var(--done)}
+.bitem.done .btxt{text-decoration:line-through;color:#999}
+.bcb{width:26px;height:26px;border-radius:6px;border:2px solid var(--mgray);
+     display:flex;align-items:center;justify-content:center;flex-shrink:0;
+     font-size:13px;color:#fff;transition:all 0.15s}
+.bcb.on{background:#555;border-color:#555}
+.btxt{font-size:14px;color:#111;line-height:1.4;flex:1}
+.bdel{color:#ccc;font-size:18px;padding:2px 8px;cursor:pointer}
+.bdel:active{color:var(--red)}
+
+/* WEEK */
+.week-list{padding:12px;display:flex;flex-direction:column;gap:8px}
+.wcard{background:#fff;border-radius:10px;border:1px solid var(--mgray);
+       display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.wcard:active{background:#F5F5F5}
+.wcard.today{border-color:var(--navy);box-shadow:0 2px 8px rgba(26,58,92,0.12)}
+.wday-emoji{font-size:24px}
+.winfo{flex:1}
+.wday-name{font-size:14px;font-weight:600;color:#111}
+.wday-count{font-size:12px;color:#888;margin-top:2px}
+.warr{color:#ccc;font-size:20px}
+
+/* DAY DETAIL HEADER */
+.day-detail-bar{display:flex;align-items:center;gap:10px;padding:10px 16px;
+                color:#fff;position:sticky;top:0;z-index:15}
+.back-btn{background:none;border:none;color:#fff;font-size:22px;
+          cursor:pointer;padding:0 4px;line-height:1}
+
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);
+         display:none;align-items:flex-end;z-index:200}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:20px;width:100%;
+       padding-bottom:calc(20px + var(--safe-bottom))}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:14px;color:#111}
+.modal input,.modal select,.modal textarea{
+  width:100%;padding:11px 14px;border-radius:8px;border:1px solid var(--mgray);
+  font-size:14px;font-family:inherit;margin-bottom:10px;background:#F9F9F9;color:#111}
+.modal textarea{height:75px;resize:none}
+.mbtn-row{display:flex;gap:8px;margin-top:4px}
+.mbtn{flex:1;padding:13px;border-radius:10px;font-size:14px;font-weight:600;
+      cursor:pointer;border:none}
+.mbtn.cancel{background:var(--lgray);color:var(--dkgray)}
+.mbtn.save{background:var(--navy);color:#fff}
+.mbtn.danger{background:var(--lred);color:var(--red)}
+
+/* FAB */
+.fab{position:fixed;right:16px;bottom:calc(68px + var(--safe-bottom));
+     width:52px;height:52px;border-radius:50%;background:var(--navy);
+     color:#fff;border:none;font-size:24px;box-shadow:0 4px 14px rgba(0,0,0,0.25);
+     cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:50}
+.fab:active{transform:scale(0.93)}
+.fab.red{background:#8B0000}
+
+
+/* SEARCH BAR */
+.search-wrap{padding:8px 12px;background:#fff;border-bottom:1px solid var(--mgray);
+             position:sticky;top:44px;z-index:9}
+.search-input{width:100%;padding:9px 14px 9px 36px;border-radius:20px;
+              border:1px solid var(--mgray);background:#F7F7F7;
+              font-size:14px;font-family:inherit;color:#111;outline:none}
+.search-input:focus{border-color:var(--navy);background:#fff}
+.search-wrap-inner{position:relative}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);
+             font-size:14px;color:#aaa;pointer-events:none}
+.search-clear{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+              font-size:16px;color:#aaa;cursor:pointer;display:none}
+
+/* RESET BAR */
+.reset-bar{padding:12px 14px;background:#fff;border-top:1px solid var(--mgray)}
+.reset-btn{width:100%;padding:13px;border-radius:10px;background:var(--lgreen);
+           color:var(--green);border:1.5px solid var(--green);font-size:14px;
+           font-weight:600;cursor:pointer}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(72px + var(--safe-bottom));left:50%;
+       transform:translateX(-50%) translateY(10px);background:#222;color:#fff;
+       padding:9px 18px;border-radius:20px;font-size:13px;opacity:0;
+       transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:400}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ── END OF DAY ── */
-.eod-btn{
-  position:fixed;bottom:calc(70px + env(safe-area-inset-bottom,0));
-  right:16px;background:var(--navy);color:#fff;border:none;
-  border-radius:50%;width:52px;height:52px;font-size:22px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);cursor:pointer;
-  display:none;align-items:center;justify-content:center;z-index:50
-}
-.eod-btn.visible{display:flex}
+/* EOD BTN */
+.eod-fab{position:fixed;left:16px;bottom:calc(68px + var(--safe-bottom));
+         width:52px;height:52px;border-radius:50%;background:#2E7D32;
+         color:#fff;border:none;font-size:22px;
+         box-shadow:0 4px 14px rgba(0,0,0,0.25);cursor:pointer;
+         display:none;align-items:center;justify-content:center;z-index:50}
+.eod-fab.show{display:flex}
 </style>
 </head>
 <body>
 
-<!-- Splash -->
 <div id="splash">
-  <div class="splash-plane">✈</div>
-  <div class="splash-title">Groomers YKF</div>
-  <div class="splash-sub">Aviation Grooming Team</div>
-  <div class="splash-bar"><div class="splash-fill"></div></div>
+  <div class="sp-plane">✈</div>
+  <div class="sp-title">Groomers YKF</div>
+  <div class="sp-sub">Aviation Grooming Team</div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
 </div>
 
-<!-- App shell -->
 <div id="app">
-  <div class="topbar">
-    <span class="topbar-plane">✈</span>
-    <span class="topbar-title">Groomers YKF</span>
-    <span class="topbar-day" id="topDay">Loading...</span>
-    <button class="sync-btn" onclick="syncData()" title="Sync">↻</button>
+  <div class="bar">
+    <span style="font-size:20px">✈</span>
+    <span class="bar-title" id="barTitle">Groomers YKF</span>
+    <span class="bar-pill" id="barDay"></span>
+    <button class="bar-btn" onclick="syncAll()" title="Sync">↻</button>
   </div>
-
-  <div class="content" id="content">
-    <div class="spinner-wrap" id="mainSpinner">
-      <div class="spinner"></div>
-      <div class="spinner-label">Loading...</div>
-    </div>
-  </div>
-
-  <div class="bottomnav" id="bottomNav"></div>
+  <div class="content" id="content"></div>
+  <div class="nav" id="nav"></div>
 </div>
 
-<!-- Add note modal -->
-<div class="modal-overlay" id="noteModal">
-  <div class="modal">
-    <h3>Add Note / Carry-over Task</h3>
-    <input type="text" id="noteText" placeholder="Task or note...">
-    <input type="text" id="noteArea" placeholder="Area (e.g. MX Hangar, Aircraft...)">
-    <div class="modal-btns">
-      <button class="modal-btn cancel" onclick="closeNoteModal()">Cancel</button>
-      <button class="modal-btn save" onclick="saveNote()">Add</button>
+<!-- Modals -->
+<div class="overlay" id="modalOverlay">
+  <div class="modal" id="modalBox">
+    <h3 id="modalTitle">Add</h3>
+    <div id="modalFields"></div>
+    <div class="mbtn-row">
+      <button class="mbtn cancel" onclick="closeModal()">Cancel</button>
+      <button class="mbtn save" id="modalSave" onclick="modalSubmit()">Save</button>
     </div>
   </div>
 </div>
 
-<!-- End of day button -->
-<button class="eod-btn" id="eodBtn" onclick="showEOD()" title="End of Day Summary">📋</button>
-
-<!-- Toast -->
+<button class="fab" id="fab" onclick="fabAction()" style="display:none">+</button>
+<button class="eod-fab" id="eodFab" onclick="showEOD()">📋</button>
 <div class="toast" id="toast"></div>
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────────
-// Replace SHEET_ID with your actual Google Sheet ID
-// (the long string in your sheet URL between /d/ and /edit)
-const SHEET_ID = '12vTTI_2UBH-yKDAdYL7k937EP1hCdJXFv8ml3nmsobQ';
+const SHEET_ID    = '12vTTI_2UBH-yKDAdYL7k937EP1hCdJXFv8ml3nmsobQ';
+const BACKEND_URL = 'BACKEND_URL_HERE'; // paste your Apps Script URL here
 
 const DAYS = ['☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday',
               '4️⃣ Thursday','5️⃣ Friday','🗓 Saturday'];
-const DAY_SHORTS = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-const TODAY_IDX = new Date().getDay();
-const TODAY_NAME = DAYS[TODAY_IDX];
-const DAY_NAMES_DISPLAY = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const DAY_EMOJIS = ['☀','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🗓'];
+const DAY_COLORS = ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','#D4860A'];
+const TODAY = new Date().getDay();
 
 const AREA_COLORS = {
-  'AIRCRAFT':           '#1A4A5C',
-  "CR GROOMERS' CORNER":'#1A3A5C',
-  'CR OFFICE':          '#5C3A1A',
-  'MX HANGAR':          '#2E5C1A',
-  'MISC':               '#4A4A4A',
-  'CHARTER':            '#5C1A4A',
-  'CLOSURE':            '#8B0000',
+  'AIRCRAFT':"#1A4A5C", "CR GROOMERS' CORNER":"#1A3A5C",
+  'CR OFFICE':"#5C3A1A", 'MX HANGAR':"#2E5C1A",
+  'MISC':"#4A4A4A", 'CHARTER':"#5C1A4A", 'CLOSURE':"#8B0000",
 };
-
 const STORE_COLORS = {
-  'Zehrs':            '#C0392B',
-  'Costco':           '#005DAA',
-  'A1 Cash & Carry':  '#D4860A',
-  'Home Depot':       '#E8500A',
-  'Canadian Tire':    '#C0181E',
-  'Monarch Oil':      '#1A6B8A',
-  'Crew House':       '#2E7D32',
-  'Supplier':         '#444444',
+  'Zehrs':'#C0392B','Costco':'#005DAA','A1 Cash & Carry':'#D4860A',
+  'Home Depot':'#E8500A','Canadian Tire':'#C0181E',
+  'Monarch Oil':'#1A6B8A','Crew House':'#2E7D32','Supplier':'#444',
 };
 
 // ── STATE ────────────────────────────────────────────────────────
-let state = {
-  currentTab: 'today',
-  sheetData:  {},
-  tasks:      {},      // { tabName: [{task,freq,area,done}] }
-  notes:      {},      // { tabName: [{text,area,date,done}] }
-  shopping:   [],      // [{item,cabinet,store,status,notes}]
-  contacts:   [],
-  bored:      [],
+const S = {
+  tab: 'today',
+  dayView: TODAY,      // which day is showing in week/day detail
+  inDayDetail: false,
+  tasks: {},           // { tabName: [{task,freq,area,done}] }
+  notes: {},           // { tabName: [{text,area,date,done}] }
+  shopping: [],
+  contacts: [],
+  bored: [],
   procedures: {},
-  activeFilter: 'all',
-  currentNoteTab: TODAY_NAME,
+  shopFilter: 'all',
+  shopSearch: '',
+  modalCtx: null,
 };
 
-// ── INIT ─────────────────────────────────────────────────────────
-window.addEventListener('load', () => {
-  document.getElementById('topDay').textContent =
-    DAY_NAMES_DISPLAY[TODAY_IDX];
-  setTimeout(initApp, 1800);
-});
-
-async function initApp() {
-  document.getElementById('splash').classList.add('hidden');
-  document.getElementById('app').classList.add('visible');
-  buildNav();
-  await loadFromSheet();
-  showTab('today');
-}
-
-// ── NAVIGATION ────────────────────────────────────────────────────
-const NAV_TABS = [
-  { id:'today',    icon:'📅', label:'Today'    },
-  { id:'week',     icon:'🗓', label:'Week'     },
-  { id:'shopping', icon:'🛒', label:'Shopping' },
-  { id:'procedures',icon:'📋',label:'Procs'   },
-  { id:'contacts', icon:'📞', label:'Contacts' },
-  { id:'bored',    icon:'💡', label:'Bored'    },
+const NAV = [
+  {id:'today',    icon:'📅', label:'Today'},
+  {id:'week',     icon:'🗓', label:'Week'},
+  {id:'shopping', icon:'🛒', label:'Shopping'},
+  {id:'procedures',icon:'📋',label:'Procs'},
+  {id:'contacts', icon:'📞', label:'Contacts'},
+  {id:'bored',    icon:'💡', label:'Bored'},
 ];
 
+// ── BOOT ─────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
+  buildNav();
+  loadNotes();
+  loadProcs();
+  setTimeout(async () => {
+    document.getElementById('splash').classList.add('out');
+    document.getElementById('app').classList.add('show');
+    await Promise.all([
+      fetchDay(DAYS[TODAY]),
+      fetchShopping(),
+      fetchContacts(),
+      fetchBored(),
+    ]);
+    render();
+  }, 1800);
+});
+
+// ── NAV ──────────────────────────────────────────────────────────
 function buildNav() {
-  const nav = document.getElementById('bottomNav');
-  nav.innerHTML = NAV_TABS.map(t => `
-    <div class="nav-item ${t.id==='today'?'active':''}"
-         onclick="showTab('${t.id}')" id="nav-${t.id}">
-      <div class="nav-icon">${t.icon}</div>
-      <div class="nav-label">${t.label}</div>
-    </div>
-  `).join('');
+  document.getElementById('nav').innerHTML = NAV.map(n => `
+    <div class="nav-btn ${n.id==='today'?'on':''}" id="nb-${n.id}" onclick="goTab('${n.id}')">
+      <div class="ni">${n.icon}</div>
+      <div class="nl">${n.label}</div>
+    </div>`).join('');
 }
 
-function showTab(id) {
-  state.currentTab = id;
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const navEl = document.getElementById(`nav-${id}`);
-  if (navEl) navEl.classList.add('active');
-  const eodBtn = document.getElementById('eodBtn');
-  eodBtn.classList.toggle('visible', id === 'today');
+function goTab(id) {
+  S.tab = id; S.inDayDetail = false;
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('on'));
+  document.getElementById(`nb-${id}`)?.classList.add('on');
+  document.getElementById('barTitle').textContent = 'Groomers YKF';
+  document.getElementById('eodFab').classList.toggle('show', id==='today');
+  render();
+}
 
-  const content = document.getElementById('content');
-  switch(id) {
-    case 'today':      renderToday(content); break;
-    case 'week':       renderWeek(content);  break;
-    case 'shopping':   renderShopping(content); break;
-    case 'procedures': renderProcedures(content); break;
-    case 'contacts':   renderContacts(content); break;
-    case 'bored':      renderBored(content); break;
-    default:           renderToday(content);
+function render() {
+  const el = document.getElementById('content');
+  document.getElementById('fab').style.display = 'none';
+  switch(S.tab) {
+    case 'today':      renderToday(el); break;
+    case 'week':       S.inDayDetail ? renderDayDetail(el) : renderWeek(el); break;
+    case 'shopping':   renderShopping(el); break;
+    case 'procedures': renderProcs(el); break;
+    case 'contacts':   renderContacts(el); break;
+    case 'bored':      renderBored(el); break;
   }
 }
 
-// ── DATA LOADING ──────────────────────────────────────────────────
-async function loadFromSheet() {
-  showSpinner();
+// ── FETCH ─────────────────────────────────────────────────────────
+async function fetchDay(tabName) {
   try {
-    // Load today's tasks
-    await loadDayTasks(TODAY_NAME);
-    // Pre-load shopping
-    await loadShopping();
-    // Load contacts
-    await loadContacts();
-    // Load bored board
-    await loadBoredBoard();
-    // Load procedures
-    await loadProcedures();
-    // Load notes from localStorage
-    loadLocalNotes();
-  } catch(e) {
-    console.error('Load error:', e);
-    loadFallbackData();
-  }
-}
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+    const res  = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table?.rows || [];
+    const cols = json.table?.cols || [];
 
-async function fetchSheet(sheetName) {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1]);
-  return json.table;
-}
-
-function tableToRows(table) {
-  if (!table || !table.rows) return [];
-  return table.rows.map(row =>
-    (table.cols || []).reduce((acc, col, i) => {
-      acc[col.label || `col${i}`] = row.c[i] ? (row.c[i].v ?? row.c[i].f ?? '') : '';
-      return acc;
-    }, {})
-  );
-}
-
-async function loadDayTasks(dayName) {
-  try {
-    const table = await fetchSheet(dayName);
-    const rows = tableToRows(table);
     const tasks = [];
-    let currentArea = '';
+    let area = '';
 
     rows.forEach(row => {
-      const vals = Object.values(row).map(v => String(v || '').trim());
+      const vals = cols.map((_, i) => {
+        const c = row.c?.[i];
+        return c ? String(c.v ?? c.f ?? '').trim() : '';
+      });
+
       const taskVal = vals[1] || '';
       const freqVal = vals[2] || '';
-
       if (!taskVal) return;
 
-      // Section header detection
-      const isHeader = taskVal === taskVal.toUpperCase() && taskVal.length > 3 &&
-                       (vals[3] === '' || vals[3] === undefined);
-      if (isHeader) { currentArea = taskVal; return; }
+      const upper = taskVal.toUpperCase();
+      if (upper.includes('SPECIAL NOTES') || upper.includes('📝') ||
+          upper.includes('NOTE / TASK')) return;
 
-      // Notes section
-      if (taskVal.includes('SPECIAL NOTES') || taskVal.includes('📝')) return;
+      // Section header — all caps, no checkbox
+      const isHdr = taskVal === upper && taskVal.length > 3 &&
+                    !vals[3] && Object.keys(AREA_COLORS).some(k => upper.includes(k.replace("'",'').substring(0,4)));
+      if (isHdr) { area = upper; return; }
 
-      tasks.push({
-        task: taskVal,
-        freq: freqVal,
-        area: currentArea,
-        done: false,
-      });
+      if (taskVal && !['#','TASK','FREQUENCY'].includes(upper)) {
+        tasks.push({ task: taskVal, freq: freqVal, area, done: false });
+      }
     });
 
-    state.tasks[dayName] = tasks;
+    S.tasks[tabName] = tasks;
   } catch(e) {
-    state.tasks[dayName] = getFallbackTasks();
+    S.tasks[tabName] = S.tasks[tabName] || fallbackTasks();
   }
 }
 
-async function loadShopping() {
+async function fetchShopping() {
   try {
-    const table = await fetchSheet('🛒 Shopping Audit');
-    const rows = tableToRows(table);
-    state.shopping = rows
-      .filter(r => {
-        const item = String(Object.values(r)[0] || '').trim();
-        return item && item !== 'Item' && !item.startsWith('Filter');
-      })
-      .map(r => {
-        const vals = Object.values(r).map(v => String(v || '').trim());
-        return {
-          item:    vals[0] || '',
-          cabinet: vals[1] || '',
-          store:   vals[2] || '',
-          status:  vals[3] || 'In Stock',
-          notes:   vals[4] || '',
-          checked: vals[3] === 'To Buy',
-        };
-      })
-      .filter(r => r.item);
-  } catch(e) { state.shopping = []; }
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('🛒 Shopping Audit')}`;
+    const res  = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table?.rows || [];
+    const cols = json.table?.cols || [];
+
+    S.shopping = rows.map(row => {
+      const v = cols.map((_,i) => { const c=row.c?.[i]; return c?String(c.v??c.f??'').trim():''; });
+      return { item:v[0], cabinet:v[1], store:v[2], status:v[3], notes:v[4]||'',
+               checked: v[3]==='To Buy' };
+    }).filter(r => r.item && r.item!=='Item' && !r.item.includes('Filter') &&
+                   !r.item.startsWith('💡') && !r.item.startsWith('TO SHOP'));
+  } catch(e) { S.shopping = S.shopping || []; }
 }
 
-async function loadContacts() {
+async function fetchContacts() {
   try {
-    const table = await fetchSheet('📞 Contacts & Info');
-    const rows = tableToRows(table);
-    state.contacts = rows
-      .filter(r => {
-        const name = String(Object.values(r)[0] || '').trim();
-        return name && name !== 'Name / Store' && name.length > 1;
-      })
-      .map(r => {
-        const vals = Object.values(r).map(v => String(v || '').trim());
-        return { name: vals[0], address: vals[1], notes: vals[2] };
-      });
-  } catch(e) { state.contacts = []; }
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('📞 Contacts & Info')}`;
+    const res  = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table?.rows || [];
+    const cols = json.table?.cols || [];
+    S.contacts = rows.map(row => {
+      const v = cols.map((_,i)=>{ const c=row.c?.[i]; return c?String(c.v??c.f??'').trim():''; });
+      return { name:v[0], address:v[1], notes:v[2] };
+    }).filter(r => r.name && r.name!=='Name / Store' && r.name.length>1);
+  } catch(e) { S.contacts = []; }
 }
 
-async function loadBoredBoard() {
+async function fetchBored() {
   try {
-    const table = await fetchSheet('💡 Bored Board');
-    const rows = tableToRows(table);
-    state.bored = rows
-      .filter(r => {
-        const task = String(Object.values(r)[1] || '').trim();
-        return task && task !== 'Task / Idea';
-      })
-      .map((r, i) => {
-        const vals = Object.values(r).map(v => String(v || '').trim());
-        return { id: i, task: vals[1] || '', done: false };
-      });
-  } catch(e) { state.bored = []; }
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent('💡 Bored Board')}`;
+    const res  = await fetch(url);
+    const text = await res.text();
+    const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+    const rows = json.table?.rows || [];
+    const cols = json.table?.cols || [];
+    S.bored = rows.map((row,i) => {
+      const v = cols.map((_,j)=>{ const c=row.c?.[j]; return c?String(c.v??c.f??'').trim():''; });
+      return { id:i, task:v[1]||'', done:false };
+    }).filter(r => r.task && r.task!=='Task / Idea');
+  } catch(e) { S.bored = []; }
 }
 
-async function loadProcedures() {
-  state.procedures = {
-    o2: {
-      title: 'O₂ Med Beds — Filling',
-      icon: '🫁',
-      warning: '⚠ Fill oxygen SLOWLY. Do not start with dirty hands (oil). If unsure, ask a senior groomer.',
-      steps: [
-        { text: 'Confirm both valves on bed AND tank are fully CLOSED.', note: 'Safety check — never skip' },
-        { text: 'Connect hose to the bed fitting.', note: '' },
-        { text: 'Tighten with wrenches — firm, do not over-torque.', note: '' },
-        { text: 'Open both valves (bed valve and tank valve).', note: '' },
-        { text: 'Slowly equalize pressure via second valve; push O₂ SLOWLY with gold valve.', note: 'Gold valve = fill valve' },
-        { text: 'Once correct PSI reached — shut off BOTH valves immediately.', note: 'Confirm PSI with lead' },
-        { text: 'Disconnect hoses from bed.', note: '' },
-        { text: 'Release remaining pressure in tank line before storing.', note: '' },
-      ],
-      done: []
-    },
-    westwind: {
-      title: 'Westwind — Full Groom',
-      icon: '✈',
-      warning: '',
-      steps: [
-        { text: 'Leather seats — Citra or leather cleaner', note: '' },
-        { text: 'Vacuum floor / carpet', note: '' },
-        { text: 'Cockpit: dust instruments & CBs; panel & overhead plastic', note: '' },
-        { text: 'Windshields', note: 'Aviation-safe cleaner' },
-        { text: 'Tables', note: '' },
-        { text: 'Empty and clean coffee and tea kettle', note: '' },
-        { text: 'Walls with Citra', note: 'Diluted' },
-        { text: 'Rails ✦', note: '2nd groomer' },
-        { text: 'Under velcro seats ✦', note: '2nd groomer' },
-        { text: 'Deep clean cockpit with q-tips ✦', note: '2nd groomer' },
-        { text: 'Engines, under wings and landing gear', note: '' },
-        { text: 'Cargo compartments ✦', note: '2nd groomer' },
-        { text: 'Belly ✦', note: '2nd groomer' },
-        { text: 'Entire fuselage ✦', note: '2nd groomer' },
-        { text: 'Put sun shades on', note: 'Before leaving aircraft' },
-        { text: 'Mop floor (IAW)', note: '' },
-      ],
-      done: []
-    },
-    metro: {
-      title: 'Metro — Full Groom',
-      icon: '✈',
-      warning: '',
-      steps: [
-        { text: 'Leather seats — Citra or leather cleaner', note: '' },
-        { text: "Empty pilots' pockets", note: '' },
-        { text: 'Cockpit detail: CBs and instrument panel', note: '' },
-        { text: 'Cockpit plastic — clean with Citra', note: 'Diluted' },
-        { text: 'Windshields and nose area', note: 'Aviation-safe cleaner' },
-        { text: 'Clean and organize commissary and folders', note: '' },
-        { text: 'Vacuum floors', note: '' },
-        { text: 'Check O₂ levels', note: 'Log the reading' },
-        { text: 'Med beds — full clean ✦', note: '2nd groomer' },
-        { text: 'Rails ✦', note: '2nd groomer' },
-        { text: 'Brush main door steps ✦', note: '2nd groomer' },
-        { text: 'Mop floor — Citra and Pine Sol', note: 'Dilute per label' },
-        { text: 'Clean landing gear', note: '' },
-        { text: 'Outside: nose compartments, cargo door, main door', note: '' },
-        { text: 'Belly ✦', note: '2nd groomer' },
-        { text: 'Nose and rear cargo compartments ✦', note: '2nd groomer' },
-        { text: 'Fuselage and engine cowlings', note: '' },
-      ],
-      done: []
-    },
-  };
+async function syncAll() {
+  toast('Syncing...');
+  await Promise.all([
+    fetchDay(DAYS[TODAY]),
+    fetchShopping(),
+    fetchContacts(),
+    fetchBored(),
+  ]);
+  if (S.inDayDetail) await fetchDay(DAYS[S.dayView]);
+  render();
+  toast('✅ Synced');
 }
 
-function loadLocalNotes() {
+// ── BACKEND CALL ─────────────────────────────────────────────────
+async function api(data) {
+  if (!BACKEND_URL || BACKEND_URL === 'BACKEND_URL_HERE') {
+    toast('⚠ Backend not set up yet');
+    return { error: 'no backend' };
+  }
   try {
-    const saved = localStorage.getItem('groomers_notes');
-    if (saved) state.notes = JSON.parse(saved);
-  } catch(e) { state.notes = {}; }
+    const res = await fetch(BACKEND_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    return await res.json();
+  } catch(e) {
+    toast('❌ Sync error');
+    return { error: e.toString() };
+  }
 }
 
-function saveLocalNotes() {
-  localStorage.setItem('groomers_notes', JSON.stringify(state.notes));
-}
-
-// ── TODAY RENDER ──────────────────────────────────────────────────
+// ── TODAY ─────────────────────────────────────────────────────────
 function renderToday(el) {
-  const tasks = state.tasks[TODAY_NAME] || [];
-  const notes = state.notes[TODAY_NAME] || [];
-  const done  = tasks.filter(t => t.done).length;
-  const pct   = tasks.length ? Math.round(done/tasks.length*100) : 0;
-
-  let areas = {};
-  tasks.forEach(t => {
-    if (!areas[t.area]) areas[t.area] = [];
-    areas[t.area].push(t);
-  });
+  document.getElementById('barTitle').textContent = DAY_NAMES[TODAY];
+  document.getElementById('eodFab').classList.add('show');
+  const tabName = DAYS[TODAY];
+  const tasks   = S.tasks[tabName] || [];
+  const notes   = S.notes[tabName] || [];
+  const done    = tasks.filter(t=>t.done).length;
+  const pct     = tasks.length ? Math.round(done/tasks.length*100) : 0;
 
   let html = `
-    <div class="day-header">
-      <div class="day-progress-label">
-        <span>${DAY_NAMES_DISPLAY[TODAY_IDX]}</span>
-        <span>${done} / ${tasks.length} tasks — ${pct}%</span>
-      </div>
-      <div class="day-progress-bar">
-        <div class="day-progress-fill" style="width:${pct}%"></div>
-      </div>
-    </div>
-  `;
+    <div class="prog-wrap">
+      <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
 
-  Object.entries(areas).forEach(([area, areaTasks]) => {
-    const color = AREA_COLORS[area] || '#4A4A4A';
-    html += `<div class="section-hdr" style="background:${color}">${area}</div>`;
-    areaTasks.forEach((t, i) => {
-      const globalIdx = tasks.indexOf(t);
-      const isClosure = area === 'CLOSURE';
-      html += `
-        <div class="task-row ${t.done?'done':''} ${isClosure?'closure-row':''}"
-             onclick="toggleTask('${TODAY_NAME}',${globalIdx})">
-          <div class="task-check ${t.done?'checked':''}">
-            ${t.done ? '✓' : ''}
-          </div>
-          <div class="task-info">
-            <div class="task-text">${t.task}</div>
-            ${t.freq ? `<div class="task-freq">${t.freq}</div>` : ''}
-          </div>
-        </div>
-      `;
-    });
-  });
-
-  // Special notes
-  html += `
-    <div class="notes-section" style="margin-top:12px">
-      <div class="notes-hdr">📝 Special Notes & Carry-over Tasks</div>
-  `;
-
-  if (notes.length === 0) {
-    html += `<div class="note-row"><div class="note-content">
-      <div class="note-text" style="color:#aaa;font-style:italic">No notes yet — add one below</div>
-    </div></div>`;
-  } else {
-    notes.forEach((note, i) => {
-      html += `
-        <div class="note-row ${note.done?'done':''}" onclick="toggleNote('${TODAY_NAME}',${i})">
-          <div class="note-check ${note.done?'checked':''}">${note.done?'✓':''}</div>
-          <div class="note-content">
-            <div class="note-text">${note.text}</div>
-            <div class="note-meta">${note.area ? note.area+' · ' : ''}${note.date || ''}</div>
-          </div>
-        </div>
-      `;
-    });
-  }
-
-  html += `</div>`;
-  html += `<button class="add-note-btn" onclick="openNoteModal('${TODAY_NAME}')">
-    + Add carry-over task or note
-  </button>`;
-  html += `<div style="height:80px"></div>`;
+  html += renderTaskGroups(tasks, tabName);
+  html += renderNotesSection(notes, tabName);
+  html += '<div style="height:80px"></div>';
 
   el.innerHTML = html;
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('fab').onclick = () => openAddTask(tabName);
 }
 
-// ── WEEK RENDER ───────────────────────────────────────────────────
-function renderWeek(el) {
-  let html = '<div style="padding:12px">';
-  DAYS.forEach((day, i) => {
-    const isToday = i === TODAY_IDX;
-    const tasks   = state.tasks[day] || [];
-    const done    = tasks.filter(t => t.done).length;
+function renderTaskGroups(tasks, tabName) {
+  const areas = {};
+  tasks.forEach(t => { (areas[t.area] = areas[t.area]||[]).push(t); });
+  let html = '';
+  Object.entries(areas).forEach(([area, atasks]) => {
+    const bg = AREA_COLORS[area] || '#4A4A4A';
+    html += `<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
+    atasks.forEach(t => {
+      const gi = tasks.indexOf(t);
+      const isClosure = area==='CLOSURE';
+      html += `
+        <div class="trow ${t.done?'done':''} ${isClosure?'closure':''}"
+             onclick="toggleTask('${tabName}',${gi})">
+          <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
+          <div class="tinfo">
+            <div class="ttxt">${t.task}</div>
+            ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
+          </div>
+          <div class="tdel" onclick="event.stopPropagation();confirmDeleteTask('${tabName}',${gi})">✕</div>
+        </div>`;
+    });
     html += `
-      <div onclick="showDayDetail('${day}')" style="
-        background:#fff;border-radius:10px;border:1px solid ${isToday?'#1A3A5C':'#CCCCCC'};
-        padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;
-        ${isToday?'box-shadow:0 2px 8px rgba(26,58,92,0.15)':''}
-      ">
-        <div style="font-size:24px">${['☀','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🗓'][i]}</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:${isToday?700:400};color:${isToday?'#1A3A5C':'#111'}">
-            ${DAY_NAMES_DISPLAY[i]}${isToday?' — Today':''}
+      <div class="add-row" onclick="openAddTask('${tabName}','${area}')">
+        <div class="add-circle">+</div>
+        <span>Add task to ${area||'this section'}...</span>
+      </div>`;
+  });
+  return html;
+}
+
+function renderNotesSection(notes, tabName) {
+  let html = `
+    <div class="notes-wrap">
+      <div class="notes-hdr">
+        📝 Special Notes & Carry-over Tasks
+        <button onclick="openAddNote('${tabName}')">+ Add</button>
+      </div>`;
+  if (!notes.length) {
+    html += `<div class="nrow"><div class="ninfo">
+      <div class="ntxt" style="color:#bbb;font-style:italic">No notes yet — tap + Add above</div>
+    </div></div>`;
+  } else {
+    notes.forEach((n,i) => {
+      html += `
+        <div class="nrow ${n.done?'done':''}" onclick="toggleNote('${tabName}',${i})">
+          <div class="ncb ${n.done?'on':''}">${n.done?'✓':''}</div>
+          <div class="ninfo">
+            <div class="ntxt">${n.text}</div>
+            <div class="nmeta">${n.area?n.area+' · ':''}${n.date||''}</div>
           </div>
-          <div style="font-size:12px;color:#888;margin-top:2px">
-            ${tasks.length ? `${done}/${tasks.length} tasks` : 'Tap to view'}
-          </div>
+          <div class="ndel" onclick="event.stopPropagation();deleteNote('${tabName}',${i})">✕</div>
+        </div>`;
+    });
+  }
+  html += '</div>';
+  return html;
+}
+
+// ── WEEK ──────────────────────────────────────────────────────────
+function renderWeek(el) {
+  document.getElementById('barTitle').textContent = 'This Week';
+  let html = '<div class="week-list">';
+  DAYS.forEach((day,i) => {
+    const tasks = S.tasks[day] || [];
+    const done  = tasks.filter(t=>t.done).length;
+    const isToday = i===TODAY;
+    html += `
+      <div class="wcard ${isToday?'today':''}" onclick="showDayDetail(${i})">
+        <div class="wday-emoji">${DAY_EMOJIS[i]}</div>
+        <div class="winfo">
+          <div class="wday-name">${DAY_NAMES[i]}${isToday?' — Today':''}</div>
+          <div class="wday-count">${tasks.length?`${done}/${tasks.length} tasks`:'Tap to load'}</div>
         </div>
-        <div style="color:#ccc;font-size:18px">›</div>
-      </div>
-    `;
+        <div class="warr">›</div>
+      </div>`;
   });
   html += '</div>';
   el.innerHTML = html;
 }
 
-async function showDayDetail(dayName) {
-  if (!state.tasks[dayName]) await loadDayTasks(dayName);
-  const content = document.getElementById('content');
-  const tasks   = state.tasks[dayName] || [];
-  const notes   = state.notes[dayName] || [];
-  const dayIdx  = DAYS.indexOf(dayName);
-
-  let areas = {};
-  tasks.forEach(t => {
-    if (!areas[t.area]) areas[t.area] = [];
-    areas[t.area].push(t);
-  });
-
-  let html = `
-    <div style="background:${DAY_COLORS[dayIdx]||'#1A3A5C'};color:#fff;
-                padding:12px 16px;display:flex;align-items:center;gap:10px;
-                position:sticky;top:0;z-index:5">
-      <button onclick="showTab('week')"
-        style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;padding:0">‹</button>
-      <span style="font-size:16px;font-weight:600">${DAY_NAMES_DISPLAY[dayIdx]}</span>
-    </div>
-  `;
-
-  const DAY_COLORS = ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','#D4860A'];
-
-  Object.entries(areas).forEach(([area, areaTasks]) => {
-    const color = AREA_COLORS[area] || '#4A4A4A';
-    html += `<div class="section-hdr" style="background:${color}">${area}</div>`;
-    areaTasks.forEach(t => {
-      const idx = tasks.indexOf(t);
-      html += `
-        <div class="task-row ${t.done?'done':''}"
-             onclick="toggleTask('${dayName}',${idx});showDayDetail('${dayName}')">
-          <div class="task-check ${t.done?'checked':''}">${t.done?'✓':''}</div>
-          <div class="task-info">
-            <div class="task-text">${t.task}</div>
-            ${t.freq?`<div class="task-freq">${t.freq}</div>`:''}
-          </div>
-        </div>
-      `;
-    });
-  });
-
-  // Notes
-  html += `<div class="notes-section" style="margin-top:12px">
-    <div class="notes-hdr">📝 Special Notes & Carry-over Tasks</div>`;
-  if (!notes.length) {
-    html += `<div class="note-row"><div class="note-text" style="color:#aaa;font-style:italic">No notes yet</div></div>`;
-  } else {
-    notes.forEach((n,i) => html += `
-      <div class="note-row ${n.done?'done':''}"
-           onclick="toggleNote('${dayName}',${i});showDayDetail('${dayName}')">
-        <div class="note-check ${n.done?'checked':''}">${n.done?'✓':''}</div>
-        <div class="note-content">
-          <div class="note-text">${n.text}</div>
-          <div class="note-meta">${n.area?n.area+' · ':''}${n.date||''}</div>
-        </div>
-      </div>
-    `);
+async function showDayDetail(dayIdx) {
+  S.dayView = dayIdx;
+  S.inDayDetail = true;
+  const tabName = DAYS[dayIdx];
+  if (!S.tasks[tabName]) {
+    document.getElementById('content').innerHTML =
+      `<div class="spin-wrap"><div class="spinner"></div><div class="spin-label">Loading ${DAY_NAMES[dayIdx]}...</div></div>`;
+    await fetchDay(tabName);
   }
-  html += `</div>
-    <button class="add-note-btn" onclick="openNoteModal('${dayName}')">+ Add note</button>
-    <div style="height:80px"></div>`;
-
-  content.innerHTML = html;
+  renderDayDetail(document.getElementById('content'));
 }
 
-// ── SHOPPING RENDER ───────────────────────────────────────────────
-function renderShopping(el) {
-  const items  = state.shopping;
-  const stores = ['all','To Buy',...new Set(items.map(i=>i.store).filter(Boolean))];
+function renderDayDetail(el) {
+  const dayIdx  = S.dayView;
+  const tabName = DAYS[dayIdx];
+  const tasks   = S.tasks[tabName] || [];
+  const notes   = S.notes[tabName] || [];
+  const done    = tasks.filter(t=>t.done).length;
+  const pct     = tasks.length ? Math.round(done/tasks.length*100) : 0;
+
+  document.getElementById('barTitle').textContent = DAY_NAMES[dayIdx];
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('fab').onclick = () => openAddTask(tabName);
 
   let html = `
-    <div class="shop-toolbar">
-      <button class="filter-chip" onclick="setFilter('all')"
-        style="background:${state.activeFilter==='all'?'#1A3A5C':'#eee'};
-               color:${state.activeFilter==='all'?'#fff':'#333'}">All</button>
-      <button class="filter-chip" onclick="setFilter('To Buy')"
-        style="background:${state.activeFilter==='To Buy'?'#8B0000':'#eee'};
-               color:${state.activeFilter==='To Buy'?'#fff':'#333'}">🔴 To Buy</button>
-  `;
+    <div class="day-detail-bar" style="background:${DAY_COLORS[dayIdx]}">
+      <button class="back-btn" onclick="goBackToWeek()">‹</button>
+      <span style="font-size:15px;font-weight:600">${DAY_NAMES[dayIdx]}${dayIdx===TODAY?' — Today':''}</span>
+    </div>
+    <div class="prog-wrap" style="top:44px">
+      <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
+      <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
 
-  Object.keys(STORE_COLORS).forEach(store => {
-    if (!items.find(i => i.store === store)) return;
-    const active = state.activeFilter === store;
+  html += renderTaskGroupsDay(tasks, tabName);
+  html += renderNotesSection(notes, tabName);
+  html += '<div style="height:80px"></div>';
+  el.innerHTML = html;
+}
+
+function renderTaskGroupsDay(tasks, tabName) {
+  const areas = {};
+  tasks.forEach(t => { (areas[t.area] = areas[t.area]||[]).push(t); });
+  let html = '';
+  Object.entries(areas).forEach(([area, atasks]) => {
+    const bg = AREA_COLORS[area] || '#4A4A4A';
+    html += `<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
+    atasks.forEach(t => {
+      const gi = tasks.indexOf(t);
+      const isClosure = area==='CLOSURE';
+      html += `
+        <div class="trow ${t.done?'done':''} ${isClosure?'closure':''}"
+             onclick="toggleTaskDay('${tabName}',${gi})">
+          <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
+          <div class="tinfo">
+            <div class="ttxt">${t.task}</div>
+            ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
+          </div>
+          <div class="tdel" onclick="event.stopPropagation();confirmDeleteTask('${tabName}',${gi})">✕</div>
+        </div>`;
+    });
     html += `
-      <button class="filter-chip" onclick="setFilter('${store}')"
-        style="background:${active?STORE_COLORS[store]:'#eee'};
-               color:${active?'#fff':'#333'}">
-        ${store}
-      </button>
-    `;
+      <div class="add-row" onclick="openAddTask('${tabName}','${area}')">
+        <div class="add-circle">+</div>
+        <span>Add task to ${area||'this section'}...</span>
+      </div>`;
   });
-  html += `</div>`;
+  return html;
+}
 
-  const filtered = items.filter(item => {
-    if (state.activeFilter === 'all')     return true;
-    if (state.activeFilter === 'To Buy')  return item.checked;
-    return item.store === state.activeFilter;
+function goBackToWeek() {
+  S.inDayDetail = false;
+  renderWeek(document.getElementById('content'));
+  document.getElementById('barTitle').textContent = 'This Week';
+  document.getElementById('fab').style.display = 'none';
+}
+
+// ── SHOPPING ──────────────────────────────────────────────────────
+function renderShopping(el) {
+  document.getElementById('barTitle').textContent = 'Shopping Audit';
+  const items = S.shopping;
+  const stores = [...new Set(items.map(i=>i.store).filter(Boolean))];
+
+  S.shopSearch = S.shopSearch || '';
+  let html = `<div class="shop-bar">
+    <button class="chip" onclick="setShopFilter('all')"
+      style="background:${S.shopFilter==='all'?'#1A3A5C':'#eee'};color:${S.shopFilter==='all'?'#fff':'#333'}">All</button>
+    <button class="chip" onclick="setShopFilter('tobuy')"
+      style="background:${S.shopFilter==='tobuy'?'#8B0000':'#eee'};color:${S.shopFilter==='tobuy'?'#fff':'#333'}">🔴 To Buy</button>`;
+  stores.forEach(s => {
+    const active = S.shopFilter===s;
+    const col = STORE_COLORS[s]||'#444';
+    html += `<button class="chip" onclick="setShopFilter('${s}')"
+      style="background:${active?col:'#eee'};color:${active?'#fff':'#333'}">${s}</button>`;
+  });
+  html += '</div>';
+
+  // Search bar
+  html += `
+    <div class="search-wrap">
+      <div class="search-wrap-inner">
+        <span class="search-icon">🔍</span>
+        <input class="search-input" type="search" placeholder="Search items, stores, cabinets..."
+               value="${S.shopSearch}"
+               oninput="setShopSearch(this.value)"
+               id="shopSearch">
+        <span class="search-clear" id="searchClear"
+              onclick="setShopSearch('')" style="${S.shopSearch?'display:block':'display:none'}">✕</span>
+      </div>
+    </div>`;
+
+  const q = S.shopSearch.toLowerCase().trim();
+  const filtered = items.filter(i => {
+    const matchFilter = S.shopFilter==='all' ? true :
+                        S.shopFilter==='tobuy' ? i.checked :
+                        i.store===S.shopFilter;
+    const matchSearch = !q ||
+      i.item.toLowerCase().includes(q) ||
+      (i.store||'').toLowerCase().includes(q) ||
+      (i.cabinet||'').toLowerCase().includes(q) ||
+      (i.notes||'').toLowerCase().includes(q);
+    return matchFilter && matchSearch;
   });
 
   if (!filtered.length) {
-    html += `<div class="spinner-wrap">
-      <div style="font-size:32px">✅</div>
-      <div class="spinner-label">All items in stock!</div>
+    html += `<div class="empty-state">
+      <div class="ei">${S.shopSearch ? '🔍' : '✅'}</div>
+      <p>${S.shopSearch ? `No results for "${S.shopSearch}"` :
+          S.shopFilter==='tobuy' ? 'Nothing to buy!' : 'No items for this filter.'}</p>
+      ${S.shopSearch ? `<button onclick="setShopSearch('')"
+        style="margin-top:8px;padding:8px 18px;border-radius:20px;border:1px solid var(--mgray);
+               background:#fff;font-size:13px;cursor:pointer;color:var(--navy)">Clear search</button>` : ''}
     </div>`;
   } else {
-    filtered.forEach((item, i) => {
-      const realIdx = items.indexOf(item);
-      const dotColor = STORE_COLORS[item.store] || '#888';
+    filtered.forEach(item => {
+      const ri = items.indexOf(item);
+      const dot = STORE_COLORS[item.store]||'#888';
       html += `
-        <div class="shop-item ${item.checked?'to-buy':''}"
-             onclick="toggleShopItem(${realIdx})">
-          <div class="shop-cb ${item.checked?'checked':''}">
-            ${item.checked?'✓':''}
-          </div>
-          <div class="shop-info">
-            <div class="shop-name">${item.item}</div>
-            <div class="shop-meta">
-              <span><span class="store-dot" style="background:${dotColor}"></span>${item.store}</span>
-              <span class="shop-cabinet">${item.cabinet}</span>
+        <div class="srow ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
+          <div class="scb ${item.checked?'on':''}">${item.checked?'✓':''}</div>
+          <div class="sinfo">
+            <div class="sname">${item.item}</div>
+            <div class="smeta">
+              <span><span class="sdot" style="background:${dot}"></span>${item.store}</span>
+              <span>${item.cabinet}</span>
             </div>
           </div>
-        </div>
-      `;
+        </div>`;
     });
   }
-
-  html += `<div style="height:80px"></div>`;
+  html += '<div style="height:80px"></div>';
   el.innerHTML = html;
 
-  // Reset bar
-  const resetBar = document.createElement('div');
-  resetBar.className = 'reset-bar';
-  resetBar.innerHTML = `<button class="reset-btn" onclick="resetShopping()">✅ Reset all to In Stock</button>`;
-  el.appendChild(resetBar);
+  // Reset bar + add button
+  const rb = document.createElement('div');
+  rb.className = 'reset-bar';
+  rb.innerHTML = `<button class="reset-btn" onclick="resetShop()">✅ Reset all to In Stock</button>`;
+  el.appendChild(rb);
+
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('fab').onclick = openAddShopItem;
 }
 
-// ── PROCEDURES RENDER ─────────────────────────────────────────────
-function renderProcedures(el) {
-  const procs = state.procedures;
-  let html = `<div class="proc-list">`;
-  Object.entries(procs).forEach(([key, proc]) => {
-    const done = (proc.done || []).length;
+// ── PROCEDURES ────────────────────────────────────────────────────
+function loadProcs() {
+  S.procedures = {
+    o2: { title:"O₂ Med Beds", icon:"🫁",
+      warning:"⚠ Fill SLOWLY. No dirty/oily hands. If unsure — ask lead first.",
+      steps:[
+        {t:"Confirm both valves (bed AND tank) fully CLOSED.",n:"Safety — never skip"},
+        {t:"Connect hose to bed fitting.",n:""},
+        {t:"Tighten with wrenches — firm, no over-torque.",n:""},
+        {t:"Open both valves.",n:""},
+        {t:"Slowly equalize pressure; push O₂ SLOWLY with gold valve.",n:"Gold valve = fill valve"},
+        {t:"Correct PSI reached → shut off BOTH valves immediately.",n:"Confirm PSI with lead"},
+        {t:"Disconnect hoses.",n:""},
+        {t:"Release remaining pressure in tank line.",n:""},
+      ], done:[], open:false },
+    westwind: { title:"Westwind Groom", icon:"✈",  warning:"",
+      steps:[
+        {t:"Leather seats — Citra or leather cleaner",n:""},
+        {t:"Vacuum floor / carpet",n:""},
+        {t:"Cockpit: instruments, CBs, panel & overhead",n:""},
+        {t:"Windshields",n:"Aviation-safe cleaner"},
+        {t:"Tables",n:""},
+        {t:"Empty & clean coffee/tea kettle",n:""},
+        {t:"Walls with Citra",n:"Diluted"},
+        {t:"Rails ✦",n:"2nd groomer",g:true},
+        {t:"Under velcro seats ✦",n:"2nd groomer",g:true},
+        {t:"Deep clean cockpit (q-tips) ✦",n:"2nd groomer",g:true},
+        {t:"Engines, under wings & landing gear",n:""},
+        {t:"Cargo compartments ✦",n:"2nd groomer",g:true},
+        {t:"Belly ✦",n:"2nd groomer",g:true},
+        {t:"Entire fuselage ✦",n:"2nd groomer",g:true},
+        {t:"Put sun shades on",n:"Before leaving"},
+        {t:"Mop floor (IAW)",n:""},
+      ], done:[], open:false },
+    metro: { title:"Metro Groom", icon:"✈", warning:"",
+      steps:[
+        {t:"Leather seats — Citra or leather cleaner",n:""},
+        {t:"Empty pilots' pockets",n:""},
+        {t:"Cockpit: CBs & instrument panel",n:""},
+        {t:"Cockpit plastic — Citra",n:"Diluted"},
+        {t:"Windshields & nose area",n:"Aviation-safe cleaner"},
+        {t:"Organize commissary & folders",n:""},
+        {t:"Vacuum floors",n:""},
+        {t:"Check O₂ levels",n:"Log the reading"},
+        {t:"Med beds — full clean ✦",n:"2nd groomer",g:true},
+        {t:"Rails ✦",n:"2nd groomer",g:true},
+        {t:"Brush main door steps ✦",n:"2nd groomer",g:true},
+        {t:"Mop floor — Citra & Pine Sol",n:"Dilute per label"},
+        {t:"Clean landing gear",n:""},
+        {t:"Outside: nose compts, cargo door, main door",n:""},
+        {t:"Belly ✦",n:"2nd groomer",g:true},
+        {t:"Nose & rear cargo compartments ✦",n:"2nd groomer",g:true},
+        {t:"Fuselage & engine cowlings",n:""},
+      ], done:[], open:false },
+  };
+}
+
+function renderProcs(el) {
+  document.getElementById('barTitle').textContent = 'Procedures';
+  let html = '<div class="proc-list">';
+  Object.entries(S.procedures).forEach(([key,p]) => {
+    const done = p.done.length;
     html += `
-      <div class="proc-card">
-        <div class="proc-card-hdr" onclick="toggleProc('${key}')">
-          <div class="proc-icon">${proc.icon}</div>
-          <div>
-            <div class="proc-title">${proc.title}</div>
-            <div class="proc-sub">${done}/${proc.steps.length} steps done</div>
+      <div class="pcard ${p.open?'open':''}" id="pc-${key}">
+        <div class="pcard-hdr" onclick="toggleProc('${key}')">
+          <div class="picon">${p.icon}</div>
+          <div style="flex:1">
+            <div class="ptitle">${p.title}</div>
+            <div class="psub">${done}/${p.steps.length} steps · tap to ${p.open?'close':'open'}</div>
           </div>
-          <div class="proc-arrow" id="arr-${key}">›</div>
+          <div class="parr">›</div>
         </div>
-        <div class="proc-detail" id="proc-${key}">
-          ${proc.warning ? `<div class="proc-warning">${proc.warning}</div>` : ''}
-          ${proc.steps.map((s,i) => `
-            <div class="proc-step ${(proc.done||[]).includes(i)?'done-step':''}"
-                 onclick="toggleProcStep('${key}',${i})">
-              <div class="step-num">${(proc.done||[]).includes(i)?'✓':i+1}</div>
-              <div>
-                <div class="step-text">${s.text}</div>
-                ${s.note?`<div class="step-note">${s.note}</div>`:''}
+        <div class="pbody">
+          ${p.warning?`<div class="pwarn">${p.warning}</div>`:''}
+          ${p.steps.map((s,i)=>`
+            <div class="pstep ${p.done.includes(i)?'done':''} ${s.g?'green-step':''}"
+                 onclick="toggleStep('${key}',${i})">
+              <div class="snum">${p.done.includes(i)?'✓':i+1}</div>
+              <div class="sinfo">
+                <div class="stxt">${s.t}</div>
+                ${s.n?`<div class="snote">${s.n}</div>`:''}
               </div>
-            </div>
-          `).join('')}
+            </div>`).join('')}
+          <button onclick="resetProc('${key}')"
+            style="width:100%;margin-top:10px;padding:9px;border-radius:8px;
+                   background:#F0F2F5;border:1px solid var(--mgray);
+                   font-size:13px;color:var(--dkgray);cursor:pointer">
+            🔄 Reset steps
+          </button>
         </div>
-      </div>
-    `;
+      </div>`;
   });
-  html += `</div>`;
+  html += '</div>';
   el.innerHTML = html;
 }
 
-// ── CONTACTS RENDER ───────────────────────────────────────────────
+// ── CONTACTS ──────────────────────────────────────────────────────
 function renderContacts(el) {
-  if (!state.contacts.length) {
-    el.innerHTML = `<div class="spinner-wrap">
-      <div class="spinner-label">No contacts loaded</div></div>`;
-    return;
-  }
-  let html = `<div class="contact-list">`;
-  state.contacts.forEach(c => {
-    html += `
-      <div class="contact-card">
-        <div class="contact-row">
-          <div class="contact-name">${c.name}</div>
-          ${c.address?`<div class="contact-addr">📍 ${c.address}</div>`:''}
-          ${c.notes?`<div class="contact-note">${c.notes}</div>`:''}
-        </div>
-      </div>
-    `;
-  });
-  html += `</div>`;
-  el.innerHTML = html;
-}
-
-// ── BORED BOARD RENDER ────────────────────────────────────────────
-function renderBored(el) {
-  let html = `<div class="bored-list">`;
-  if (!state.bored.length) {
-    html += `<div class="spinner-wrap"><div class="spinner-label">Loading bored board...</div></div>`;
+  document.getElementById('barTitle').textContent = 'Contacts & Stores';
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('fab').onclick = openAddContact;
+  let html = '<div class="con-list">';
+  if (!S.contacts.length) {
+    html += `<div class="empty-state"><div class="ei">📞</div><p>No contacts loaded. Tap sync to reload.</p></div>`;
   } else {
-    state.bored.forEach((item, i) => {
-      html += `
-        <div class="bored-item ${item.done?'done':''}" onclick="toggleBored(${i})">
-          <div class="bored-cb ${item.done?'checked':''}">${item.done?'✓':''}</div>
-          <div class="bored-text">${item.task}</div>
-        </div>
-      `;
+    S.contacts.forEach(c => {
+      html += `<div class="ccard"><div class="crow">
+        <div class="cname">${c.name}</div>
+        ${c.address?`<div class="caddr">📍 ${c.address}</div>`:''}
+        ${c.notes?`<div class="cnote">${c.notes}</div>`:''}
+      </div></div>`;
     });
   }
-  html += `</div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ── BORED BOARD ───────────────────────────────────────────────────
+function renderBored(el) {
+  document.getElementById('barTitle').textContent = 'Bored Board';
+  document.getElementById('fab').style.display = 'flex';
+  document.getElementById('fab').onclick = openAddBored;
+  let html = '<div class="bored-list">';
+  if (!S.bored.length) {
+    html += `<div class="empty-state"><div class="ei">💡</div><p>No tasks yet. Tap + to add one.</p></div>`;
+  } else {
+    S.bored.forEach((b,i) => {
+      html += `
+        <div class="bitem ${b.done?'done':''}" onclick="toggleBored(${i})">
+          <div class="bcb ${b.done?'on':''}">${b.done?'✓':''}</div>
+          <div class="btxt">${b.task}</div>
+          <div class="bdel" onclick="event.stopPropagation();deleteBored(${i})">✕</div>
+        </div>`;
+    });
+  }
+  html += '</div>';
   el.innerHTML = html;
 }
 
 // ── TOGGLE ACTIONS ────────────────────────────────────────────────
-function toggleTask(dayName, idx) {
-  if (!state.tasks[dayName]) return;
-  state.tasks[dayName][idx].done = !state.tasks[dayName][idx].done;
-  if (state.currentTab === 'today' && dayName === TODAY_NAME) {
-    renderToday(document.getElementById('content'));
-  }
-  showToast(state.tasks[dayName][idx].done ? '✓ Task done' : 'Task unchecked');
+function toggleTask(tabName, idx) {
+  S.tasks[tabName][idx].done = !S.tasks[tabName][idx].done;
+  const t = S.tasks[tabName][idx];
+  api({ action:'toggleTask', tabName, task:t.task });
+  renderToday(document.getElementById('content'));
+  toast(t.done ? '✓ Done' : 'Unchecked');
 }
 
-function toggleNote(dayName, idx) {
-  if (!state.notes[dayName]) return;
-  state.notes[dayName][idx].done = !state.notes[dayName][idx].done;
-  saveLocalNotes();
-  showToast(state.notes[dayName][idx].done ? '✓ Note done' : 'Note unchecked');
+function toggleTaskDay(tabName, idx) {
+  S.tasks[tabName][idx].done = !S.tasks[tabName][idx].done;
+  const t = S.tasks[tabName][idx];
+  api({ action:'toggleTask', tabName, task:t.task });
+  renderDayDetail(document.getElementById('content'));
+  toast(t.done ? '✓ Done' : 'Unchecked');
 }
 
-function toggleShopItem(idx) {
-  state.shopping[idx].checked = !state.shopping[idx].checked;
-  state.shopping[idx].status  = state.shopping[idx].checked ? 'To Buy' : 'In Stock';
+function toggleNote(tabName, idx) {
+  S.notes[tabName][idx].done = !S.notes[tabName][idx].done;
+  saveNotes();
+  render();
+}
+
+function deleteNote(tabName, idx) {
+  if (!confirm('Delete this note?')) return;
+  S.notes[tabName].splice(idx,1);
+  saveNotes();
+  render();
+}
+
+function toggleShop(idx) {
+  S.shopping[idx].checked = !S.shopping[idx].checked;
+  S.shopping[idx].status  = S.shopping[idx].checked ? 'To Buy' : 'In Stock';
+  api({ action:'toggleShop', item:S.shopping[idx].item });
   renderShopping(document.getElementById('content'));
-  showToast(state.shopping[idx].checked ? '🔴 Marked To Buy' : '✅ Back to In Stock');
+  toast(S.shopping[idx].checked ? '🔴 To Buy' : '✅ In Stock');
+}
+
+function resetShop() {
+  const n = S.shopping.filter(i=>i.checked).length;
+  if (!n) { toast('Already all In Stock ✅'); return; }
+  if (!confirm(`Reset ${n} items to In Stock?`)) return;
+  S.shopping.forEach(i=>{ i.checked=false; i.status='In Stock'; });
+  api({ action:'resetShop' });
+  renderShopping(document.getElementById('content'));
+  toast(`✅ ${n} items reset`);
+}
+
+function setShopFilter(f) { S.shopFilter=f; renderShopping(document.getElementById('content')); }
+function setShopSearch(q) {
+  S.shopSearch = q;
+  renderShopping(document.getElementById('content'));
+  // Keep focus on search input after re-render
+  const inp = document.getElementById('shopSearch');
+  if (inp) { inp.focus(); inp.value = q; inp.setSelectionRange(q.length,q.length); }
 }
 
 function toggleBored(idx) {
-  state.bored[idx].done = !state.bored[idx].done;
+  S.bored[idx].done = !S.bored[idx].done;
+  api({ action:'toggleBored', task:S.bored[idx].task });
   renderBored(document.getElementById('content'));
-  showToast(state.bored[idx].done ? '✓ Done!' : 'Unchecked');
+  toast(S.bored[idx].done ? '✓ Done!' : 'Unchecked');
+}
+
+function deleteBored(idx) {
+  if (!confirm('Remove from Bored Board?')) return;
+  S.bored.splice(idx,1);
+  renderBored(document.getElementById('content'));
 }
 
 function toggleProc(key) {
-  const detail = document.getElementById(`proc-${key}`);
-  const arrow  = document.getElementById(`arr-${key}`);
-  const isOpen = detail.classList.contains('open');
-  detail.classList.toggle('open', !isOpen);
-  arrow.textContent = isOpen ? '›' : '˅';
+  S.procedures[key].open = !S.procedures[key].open;
+  renderProcs(document.getElementById('content'));
 }
 
-function toggleProcStep(key, idx) {
-  const proc = state.procedures[key];
-  if (!proc.done) proc.done = [];
-  const i = proc.done.indexOf(idx);
-  if (i > -1) proc.done.splice(i, 1);
-  else proc.done.push(idx);
-  renderProcedures(document.getElementById('content'));
-  showToast(proc.done.includes(idx) ? '✓ Step done' : 'Step unchecked');
+function toggleStep(key, idx) {
+  const done = S.procedures[key].done;
+  const i = done.indexOf(idx);
+  i>-1 ? done.splice(i,1) : done.push(idx);
+  renderProcs(document.getElementById('content'));
+  toast(done.includes(idx) ? '✓ Step done' : 'Step unchecked');
 }
 
-function setFilter(f) {
-  state.activeFilter = f;
-  renderShopping(document.getElementById('content'));
+function resetProc(key) {
+  S.procedures[key].done = [];
+  renderProcs(document.getElementById('content'));
+  toast('Steps reset');
 }
 
-function resetShopping() {
-  const checked = state.shopping.filter(i => i.checked).length;
-  if (!checked) { showToast('All already In Stock ✅'); return; }
-  if (confirm(`Reset ${checked} items to In Stock?`)) {
-    state.shopping.forEach(i => { i.checked = false; i.status = 'In Stock'; });
-    renderShopping(document.getElementById('content'));
-    showToast(`✅ ${checked} items reset`);
-  }
+// ── MODALS ────────────────────────────────────────────────────────
+function openModal(title, fields, submitFn) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalFields').innerHTML = fields;
+  S.modalCtx = submitFn;
+  document.getElementById('modalOverlay').classList.add('open');
+  setTimeout(() => document.querySelector('#modalFields input,#modalFields textarea')?.focus(), 100);
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  S.modalCtx = null;
+}
+function modalSubmit() { S.modalCtx?.(); }
+
+function openAddTask(tabName, area='') {
+  openModal('Add Task',
+    `<input id="mTask" placeholder="Task description..." value="">
+     <input id="mFreq" placeholder="Frequency (e.g. Daily, Weekly...)">
+     <select id="mArea">
+       ${Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===area?'selected':''}>${a}</option>`).join('')}
+     </select>`,
+    async () => {
+      const task = document.getElementById('mTask').value.trim();
+      const freq = document.getElementById('mFreq').value.trim();
+      const areaVal = document.getElementById('mArea').value;
+      if (!task) return;
+      if (!S.tasks[tabName]) S.tasks[tabName] = [];
+      S.tasks[tabName].push({ task, freq, area:areaVal, done:false });
+      const r = await api({ action:'addTask', tabName, task, freq, area:areaVal });
+      closeModal();
+      render();
+      toast('Task added ✓');
+    }
+  );
 }
 
-// ── NOTE MODAL ────────────────────────────────────────────────────
-function openNoteModal(dayName) {
-  state.currentNoteTab = dayName;
-  document.getElementById('noteModal').classList.add('open');
-  document.getElementById('noteText').focus();
-}
-function closeNoteModal() {
-  document.getElementById('noteModal').classList.remove('open');
-  document.getElementById('noteText').value = '';
-  document.getElementById('noteArea').value = '';
-}
-function saveNote() {
-  const text = document.getElementById('noteText').value.trim();
-  if (!text) return;
-  const area = document.getElementById('noteArea').value.trim();
-  const day  = state.currentNoteTab;
-  if (!state.notes[day]) state.notes[day] = [];
-  state.notes[day].push({
-    text, area,
-    date: new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'}),
-    done: false,
-  });
-  saveLocalNotes();
-  closeNoteModal();
-  showToast('Note added ✓');
-  if (state.currentTab === 'today') renderToday(document.getElementById('content'));
+function confirmDeleteTask(tabName, idx) {
+  if (!confirm('Delete this task?')) return;
+  const task = S.tasks[tabName][idx].task;
+  S.tasks[tabName].splice(idx,1);
+  api({ action:'deleteTask', tabName, task });
+  render();
+  toast('Task deleted');
 }
 
-// ── END OF DAY SUMMARY ────────────────────────────────────────────
+function openAddNote(tabName) {
+  openModal('Add Note / Carry-over Task',
+    `<input id="mNText" placeholder="Task or note...">
+     <input id="mNArea" placeholder="Area (e.g. MX Hangar, Aircraft...)">`,
+    () => {
+      const text = document.getElementById('mNText').value.trim();
+      const area = document.getElementById('mNArea').value.trim();
+      if (!text) return;
+      if (!S.notes[tabName]) S.notes[tabName] = [];
+      const date = new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+      S.notes[tabName].push({ text, area, date, done:false });
+      api({ action:'addNote', tabName, text, area });
+      saveNotes();
+      closeModal();
+      render();
+      toast('Note added ✓');
+    }
+  );
+}
+
+function openAddShopItem() {
+  openModal('Add Shopping Item',
+    `<input id="mSItem" placeholder="Item name...">
+     <input id="mSCab" placeholder="Cabinet / Location (e.g. MX Hangar)">
+     <select id="mSStore">
+       ${Object.keys(STORE_COLORS).map(s=>`<option value="${s}">${s}</option>`).join('')}
+       <option value="Crew House">Crew House</option>
+     </select>`,
+    async () => {
+      const item    = document.getElementById('mSItem').value.trim();
+      const cabinet = document.getElementById('mSCab').value.trim();
+      const store   = document.getElementById('mSStore').value;
+      if (!item) return;
+      S.shopping.push({ item, cabinet, store, status:'To Buy', checked:true, notes:'' });
+      await api({ action:'addShopItem', item, cabinet, store, toBuy:true });
+      closeModal();
+      renderShopping(document.getElementById('content'));
+      toast('Item added ✓');
+    }
+  );
+}
+
+function openAddBored() {
+  openModal('Add to Bored Board',
+    `<textarea id="mBTask" placeholder="Task or idea..."></textarea>`,
+    async () => {
+      const task = document.getElementById('mBTask').value.trim();
+      if (!task) return;
+      S.bored.unshift({ id:Date.now(), task, done:false });
+      await api({ action:'addBored', task });
+      closeModal();
+      renderBored(document.getElementById('content'));
+      toast('Added to Bored Board ✓');
+    }
+  );
+}
+
+function openAddContact() {
+  openModal('Add Contact',
+    `<input id="mCName" placeholder="Name / Store">
+     <input id="mCAddr" placeholder="Address">
+     <input id="mCNote" placeholder="Notes">`,
+    async () => {
+      const name    = document.getElementById('mCName').value.trim();
+      const address = document.getElementById('mCAddr').value.trim();
+      const notes   = document.getElementById('mCNote').value.trim();
+      if (!name) return;
+      S.contacts.push({ name, address, notes });
+      await api({ action:'addContact', name, address, notes });
+      closeModal();
+      renderContacts(document.getElementById('content'));
+      toast('Contact added ✓');
+    }
+  );
+}
+
+function fabAction() {
+  // Context-aware fab — delegates to render function
+}
+
+// ── END OF DAY ────────────────────────────────────────────────────
 function showEOD() {
-  const tasks   = state.tasks[TODAY_NAME] || [];
-  const done    = tasks.filter(t => t.done);
-  const missed  = tasks.filter(t => !t.done && !t.area.includes('CLOSURE'));
-  const closure = tasks.filter(t => t.area === 'CLOSURE');
-  const closureDone = closure.filter(t => t.done);
+  const tabName = DAYS[TODAY];
+  const tasks   = S.tasks[tabName] || [];
+  const done    = tasks.filter(t=>t.done);
+  const missed  = tasks.filter(t=>!t.done && t.area!=='CLOSURE');
+  const closure = tasks.filter(t=>t.area==='CLOSURE');
+  const clDone  = closure.filter(t=>t.done);
+  const pct     = tasks.length ? Math.round(done.length/tasks.length*100) : 0;
   const now     = new Date();
   const dateStr = now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
   const timeStr = now.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-  const pct     = tasks.length ? Math.round(done.length/tasks.length*100) : 0;
 
   let msg = `✈ *GROOMING TEAM — END OF DAY*\n`;
   msg += `📅 ${dateStr} · ${timeStr}\n`;
-  msg += `${'─'.repeat(30)}\n\n`;
-  msg += `📊 *${done.length}/${tasks.length} tasks completed (${pct}%)*\n\n`;
-
+  msg += `${'─'.repeat(28)}\n\n`;
+  msg += `📊 *${done.length}/${tasks.length} tasks (${pct}%)*\n\n`;
   if (missed.length) {
     msg += `⚠️ *Incomplete:*\n${missed.map(t=>`  • ${t.task}`).join('\n')}\n\n`;
   } else {
-    msg += `✅ All daily tasks completed!\n\n`;
+    msg += `✅ All tasks done!\n\n`;
   }
-
-  if (closureDone.length === closure.length && closure.length > 0) {
+  if (clDone.length === closure.length && closure.length) {
     msg += `🔐 *Closure: ✅ Complete*\n\n`;
-  } else if (closure.length > 0) {
-    const cm = closure.filter(t=>!t.done);
-    msg += `🔐 *Closure — pending:*\n${cm.map(t=>`  ❌ ${t.task}`).join('\n')}\n\n`;
+  } else if (closure.length) {
+    msg += `🔐 *Closure — pending:*\n${closure.filter(t=>!t.done).map(t=>`  ❌ ${t.task}`).join('\n')}\n\n`;
   }
+  msg += `${'─'.repeat(28)}\n_Sent from ✈ Groomers YKF_`;
 
-  msg += `${'─'.repeat(30)}\n_Sent from ✈ Groomers YKF_`;
-
-  const popup = window.open('','_blank','width=360,height=480');
-  if (popup) {
-    popup.document.write(`
-      <html><body style="font-family:Arial;padding:16px;background:#f5f5f5">
-      <h3 style="color:#1A3A5C">✈ End of Day Summary</h3>
-      <p style="font-size:12px;color:#666;margin-bottom:10px">Copy and paste into WhatsApp</p>
-      <textarea readonly style="width:100%;height:280px;font-size:12px;padding:10px;
-        border-radius:6px;border:1px solid #ccc;line-height:1.5">${msg}</textarea>
-      <button onclick="document.querySelector('textarea').select();document.execCommand('copy');
-        this.textContent='✅ Copied!'"
-        style="width:100%;padding:12px;margin-top:10px;background:#1A3A5C;color:#fff;
-        border:none;border-radius:8px;font-size:14px;cursor:pointer">
-        📋 Copy to clipboard
-      </button>
-      </body></html>
-    `);
-  } else {
-    alert(msg);
-  }
+  openModal('📋 End of Day Summary',
+    `<textarea id="eodMsg" readonly style="height:220px;font-size:12px;line-height:1.5;
+      background:#F9F9F9">${msg}</textarea>`,
+    () => {
+      const ta = document.getElementById('eodMsg');
+      ta.select();
+      document.execCommand('copy');
+      toast('✅ Copied — paste into WhatsApp');
+      closeModal();
+    }
+  );
+  document.getElementById('modalSave').textContent = '📋 Copy & Close';
 }
 
-// ── SYNC ──────────────────────────────────────────────────────────
-async function syncData() {
-  showToast('Syncing...');
-  await loadFromSheet();
-  showTab(state.currentTab);
-  showToast('✅ Synced');
+// ── NOTES PERSISTENCE ─────────────────────────────────────────────
+function saveNotes() {
+  localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
+}
+function loadNotes() {
+  try { S.notes = JSON.parse(localStorage.getItem('gykf_notes')||'{}'); } catch(e) { S.notes={}; }
 }
 
-// ── HELPERS ───────────────────────────────────────────────────────
-function showSpinner() {
-  document.getElementById('content').innerHTML = `
-    <div class="spinner-wrap">
-      <div class="spinner"></div>
-      <div class="spinner-label">Loading sheet data...</div>
-    </div>`;
-}
-
-function showToast(msg) {
+// ── TOAST ─────────────────────────────────────────────────────────
+function toast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 2200);
 }
 
-function getFallbackTasks() {
+// ── FALLBACK ──────────────────────────────────────────────────────
+function fallbackTasks() {
   return [
     {task:'Clean aircraft (exterior & interior)',freq:'Daily',area:'AIRCRAFT',done:false},
     {task:'Check O₂ beds & refill if needed',freq:'Daily',area:'AIRCRAFT',done:false},
-    {task:'Clean groomer corner\'s floor',freq:'Daily',area:"CR GROOMERS' CORNER",done:false},
+    {task:"Clean groomer corner's floor",freq:'Daily',area:"CR GROOMERS' CORNER",done:false},
     {task:'Sweep hangar',freq:'Daily',area:'MX HANGAR',done:false},
     {task:'Bathrooms',freq:'Daily',area:'MX HANGAR',done:false},
-    {task:'Connect groomer\'s phone',freq:'Daily',area:'CLOSURE',done:false},
+    {task:"Connect groomer's phone",freq:'Daily',area:'CLOSURE',done:false},
     {task:'Put back Credit Card',freq:'Daily',area:'CLOSURE',done:false},
   ];
 }
 
-function loadFallbackData() {
-  state.tasks[TODAY_NAME] = getFallbackTasks();
-  state.shopping = [];
-  state.contacts = [];
-  state.bored    = [];
-}
-
-// Service Worker registration for offline use
+// Service worker
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
-  });
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
 </body>
