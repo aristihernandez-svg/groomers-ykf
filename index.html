@@ -652,6 +652,8 @@ const S = {
   tab:'home', dayView:TODAY, inDay:false,
   theme: localStorage.getItem('gykf_theme') || 'premium',
   weather: null,
+  metar: null,
+  taf: null,
   tasks:{}, notes:{}, shopping:[], contacts:[], bored:[],
   procs:{}, shopFilter:'all', shopLocFilter:'all',
   shopSearch:'', shopView:'list', // 'list' or 'cart'
@@ -661,13 +663,14 @@ const S = {
 };
 
 const NAV_ITEMS = [
-  {id:'home',    icon:'🏠', label:'Home'},
-  {id:'today',   icon:'📅', label:'Today'},
-  {id:'week',    icon:'🗓', label:'Week'},
-  {id:'shopping',icon:'🛒', label:'Shopping'},
-  {id:'procedures',icon:'📋',label:'Procs'},
-  {id:'contacts',icon:'📞', label:'Contacts'},
-  {id:'bored',   icon:'💡', label:'Bored'},
+  {id:'home',        icon:'🏠', label:'Home'},
+  {id:'today',       icon:'📅', label:'Today'},
+  {id:'week',        icon:'🗓', label:'Week'},
+  {id:'shopping',    icon:'🛒', label:'Shopping'},
+  {id:'procedures',  icon:'📋', label:'Procs'},
+  {id:'contacts',    icon:'📞', label:'Contacts'},
+  {id:'bored',       icon:'💡', label:'Bored'},
+  {id:'flightaware', icon:'✈',  label:'Flights'},
 ];
 
 // ── BOOT ───────────────────────────────────────────────────────────
@@ -714,10 +717,7 @@ function buildNav() {
     </div>`).join('');
 }
 function goTab(id) {
-  if(id==='flightaware') {
-    openFlightAware();
-    return;
-  }
+
   S.tab=id; S.inDay=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById(`nb-${id}`)?.classList.add('on');
@@ -728,32 +728,8 @@ function goTab(id) {
 }
 
 function openFlightAware() {
-  // Try deep link first (opens app if installed)
-  // iOS and Android both support this URL scheme
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-
-  if(isIOS) {
-    // iOS deep link — opens FlightAware app or App Store
-    const appLink = 'flightaware://';
-    const fallback = 'https://flightaware.com';
-    const start = Date.now();
-    // Try app link
-    window.location.href = appLink;
-    // If app not installed, fall back to website after 1.5s
-    setTimeout(() => {
-      if(Date.now() - start < 2000) {
-        window.open(fallback, '_blank');
-      }
-    }, 1500);
-  } else if(isAndroid) {
-    // Android intent — opens app if installed, website if not
-    const intentUrl = 'intent://flightaware.com/#Intent;scheme=https;package=com.flightaware.android.liveflighttracker;S.browser_fallback_url=https%3A%2F%2Fflightaware.com;end';
-    window.location.href = intentUrl;
-  } else {
-    // Desktop — open website
-    window.open('https://flightaware.com', '_blank');
-  }
+  // Now handled as internal tab via goTab
+  goTab('flightaware');
 }
 function setTheme(t) {
   S.theme=t;
@@ -783,7 +759,8 @@ function render() {
     case 'shopping':   renderShopping(el); break;
     case 'procedures': renderProcs(el); break;
     case 'contacts':   renderContacts(el); break;
-    case 'bored':      renderBored(el); break;
+    case 'bored':        renderBored(el); break;
+    case 'flightaware':  renderFlightAware(el); break;
   }
 }
 
@@ -1062,25 +1039,51 @@ function openWeatherApp() {
   }
 }
 
-// Weather fetch for YKF (Kitchener Airport)
-// Lat: 43.4606, Lon: -80.3785
+// METAR + TAF fetch for CYKF (Kitchener Airport)
 async function fetchWeather() {
   try {
-    const url = 'https://api.open-meteo.com/v1/forecast?latitude=43.4606&longitude=-80.3785&current=temperature_2m,weather_code,wind_speed_10m,apparent_temperature&temperature_unit=celsius&wind_speed_unit=kmh&timezone=America%2FToronto';
-    const res = await fetch(url);
-    const data = await res.json();
-    const c = data.current;
-    S.weather = {
-      temp: Math.round(c.temperature_2m),
-      feels: Math.round(c.apparent_temperature),
-      wind: Math.round(c.wind_speed_10m),
-      code: c.weather_code,
-    };
-    console.log('Weather:', S.weather);
+    // Fetch METAR
+    const metarUrl = 'https://aviationweather.gov/api/data/metar?ids=CYKF&format=json&hours=2';
+    const metarRes = await fetch(metarUrl);
+    const metarData = await metarRes.json();
+    if (metarData && metarData.length > 0) {
+      S.metar = metarData[0];
+    }
   } catch(e) {
-    console.log('Weather failed:', e);
-    S.weather = null;
+    console.log('METAR fetch failed:', e);
+    S.metar = null;
   }
+  try {
+    // Fetch TAF
+    const tafUrl = 'https://aviationweather.gov/api/data/taf?ids=CYKF&format=json';
+    const tafRes = await fetch(tafUrl);
+    const tafData = await tafRes.json();
+    if (tafData && tafData.length > 0) {
+      S.taf = tafData[0];
+    }
+  } catch(e) {
+    console.log('TAF fetch failed:', e);
+    S.taf = null;
+  }
+  S.weather = S.metar || S.taf ? { loaded: true } : null;
+  console.log('METAR:', S.metar);
+  console.log('TAF:', S.taf);
+}
+
+function flightCategory(metar) {
+  if (!metar) return { cat: 'N/A', color: '#888' };
+  const vis = metar.visib || 10;
+  const cig = metar.clouds ? Math.min(...metar.clouds.filter(c=>c.cover==='BKN'||c.cover==='OVC').map(c=>c.base||9999)) : 9999;
+  if (vis >= 5 && cig >= 3000) return { cat: 'VFR', color: '#22CC66' };
+  if (vis >= 3 && cig >= 1000) return { cat: 'MVFR', color: '#4499FF' };
+  if (vis >= 1 && cig >= 500)  return { cat: 'IFR', color: '#FF4444' };
+  return { cat: 'LIFR', color: '#FF00FF' };
+}
+
+function windDir(deg) {
+  if (deg === undefined || deg === null) return 'VRB';
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  return dirs[Math.round(deg/45) % 8];
 }
 
 function weatherIcon(code) {
@@ -1148,28 +1151,39 @@ async function renderHome(el) {
     {id:'flightaware',svg:ICONS.flightaware,label:'FlightAware',info:'Live flight tracking'},
   ];
 
-  const weatherHtml = S.weather ? `
-    <div onclick="openWeatherApp()" style="
-      margin:0 14px 14px;
-      background:var(--glass2);
-      backdrop-filter:blur(10px);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      padding:12px 16px;
-      display:flex;align-items:center;gap:14px;
-      cursor:pointer;
-    ">
-      <div style="font-size:36px">${weatherIcon(S.weather.code)}</div>
-      <div style="flex:1">
-        <div style="font-size:11px;color:var(--t2);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">YKF Airport · Kitchener</div>
-        <div style="display:flex;align-items:baseline;gap:8px">
-          <span style="font-size:28px;font-weight:300;color:var(--t1)">${S.weather.temp}°C</span>
-          <span style="font-size:12px;color:var(--t2)">${weatherDesc(S.weather.code)}</span>
-        </div>
-        <div style="font-size:11px;color:var(--t3);margin-top:3px">Feels like ${S.weather.feels}°C · Wind ${S.weather.wind} km/h</div>
+    // Build METAR/TAF widget
+  let weatherHtml = '';
+  if (S.metar) {
+    const m = S.metar;
+    const fc = flightCategory(m);
+    const windStr = m.wdir !== undefined ? `${m.wdir}° ${windDir(m.wdir)} @ ${m.wspd||0}${m.wgst?'G'+m.wgst:''} kt` : 'Calm';
+    const visStr  = m.visib !== undefined ? `${m.visib} SM` : 'N/A';
+    const altStr  = m.altim !== undefined ? `${(m.altim*0.02953).toFixed(2)}"` : 'N/A';
+    const tempStr = m.temp  !== undefined ? `${Math.round(m.temp)}°C` : 'N/A';
+    const dewStr  = m.dewp  !== undefined ? `${Math.round(m.dewp)}°C` : 'N/A';
+    const rawMetar  = m.rawOb || m.raw || '';
+    const cloudsStr = m.clouds ? m.clouds.map(c=>`${c.cover} ${c.base||'CLR'}`).join(' ') : 'SKC';
+    const obsTime   = m.obsTime ? new Date(m.obsTime*1000).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',timeZone:'America/Toronto'}) : '';
+    weatherHtml = `
+    <div onclick="openWeatherApp()" style="margin:0 14px 14px;background:var(--glass2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;">
+      <div style="padding:9px 14px;background:var(--glass);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div><span style="font-size:11px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase">CYKF · Kitchener</span>${obsTime?` <span style="font-size:10px;color:var(--t3)">Obs: ${obsTime}</span>`:''}</div>
+        <div style="background:${fc.color}22;border:1px solid ${fc.color}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${fc.color};letter-spacing:1px">${fc.cat}</div>
       </div>
-      <div style="color:var(--t3);font-size:18px">›</div>
-    </div>` : '';
+      <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Wind</div><div style="font-size:12px;color:var(--t1);font-weight:600">${windStr}</div></div>
+        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Visibility</div><div style="font-size:12px;color:var(--t1);font-weight:600">${visStr}</div></div>
+        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Altimeter</div><div style="font-size:12px;color:var(--t1);font-weight:600">${altStr}</div></div>
+        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Temp / Dew</div><div style="font-size:12px;color:var(--t1);font-weight:600">${tempStr} / ${dewStr}</div></div>
+        <div style="grid-column:span 2"><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Clouds</div><div style="font-size:12px;color:var(--t1);font-weight:600">${cloudsStr}</div></div>
+      </div>
+      ${rawMetar?`<div style="padding:7px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--t3);font-family:monospace;word-break:break-all">${rawMetar}</div>`:''}
+    </div>
+    ${S.taf&&S.taf.rawTAF?`<div onclick="openWeatherApp()" style="margin:-4px 14px 14px;background:var(--glass);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);padding:8px 14px;cursor:pointer"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">TAF</div><div style="font-size:10px;color:var(--t2);font-family:monospace;line-height:1.5;word-break:break-all">${S.taf.rawTAF}</div></div>`:''}
+  `;
+  } else if (S.weather === false) {
+    weatherHtml = `<div style="margin:0 14px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center"><div style="font-size:11px;color:var(--t3)">Loading METAR for CYKF...</div></div>`;
+  }
 
   let html = `
     <style>
@@ -1213,7 +1227,7 @@ async function renderHome(el) {
 </svg></div>
       <div style="font-size:24px;font-weight:800;color:var(--t1);letter-spacing:1px">Skycare</div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
-      <div style="font-size:38px;font-weight:300;color:var(--navy4,#1A2848);margin-top:6px;letter-spacing:3px;line-height:1">${timeStr}</div>
+      
     </div>
 
     <!-- Today progress -->
@@ -1493,6 +1507,23 @@ function renderShopping(el) {
 
   if(S.shopView==='cart') { renderCart(el,items); return; }
 
+  // Trip planner section
+  const tripHtml = `
+    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>📍 Trip Planner / Errands</span>
+        ${S.tripNotes ? `<span onclick="clearTrip()" style="color:var(--t3);font-size:10px;cursor:pointer;font-weight:400">Clear</span>` : ''}
+      </div>
+      <textarea id="tripNotes" placeholder="Write your stops, errands, reminders for this run...&#10;e.g. Zehrs → Costco → Home Depot → Return washer fluid at Canadian Tire"
+        oninput="saveTripNotes(this.value)"
+        style="
+          width:100%;min-height:80px;padding:10px 12px;
+          border-radius:var(--radius-sm);border:1px solid var(--border2);
+          background:var(--glass2);color:var(--t1);font-size:13px;
+          font-family:inherit;resize:none;line-height:1.5;outline:none;
+        ">${S.tripNotes}</textarea>
+    </div>`;
+
   let html=`<div class="shop-filters">
     <div class="shop-bar">
       <button class="chip" onclick="setSF('all')"
@@ -1564,6 +1595,23 @@ function renderCart(el, items) {
   const toBuy=items.filter(i=>i.checked);
   const byStore={};
   toBuy.forEach(i=>{ (byStore[i.store]=byStore[i.store]||[]).push(i); });
+
+  // Trip planner section
+  const tripHtml = `
+    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border)">
+      <div style="font-size:10px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+        <span>📍 Trip Planner / Errands</span>
+        ${S.tripNotes ? `<span onclick="clearTrip()" style="color:var(--t3);font-size:10px;cursor:pointer;font-weight:400">Clear</span>` : ''}
+      </div>
+      <textarea id="tripNotes" placeholder="Write your stops, errands, reminders for this run...&#10;e.g. Zehrs → Costco → Home Depot → Return washer fluid at Canadian Tire"
+        oninput="saveTripNotes(this.value)"
+        style="
+          width:100%;min-height:80px;padding:10px 12px;
+          border-radius:var(--radius-sm);border:1px solid var(--border2);
+          background:var(--glass2);color:var(--t1);font-size:13px;
+          font-family:inherit;resize:none;line-height:1.5;outline:none;
+        ">${S.tripNotes}</textarea>
+    </div>`;
 
   let html=`<div class="shop-filters">
     <div class="shop-bar">
@@ -2062,6 +2110,13 @@ function toast(msg) {
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
 function saveNotes() { localStorage.setItem('gykf_notes',JSON.stringify(S.notes)); }
+function saveTripNotes(val) { S.tripNotes=val; localStorage.setItem('gykf_trip',val); }
+function clearTrip() {
+  if(!confirm('Clear trip notes?')) return;
+  S.tripNotes=''; localStorage.removeItem('gykf_trip');
+  renderShopping(document.getElementById('content'));
+  toast('Trip notes cleared');
+}
 function loadNotes() { try{S.notes=JSON.parse(localStorage.getItem('gykf_notes')||'{}');}catch(e){S.notes={};} }
 function saveDmg() { localStorage.setItem('gykf_dmg',JSON.stringify(S.dmgReports)); }
 function loadDmg() { try{S.dmgReports=JSON.parse(localStorage.getItem('gykf_dmg')||'{}');}catch(e){S.dmgReports={};} }
