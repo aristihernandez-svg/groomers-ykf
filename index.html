@@ -971,21 +971,30 @@ async function fetchContacts() {
 
   // Hardcoded fallback
   S.contacts = [
-    {name:'Zehrs',           address:'Kitchener, ON',                                   notes:'Regular grocery & supply run'},
-    {name:'Costco',          address:'Kitchener, ON',                                   notes:'Bulk items — bring membership card'},
-    {name:'A1 Cash & Carry', address:'Kitchener, ON',                                   notes:'Fiji water · water crates · coffee cups'},
-    {name:'Home Depot',      address:'Kitchener, ON',                                   notes:'Aisle 3: mop heads · Aisle 9: acid brushes · Aisle 4: zip ties'},
-    {name:'Canadian Tire',   address:'Kitchener, ON',                                   notes:'Valve grind · distilled water · invisible glass · washer fluid'},
-    {name:'Monarch Oil',     address:'2216 Shirley Dr, Kitchener, ON N2B 3Y1',          notes:'ISO & oil products — call to order'},
-    {name:'Aviation Supplier',address:'',                                               notes:'Prist x5 — call ahead'},
-    {name:'JSA Grimsby',     address:'262 Mud St W, Grassie, ON L0R 1M0',               notes:'Seat and uniform pick ups — hangar inside the airfield'},
-    {name:'Aircraft Spruce', address:'27 York Rd, Brantford, ON N3T 0L2',               notes:'Pick up aircraft parts — Luis'},
-    {name:'Laundry',         address:'1077 Weber St E Unit #1, Kitchener, ON N2A 3Y5',  notes:'Drop-off laundry'},
-    {name:'Crew House',      address:'220 Thomas Slee Drive, Kitchener',               notes:'Code: 3737', code:'3737'},
-    {name:'Gate',            address:'',                                                notes:'Code: 3548', code:'3548'},
-    {name:'Wes Verboon',     address:'',                                                notes:'778-838-1498 · Mon–Fri 0700–1900', role:'MX Supervisor', phone:'7788381498'},
-    {name:'Josh',            address:'',                                                notes:'519-276-0204 · 14 on 14 off', role:'Crew Chief', phone:'5192762040'},
-    {name:'Keddy',           address:'',                                                notes:'519-301-3170 · 14 on 14 off', role:'Crew Chief', phone:'5193013170'},
+    // Stores & Suppliers
+    {name:'Zehrs',              address:'Kitchener, ON',                                    notes:'Regular grocery & supply run'},
+    {name:'Costco',             address:'Kitchener, ON',                                    notes:'Bulk items — bring membership card'},
+    {name:'A1 Cash & Carry',    address:'Kitchener, ON',                                    notes:'Fiji water · water crates · coffee cups'},
+    {name:'Home Depot',         address:'Kitchener, ON',                                    notes:'Aisle 3: mop heads · Aisle 9: acid brushes · Aisle 4: zip ties'},
+    {name:'Canadian Tire',      address:'Kitchener, ON',                                    notes:'Valve grind · distilled water · invisible glass · washer fluid'},
+    {name:'Monarch Oil',        address:'2216 Shirley Dr, Kitchener, ON N2B 3Y1',           notes:'ISO & oil products — call to order'},
+    {name:'Aviation Supplier',  address:'',                                                 notes:'Prist x5 — call ahead'},
+    {name:'JSA Grimsby',        address:'262 Mud St W, Grassie, ON L0R 1M0',                notes:'Seat and uniform pick ups — hangar inside the airfield'},
+    {name:'Aircraft Spruce',    address:'27 York Rd, Brantford, ON N3T 0L2',                notes:'Pick up aircraft parts — Luis'},
+    {name:'Crew House',         address:'220 Thomas Slee Drive, Kitchener',                notes:'Drop-off & pick up'},
+    {name:'Laundry — Centreville', address:'1077 Weber St E Unit #1, Kitchener, ON N2A 3Y5', notes:'Drop-off laundry'},
+    // Codes
+    {name:'Code MX Hangar',            address:'', notes:'Code: 0626',              code:'0626'},
+    {name:'Code CR Office',            address:'', notes:'Code: 0626',              code:'0626'},
+    {name:'Code Medic Trailer @ MX',   address:'', notes:'Code: 911#',              code:'911#'},
+    {name:'Code Medic Room @ CR',      address:'', notes:'Code: 9119',              code:'9119'},
+    {name:'Code Lock Medic Room @ CR', address:'', notes:'Code: 911 (top to bottom)',code:'911'},
+    {name:'Ramp Hangar Doors @ CR',    address:'', notes:'Code: 2451',              code:'2451'},
+    {name:'Gate',                      address:'', notes:'Code: 3548',              code:'3548'},
+    // Contacts
+    {name:'Wes Verboon',        address:'', notes:'778-838-1498 · Mon–Fri 0700–1900', role:'MX Supervisor', phone:'7788381498'},
+    {name:'Josh',               address:'', notes:'519-276-0204 · 14 on 14 off, do not call during off days', role:'Crew Chief', phone:'5192762040'},
+    {name:'Keddy',              address:'', notes:'519-301-3170 · 14 on 14 off, do not call during off days', role:'Crew Chief', phone:'5193013170'},
   ];
   console.log('Contacts from fallback:', S.contacts.length);
 }
@@ -1199,6 +1208,16 @@ async function renderHome(el) {
       </div>
     </div>
 
+    <!-- QR Code -->
+    <div style="padding:0 14px 16px">
+      <div style="font-size:11px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📱 Share App</div>
+      <div style="background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center">
+        <canvas id="qrCanvas" width="160" height="160" style="border-radius:8px;background:#fff;padding:6px"></canvas>
+        <div style="font-size:10px;color:var(--t3);margin-top:8px;font-family:monospace">aristihernandez-svg.github.io/groomers-ykf</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px">Scan to open · Add to Home Screen to install</div>
+      </div>
+    </div>
+
     <!-- Style switcher -->
     <div style="padding:0 14px 24px">
       <div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Style</div>
@@ -1211,6 +1230,8 @@ async function renderHome(el) {
   `;
 
   el.innerHTML = html;
+  // Draw QR code after DOM is ready
+  setTimeout(()=>drawQR('qrCanvas','https://aristihernandez-svg.github.io/groomers-ykf/'), 100);
 }
 
 // ── TODAY ──────────────────────────────────────────────────────────
@@ -1413,7 +1434,10 @@ function backWeek() {
 function renderShopping(el) {
   document.getElementById('barTitle').textContent='Skycare';
   showFab(openAddShopItem);
-  const scrollTop = el ? el.scrollTop : 0; // save scroll position
+  const scrollTop = el ? el.scrollTop : 0;
+  // Save horizontal scroll of filter bars too
+  const bar1Scroll = document.querySelector('.shop-bar')?.scrollLeft || 0;
+  const bar2Scroll = document.querySelector('.shop-bar2')?.scrollLeft || 0;
   const items=S.shopping;
   const stores=[...new Set(items.map(i=>i.store).filter(Boolean))];
   const locs=[...new Set(items.map(i=>i.cabinet).filter(Boolean))];
@@ -1511,8 +1535,14 @@ function renderShopping(el) {
     const i=parseInt(w.dataset.idx);
     if(!isNaN(i)) setupSwipeTwoWay(w, ()=>editShopItem(i), ()=>deleteShopItem(i));
   });
-  // Restore scroll position
-  el.scrollTop = scrollTop;
+  // Restore vertical + horizontal scroll positions
+  if(el) el.scrollTop = scrollTop;
+  requestAnimationFrame(() => {
+    const b1 = document.querySelector('.shop-bar');
+    const b2 = document.querySelector('.shop-bar2');
+    if(b1 && bar1Scroll) b1.scrollLeft = bar1Scroll;
+    if(b2 && bar2Scroll) b2.scrollLeft = bar2Scroll;
+  });
   // Keep search focus
   const si=document.getElementById('shopSrch');
   if(si&&q){si.focus();si.setSelectionRange(q.length,q.length);}
@@ -1688,20 +1718,11 @@ function renderProcs(el) {
       </div>
     </div>`;
   });
-  // Add QR code section at top of procedures
-  const qrSection = `
-    <div class="qr-wrap">
-      <div class="qr-title">📱 Install Skycare App</div>
-      <canvas id="qrCanvas" class="qr-canvas" width="180" height="180"></canvas>
-      <div class="qr-url">aristihernandez-svg.github.io/groomers-ykf</div>
-      <div style="font-size:11px;color:var(--t3);margin-top:6px">Scan to open · Add to Home Screen to install</div>
-    </div>`;
+  html+='</div>';
+  el.innerHTML=html;
+}
 
-  html = qrSection + html + '</div>';
-  el.innerHTML = html;
-
-  // Draw QR code using canvas
-  setTimeout(()=>drawQR('qrCanvas','https://aristihernandez-svg.github.io/groomers-ykf/'),50);
+// ── CONTACTS
 }
 
 // ── CONTACTS ─────────────────────────────────────────────────
@@ -1715,7 +1736,11 @@ function renderContacts(el) {
   const q = S.contactSearch.toLowerCase().trim();
 
   // Categorize contacts
-  const CODE_NAMES   = ['crew house','gate'];
+  // Fixed categories — don't rely on heuristics
+  const STORE_NAMES  = ['zehrs','costco','a1 cash','home depot','canadian tire',
+                        'monarch','aviation supplier','jsa','aircraft spruce',
+                        'crew house','laundry'];
+  const CODE_NAMES   = ['code mx','code cr','code lock','code medic','ramp hanger','gate'];
   const PERSON_NAMES = ['wes','josh','keddy'];
 
   let stores  = [];
@@ -1724,13 +1749,9 @@ function renderContacts(el) {
 
   S.contacts.forEach(c => {
     const n = c.name.toLowerCase();
-    if (PERSON_NAMES.some(p => n.includes(p)) ||
-        c.phone || (c.role) ||
-        /\d{3}[-.]?\d{3}[-.]?\d{4}/.test(c.notes||'')) {
+    if (PERSON_NAMES.some(p => n.includes(p)) || c.phone || c.role) {
       persons.push(c);
-    } else if (CODE_NAMES.some(k => n.includes(k)) ||
-               /code:/i.test(c.notes||'') ||
-               /^\d{4}$/.test((c.notes||'').trim())) {
+    } else if (CODE_NAMES.some(k => n.includes(k)) || /code/i.test(c.name)) {
       codes.push(c);
     } else {
       stores.push(c);
@@ -1753,18 +1774,19 @@ function renderContacts(el) {
       <div style="position:relative">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3)">🔍</span>
         <input
+          id="contactSearch"
           type="search"
           placeholder="Search contacts, addresses, notes..."
           value="${q}"
-          oninput="S.contactSearch=this.value;renderContacts(document.getElementById('content'))"
+          oninput="filterContacts(this.value)"
           style="width:100%;padding:10px 36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none">
-        ${q ? `<span onclick="S.contactSearch='';renderContacts(document.getElementById('content'))" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--t3);cursor:pointer">✕</span>` : ''}
+        ${q ? `<span onclick="filterContacts('');document.getElementById('contactSearch').value=''" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--t3);cursor:pointer">✕</span>` : ''}
       </div>
     </div>`;
 
   // ── SECTION: STORES & SUPPLIERS ─────────────────────────────
   if (stores.length) {
-    html += `<div class="sec" style="background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:2px solid var(--accent);color:var(--accent)">📍 Stores & Suppliers</div>`;
+    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:3px solid var(--accent);border-bottom:1px solid var(--border);margin-top:4px">📍 &nbsp;Stores & Suppliers</div>`;
     stores.forEach(c => {
       const hasAddr = c.address && c.address.length > 5 && /\d/.test(c.address);
       const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(c.address||c.name+' Kitchener ON')}`;
@@ -1786,7 +1808,7 @@ function renderContacts(el) {
 
   // ── SECTION: CODES & ACCESS ──────────────────────────────────
   if (codes.length) {
-    html += `<div class="sec" style="background:linear-gradient(90deg,rgba(232,64,64,0.1),transparent);border-left:2px solid var(--red);color:var(--red)">🔐 Codes & Access</div>`;
+    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);background:linear-gradient(90deg,rgba(232,64,64,0.1),transparent);border-left:3px solid var(--red);border-bottom:1px solid var(--border);margin-top:4px">🔐 &nbsp;Codes & Access</div>`;
     codes.forEach(c => {
       // Extract code from notes
       const codeMatch = (c.notes||'').match(/(\d{4,})/);
@@ -1799,7 +1821,7 @@ function renderContacts(el) {
             <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px">${c.name}</div>
             ${c.address ? `<div style="font-size:12px;color:var(--t2);margin-bottom:4px">📍 ${c.address}</div>` : ''}
             ${c.notes ? `<div style="font-size:11px;color:var(--t3)">${c.notes}</div>` : ''}
-            ${hasAddr ? `<a href="${mapsUrl}" target="_blank" class="maps-btn" style="margin-top:6px;display:inline-flex">🗺 Maps</a>` : ''}
+
           </div>
           ${code ? `
             <div style="
@@ -1816,7 +1838,7 @@ function renderContacts(el) {
 
   // ── SECTION: KEY CONTACTS ────────────────────────────────────
   if (persons.length) {
-    html += `<div class="sec" style="background:linear-gradient(90deg,rgba(64,144,255,0.1),transparent);border-left:2px solid #6EB0FF;color:#6EB0FF">📞 Key Contacts</div>`;
+    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6EB0FF;background:linear-gradient(90deg,rgba(64,144,255,0.1),transparent);border-left:3px solid #6EB0FF;border-bottom:1px solid var(--border);margin-top:4px">📞 &nbsp;Key Contacts</div>`;
     persons.forEach(c => {
       // Extract phone from notes or phone field
       const phoneMatch = (c.notes||'').match(/(\d{3}[-.]?\d{3}[-.]?\d{4})/);
@@ -1966,6 +1988,24 @@ function setSFByIndex(i){
   renderShopping(document.getElementById('content'));
 }
 function setSLF(f){S.shopLocFilter=f;renderShopping(document.getElementById('content'));}
+
+// Contact search — updates only the list, keeps keyboard open
+let contactSearchTimer = null;
+function filterContacts(val) {
+  S.contactSearch = val;
+  // Debounce — wait 200ms before filtering
+  clearTimeout(contactSearchTimer);
+  contactSearchTimer = setTimeout(() => {
+    const el = document.getElementById('content');
+    if(el && S.tab === 'contacts') {
+      // Re-render contacts but restore focus to search input
+      const pos = document.getElementById('contactSearch')?.selectionStart;
+      renderContacts(el);
+      const inp = document.getElementById('contactSearch');
+      if(inp) { inp.focus(); if(pos) inp.setSelectionRange(pos,pos); }
+    }
+  }, 200);
+}
 function setSLFByIndex(i){
   // Get the current locs array from shopping items
   const locs=[...new Set(S.shopping.map(item=>item.cabinet).filter(Boolean))];
@@ -1982,7 +2022,7 @@ function openDmgReport(key) {
     `<label>Description</label>
      <textarea id="dmgText" placeholder="Describe the damage..."></textarea>
      <label>Photo (optional)</label>
-     <button type="button" onclick="triggerPhoto('dmg')"
+     <button type="button" id="dmgPhotoBtn" onclick="triggerPhoto('dmg')"
        style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
               background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2)">
        📷 Take / Choose photo
@@ -2012,9 +2052,11 @@ function setupPhotoInput() {
     reader.onload=ev=>{
       const src=ev.target.result;
       if(S.photoCtx==='dmg') {
-        S.pendingDmgPhoto = src; // save to state — DOM may not exist on iOS
-        const img=document.getElementById('dmgPreview');
-        if(img){img.src=src;img.style.display='block';}
+        S.pendingDmgPhoto = src; // save to state — survives DOM rebuild on iOS
+        const img = document.getElementById('dmgPreview');
+        if(img){ img.src=src; img.style.display='block'; }
+        const btn = document.getElementById('dmgPhotoBtn');
+        if(btn){ btn.textContent='✅ Photo attached — tap to change'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
       } else if(S.photoCtx==='note') {
         S.pendingPhoto=src;
         const btn=document.getElementById('notePhotoBtn');
