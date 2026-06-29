@@ -15,12 +15,15 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   // Always try network first; fall back to cache for offline
+  if(e.request.method !== 'GET') return;
   e.respondWith(
     fetch(e.request)
       .then(resp => {
-        // Cache a copy for offline fallback
-        const clone = resp.clone();
-        caches.open(CACHE).then(c => c.put(e.request, clone));
+        // Cache a copy for offline fallback (only same-origin, OK responses)
+        if(resp.ok && e.request.url.startsWith(self.location.origin)) {
+          const clone = resp.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(()=>{});
+        }
         return resp;
       })
       .catch(() => caches.match(e.request))
