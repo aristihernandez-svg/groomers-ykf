@@ -694,7 +694,7 @@ const S = {
   tab:'home', dayView:TODAY, inDay:false,
   theme: localStorage.getItem('gykf_theme') || 'premium',
   renderV: 0,
-  pendingDmgPhoto: null,
+  pendingDmgPhoto: null, dmgKeyCtx: null,
   contactSearch: '', // stores damage photo from camera
   tasks:{}, notes:{}, shopping:[], contacts:[], bored:[],
   procs:{}, shopFilter:'all', shopLocFilter:'all',
@@ -724,10 +724,11 @@ window.addEventListener('load', async () => {
   
   document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
   updateThemeToggleBtn();
-  buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg();
+  buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); recoverDmgDraft();
   setupPullToRefresh();
   setupPhotoInput();
-  setTimeout(async () => {
+  setTimeout(() => {
+    // Hide splash and show app immediately
     document.getElementById('splash').classList.add('out');
     document.getElementById('app').classList.add('show');
     setupDraggableNav();
@@ -735,8 +736,12 @@ window.addEventListener('load', async () => {
     S.tab = 'home';
     document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
     document.getElementById('nb-home')?.classList.add('on');
-    await Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()]);
+    // Render home immediately with cached/fallback data
     render();
+    // Then fetch fresh data in background
+    Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
+      .then(() => { if(S.tab==='home') renderHome(document.getElementById('content')); else render(); })
+      .catch(e => console.log('Boot fetch error:', e));
   }, 1800);
 });
 
@@ -1535,9 +1540,11 @@ function renderShopping(el) {
     const i=parseInt(w.dataset.idx);
     if(!isNaN(i)) setupSwipeTwoWay(w, ()=>editShopItem(i), ()=>deleteShopItem(i));
   });
-  // Restore vertical + horizontal scroll positions
-  if(el) el.scrollTop = scrollTop;
+  // Restore vertical + horizontal scroll positions — done after layout
+  // settles (rAF) so the browser doesn't clamp scrollTop back to 0 when
+  // tapping a filter chip near the end of the scrollable row.
   requestAnimationFrame(() => {
+    if(el) el.scrollTop = scrollTop;
     const b1 = document.querySelector('.shop-bar');
     const b2 = document.querySelector('.shop-bar2');
     if(b1 && bar1Scroll) b1.scrollLeft = bar1Scroll;
@@ -1735,6 +1742,26 @@ function renderContacts(el) {
 
   const q = S.contactSearch.toLowerCase().trim();
 
+  el.innerHTML = `
+    <!-- Search bar — kept static across re-renders so the keyboard doesn't close while typing -->
+    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)">
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3)">🔍</span>
+        <input
+          id="contactSearch"
+          type="search"
+          placeholder="Search contacts, addresses, notes..."
+          value="${q}"
+          oninput="filterContacts(this.value)"
+          style="width:100%;padding:10px 36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none">
+        <span id="contactSearchClear" onclick="filterContacts('');document.getElementById('contactSearch').value=''" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--t3);cursor:pointer;display:${q?'inline':'none'}">✕</span>
+      </div>
+    </div>
+    <div id="contactsList"></div>`;
+  document.getElementById('contactsList').innerHTML = renderContactsList(q);
+}
+
+function renderContactsList(q) {
   // Categorize contacts
   // Fixed categories — don't rely on heuristics
   const STORE_NAMES  = ['zehrs','costco','a1 cash','home depot','canadian tire',
@@ -1768,25 +1795,11 @@ function renderContacts(el) {
   codes   = codes.filter(filterFn);
   persons = persons.filter(filterFn);
 
-  let html = `
-    <!-- Search bar -->
-    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10;backdrop-filter:blur(10px)">
-      <div style="position:relative">
-        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3)">🔍</span>
-        <input
-          id="contactSearch"
-          type="search"
-          placeholder="Search contacts, addresses, notes..."
-          value="${q}"
-          oninput="filterContacts(this.value)"
-          style="width:100%;padding:10px 36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none">
-        ${q ? `<span onclick="filterContacts('');document.getElementById('contactSearch').value=''" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--t3);cursor:pointer">✕</span>` : ''}
-      </div>
-    </div>`;
+  let html = '';
 
   // ── SECTION: STORES & SUPPLIERS ─────────────────────────────
   if (stores.length) {
-    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--accent);background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:3px solid var(--accent);border-bottom:1px solid var(--border);margin-top:4px">📍 &nbsp;Stores & Suppliers</div>`;
+    html += `<div style="padding:14px 16px 10px;font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:4px solid var(--accent);border-bottom:1px solid var(--border);margin-top:4px">📍 &nbsp;Stores & Suppliers</div>`;
     stores.forEach(c => {
       const hasAddr = c.address && c.address.length > 5 && /\d/.test(c.address);
       const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(c.address||c.name+' Kitchener ON')}`;
@@ -1808,7 +1821,7 @@ function renderContacts(el) {
 
   // ── SECTION: CODES & ACCESS ──────────────────────────────────
   if (codes.length) {
-    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--red);background:linear-gradient(90deg,rgba(232,64,64,0.1),transparent);border-left:3px solid var(--red);border-bottom:1px solid var(--border);margin-top:4px">🔐 &nbsp;Codes & Access</div>`;
+    html += `<div style="padding:14px 16px 10px;font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--red);background:linear-gradient(90deg,rgba(232,64,64,0.1),transparent);border-left:4px solid var(--red);border-bottom:1px solid var(--border);margin-top:4px">🔐 &nbsp;Codes & Access</div>`;
     codes.forEach(c => {
       // Extract code from notes
       const codeMatch = (c.notes||'').match(/(\d{4,})/);
@@ -1838,7 +1851,7 @@ function renderContacts(el) {
 
   // ── SECTION: KEY CONTACTS ────────────────────────────────────
   if (persons.length) {
-    html += `<div style="padding:12px 16px 8px;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6EB0FF;background:linear-gradient(90deg,rgba(64,144,255,0.1),transparent);border-left:3px solid #6EB0FF;border-bottom:1px solid var(--border);margin-top:4px">📞 &nbsp;Key Contacts</div>`;
+    html += `<div style="padding:14px 16px 10px;font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#6EB0FF;background:linear-gradient(90deg,rgba(64,144,255,0.1),transparent);border-left:4px solid #6EB0FF;border-bottom:1px solid var(--border);margin-top:4px">📞 &nbsp;Key Contacts</div>`;
     persons.forEach(c => {
       // Extract phone from notes or phone field
       const phoneMatch = (c.notes||'').match(/(\d{3}[-.]?\d{3}[-.]?\d{4})/);
@@ -1877,7 +1890,7 @@ function renderContacts(el) {
   }
 
   html += `<div style="height:80px"></div>`;
-  el.innerHTML = html;
+  return html;
 }
 
 
@@ -1989,21 +2002,17 @@ function setSFByIndex(i){
 }
 function setSLF(f){S.shopLocFilter=f;renderShopping(document.getElementById('content'));}
 
-// Contact search — updates only the list, keeps keyboard open
+// Contact search — updates only the results list; the search input itself
+// is never touched, so the on-screen keyboard never closes while typing.
 let contactSearchTimer = null;
 function filterContacts(val) {
   S.contactSearch = val;
-  // Debounce — wait 200ms before filtering
+  const clearBtn = document.getElementById('contactSearchClear');
+  if(clearBtn) clearBtn.style.display = val ? 'inline' : 'none';
   clearTimeout(contactSearchTimer);
   contactSearchTimer = setTimeout(() => {
-    const el = document.getElementById('content');
-    if(el && S.tab === 'contacts') {
-      // Re-render contacts but restore focus to search input
-      const pos = document.getElementById('contactSearch')?.selectionStart;
-      renderContacts(el);
-      const inp = document.getElementById('contactSearch');
-      if(inp) { inp.focus(); if(pos) inp.setSelectionRange(pos,pos); }
-    }
+    const list = document.getElementById('contactsList');
+    if(list && S.tab === 'contacts') list.innerHTML = renderContactsList(val.toLowerCase().trim());
   }, 200);
 }
 function setSLFByIndex(i){
@@ -2017,10 +2026,10 @@ function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(doc
 
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
 function openDmgReport(key) {
-  S.photoCtx='dmg'; S.pendingDmgPhoto=null; // Set BEFORE modal opens
+  S.photoCtx='dmg'; S.pendingDmgPhoto=null; S.dmgKeyCtx=key; // Set BEFORE modal opens
   openModal('📸 Damage Report',
     `<label>Description</label>
-     <textarea id="dmgText" placeholder="Describe the damage..."></textarea>
+     <textarea id="dmgText" placeholder="Describe the damage..." oninput="saveDmgDraft()"></textarea>
      <label>Photo (optional)</label>
      <button type="button" id="dmgPhotoBtn" onclick="triggerPhoto('dmg')"
        style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
@@ -2033,7 +2042,8 @@ function openDmgReport(key) {
       if(!text){toast('Please add a description');return;}
       // Use state photo (more reliable than DOM on iOS)
       const photo = S.pendingDmgPhoto || '';
-      S.pendingDmgPhoto = null; // clear after use
+      S.pendingDmgPhoto = null; S.dmgKeyCtx=null; // clear after use
+      localStorage.removeItem('gykf_dmg_draft');
       if(!S.dmgReports[key]) S.dmgReports[key]=[];
       const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
       S.dmgReports[key].push({text,photo,date});
@@ -2042,6 +2052,30 @@ function openDmgReport(key) {
       toast('Damage report saved 📸');
     }
   );
+}
+
+// Persist an in-progress damage report (text + photo) so it survives a PWA
+// reload triggered by the OS camera app handing control back to the browser.
+function saveDmgDraft() {
+  if(!S.dmgKeyCtx) return;
+  const textEl=document.getElementById('dmgText');
+  const draft={procKey:S.dmgKeyCtx,text:textEl?textEl.value:'',photo:S.pendingDmgPhoto||''};
+  if(!draft.text && !draft.photo) { localStorage.removeItem('gykf_dmg_draft'); return; }
+  localStorage.setItem('gykf_dmg_draft', JSON.stringify(draft));
+}
+function recoverDmgDraft() {
+  try {
+    const raw=localStorage.getItem('gykf_dmg_draft');
+    if(!raw) return;
+    const draft=JSON.parse(raw);
+    if(!draft || !draft.photo || !draft.procKey) { localStorage.removeItem('gykf_dmg_draft'); return; }
+    if(!S.dmgReports[draft.procKey]) S.dmgReports[draft.procKey]=[];
+    const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+    S.dmgReports[draft.procKey].push({text:draft.text||'(recovered photo)',photo:draft.photo,date});
+    saveDmg();
+    localStorage.removeItem('gykf_dmg_draft');
+    toast('📸 Recovered a damage photo that didn\'t finish saving');
+  } catch(e) { localStorage.removeItem('gykf_dmg_draft'); }
 }
 
 // ── PHOTO HANDLING ─────────────────────────────────────────────────
@@ -2057,6 +2091,7 @@ function setupPhotoInput() {
         if(img){ img.src=src; img.style.display='block'; }
         const btn = document.getElementById('dmgPhotoBtn');
         if(btn){ btn.textContent='✅ Photo attached — tap to change'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
+        saveDmgDraft(); // persist immediately in case the OS reloads the PWA
       } else if(S.photoCtx==='note') {
         S.pendingPhoto=src;
         const btn=document.getElementById('notePhotoBtn');
@@ -2081,7 +2116,7 @@ function openModal(title,fields,onSave) {
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.querySelector('#mFields input,#mFields textarea')?.focus(),100);
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
 function openAddTask(tabName,area='') {
