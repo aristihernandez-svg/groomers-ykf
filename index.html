@@ -715,30 +715,50 @@ const NAV_ITEMS = [
 ];
 
 // ── BOOT ───────────────────────────────────────────────────────────
+// Hard failsafe: no matter what throws or hangs above, force the splash
+// off and the app visible after 6s so the app can never get stuck.
+let splashCleared = false;
+function clearSplash() {
+  if(splashCleared) return;
+  splashCleared = true;
+  document.getElementById('splash')?.classList.add('out');
+  document.getElementById('app')?.classList.add('show');
+}
+setTimeout(clearSplash, 6000);
+
 window.addEventListener('load', async () => {
-  // Load saved theme
-  const savedTheme = localStorage.getItem('gykf_theme') || 'premium';
-  S.theme = savedTheme;
-  document.documentElement.setAttribute('data-theme', savedTheme==='premium'?'':savedTheme);
-  // Default to premium dark if no saved theme
-  
-  document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
-  updateThemeToggleBtn();
-  buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); recoverDmgDraft();
-  setupPullToRefresh();
-  setupPhotoInput();
+  try {
+    // Load saved theme
+    const savedTheme = localStorage.getItem('gykf_theme') || 'premium';
+    S.theme = savedTheme;
+    document.documentElement.setAttribute('data-theme', savedTheme==='premium'?'':savedTheme);
+    // Default to premium dark if no saved theme
+
+    document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
+    updateThemeToggleBtn();
+    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg();
+    try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
+    setupPullToRefresh();
+    setupPhotoInput();
+  } catch(e) {
+    console.log('Boot setup error:', e);
+  }
   setTimeout(() => {
-    // Hide splash and show app immediately
-    document.getElementById('splash').classList.add('out');
-    document.getElementById('app').classList.add('show');
-    setupDraggableNav();
-    // Start on home screen
-    S.tab = 'home';
-    document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-    document.getElementById('nb-home')?.classList.add('on');
-    // Render home immediately with cached/fallback data
-    render();
-    // Then fetch fresh data in background
+    try {
+      // Hide splash and show app immediately
+      clearSplash();
+      setupDraggableNav();
+      // Start on home screen
+      S.tab = 'home';
+      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+      document.getElementById('nb-home')?.classList.add('on');
+      // Render home immediately with cached/fallback data
+      render();
+    } catch(e) {
+      console.log('Boot render error:', e);
+      clearSplash();
+    }
+    // Then fetch fresh data in background — never blocks the UI from showing
     Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
       .then(() => { if(S.tab==='home') renderHome(document.getElementById('content')); else render(); })
       .catch(e => console.log('Boot fetch error:', e));
