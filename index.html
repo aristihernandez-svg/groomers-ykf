@@ -606,45 +606,61 @@ async function fetchShopping() {
 }
 
 async function fetchContacts() {
+  // Load from localStorage first (user edits), then merge with defaults
+  const saved = localStorage.getItem('gykf_contacts');
+  const localContacts = saved ? JSON.parse(saved) : null;
+  
+  if (localContacts && localContacts.length > 0) {
+    S.contacts = localContacts;
+    console.log('Contacts from local:', S.contacts.length);
+    return;
+  }
+
+  // Try backend
   try {
-    // Use backend to read contacts — bypasses public API merge cell limitations
     if (BACKEND_URL && BACKEND_URL !== 'BACKEND_URL_HERE') {
       const res = await fetch(`${BACKEND_URL}?action=getSheet&sheet=${encodeURIComponent('📞 Contacts & Info')}`);
       const data = await res.json();
-      if (data.rows && data.rows.length) {
-        // Find header row (contains "Name / Store")
+      if (data.rows && data.rows.length > 5) {
         let dataStart = 0;
         for (let i = 0; i < data.rows.length; i++) {
           const cell = String(data.rows[i][0] || '').trim();
-          if (cell === 'Name / Store' || cell === 'Name') { dataStart = i + 1; break; }
+          if (cell === 'Name / Store') { dataStart = i + 1; break; }
         }
-        S.contacts = data.rows.slice(dataStart).map(row => ({
+        const parsed = data.rows.slice(dataStart).map(row => ({
           name:    String(row[0] || '').trim(),
           address: String(row[1] || '').trim(),
           notes:   String(row[2] || '').trim(),
-        })).filter(r =>
-          r.name && r.name.length > 1 &&
-          !r.name.startsWith('Rev.') &&
-          r.name !== 'Name / Store'
-        );
-        console.log('Contacts via backend:', S.contacts.length, S.contacts.map(c=>c.name));
-        return;
+        })).filter(r => r.name && r.name.length > 1 && !r.name.startsWith('Rev.'));
+        
+        if (parsed.length > 2) {
+          S.contacts = parsed;
+          localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
+          console.log('Contacts from backend:', S.contacts.length);
+          return;
+        }
       }
     }
-    // Fallback to public API
-    const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1106791544`;
-    const text=(await (await fetch(url)).text());
-    const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
-    const rows=json.table?.rows||[], cols=json.table?.cols||[];
-    S.contacts=rows.map(row=>{
-      const v=cols.map((_,i)=>{const c=row.c?.[i];return c?String(c.f??c.v??'').trim():'';});
-      return {name:v[0]||'',address:v[1]||'',notes:v[2]||''};
-    }).filter(r=>r.name&&r.name.length>1&&r.name!=='Name / Store'&&!r.name.startsWith('Rev.'));
-    console.log('Contacts via API:', S.contacts.length);
-  } catch(e){
-    console.error('Contacts error:', e);
-    S.contacts=[];
-  }
+  } catch(e) { console.log('Backend contacts failed:', e); }
+
+  // Fallback: default contacts from sheet
+  S.contacts = [
+    {name:'Zehrs', address:'Kitchener, ON', notes:'Regular grocery & supply run'},
+    {name:'Costco', address:'Kitchener, ON', notes:'Bulk items — bring membership card'},
+    {name:'A1 Cash & Carry', address:'Kitchener, ON', notes:'Fiji water · water crates · coffee cups'},
+    {name:'Home Depot', address:'Kitchener, ON', notes:'Aisle 3: mop heads · Aisle 9: acid brushes · Aisle 4: zip ties'},
+    {name:'Canadian Tire', address:'Kitchener, ON', notes:'Valve grind · distilled water · invisible glass · washer fluid'},
+    {name:'Monarch Oil', address:'2216 Shirley Dr, Kitchener, ON N2B 3Y1', notes:'ISO & oil products — call to order'},
+    {name:'Aviation Supplier', address:'', notes:'Prist x5 — call ahead'},
+    {name:'JSA Grimsby', address:'262 Mud St W, Grassie, ON L0R 1M0', notes:'Seat and uniform pick ups — hangar inside the airfield'},
+    {name:'Aircraft Spruce', address:'27 York Rd, Brantford, ON N3T 0L2', notes:'Pick up aircraft parts — Luis'},
+    {name:'Crew House', address:'220 Thomas Slee Drive, Kitchener', notes:'Code: 3737'},
+    {name:'Gate', address:'', notes:'Code: 3548'},
+    {name:'Wes Verboon (MX Boss)', address:'', notes:'778-838-1498 · Mon–Fri 0700–1900'},
+    {name:'Josh (Crew Chief)', address:'', notes:'519-276-0204 · 14 on 14 off, do not call during off days'},
+    {name:'Keddy (Crew Chief)', address:'', notes:'519-301-3170 · 14 on 14 off, do not call during off days'},
+  ];
+  console.log('Contacts from fallback:', S.contacts.length);
 }
 
 async function fetchBored() {
@@ -1349,6 +1365,7 @@ function openAddContact() {
       const notes=document.getElementById('mCO').value.trim();
       if(!name) return;
       S.contacts.push({name,address,notes});
+      localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
       await api({action:'addContact',name,address,notes});
       closeModal(); renderContacts(document.getElementById('content')); toast('Contact added ✓');
     });
