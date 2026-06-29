@@ -607,31 +607,40 @@ async function fetchShopping() {
 
 async function fetchContacts() {
   try {
+    // Use backend to read contacts — bypasses public API merge cell limitations
+    if (BACKEND_URL && BACKEND_URL !== 'BACKEND_URL_HERE') {
+      const res = await fetch(`${BACKEND_URL}?action=getSheet&sheet=${encodeURIComponent('📞 Contacts & Info')}`);
+      const data = await res.json();
+      if (data.rows && data.rows.length) {
+        // Find header row (contains "Name / Store")
+        let dataStart = 0;
+        for (let i = 0; i < data.rows.length; i++) {
+          const cell = String(data.rows[i][0] || '').trim();
+          if (cell === 'Name / Store' || cell === 'Name') { dataStart = i + 1; break; }
+        }
+        S.contacts = data.rows.slice(dataStart).map(row => ({
+          name:    String(row[0] || '').trim(),
+          address: String(row[1] || '').trim(),
+          notes:   String(row[2] || '').trim(),
+        })).filter(r =>
+          r.name && r.name.length > 1 &&
+          !r.name.startsWith('Rev.') &&
+          r.name !== 'Name / Store'
+        );
+        console.log('Contacts via backend:', S.contacts.length, S.contacts.map(c=>c.name));
+        return;
+      }
+    }
+    // Fallback to public API
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1106791544`;
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
-    // Log raw data to debug
-    console.log('Contacts raw rows:', rows.length);
-    console.log('Contacts cols:', cols.map(c=>c.label));
-    if(rows[0]) console.log('First row:', rows[0].c?.map(c=>c?String(c.f??c.v??''):''));
-
     S.contacts=rows.map(row=>{
-      const v=cols.map((_,i)=>{
-        const c=row.c?.[i];
-        // Try formatted value first (handles hyperlinks), then raw value
-        return c ? String(c.f ?? c.v ?? '').trim() : '';
-      });
-      return {name:v[0]||'', address:v[1]||'', notes:v[2]||''};
-    }).filter(r => {
-      // Absolute minimum filtering — only skip truly empty or header rows
-      if (!r.name || r.name.length < 1) return false;
-      if (r.name === 'Name / Store') return false;
-      if (r.name === 'CONTACTS & STORE INFORMATION') return false;
-      if (r.name.startsWith('Rev.')) return false;
-      return true;
-    });
-    console.log('Contacts loaded:', S.contacts.length, S.contacts.map(c=>c.name));
+      const v=cols.map((_,i)=>{const c=row.c?.[i];return c?String(c.f??c.v??'').trim():'';});
+      return {name:v[0]||'',address:v[1]||'',notes:v[2]||''};
+    }).filter(r=>r.name&&r.name.length>1&&r.name!=='Name / Store'&&!r.name.startsWith('Rev.'));
+    console.log('Contacts via API:', S.contacts.length);
   } catch(e){
     console.error('Contacts error:', e);
     S.contacts=[];
