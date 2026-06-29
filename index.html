@@ -1407,6 +1407,7 @@ function backWeek() {
 function renderShopping(el) {
   document.getElementById('barTitle').textContent='Skycare';
   showFab(openAddShopItem);
+  const scrollTop = el ? el.scrollTop : 0; // save scroll position
   const items=S.shopping;
   const stores=[...new Set(items.map(i=>i.store).filter(Boolean))];
   const locs=[...new Set(items.map(i=>i.cabinet).filter(Boolean))];
@@ -1448,13 +1449,13 @@ function renderShopping(el) {
         style="background:${S.shopFilter==='tobuy'?'var(--red)':'var(--glass)'};color:${S.shopFilter==='tobuy'?'#fff':'var(--t2)'};border-color:${S.shopFilter==='tobuy'?'var(--red)':'var(--border2)'}">🔴 To Buy</button>
       <button class="chip" onclick="setSV()"
         style="background:${S.shopView==='cart'?'var(--green)':'var(--glass)'};color:${S.shopView==='cart'?'#fff':'var(--t2)'};border-color:${S.shopView==='cart'?'var(--green)':'var(--border2)'}">🛒 Cart</button>
-      ${stores.map(s=>{const a=S.shopFilter===s;return `<button class="chip" onclick="setSF('${s}')" style="background:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--border2)'}">${s}</button>`;}).join('')}
+      ${stores.map((s,si)=>{const a=S.shopFilter===s;return `<button class="chip" onclick="setSFByIndex(${si})" style="background:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--border2)'}">${s}</button>`;}).join('')}
     </div>
     <div class="shop-bar2">
       <span class="chip-label">📍</span>
       <button class="chip" onclick="setSLF('all')"
         style="background:${S.shopLocFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopLocFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopLocFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
-      ${locs.map(l=>{const a=S.shopLocFilter===l;return `<button class="chip" onclick="setSLF('${l}')" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
+      ${locs.map((l,li)=>{const a=S.shopLocFilter===l;return `<button class="chip" onclick="setSLFByIndex(${li})" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
     </div>
     <div class="search-wrap">
       <div class="search-inner">
@@ -1504,6 +1505,8 @@ function renderShopping(el) {
     const i=parseInt(w.dataset.idx);
     if(!isNaN(i)) setupSwipeTwoWay(w, ()=>editShopItem(i), ()=>deleteShopItem(i));
   });
+  // Restore scroll position
+  el.scrollTop = scrollTop;
   // Keep search focus
   const si=document.getElementById('shopSrch');
   if(si&&q){si.focus();si.setSelectionRange(q.length,q.length);}
@@ -1829,7 +1832,18 @@ function resetDay() {
   toast('🔄 Today reset');
 }
 function setSF(f){S.shopFilter=f;renderShopping(document.getElementById('content'));}
+function setSFByIndex(i){
+  const stores=[...new Set(S.shopping.map(item=>item.store).filter(Boolean))];
+  S.shopFilter = i < stores.length ? stores[i] : 'all';
+  renderShopping(document.getElementById('content'));
+}
 function setSLF(f){S.shopLocFilter=f;renderShopping(document.getElementById('content'));}
+function setSLFByIndex(i){
+  // Get the current locs array from shopping items
+  const locs=[...new Set(S.shopping.map(item=>item.cabinet).filter(Boolean))];
+  S.shopLocFilter = i < locs.length ? locs[i] : 'all';
+  renderShopping(document.getElementById('content'));
+}
 function setSSearch(q){S.shopSearch=q;renderShopping(document.getElementById('content'));}
 function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(document.getElementById('content'));}
 
