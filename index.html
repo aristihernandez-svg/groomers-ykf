@@ -662,7 +662,7 @@ body::before{
 <button class="fab" id="fab" onclick="fabClick()">+</button>
 <button class="eod-fab" id="eodFab" onclick="showEOD()">📋</button>
 <div class="toast" id="toast"></div>
-<input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+<input type="file" id="photoInput" accept="image/*" style="display:none">
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────
@@ -2052,11 +2052,18 @@ function openDmgReport(key) {
     `<label>Description</label>
      <textarea id="dmgText" placeholder="Describe the damage..." oninput="saveDmgDraft()"></textarea>
      <label>Photo (optional)</label>
-     <button type="button" id="dmgPhotoBtn" onclick="triggerPhoto('dmg')"
-       style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
-              background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2)">
-       📷 Take / Choose photo
-     </button>
+     <div style="display:flex;gap:8px;margin-bottom:10px">
+       <button type="button" id="dmgPhotoBtn" onclick="openCameraCapture('dmg')"
+         style="flex:1;padding:11px;border-radius:8px;border:1px dashed var(--border2);
+                background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2)">
+         📷 Take Photo
+       </button>
+       <button type="button" onclick="triggerPhoto('dmg')"
+         style="flex:1;padding:11px;border-radius:8px;border:1px dashed var(--border2);
+                background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2)">
+         🖼 Gallery
+       </button>
+     </div>
      <img id="dmgPreview" class="photo-preview">`,
     ()=>{
       const text=document.getElementById('dmgText').value.trim();
@@ -2100,27 +2107,28 @@ function recoverDmgDraft() {
 }
 
 // ── PHOTO HANDLING ─────────────────────────────────────────────────
+// Shared by both the gallery file-picker and the in-app camera capture below.
+function applyCapturedPhoto(src) {
+  if(S.photoCtx==='dmg') {
+    S.pendingDmgPhoto = src; // save to state — survives DOM rebuild on iOS
+    const img = document.getElementById('dmgPreview');
+    if(img){ img.src=src; img.style.display='block'; }
+    const btn = document.getElementById('dmgPhotoBtn');
+    if(btn){ btn.textContent='✅ Photo attached'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
+    saveDmgDraft(); // persist immediately in case the OS reloads the PWA
+  } else if(S.photoCtx==='note') {
+    S.pendingPhoto=src;
+    const btn=document.getElementById('notePhotoBtn');
+    if(btn) btn.textContent='📷 Photo attached ✓';
+  }
+}
 function setupPhotoInput() {
   document.getElementById('photoInput').addEventListener('change',e=>{
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
-    reader.onload=ev=>{
-      const src=ev.target.result;
-      if(S.photoCtx==='dmg') {
-        S.pendingDmgPhoto = src; // save to state — survives DOM rebuild on iOS
-        const img = document.getElementById('dmgPreview');
-        if(img){ img.src=src; img.style.display='block'; }
-        const btn = document.getElementById('dmgPhotoBtn');
-        if(btn){ btn.textContent='✅ Photo attached — tap to change'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
-        saveDmgDraft(); // persist immediately in case the OS reloads the PWA
-      } else if(S.photoCtx==='note') {
-        S.pendingPhoto=src;
-        const btn=document.getElementById('notePhotoBtn');
-        if(btn) btn.textContent='📷 Photo attached ✓';
-      }
-    };
+    reader.onload=ev=>applyCapturedPhoto(ev.target.result);
     reader.readAsDataURL(file);
-    e.target.value=''; // reset so the next tap reliably reopens the camera/picker
+    e.target.value=''; // reset so the next tap reliably reopens the picker
   });
 }
 function triggerPhoto(ctx) {
@@ -2128,6 +2136,49 @@ function triggerPhoto(ctx) {
   const input=document.getElementById('photoInput');
   input.value=''; // clear any previously selected file before opening
   input.click();
+}
+
+// In-app camera capture — keeps everything inside the PWA's own page
+// context so the OS camera app never takes over (and can't silently
+// reload/kill the PWA mid-flow, which was destroying open damage report
+// modals before the photo could be saved).
+async function openCameraCapture(ctx) {
+  S.photoCtx=ctx;
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}, audio:false});
+  } catch(e) {
+    console.log('Camera unavailable, falling back to picker:', e);
+    toast('Camera unavailable — using photo picker instead');
+    triggerPhoto(ctx);
+    return;
+  }
+  const overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;background:#000;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center';
+  const video=document.createElement('video');
+  video.autoplay=true; video.playsInline=true; video.muted=true;
+  video.style.cssText='width:100%;flex:1;object-fit:cover';
+  video.srcObject=stream;
+  const btnRow=document.createElement('div');
+  btnRow.style.cssText='display:flex;gap:16px;padding:20px calc(20px + env(safe-area-inset-bottom,0px)) calc(20px + env(safe-area-inset-bottom,0px))';
+  const captureBtn=document.createElement('button');
+  captureBtn.textContent='📸 Capture';
+  captureBtn.style.cssText='padding:14px 28px;border-radius:30px;background:#C8A84B;color:#000;border:none;font-size:16px;font-weight:700;cursor:pointer';
+  const cancelBtn=document.createElement('button');
+  cancelBtn.textContent='✕ Cancel';
+  cancelBtn.style.cssText='padding:14px 28px;border-radius:30px;background:rgba(255,255,255,0.15);color:#fff;border:none;font-size:16px;cursor:pointer';
+  function closeCam() { stream.getTracks().forEach(t=>t.stop()); overlay.remove(); }
+  cancelBtn.onclick=closeCam;
+  captureBtn.onclick=()=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=video.videoWidth; canvas.height=video.videoHeight;
+    canvas.getContext('2d').drawImage(video,0,0);
+    applyCapturedPhoto(canvas.toDataURL('image/jpeg',0.85));
+    closeCam();
+  };
+  btnRow.append(captureBtn,cancelBtn);
+  overlay.append(video,btnRow);
+  document.body.append(overlay);
 }
 function viewPhoto(src) {
   openModal('📸 Photo',`<img src="${src}" style="width:100%;border-radius:8px">`,null);
@@ -2218,11 +2269,18 @@ function openAddNote(tabName) {
      <input id="mNText" placeholder="Task or note...">
      <label>Area (optional)</label>
      <input id="mNArea" placeholder="e.g. MX Hangar, Aircraft...">
-     <button type="button" id="notePhotoBtn" onclick="triggerPhoto('note')"
-       style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
-              background:var(--bg3);font-size:14px;cursor:pointer;color:var(--accent);margin-bottom:10px">
-       📷 Attach photo (optional)
-     </button>`,
+     <div style="display:flex;gap:8px;margin-bottom:10px">
+       <button type="button" id="notePhotoBtn" onclick="openCameraCapture('note')"
+         style="flex:1;padding:11px;border-radius:8px;border:1px dashed var(--border2);
+                background:var(--bg3);font-size:14px;cursor:pointer;color:var(--accent)">
+         📷 Take Photo
+       </button>
+       <button type="button" onclick="triggerPhoto('note')"
+         style="flex:1;padding:11px;border-radius:8px;border:1px dashed var(--border2);
+                background:var(--bg3);font-size:14px;cursor:pointer;color:var(--accent)">
+         🖼 Gallery
+       </button>
+     </div>`,
     ()=>{
       const text=document.getElementById('mNText').value.trim();
       if(!text) return;
