@@ -218,13 +218,15 @@ body::before{
   50%{transform:translateY(-10px) rotate(4deg)}
 }
 @keyframes takeoff{
-  0%{transform:translateX(0) translateY(0) rotate(0deg);opacity:1}
-  30%{transform:translateX(10px) translateY(-6px) rotate(8deg);opacity:1}
-  60%{transform:translateX(24px) translateY(-20px) rotate(12deg);opacity:0.7}
-  61%{transform:translateX(-30px) translateY(8px) rotate(-5deg);opacity:0}
-  62%{transform:translateX(-30px) translateY(8px) rotate(-5deg);opacity:0}
-  80%{transform:translateX(-10px) translateY(4px) rotate(-2deg);opacity:0.8}
-  100%{transform:translateX(0) translateY(0) rotate(0deg);opacity:1}
+  0%   {transform:translateX(-8px) translateY(6px) rotate(-5deg);opacity:0.6}
+  10%  {transform:translateX(-4px) translateY(3px) rotate(-3deg);opacity:0.9}
+  20%  {transform:translateX(0px)  translateY(0px) rotate(0deg); opacity:1}
+  40%  {transform:translateX(8px)  translateY(-4px) rotate(6deg);opacity:1}
+  65%  {transform:translateX(22px) translateY(-18px) rotate(14deg);opacity:0.8}
+  80%  {transform:translateX(34px) translateY(-30px) rotate(18deg);opacity:0}
+  81%  {transform:translateX(-40px) translateY(12px) rotate(-8deg);opacity:0}
+  95%  {transform:translateX(-12px) translateY(5px) rotate(-4deg);opacity:0.5}
+  100% {transform:translateX(-8px)  translateY(6px) rotate(-5deg);opacity:0.6}
 }
 .sp-title{color:#E8C86A;font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase}
 .sp-sub{color:#7890A8;font-size:12px;letter-spacing:3px;margin-top:6px;font-weight:300}
@@ -830,9 +832,23 @@ async function fetchShopping() {
     const text=(await (await fetch(url)).text());
     const json=JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
     const rows=json.table?.rows||[], cols=json.table?.cols||[];
+    // Normalize cabinet names at fetch time
+    const normCabinet = (s) => {
+      if(!s) return '';
+      s = s.trim();
+      // Standardize MX Hangar variations
+      if(/mx\s*han[gh]?[ae]r/i.test(s)) return 'MX Hangar';
+      if(/mx\s*office/i.test(s)) return 'MX Office';
+      if(/crew\s*house/i.test(s)) return 'Crew House';
+      if(/jet\s*cab/i.test(s)) return 'Jet Cabinet';
+      if(/cr\s*(groomer|corner)/i.test(s)) return "CR Groomers' Corner";
+      if(/cr\s*office/i.test(s)) return 'CR Office';
+      if(/metro/i.test(s)) return 'Metro Cabinet';
+      return s;
+    };
     S.shopping=rows.map(row=>{
       const v=cols.map((_,i)=>{const c=row.c?.[i];return c?String(c.v??c.f??'').trim():'';});
-      return {item:v[0],cabinet:v[1],store:v[2],status:v[3],notes:v[4]||'',checked:v[3]==='To Buy'};
+      return {item:v[0],cabinet:normCabinet(v[1]),store:v[2],status:v[3],notes:v[4]||'',checked:v[3]==='To Buy'};
     }).filter(r=>r.item&&r.item!=='Item'&&!r.item.startsWith('💡')&&!r.item.startsWith('TO SHOP')&&r.item.length>1);
   } catch(e){S.shopping=S.shopping||[];}
 }
@@ -1040,7 +1056,7 @@ async function renderHome(el) {
       background:linear-gradient(180deg,var(--navy2) 0%,transparent 100%);
       border-bottom:1px solid var(--border);
     ">
-      <div style="font-size:64px;margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 3s ease-in-out infinite;display:inline-block">✈</div>
+      <div style="font-size:64px;margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-block">✈</div>
       <div style="font-size:24px;font-weight:800;color:var(--t1);letter-spacing:1px">Skycare</div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
       
@@ -1344,30 +1360,23 @@ function renderShopping(el) {
   let html=`<div class="shop-filters">
     <div class="shop-bar">
       <button class="chip" onclick="setSF('all')"
-        style="background:${S.shopFilter==='all'?'#1A3A5C':'#eee'};color:${S.shopFilter==='all'?'#fff':'#333'}">All</button>
+        style="background:${S.shopFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
       <button class="chip" onclick="setSF('tobuy')"
-        style="background:${S.shopFilter==='tobuy'?'#8B0000':'#eee'};color:${S.shopFilter==='tobuy'?'#fff':'#333'}">🔴 To Buy</button>
-      <button class="chip" onclick="setSV()" style="background:${S.shopView==='cart'?'#2E7D32':'#eee'};color:${S.shopView==='cart'?'#fff':'#333'}">🛒 Cart</button>`;
-  stores.forEach(s=>{
-    const a=S.shopFilter===s;
-    html+=`<button class="chip" onclick="setSF('${s}')"
-      style="background:${a?(STORE_COLORS[s]||'#444'):'#eee'};color:${a?'#fff':'#333'}">${s}</button>`;
-  });
-  html+=`</div>
+        style="background:${S.shopFilter==='tobuy'?'var(--red)':'var(--glass)'};color:${S.shopFilter==='tobuy'?'#fff':'var(--t2)'};border-color:${S.shopFilter==='tobuy'?'var(--red)':'var(--border2)'}">🔴 To Buy</button>
+      <button class="chip" onclick="setSV()"
+        style="background:${S.shopView==='cart'?'var(--green)':'var(--glass)'};color:${S.shopView==='cart'?'#fff':'var(--t2)'};border-color:${S.shopView==='cart'?'var(--green)':'var(--border2)'}">🛒 Cart</button>
+      ${stores.map(s=>{const a=S.shopFilter===s;return `<button class="chip" onclick="setSF('${s}')" style="background:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--border2)'}">${s}</button>`;}).join('')}
+    </div>
     <div class="shop-bar2">
-      <span class="chip-label">Location:</span>
+      <span class="chip-label">📍</span>
       <button class="chip" onclick="setSLF('all')"
-        style="background:${S.shopLocFilter==='all'?'#555':'#eee'};color:${S.shopLocFilter==='all'?'#fff':'#333'}">All</button>`;
-  locs.forEach(l=>{
-    const a=S.shopLocFilter===l;
-    html+=`<button class="chip" onclick="setSLF('${l}')"
-      style="background:${a?'#555':'#eee'};color:${a?'#fff':'#333'}">${l}</button>`;
-  });
-  html+=`</div>
+        style="background:${S.shopLocFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopLocFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopLocFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
+      ${locs.map(l=>{const a=S.shopLocFilter===l;return `<button class="chip" onclick="setSLF('${l}')" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
+    </div>
     <div class="search-wrap">
       <div class="search-inner">
         <span class="s-icon">🔍</span>
-        <input class="search-inp" type="search" placeholder="Search items, stores, cabinets..."
+        <input class="search-inp" type="search" placeholder="Search items, stores, locations..."
                value="${q}" oninput="setSSearch(this.value)" id="shopSrch">
         ${q?`<span class="s-clear" onclick="setSSearch('')">✕</span>`:''}
       </div>
@@ -1613,18 +1622,111 @@ function openMaps(address) {
 // ── BORED ──────────────────────────────────────────────────────────
 
 // ── FLIGHTAWARE IN-APP ───────────────────────────────────────
-function renderFlightAware(el) {
+async function renderFlightAware(el) {
   document.getElementById('barTitle').textContent = 'Skycare';
   document.getElementById('eodFab').classList.remove('show');
   document.getElementById('fab').style.display = 'none';
+
+  // Show loading state first
   el.innerHTML = `
     <div class="sec" style="background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:2px solid var(--accent);color:var(--accent)">LIVE FLIGHT TRACKING</div>
     <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px">
       <button onclick="launchFA('app')" style="flex:1;padding:13px;border-radius:var(--radius-sm);background:linear-gradient(135deg,#1A3A5C,#1E4A7C);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">✈ Open App</button>
       <button onclick="launchFA('cykf')" style="flex:1;padding:13px;border-radius:var(--radius-sm);background:var(--glass2);color:var(--t1);border:1px solid var(--border2);font-size:13px;font-weight:600;cursor:pointer">CYKF Live</button>
     </div>
-    <iframe src="https://www.flightaware.com/live/airport/CYKF" style="width:100%;height:calc(100vh - 220px);border:none" loading="lazy"></iframe>
+    <div id="faAircraftList">
+      <div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Checking aircraft status...</div></div>
+    </div>
+    <div style="padding:10px 16px 4px;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600">Airport Traffic — CYKF</div>
+    <iframe src="https://www.flightaware.com/live/airport/CYKF" style="width:100%;height:calc(100vh - 360px);border:none" loading="lazy"></iframe>
   `;
+
+  // Fetch live status for tracked aircraft from OpenSky
+  await fetchAircraftStatus();
+}
+
+async function fetchAircraftStatus() {
+  const listEl = document.getElementById('faAircraftList');
+  if(!listEl) return;
+
+  try {
+    // OpenSky Network — free, no key needed
+    // Build ICAO hex list — need to convert reg to ICAO
+    // For Canadian C- prefix, use FlightAware search links as fallback
+    // OpenSky uses ICAO24 hex codes, not tail numbers directly
+    // So we use their registration search endpoint
+    const results = await Promise.all(
+      TRACKED_AIRCRAFT.map(async (ac) => {
+        try {
+          const reg = ac.reg.replace('-','').toLowerCase();
+          const url = `https://opensky-network.org/api/states/all?time=0`;
+          // OpenSky doesn't support reg lookup without auth
+          // Use their registration endpoint instead
+          const r = await fetch(`https://opensky-network.org/api/flights/aircraft?icao24=${reg}&begin=${Math.floor(Date.now()/1000)-86400}&end=${Math.floor(Date.now()/1000)}`);
+          if(!r.ok) throw new Error('no data');
+          const data = await r.json();
+          const last = data[data.length-1];
+          return { ...ac, status: last ? (last.lastSeen ? 'Last seen' : 'No recent flights') : 'No data', flight: last };
+        } catch(e) {
+          return { ...ac, status: 'offline', flight: null };
+        }
+      })
+    );
+    renderAircraftCards(results);
+  } catch(e) {
+    if(listEl) listEl.innerHTML = renderAircraftFallback();
+  }
+}
+
+function renderAircraftCards(aircraft) {
+  const listEl = document.getElementById('faAircraftList');
+  if(!listEl) return;
+
+  let html = '<div style="padding:10px 16px 4px;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border)">Fleet Status</div>';
+
+  aircraft.forEach(ac => {
+    const hasData = ac.flight;
+    const dep = ac.flight?.estDepartureAirport || '—';
+    const arr = ac.flight?.estArrivalAirport || '—';
+    const time = ac.flight?.lastSeen ? new Date(ac.flight.lastSeen*1000).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}) : '';
+    const statusColor = hasData ? 'var(--green)' : 'var(--t3)';
+
+    html += `
+      <div onclick="window.open('https://flightaware.com/live/flight/${ac.reg}','_blank')"
+        style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--glass)">
+        <div style="font-size:28px">✈</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${ac.reg}</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px">${ac.type} ${time?'· Last seen '+time:''}</div>
+          ${hasData?`<div style="font-size:11px;color:var(--t3);margin-top:2px">${dep} → ${arr}</div>`:''}
+        </div>
+        <div style="font-size:11px;font-weight:600;color:${statusColor}">${hasData?'Active':'—'}</div>
+        <div style="color:var(--t3)">›</div>
+      </div>`;
+  });
+
+  html += `<div style="padding:8px 16px;font-size:10px;color:var(--t3);text-align:center">
+    Tap any aircraft to view on FlightAware · Data: OpenSky Network
+  </div>`;
+
+  listEl.innerHTML = html;
+}
+
+function renderAircraftFallback() {
+  let html = '<div style="padding:10px 16px 4px;font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;font-weight:600;border-bottom:1px solid var(--border)">Fleet — Tap to track</div>';
+  TRACKED_AIRCRAFT.forEach(ac => {
+    html += `
+      <div onclick="window.open('https://flightaware.com/live/flight/${ac.reg}','_blank')"
+        style="display:flex;align-items:center;gap:14px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;background:var(--glass)">
+        <div style="font-size:28px">✈</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${ac.reg}</div>
+          <div style="font-size:11px;color:var(--t2);margin-top:2px">${ac.type}</div>
+        </div>
+        <div style="color:var(--t3)">›</div>
+      </div>`;
+  });
+  return html;
 }
 
 function launchFA(type) {
@@ -1736,29 +1838,30 @@ function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(doc
 
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
 function openDmgReport(key) {
+  S.photoCtx='dmg'; // Set BEFORE modal opens
   openModal('📸 Damage Report',
     `<label>Description</label>
      <textarea id="dmgText" placeholder="Describe the damage..."></textarea>
      <label>Photo (optional)</label>
      <button type="button" onclick="triggerPhoto('dmg')"
        style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
-              background:var(--bg3);font-size:14px;cursor:pointer;color:var(--accent)">
+              background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2)">
        📷 Take / Choose photo
      </button>
      <img id="dmgPreview" class="photo-preview">`,
     ()=>{
       const text=document.getElementById('dmgText').value.trim();
       if(!text){toast('Please add a description');return;}
-      const photo=document.getElementById('dmgPreview').src;
+      const previewImg=document.getElementById('dmgPreview');
+      const photo = previewImg && previewImg.src && previewImg.src.startsWith('data:') ? previewImg.src : '';
       if(!S.dmgReports[key]) S.dmgReports[key]=[];
       const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-      S.dmgReports[key].push({text,photo:photo&&photo!==window.location.href?photo:'',date});
+      S.dmgReports[key].push({text,photo,date});
       saveDmg(); closeModal();
       renderProcs(document.getElementById('content'));
       toast('Damage report saved 📸');
     }
   );
-  S.photoCtx='dmg';
 }
 
 // ── PHOTO HANDLING ─────────────────────────────────────────────────
