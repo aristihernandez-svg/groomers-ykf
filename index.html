@@ -2086,7 +2086,8 @@ function saveDmgDraft() {
   const textEl=document.getElementById('dmgText');
   const draft={procKey:S.dmgKeyCtx,text:textEl?textEl.value:'',photo:S.pendingDmgPhoto||''};
   if(!draft.text && !draft.photo) { localStorage.removeItem('gykf_dmg_draft'); return; }
-  localStorage.setItem('gykf_dmg_draft', JSON.stringify(draft));
+  try { localStorage.setItem('gykf_dmg_draft', JSON.stringify(draft)); }
+  catch(e) { console.log('saveDmgDraft quota error (non-fatal, draft just won\'t survive a reload):', e); }
 }
 function recoverDmgDraft() {
   try {
@@ -2119,11 +2120,29 @@ function applyCapturedPhoto(src) {
     if(btn) btn.textContent='📷 Photo attached ✓';
   }
 }
+// Camera photos can be several MB as base64, which blows through
+// localStorage's ~5-10MB quota after just a few reports. Downscale +
+// re-compress every photo before it's ever stored.
+function compressImage(dataUrl, maxDim=1280, quality=0.6) {
+  return new Promise(resolve=>{
+    const img=new Image();
+    img.onload=()=>{
+      let {width:w,height:h}=img;
+      if(w>maxDim||h>maxDim){ const s=maxDim/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>resolve(dataUrl); // fall back to original if it won't decode
+    img.src=dataUrl;
+  });
+}
 function setupPhotoInput() {
   document.getElementById('photoInput').addEventListener('change',e=>{
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
-    reader.onload=ev=>applyCapturedPhoto(ev.target.result);
+    reader.onload=async ev=>applyCapturedPhoto(await compressImage(ev.target.result));
     reader.readAsDataURL(file);
     e.target.value=''; // reset so the next tap reliably reopens the picker
   });
@@ -2515,7 +2534,27 @@ function loadTaskCache() {
     });
   } catch(e) {}
 }
-function saveDmg() { localStorage.setItem('gykf_dmg',JSON.stringify(S.dmgReports)); }
+function saveDmg() {
+  try {
+    localStorage.setItem('gykf_dmg',JSON.stringify(S.dmgReports));
+  } catch(e) {
+    // Storage quota full (likely old large photos) — strip photos from the
+    // oldest reports until the write fits, keeping all descriptions intact.
+    console.log('saveDmg quota error, pruning old photos:', e);
+    const all=[];
+    Object.entries(S.dmgReports).forEach(([key,list])=>list.forEach((r,i)=>all.push({key,i,date:r.date})));
+    all.sort((a,b)=>new Date(a.date)-new Date(b.date));
+    let prunedAny=false, saved=false;
+    for(const {key,i} of all) {
+      if(S.dmgReports[key][i].photo) { S.dmgReports[key][i].photo=''; prunedAny=true; }
+      try { localStorage.setItem('gykf_dmg',JSON.stringify(S.dmgReports)); saved=true; break; }
+      catch(e2) { /* still too big, keep pruning the next oldest photo */ }
+    }
+    if(prunedAny) toast(saved
+      ? '⚠️ Storage was full — removed photos from older reports to make room'
+      : '⚠️ Storage full — could not free enough room, some reports may not be saved');
+  }
+}
 function loadDmg() { try{S.dmgReports=JSON.parse(localStorage.getItem('gykf_dmg')||'{}');}catch(e){S.dmgReports={};} }
 function fallback() {
   return [
