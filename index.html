@@ -1738,7 +1738,10 @@ function renderProcs(el) {
                 <div>${d.text}</div>
                 <div style="font-size:11px;color:#888;margin-top:2px">${d.date}</div>
                 ${d.photo?`<img class="dmg-item-photo" src="${d.photo}" onclick="viewPhoto('${d.photo}')">`:''}
-                <button type="button" onclick="shareDmgReport('${key}',${di})" style="margin-top:8px;width:100%;padding:8px;border-radius:6px;border:1px solid rgba(232,64,64,0.25);background:var(--glass2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer">📤 Share to mechanic (text/email)</button>
+                <div style="display:flex;gap:6px;margin-top:8px">
+                  <button type="button" onclick="shareDmgReport('${key}',${di})" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(232,64,64,0.25);background:var(--glass2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer">📤 Share to mechanic</button>
+                  <button type="button" onclick="deleteDmgReport('${key}',${di})" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t3);font-size:12px;font-weight:600;cursor:pointer">🗑</button>
+                </div>
               </div>`).join('')}
             </div>
           </div>
@@ -2164,6 +2167,16 @@ async function shareDmgReport(key, idx) {
     a.href=report.photo; a.download='damage-photo.jpg';
     document.body.appendChild(a); a.click(); a.remove();
   }
+}
+
+function deleteDmgReport(key, idx) {
+  if(!confirm('Delete this damage report? This can\'t be undone.')) return;
+  const list = S.dmgReports[key];
+  if(!list || !list[idx]) return;
+  list.splice(idx,1);
+  saveDmg();
+  renderProcs(document.getElementById('content'));
+  toast('🗑 Damage report deleted');
 }
 
 // ── MODALS ─────────────────────────────────────────────────────────
