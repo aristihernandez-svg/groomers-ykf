@@ -651,9 +651,7 @@ const PROC_VIDEOS = {
 const S = {
   tab:'home', dayView:TODAY, inDay:false,
   theme: localStorage.getItem('gykf_theme') || 'premium',
-  weather: null,
-  metar: null,
-  taf: null,
+  renderV: 0, // render version — increment on each goTab to cancel stale async callbacks
   tasks:{}, notes:{}, shopping:[], contacts:[], bored:[],
   procs:{}, shopFilter:'all', shopLocFilter:'all',
   shopSearch:'', shopView:'list', // 'list' or 'cart'
@@ -717,27 +715,22 @@ function buildNav() {
     </div>`).join('');
 }
 function goTab(id) {
-
+  S.renderV++;
   S.tab=id; S.inDay=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-  document.getElementById(`nb-${id}`)?.classList.add('on');
+  document.getElementById('nb-'+id)?.classList.add('on');
   document.getElementById('barTitle').textContent='Skycare';
   document.getElementById('eodFab').classList.toggle('show',id==='today');
   document.getElementById('fab').style.display='none';
   render();
 }
 
-function openFlightAware() {
-  // Now handled as internal tab via goTab
-  goTab('flightaware');
-}
 function setTheme(t) {
   S.theme=t;
   document.documentElement.setAttribute('data-theme', t==='premium'?'':t);
   localStorage.setItem('gykf_theme',t);
   updateThemeToggleBtn();
   if(S.tab==='home') renderHome(document.getElementById('content'));
-  else render();
 }
 function toggleDayNight() {
   const map = {'premium':'premium-day','premium-day':'premium','standard-night':'standard-day','standard-day':'standard-night'};
@@ -998,7 +991,7 @@ function loadBoredFallback() {
 async function syncAll() {
   toast('Syncing...');
   S.weather=null;
-  await Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored(),fetchWeather()]);
+  await Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()]);
   if(S.inDay) await fetchDay(DAYS[S.dayView]);
   render(); toast('✅ Synced');
 }
@@ -1025,105 +1018,12 @@ const ICONS = {
   flightaware: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2c-.5-.1-.9.1-1.1.5L3 7.1c-.2.4 0 .9.4 1.1L8 11 6 13H4l-1 1 1.5 1.5L6 17l1.5 1.5L9 17l-1-1v-2l2-2 2.9 4.8c.2.4.7.6 1.1.4z"/><path d="M4 6c1-1 2.5-1.5 4-1M18 20c1-1 1.5-2.5 1-4"/></svg>`,
 };
 
-function openWeatherApp() {
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  // Try native weather app deep links, fall back to weather website
-  if(isIOS) {
-    // Opens Apple Weather or weather.com
-    window.open('https://weather.com/weather/today/l/43.4606,-80.3785', '_blank');
-  } else if(isAndroid) {
-    window.open('https://weather.com/weather/today/l/43.4606,-80.3785', '_blank');
-  } else {
-    window.open('https://weather.com/weather/today/l/43.4606,-80.3785', '_blank');
-  }
-}
-
-// METAR + TAF fetch for CYKF (Kitchener Airport)
-async function fetchWeather() {
-  try {
-    // Fetch METAR
-    const metarUrl = 'https://aviationweather.gov/api/data/metar?ids=CYKF&format=json&hours=2';
-    const metarRes = await fetch(metarUrl);
-    const metarData = await metarRes.json();
-    if (metarData && metarData.length > 0) {
-      S.metar = metarData[0];
-    }
-  } catch(e) {
-    console.log('METAR fetch failed:', e);
-    S.metar = null;
-  }
-  try {
-    // Fetch TAF
-    const tafUrl = 'https://aviationweather.gov/api/data/taf?ids=CYKF&format=json';
-    const tafRes = await fetch(tafUrl);
-    const tafData = await tafRes.json();
-    if (tafData && tafData.length > 0) {
-      S.taf = tafData[0];
-    }
-  } catch(e) {
-    console.log('TAF fetch failed:', e);
-    S.taf = null;
-  }
-  S.weather = S.metar || S.taf ? { loaded: true } : null;
-  console.log('METAR:', S.metar);
-  console.log('TAF:', S.taf);
-}
-
-function flightCategory(metar) {
-  if (!metar) return { cat: 'N/A', color: '#888' };
-  const vis = metar.visib || 10;
-  const cig = metar.clouds ? Math.min(...metar.clouds.filter(c=>c.cover==='BKN'||c.cover==='OVC').map(c=>c.base||9999)) : 9999;
-  if (vis >= 5 && cig >= 3000) return { cat: 'VFR', color: '#22CC66' };
-  if (vis >= 3 && cig >= 1000) return { cat: 'MVFR', color: '#4499FF' };
-  if (vis >= 1 && cig >= 500)  return { cat: 'IFR', color: '#FF4444' };
-  return { cat: 'LIFR', color: '#FF00FF' };
-}
-
-function windDir(deg) {
-  if (deg === undefined || deg === null) return 'VRB';
-  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
-  return dirs[Math.round(deg/45) % 8];
-}
-
-function weatherIcon(code) {
-  if(code === 0) return '☀️';
-  if(code <= 2) return '⛅';
-  if(code <= 3) return '☁️';
-  if(code <= 49) return '🌫️';
-  if(code <= 59) return '🌦️';
-  if(code <= 69) return '🌧️';
-  if(code <= 79) return '❄️';
-  if(code <= 82) return '🌧️';
-  if(code <= 86) return '🌨️';
-  if(code <= 99) return '⛈️';
-  return '🌡️';
-}
-
-function weatherDesc(code) {
-  if(code===0) return 'Clear';
-  if(code<=2) return 'Partly cloudy';
-  if(code<=3) return 'Overcast';
-  if(code<=49) return 'Foggy';
-  if(code<=59) return 'Drizzle';
-  if(code<=69) return 'Rain';
-  if(code<=79) return 'Snow';
-  if(code<=82) return 'Showers';
-  if(code<=86) return 'Snow showers';
-  if(code<=99) return 'Thunderstorm';
-  return 'Unknown';
-}
-
 async function renderHome(el) {
   document.getElementById('barTitle').textContent = 'Skycare';
   document.getElementById('eodFab').classList.remove('show');
   document.getElementById('fab').style.display = 'none';
 
-  // Fetch weather if not loaded
-  if(!S.weather && S.weather !== false) {
-    S.weather = false; // prevent double fetch
-    fetchWeather().then(()=>renderHome(document.getElementById('content')));
-  }
+
 
   const tasks   = S.tasks[DAYS[TODAY]] || [];
   const done    = tasks.filter(t=>t.done).length;
@@ -1148,42 +1048,10 @@ async function renderHome(el) {
     {id:'procedures', svg:ICONS.procedures, label:'Procedures', info:'O₂ · WW · Metro'},
     {id:'contacts',   svg:ICONS.contacts,   label:'Contacts',   info:`${S.contacts.length} entries`},
     {id:'bored',      svg:ICONS.bored,      label:'Bored Board',info:`${S.bored.length} tasks`},
-    {id:'flightaware',svg:ICONS.flightaware,label:'FlightAware',info:'Live flight tracking'},
+    {id:'flightaware',svg:ICONS.flightaware,label:'FlightAware',info:'Live tracking'},
   ];
 
-    // Build METAR/TAF widget
-  let weatherHtml = '';
-  if (S.metar) {
-    const m = S.metar;
-    const fc = flightCategory(m);
-    const windStr = m.wdir !== undefined ? `${m.wdir}° ${windDir(m.wdir)} @ ${m.wspd||0}${m.wgst?'G'+m.wgst:''} kt` : 'Calm';
-    const visStr  = m.visib !== undefined ? `${m.visib} SM` : 'N/A';
-    const altStr  = m.altim !== undefined ? `${(m.altim*0.02953).toFixed(2)}"` : 'N/A';
-    const tempStr = m.temp  !== undefined ? `${Math.round(m.temp)}°C` : 'N/A';
-    const dewStr  = m.dewp  !== undefined ? `${Math.round(m.dewp)}°C` : 'N/A';
-    const rawMetar  = m.rawOb || m.raw || '';
-    const cloudsStr = m.clouds ? m.clouds.map(c=>`${c.cover} ${c.base||'CLR'}`).join(' ') : 'SKC';
-    const obsTime   = m.obsTime ? new Date(m.obsTime*1000).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit',timeZone:'America/Toronto'}) : '';
-    weatherHtml = `
-    <div onclick="openWeatherApp()" style="margin:0 14px 14px;background:var(--glass2);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;">
-      <div style="padding:9px 14px;background:var(--glass);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-        <div><span style="font-size:11px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase">CYKF · Kitchener</span>${obsTime?` <span style="font-size:10px;color:var(--t3)">Obs: ${obsTime}</span>`:''}</div>
-        <div style="background:${fc.color}22;border:1px solid ${fc.color}55;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;color:${fc.color};letter-spacing:1px">${fc.cat}</div>
-      </div>
-      <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Wind</div><div style="font-size:12px;color:var(--t1);font-weight:600">${windStr}</div></div>
-        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Visibility</div><div style="font-size:12px;color:var(--t1);font-weight:600">${visStr}</div></div>
-        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Altimeter</div><div style="font-size:12px;color:var(--t1);font-weight:600">${altStr}</div></div>
-        <div><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Temp / Dew</div><div style="font-size:12px;color:var(--t1);font-weight:600">${tempStr} / ${dewStr}</div></div>
-        <div style="grid-column:span 2"><div style="font-size:9px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px">Clouds</div><div style="font-size:12px;color:var(--t1);font-weight:600">${cloudsStr}</div></div>
-      </div>
-      ${rawMetar?`<div style="padding:7px 14px;border-top:1px solid var(--border);font-size:10px;color:var(--t3);font-family:monospace;word-break:break-all">${rawMetar}</div>`:''}
-    </div>
-    ${S.taf&&S.taf.rawTAF?`<div onclick="openWeatherApp()" style="margin:-4px 14px 14px;background:var(--glass);border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);padding:8px 14px;cursor:pointer"><div style="font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">TAF</div><div style="font-size:10px;color:var(--t2);font-family:monospace;line-height:1.5;word-break:break-all">${S.taf.rawTAF}</div></div>`:''}
-  `;
-  } else if (S.weather === false) {
-    weatherHtml = `<div style="margin:0 14px 14px;background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;text-align:center"><div style="font-size:11px;color:var(--t3)">Loading METAR for CYKF...</div></div>`;
-  }
+    const weatherHtml = '';
 
   let html = `
     <style>
