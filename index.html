@@ -558,15 +558,21 @@ body::before{
   background:linear-gradient(135deg,#1A6B3C,#22A855);
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:13px;font-weight:700;
-  transform:translateX(-100%);transition:transform 0.2s;
-  cursor:pointer;
+  transform:translateX(-100%);
+  transition:transform 0.25s ease;
+  cursor:pointer;z-index:2;
 }
 .swipe-action-right{
   position:absolute;right:0;top:0;bottom:0;width:90px;
   background:linear-gradient(135deg,#8B1A1A,#CC2222);
   display:flex;align-items:center;justify-content:center;
   color:#fff;font-size:13px;font-weight:700;
-  cursor:pointer;
+  transform:translateX(100%);
+  transition:transform 0.25s ease;
+  cursor:pointer;z-index:2;
+}
+.swipe-wrap.open-right .swipe-action-right{
+  transform:translateX(0);
 }
 .swipe-wrap .srow,
 .swipe-wrap .bitem{
@@ -579,6 +585,7 @@ body::before{
 .swipe-wrap.open-left .swipe-action-left{transform:translateX(0)}
 .swipe-wrap.open-right .srow,
 .swipe-wrap.open-right .bitem{transform:translateX(-90px)}
+.swipe-wrap.open-right .swipe-action-right{transform:translateX(0)}
 
 /* ── DRAGGABLE NAV ── */
 .nb{cursor:grab}
@@ -716,7 +723,7 @@ window.addEventListener('load', async () => {
   
   document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
   updateThemeToggleBtn();
-  buildNav(); restoreNavOrder(); loadNotes(); loadProcs(); loadDmg();
+  buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg();
   setupPullToRefresh();
   setupPhotoInput();
   setTimeout(async () => {
@@ -884,6 +891,12 @@ async function fetchDay(tabName) {
     });
     S.tasks[tabName]=tasks;
   } catch(e){ S.tasks[tabName]=S.tasks[tabName]||fallback(); }
+  // Cache tasks locally so they survive page refresh
+  try {
+    const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
+    cached[tabName] = S.tasks[tabName];
+    localStorage.setItem('gykf_tasks', JSON.stringify(cached));
+  } catch(e) {}
 }
 
 async function fetchShopping() {
@@ -965,6 +978,7 @@ async function fetchContacts() {
     {name:'Aircraft Spruce', address:'27 York Rd, Brantford, ON N3T 0L2', notes:'Pick up aircraft parts — Luis'},
     {name:'Crew House', address:'220 Thomas Slee Drive, Kitchener', notes:'Code: 3737'},
     {name:'Gate', address:'', notes:'Code: 3548'},
+    {name:'Laundry', address:'1077 Weber St E Unit #1, Kitchener, ON N2A 3Y5', notes:'Drop-off laundry'},
     {name:'Wes Verboon (MX Supervisor)', address:'', notes:'778-838-1498 · Mon–Fri 0700–1900'},
     {name:'Josh (Crew Chief)', address:'', notes:'519-276-0204 · 14 on 14 off, do not call during off days'},
     {name:'Keddy (Crew Chief)', address:'', notes:'519-301-3170 · 14 on 14 off, do not call during off days'},
@@ -1039,10 +1053,19 @@ function loadBoredFallback() {
 
 async function syncAll() {
   toast('Syncing...');
-  S.weather=null;
-  await Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()]);
+  // Fetch all data fresh from sheets
+  await Promise.all([
+    fetchDay(DAYS[TODAY]),
+    fetchShopping(),
+    fetchContacts(),
+    fetchBored()
+  ]);
+  // If viewing a specific day, refresh that too
   if(S.inDay) await fetchDay(DAYS[S.dayView]);
-  render(); toast('✅ Synced');
+  // Clear local shopping cache so fresh sheet data takes priority
+  localStorage.removeItem('gykf_shop_state');
+  render();
+  toast('✅ Synced');
 }
 
 async function api(data) {
@@ -2054,12 +2077,16 @@ function setupSwipeTwoWay(el, onLeft, onRight) {
   el.addEventListener('touchmove', e=>{
     if(!active) return;
     currentX = e.touches[0].clientX - startX;
-    // Prevent vertical scroll interference
     if(Math.abs(currentX) > 8) e.preventDefault();
+    // Live feedback while dragging
+    const inner = el.querySelector('.srow,.bitem');
+    if(inner) inner.style.transform = `translateX(${Math.max(-90,Math.min(90,currentX))}px)`;
   },{passive:false});
 
   el.addEventListener('touchend', ()=>{
     if(!active) return; active=false;
+    const inner = el.querySelector('.srow,.bitem');
+    if(inner) inner.style.transform = '';
     if(currentX > 50) {
       el.classList.add('open-left');
       el.classList.remove('open-right');
@@ -2102,6 +2129,11 @@ function editShopItem(idx) {
       if(!newItem) return;
       S.shopping[idx] = {...item, item:newItem, cabinet:newCab, store:newStore};
       saveShoppingState();
+      // Delete old item and add new one in sheet
+      if(newItem !== item.item) {
+        await api({action:'deleteShopItem', item:item.item});
+      }
+      await api({action:'addShopItem', item:newItem, cabinet:newCab, store:newStore, toBuy:item.checked});
       closeModal();
       renderShopping(document.getElementById('content'));
       toast('Item updated ✓');
@@ -2109,7 +2141,11 @@ function editShopItem(idx) {
 }
 
 function deleteShopItem(idx) {
-  if(!confirm(`Delete "${S.shopping[idx].item}"?`)) return;
+  const item = S.shopping[idx];
+  if(!confirm(`Delete "${item.item}"?`)) return;
+  // Remove from backend (sheet)
+  api({action:'deleteShopItem', item:item.item});
+  // Remove from local state and cache
   S.shopping.splice(idx,1);
   saveShoppingState();
   renderShopping(document.getElementById('content'));
@@ -2135,6 +2171,9 @@ function editBoredItem(idx) {
 
 function deleteBoredItem(idx) {
   if(!confirm(`Delete this task?`)) return;
+  const task = S.bored[idx].task;
+  // Call backend to delete from sheet
+  api({action:'deleteBoredItem', task});
   S.bored.splice(idx,1);
   localStorage.setItem('gykf_bored', JSON.stringify(S.bored));
   renderBored(document.getElementById('content'));
@@ -2170,6 +2209,15 @@ function clearTrip() {
   toast('Trip notes cleared');
 }
 function loadNotes() { try{S.notes=JSON.parse(localStorage.getItem('gykf_notes')||'{}');}catch(e){S.notes={};} }
+function loadTaskCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
+    // Pre-populate S.tasks with cached data — fresh fetch will override
+    Object.keys(cached).forEach(tab => {
+      if(!S.tasks[tab]) S.tasks[tab] = cached[tab];
+    });
+  } catch(e) {}
+}
 function saveDmg() { localStorage.setItem('gykf_dmg',JSON.stringify(S.dmgReports)); }
 function loadDmg() { try{S.dmgReports=JSON.parse(localStorage.getItem('gykf_dmg')||'{}');}catch(e){S.dmgReports={};} }
 function fallback() {
