@@ -218,15 +218,15 @@ body::before{
   50%{transform:translateY(-10px) rotate(4deg)}
 }
 @keyframes takeoff{
-  0%   {transform:translateX(-8px) translateY(6px) rotate(-5deg);opacity:0.6}
-  10%  {transform:translateX(-4px) translateY(3px) rotate(-3deg);opacity:0.9}
-  20%  {transform:translateX(0px)  translateY(0px) rotate(0deg); opacity:1}
-  40%  {transform:translateX(8px)  translateY(-4px) rotate(6deg);opacity:1}
-  65%  {transform:translateX(22px) translateY(-18px) rotate(14deg);opacity:0.8}
-  80%  {transform:translateX(34px) translateY(-30px) rotate(18deg);opacity:0}
-  81%  {transform:translateX(-40px) translateY(12px) rotate(-8deg);opacity:0}
-  95%  {transform:translateX(-12px) translateY(5px) rotate(-4deg);opacity:0.5}
-  100% {transform:translateX(-8px)  translateY(6px) rotate(-5deg);opacity:0.6}
+  0%   {transform:translateX(-60px) translateY(8px)  rotate(0deg); opacity:0}
+  8%   {transform:translateX(-45px) translateY(6px)  rotate(2deg); opacity:0.6}
+  18%  {transform:translateX(-25px) translateY(3px)  rotate(8deg); opacity:0.9}
+  30%  {transform:translateX(-5px)  translateY(-4px) rotate(12deg);opacity:1}
+  50%  {transform:translateX(20px)  translateY(-16px) rotate(15deg);opacity:1}
+  70%  {transform:translateX(50px)  translateY(-34px) rotate(15deg);opacity:0.7}
+  85%  {transform:translateX(75px)  translateY(-52px) rotate(15deg);opacity:0}
+  86%  {transform:translateX(-70px) translateY(8px)  rotate(0deg); opacity:0}
+  100% {transform:translateX(-60px) translateY(8px)  rotate(0deg); opacity:0}
 }
 .sp-title{color:#E8C86A;font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase}
 .sp-sub{color:#7890A8;font-size:12px;letter-spacing:3px;margin-top:6px;font-weight:300}
@@ -551,6 +551,67 @@ body::before{
 .toast{position:fixed;bottom:calc(76px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);color:var(--t1);border:1px solid var(--border2);padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:400;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-weight:500}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ── SWIPE ACTIONS ── */
+.swipe-wrap{position:relative;overflow:hidden;touch-action:pan-y}
+.swipe-action-left{
+  position:absolute;left:0;top:0;bottom:0;width:90px;
+  background:linear-gradient(135deg,#1A6B3C,#22A855);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:700;
+  transform:translateX(-100%);transition:transform 0.2s;
+  cursor:pointer;
+}
+.swipe-action-right{
+  position:absolute;right:0;top:0;bottom:0;width:90px;
+  background:linear-gradient(135deg,#8B1A1A,#CC2222);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;font-size:13px;font-weight:700;
+  cursor:pointer;
+}
+.swipe-wrap .srow,
+.swipe-wrap .bitem{
+  position:relative;z-index:1;
+  transition:transform 0.2s ease;
+  background:var(--glass);
+}
+.swipe-wrap.open-left .srow,
+.swipe-wrap.open-left .bitem{transform:translateX(90px)}
+.swipe-wrap.open-left .swipe-action-left{transform:translateX(0)}
+.swipe-wrap.open-right .srow,
+.swipe-wrap.open-right .bitem{transform:translateX(-90px)}
+
+/* ── DRAGGABLE NAV ── */
+.nb{cursor:grab}
+.nb.dragging{opacity:0.5;cursor:grabbing}
+.nb.drag-over{background:var(--accent-dim)}
+
+/* ── CART STORE HEADER (bigger, not red) ── */
+.cart-store-hdr{
+  padding:12px 16px 8px;
+  font-size:13px;font-weight:700;
+  letter-spacing:0.5px;
+  color:#fff;
+  display:flex;align-items:center;gap:10px;
+  margin-top:4px;
+}
+.cart-count{
+  background:rgba(255,255,255,0.2);
+  border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;
+}
+.cart-store-divider{
+  height:3px;margin:0 0 2px;border-radius:2px;
+}
+
+/* ── QR CODE ── */
+.qr-wrap{
+  margin:12px 16px;
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;text-align:center;
+}
+.qr-title{font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px}
+.qr-canvas{border-radius:8px;background:#fff;padding:8px}
+.qr-url{font-size:11px;color:var(--t3);margin-top:8px;font-family:monospace}
+
 /* PHOTO PREVIEW */
 .photo-preview{width:100%;border-radius:var(--radius-sm);margin:8px 0;max-height:200px;object-fit:cover;display:none;border:1px solid var(--border)}
 </style>
@@ -599,7 +660,7 @@ body::before{
 <script>
 // ── CONFIG ────────────────────────────────────────────────────────
 const SHEET_ID    = '12vTTI_2UBH-yKDAdYL7k937EP1hCdJXFv8ml3nmsobQ';
-const BACKEND_URL = 'BACKEND_URL_HERE';
+const BACKEND_URL = 'https://script.google.com/macros/s/AKfycbxR1D54W4UQrLXAnk0e2B8fCdf9TTzYI4qe4ijhsNDlOSESM1JExspP-0KBFsa9AmdTag/exec';
 
 const DAYS      = ['☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday','4️⃣ Thursday','5️⃣ Friday','🗓 Saturday'];
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -655,12 +716,13 @@ window.addEventListener('load', async () => {
   
   document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
   updateThemeToggleBtn();
-  buildNav(); loadNotes(); loadProcs(); loadDmg();
+  buildNav(); restoreNavOrder(); loadNotes(); loadProcs(); loadDmg();
   setupPullToRefresh();
   setupPhotoInput();
   setTimeout(async () => {
     document.getElementById('splash').classList.add('out');
     document.getElementById('app').classList.add('show');
+    setupDraggableNav();
     // Start on home screen
     S.tab = 'home';
     document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
@@ -838,7 +900,7 @@ async function fetchShopping() {
       if(/mx\s*han[gh]?[ae]r/i.test(s)) return 'MX Hangar';
       if(/mx\s*office/i.test(s)) return 'MX Office';
       if(/crew\s*house/i.test(s)) return 'Crew House';
-      if(/jet/i.test(s)) return 'Jet Cabinet'; // catches "Jet's Cabinet", "Jet Cabinet", etc
+      if(/jet/i.test(s)) return "Jet's Cabinet"; // normalize all Jet variations
       if(/cr\s*(groomer|corner)/i.test(s)) return "CR Groomers' Corner";
       if(/cr\s*office/i.test(s)) return 'CR Office';
       if(/metro/i.test(s)) return 'Metro Cabinet';
@@ -1391,13 +1453,18 @@ function renderShopping(el) {
     filtered.forEach(item=>{
       const ri=items.indexOf(item);
       const dot=STORE_COLORS[item.store]||'#888';
-      html+=`<div class="srow ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
-        <div class="scb ${item.checked?'on':''}">${item.checked?'✓':''}</div>
-        <div class="sinfo">
-          <div class="sname">${item.item}</div>
-          <div class="smeta">
-            <span style="font-weight:600;color:var(--t1)"><span class="sdot" style="background:${dot}"></span>${item.store}</span>
-            <span style="color:var(--t2)">${item.cabinet}</span>
+      html+=`
+      <div class="swipe-wrap" data-idx="${ri}">
+        <div class="swipe-action-left">✏️ Edit</div>
+        <div class="swipe-action-right">🗑 Delete</div>
+        <div class="srow ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
+          <div class="scb ${item.checked?'on':''}">${item.checked?'✓':''}</div>
+          <div class="sinfo">
+            <div class="sname">${item.item}</div>
+            <div class="smeta">
+              <span style="font-weight:600;color:var(--t1)"><span class="sdot" style="background:${dot}"></span>${item.store}</span>
+              <span style="color:var(--t2)">${item.cabinet}</span>
+            </div>
           </div>
         </div>
       </div>`;
@@ -1409,6 +1476,11 @@ function renderShopping(el) {
   rb.className='reset-bar';
   rb.innerHTML=`<button class="reset-btn" onclick="resetShop()">✅ Reset all to In Stock</button>`;
   el.appendChild(rb);
+  // Setup two-way swipe on shopping rows
+  el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
+    const i=parseInt(w.dataset.idx);
+    if(!isNaN(i)) setupSwipeTwoWay(w, ()=>editShopItem(i), ()=>deleteShopItem(i));
+  });
   // Keep search focus
   const si=document.getElementById('shopSrch');
   if(si&&q){si.focus();si.setSelectionRange(q.length,q.length);}
@@ -1450,15 +1522,19 @@ function renderCart(el, items) {
   } else {
     Object.entries(byStore).forEach(([store,sitems])=>{
       const col=STORE_COLORS[store]||'#444';
-      html+=`<div class="cart-store-hdr" style="background:${col}">
-        ${store} <span class="cart-count">${sitems.length}</span>
+      html+=`
+      <div style="margin-top:8px">
+        <div class="cart-store-hdr" style="background:${col}">
+          ✈ ${store} <span class="cart-count">${sitems.length} item${sitems.length>1?'s':''}</span>
+        </div>
+        <div class="cart-store-divider" style="background:${col};opacity:0.4"></div>
       </div>`;
       sitems.forEach(item=>{
         const ri=items.indexOf(item);
-        html+=`<div class="srow tobuy" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
-          <div class="scb on">✓</div>
+        html+=`<div class="srow" style="background:var(--glass);border-left:3px solid ${col}" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
+          <div class="scb" style="background:${col};border-color:${col};color:#fff">✓</div>
           <div class="sinfo">
-            <div class="sname">${item.item}</div>
+            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
           </div>
         </div>`;
@@ -1580,8 +1656,20 @@ function renderProcs(el) {
       </div>
     </div>`;
   });
-  html+='</div>';
-  el.innerHTML=html;
+  // Add QR code section at top of procedures
+  const qrSection = `
+    <div class="qr-wrap">
+      <div class="qr-title">📱 Install Skycare App</div>
+      <canvas id="qrCanvas" class="qr-canvas" width="180" height="180"></canvas>
+      <div class="qr-url">aristihernandez-svg.github.io/groomers-ykf</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:6px">Scan to open · Add to Home Screen to install</div>
+    </div>`;
+
+  html = qrSection + html + '</div>';
+  el.innerHTML = html;
+
+  // Draw QR code using canvas
+  setTimeout(()=>drawQR('qrCanvas','https://aristihernandez-svg.github.io/groomers-ykf/'),50);
 }
 
 // ── CONTACTS ───────────────────────────────────────────────────────
@@ -1629,13 +1717,21 @@ function renderBored(el) {
   }
   let html='<div class="bored-list">';
   S.bored.forEach((b,i)=>{
-    html+=`<div class="bitem ${b.done?'done':''}" onclick="toggleBored(${i})">
-      <div class="bcb ${b.done?'on':''}">${b.done?'✓':''}</div>
-      <div class="btxt">${b.task}</div>
-      <div class="bdel" onclick="event.stopPropagation();deleteBored(${i})">✕</div>
+    html+=`
+    <div class="swipe-wrap" data-idx="${i}">
+      <div class="swipe-action-left">✏️ Edit</div>
+      <div class="swipe-action-right">🗑 Delete</div>
+      <div class="bitem ${b.done?'done':''}" onclick="toggleBored(${i})">
+        <div class="bcb ${b.done?'on':''}">${b.done?'✓':''}</div>
+        <div class="btxt">${b.task}</div>
+      </div>
     </div>`;
   });
   el.innerHTML=html+'</div>';
+  el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
+    const i=parseInt(w.dataset.idx);
+    if(!isNaN(i)) setupSwipeTwoWay(w,()=>editBoredItem(i),()=>deleteBoredItem(i));
+  });
 }
 
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
@@ -1941,6 +2037,110 @@ function toast(msg) {
   t.textContent=msg; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
+// ── SWIPE HANDLER (two-direction) ────────────────────────────
+function setupSwipeTwoWay(el, onLeft, onRight) {
+  let startX=0, currentX=0, active=false;
+  const inner = el.querySelector('.srow,.bitem');
+  if(!inner) return;
+
+  el.addEventListener('touchstart', e=>{
+    // Close any other open swipes
+    document.querySelectorAll('.swipe-wrap.open-left,.swipe-wrap.open-right').forEach(w=>{
+      if(w!==el){w.classList.remove('open-left','open-right');}
+    });
+    startX=e.touches[0].clientX; active=true;
+  },{passive:true});
+
+  el.addEventListener('touchmove', e=>{
+    if(!active) return;
+    currentX = e.touches[0].clientX - startX;
+    // Prevent vertical scroll interference
+    if(Math.abs(currentX) > 8) e.preventDefault();
+  },{passive:false});
+
+  el.addEventListener('touchend', ()=>{
+    if(!active) return; active=false;
+    if(currentX > 50) {
+      el.classList.add('open-left');
+      el.classList.remove('open-right');
+    } else if(currentX < -50) {
+      el.classList.add('open-right');
+      el.classList.remove('open-left');
+    } else {
+      el.classList.remove('open-left','open-right');
+    }
+    currentX=0;
+  });
+
+  // Action buttons
+  const leftBtn = el.querySelector('.swipe-action-left');
+  const rightBtn = el.querySelector('.swipe-action-right');
+  if(leftBtn) leftBtn.addEventListener('click', ()=>{
+    el.classList.remove('open-left','open-right');
+    onLeft();
+  });
+  if(rightBtn) rightBtn.addEventListener('click', ()=>{
+    el.classList.remove('open-left','open-right');
+    onRight();
+  });
+}
+
+// ── EDIT SHOPPING ITEM ────────────────────────────────────────
+function editShopItem(idx) {
+  const item = S.shopping[idx];
+  openModal('✏️ Edit Item',
+    `<label>Item name</label>
+     <input id="eSI" value="${item.item}">
+     <label>Location / Cabinet</label>
+     <input id="eSC" value="${item.cabinet||''}">
+     <label>Store</label>
+     <select id="eSS">${Object.keys(STORE_COLORS).map(s=>`<option value="${s}" ${s===item.store?'selected':''}>${s}</option>`).join('')}</select>`,
+    async ()=>{
+      const newItem=document.getElementById('eSI').value.trim();
+      const newCab=document.getElementById('eSC').value.trim();
+      const newStore=document.getElementById('eSS').value;
+      if(!newItem) return;
+      S.shopping[idx] = {...item, item:newItem, cabinet:newCab, store:newStore};
+      saveShoppingState();
+      closeModal();
+      renderShopping(document.getElementById('content'));
+      toast('Item updated ✓');
+    });
+}
+
+function deleteShopItem(idx) {
+  if(!confirm(`Delete "${S.shopping[idx].item}"?`)) return;
+  S.shopping.splice(idx,1);
+  saveShoppingState();
+  renderShopping(document.getElementById('content'));
+  toast('Item deleted');
+}
+
+// ── EDIT BORED ITEM ───────────────────────────────────────────
+function editBoredItem(idx) {
+  const item = S.bored[idx];
+  openModal('✏️ Edit Task',
+    `<label>Task</label>
+     <textarea id="eBT">${item.task}</textarea>`,
+    ()=>{
+      const task=document.getElementById('eBT').value.trim();
+      if(!task) return;
+      S.bored[idx].task = task;
+      localStorage.setItem('gykf_bored', JSON.stringify(S.bored));
+      closeModal();
+      renderBored(document.getElementById('content'));
+      toast('Task updated ✓');
+    });
+}
+
+function deleteBoredItem(idx) {
+  if(!confirm(`Delete this task?`)) return;
+  S.bored.splice(idx,1);
+  localStorage.setItem('gykf_bored', JSON.stringify(S.bored));
+  renderBored(document.getElementById('content'));
+  toast('Task deleted');
+}
+
 function saveNotes() { localStorage.setItem('gykf_notes',JSON.stringify(S.notes)); }
 
 function saveShoppingState() {
@@ -1984,6 +2184,148 @@ function fallback() {
   ];
 }
 if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+// ── QR CODE GENERATOR (pure JS, no library) ──────────────────
+function drawQR(canvasId, url) {
+  const canvas = document.getElementById(canvasId);
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const size = canvas.width;
+
+  // Simple QR using a pre-encoded URL approach
+  // We'll use a free QR API image
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,size,size);
+    ctx.drawImage(img, 0, 0, size, size);
+  };
+  img.onerror = () => {
+    // Fallback: draw text
+    ctx.fillStyle = '#0B1120';
+    ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = '#C8A84B';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Scan on phone', size/2, size/2-10);
+    ctx.fillText('camera app', size/2, size/2+10);
+  };
+  // Use Google Charts QR API (free, no key)
+  img.src = `https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8`;
+}
+
+// ── DRAGGABLE NAV ICONS ───────────────────────────────────────
+let dragSrcEl = null;
+
+function setupDraggableNav() {
+  const nav = document.getElementById('nav');
+  if(!nav) return;
+
+  const items = nav.querySelectorAll('.nb');
+  items.forEach(item => {
+    item.setAttribute('draggable', 'true');
+
+    item.addEventListener('dragstart', e => {
+      dragSrcEl = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      items.forEach(i=>i.classList.remove('drag-over'));
+      item.classList.add('drag-over');
+    });
+
+    item.addEventListener('dragleave', () => {
+      item.classList.remove('drag-over');
+    });
+
+    item.addEventListener('drop', e => {
+      e.preventDefault();
+      if(dragSrcEl && dragSrcEl !== item) {
+        // Swap positions
+        const allItems = [...nav.querySelectorAll('.nb')];
+        const srcIdx = allItems.indexOf(dragSrcEl);
+        const dstIdx = allItems.indexOf(item);
+        if(srcIdx < dstIdx) {
+          nav.insertBefore(dragSrcEl, item.nextSibling);
+        } else {
+          nav.insertBefore(dragSrcEl, item);
+        }
+        // Save order
+        const order = [...nav.querySelectorAll('.nb')].map(n=>n.id.replace('nb-',''));
+        localStorage.setItem('gykf_nav_order', JSON.stringify(order));
+      }
+      items.forEach(i=>i.classList.remove('drag-over','dragging'));
+    });
+
+    item.addEventListener('dragend', () => {
+      items.forEach(i=>i.classList.remove('dragging','drag-over'));
+    });
+
+    // Touch drag support for mobile
+    let touchStartX=0, touchStartY=0, clone=null;
+    item.addEventListener('touchstart', e=>{
+      if(e.touches.length!==1) return;
+      touchStartX=e.touches[0].clientX;
+      touchStartY=e.touches[0].clientY;
+    },{passive:true});
+
+    item.addEventListener('touchmove', e=>{
+      if(!clone&&Math.abs(e.touches[0].clientX-touchStartX)>10){
+        clone=item.cloneNode(true);
+        clone.style.cssText='position:fixed;opacity:0.7;pointer-events:none;z-index:999;background:var(--accent-dim);border-radius:8px';
+        document.body.appendChild(clone);
+        dragSrcEl=item;
+        item.classList.add('dragging');
+      }
+      if(clone){
+        clone.style.left=(e.touches[0].clientX-30)+'px';
+        clone.style.top=(e.touches[0].clientY-30)+'px';
+        // Find target
+        clone.style.display='none';
+        const el2=document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY);
+        clone.style.display='';
+        const target=el2?.closest('.nb');
+        items.forEach(i=>i.classList.remove('drag-over'));
+        if(target&&target!==item) target.classList.add('drag-over');
+      }
+    },{passive:true});
+
+    item.addEventListener('touchend', e=>{
+      if(clone){
+        document.body.removeChild(clone); clone=null;
+        const target=nav.querySelector('.nb.drag-over');
+        if(target&&target!==item){
+          const allItems=[...nav.querySelectorAll('.nb')];
+          const srcIdx=allItems.indexOf(item);
+          const dstIdx=allItems.indexOf(target);
+          if(srcIdx<dstIdx) nav.insertBefore(item,target.nextSibling);
+          else nav.insertBefore(item,target);
+          const order=[...nav.querySelectorAll('.nb')].map(n=>n.id.replace('nb-',''));
+          localStorage.setItem('gykf_nav_order',JSON.stringify(order));
+        }
+        items.forEach(i=>i.classList.remove('drag-over','dragging'));
+        dragSrcEl=null;
+      }
+    },{passive:true});
+  });
+}
+
+function restoreNavOrder() {
+  try {
+    const order = JSON.parse(localStorage.getItem('gykf_nav_order')||'[]');
+    if(!order.length) return;
+    const nav = document.getElementById('nav');
+    order.forEach(id=>{
+      const el = document.getElementById('nb-'+id);
+      if(el) nav.appendChild(el);
+    });
+  } catch(e) {}
+}
 
 // ── FIREBASE PUSH NOTIFICATIONS ──────────────────────────────
 const FIREBASE_CONFIG = {
