@@ -1734,10 +1734,11 @@ function renderProcs(el) {
           <div class="dmg-hdr">📸 Damage Reports</div>
           <div class="dmg-body">
             <div class="dmg-list">
-              ${dmg.map(d=>`<div class="dmg-item">
+              ${dmg.map((d,di)=>`<div class="dmg-item">
                 <div>${d.text}</div>
                 <div style="font-size:11px;color:#888;margin-top:2px">${d.date}</div>
                 ${d.photo?`<img class="dmg-item-photo" src="${d.photo}" onclick="viewPhoto('${d.photo}')">`:''}
+                <button type="button" onclick="shareDmgReport('${key}',${di})" style="margin-top:8px;width:100%;padding:8px;border-radius:6px;border:1px solid rgba(232,64,64,0.25);background:var(--glass2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer">📤 Share to mechanic (text/email)</button>
               </div>`).join('')}
             </div>
           </div>
@@ -2116,12 +2117,53 @@ function setupPhotoInput() {
       }
     };
     reader.readAsDataURL(file);
+    e.target.value=''; // reset so the next tap reliably reopens the camera/picker
   });
 }
-function triggerPhoto(ctx) { S.photoCtx=ctx; document.getElementById('photoInput').click(); }
+function triggerPhoto(ctx) {
+  S.photoCtx=ctx;
+  const input=document.getElementById('photoInput');
+  input.value=''; // clear any previously selected file before opening
+  input.click();
+}
 function viewPhoto(src) {
   openModal('📸 Photo',`<img src="${src}" style="width:100%;border-radius:8px">`,null);
   document.getElementById('mSave').style.display='none';
+}
+
+// Share a damage report (description + photo) via the device's native
+// share sheet — Messages, WhatsApp, email, AirDrop, etc. — so it can be
+// handed straight to a mechanic without needing a separate login/view.
+async function shareDmgReport(key, idx) {
+  const report = (S.dmgReports[key]||[])[idx];
+  if(!report) return;
+  const procTitle = S.procs[key]?.title || key;
+  const text = `Damage Report — ${procTitle}\n${report.text}\n${report.date}`;
+
+  let file = null;
+  if(report.photo) {
+    try {
+      const blob = await (await fetch(report.photo)).blob();
+      file = new File([blob], 'damage-photo.jpg', {type: blob.type||'image/jpeg'});
+    } catch(e) { console.log('Photo conversion failed:', e); }
+  }
+
+  try {
+    if(navigator.share && (!file || (navigator.canShare && navigator.canShare({files:[file]})))) {
+      await navigator.share(file ? {text, files:[file]} : {text});
+      return;
+    }
+  } catch(e) { console.log('Share cancelled or failed:', e); return; }
+
+  // Fallback for browsers without Web Share / file support: copy the text
+  // and let the user save the photo manually.
+  try { await navigator.clipboard.writeText(text); toast('📋 Description copied — paste into your message'); }
+  catch(e) { toast('Could not copy text'); }
+  if(report.photo) {
+    const a=document.createElement('a');
+    a.href=report.photo; a.download='damage-photo.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+  }
 }
 
 // ── MODALS ─────────────────────────────────────────────────────────
