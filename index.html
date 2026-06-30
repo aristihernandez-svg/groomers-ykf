@@ -209,24 +209,25 @@ body::before{
   border:1px solid rgba(200,168,75,0.10);
 }
 .sp-plane{
-  font-size:52px;
+  display:flex;align-items:center;justify-content:center;
   filter:drop-shadow(0 4px 16px rgba(200,168,75,0.35));
   animation:bob 2.5s ease-in-out infinite;
 }
 @keyframes bob{
-  0%,100%{transform:translateY(0) rotate(-4deg)}
-  50%{transform:translateY(-10px) rotate(4deg)}
+  0%,100%{transform:translateY(0) rotate(-3deg)}
+  50%{transform:translateY(-10px) rotate(3deg)}
 }
+/* Continuous climb-out: the plane fades in low-left, climbs steadily to
+   high-right with the nose banking up in the direction of travel, then
+   fades out before resetting — the reset happens only while invisible,
+   so the loop reads as one unbroken takeoff rather than a snap-back. */
 @keyframes takeoff{
-  0%   {transform:translateX(-60px) translateY(8px)  rotate(0deg); opacity:0}
-  8%   {transform:translateX(-45px) translateY(6px)  rotate(2deg); opacity:0.6}
-  18%  {transform:translateX(-25px) translateY(3px)  rotate(8deg); opacity:0.9}
-  30%  {transform:translateX(-5px)  translateY(-4px) rotate(12deg);opacity:1}
-  50%  {transform:translateX(20px)  translateY(-16px) rotate(15deg);opacity:1}
-  70%  {transform:translateX(50px)  translateY(-34px) rotate(15deg);opacity:0.7}
-  85%  {transform:translateX(75px)  translateY(-52px) rotate(15deg);opacity:0}
-  86%  {transform:translateX(-70px) translateY(8px)  rotate(0deg); opacity:0}
-  100% {transform:translateX(-60px) translateY(8px)  rotate(0deg); opacity:0}
+  0%   {transform:translate(-70px,12px)  rotate(-2deg);  opacity:0}
+  10%  {transform:translate(-48px,7px)   rotate(-5deg);  opacity:1}
+  35%  {transform:translate(-12px,-6px)  rotate(-12deg); opacity:1}
+  60%  {transform:translate(28px,-26px)  rotate(-18deg); opacity:1}
+  85%  {transform:translate(62px,-48px)  rotate(-20deg); opacity:0.35}
+  100% {transform:translate(82px,-60px)  rotate(-20deg); opacity:0}
 }
 .sp-title{color:#E8C86A;font-size:26px;font-weight:700;letter-spacing:4px;text-transform:uppercase}
 .sp-sub{color:#7890A8;font-size:12px;letter-spacing:3px;margin-top:6px;font-weight:300}
@@ -626,7 +627,7 @@ body::before{
 <body>
 <div id="splash">
   <div class="splash-ring">
-    <div class="sp-plane">✈</div>
+    <div class="sp-plane"><svg viewBox="0 0 64 64" width="52" height="52" fill="#E8C86A"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg></div>
   </div>
   <div class="sp-title">Groomers YKF</div>
   <div class="sp-divider"></div>
@@ -1179,7 +1180,9 @@ async function renderHome(el) {
       background:linear-gradient(180deg,var(--navy2) 0%,transparent 100%);
       border-bottom:1px solid var(--border);
     ">
-      <div style="font-size:64px;margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-block">✈</div>
+      <div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
+        <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
+      </div>
       <div style="font-size:24px;font-weight:800;color:var(--t1);letter-spacing:1px">Skycare</div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
       
