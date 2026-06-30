@@ -704,6 +704,8 @@ const S = {
   mCtx:null, photoCtx:null,
   dmgReports:{}, // {procKey:[{text,photo,date}]}
   dark: localStorage.getItem('gykf_dark')==='1',
+  handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
+  pendingHandoffAudio: null,
 };
 
 const NAV_ITEMS = [
@@ -1221,8 +1223,10 @@ async function renderHome(el) {
       </div>
       <div style="font-size:24px;font-weight:800;color:var(--t1);letter-spacing:1px">Skycare</div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
-      
+
     </div>
+
+    ${renderHandoffNotesHtml()}
 
     <!-- Today progress -->
     <div style="
@@ -1313,7 +1317,8 @@ function renderToday(el) {
   const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
-  let html=`
+  let html=renderHandoffNotesHtml();
+  html+=`
     <div class="reset-day-bar">
       <button class="reset-day-btn" onclick="resetDay()">🔄 Reset today's tasks</button>
     </div>
@@ -2573,10 +2578,88 @@ function showEOD() {
   }
 
   msg+=`${'─'.repeat(30)}\n_Sent from ✈ Skycare — YKF Grooming Team_`;
+  S.pendingHandoffAudio = null;
   openModal('📋 End of Day Summary',
-    `<textarea id="eodTxt" readonly style="height:240px;font-size:12px;line-height:1.5;background:var(--bg3)">${msg}</textarea>`,
-    ()=>{ const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); toast('✅ Copied — paste into WhatsApp'); closeModal(); });
+    `<label>📌 Note for next shift (optional)</label>
+     <textarea id="eodNote" placeholder="Anything the next shift should know..." style="height:70px"></textarea>
+     <button type="button" id="eodVoiceBtn" onclick="recordHandoffVoice()"
+       style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
+              background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2);margin-bottom:4px">
+       🎙 Record voice note (max 60s)
+     </button>
+     <div id="eodVoiceStatus" style="font-size:11px;color:var(--t3);margin-bottom:10px"></div>
+     <label>Summary (auto-generated)</label>
+     <textarea id="eodTxt" readonly style="height:200px;font-size:12px;line-height:1.5;background:var(--bg3)">${msg}</textarea>`,
+    async()=>{
+      const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy');
+      const noteText = document.getElementById('eodNote')?.value.trim() || '';
+      const audio = S.pendingHandoffAudio || '';
+      if((noteText || audio) && db) {
+        try {
+          await db.collection('handoffNotes').add({
+            text:noteText, audio, day:DAY_NAMES[TODAY], date:dateStr,
+            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp()
+          });
+          toast('✅ Copied — handoff note saved for next shift');
+        } catch(e) {
+          console.log('Handoff note save failed:', e);
+          toast('✅ Copied — but handoff note failed to save (offline?)');
+        }
+      } else {
+        toast('✅ Copied — paste into WhatsApp');
+      }
+      S.pendingHandoffAudio = null;
+      closeModal();
+    });
   document.getElementById('mSave').textContent='📋 Copy & Close';
+}
+
+// In-page voice recording for the handoff note — same reasoning as the
+// in-page camera: avoids handing off to an OS-level recorder app that could
+// reload the PWA mid-flow. Hard-capped at 60s to stay well under Firestore's
+// 1MB document size limit once base64-encoded.
+let handoffRecorder = null;
+async function recordHandoffVoice() {
+  const btn = document.getElementById('eodVoiceBtn');
+  const status = document.getElementById('eodVoiceStatus');
+  if(handoffRecorder && handoffRecorder.state==='recording') { handoffRecorder.stop(); return; }
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({audio:true});
+  } catch(e) {
+    console.log('Mic unavailable:', e);
+    toast('Microphone unavailable');
+    return;
+  }
+  const chunks=[];
+  let seconds=0;
+  const maxSeconds=60;
+  try {
+    handoffRecorder = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus', audioBitsPerSecond:24000});
+  } catch(e) {
+    handoffRecorder = new MediaRecorder(stream); // fallback for browsers without opus/webm support
+  }
+  handoffRecorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
+  const timer = setInterval(()=>{
+    seconds++;
+    if(status) status.textContent = `🔴 Recording... ${seconds}s / ${maxSeconds}s (tap again to stop)`;
+    if(seconds>=maxSeconds) handoffRecorder.stop();
+  },1000);
+  handoffRecorder.onstop = () => {
+    clearInterval(timer);
+    stream.getTracks().forEach(t=>t.stop());
+    const blob = new Blob(chunks, {type:handoffRecorder.mimeType||'audio/webm'});
+    const reader = new FileReader();
+    reader.onload = () => {
+      S.pendingHandoffAudio = reader.result;
+      if(status) status.textContent = `✅ Voice note recorded (${seconds}s)`;
+      if(btn) { btn.textContent = '🎙 Re-record voice note'; btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; }
+    };
+    reader.readAsDataURL(blob);
+  };
+  handoffRecorder.start();
+  if(btn) btn.textContent = '⏹ Stop recording';
+  if(status) status.textContent = '🔴 Recording... 0s / 60s (tap again to stop)';
 }
 
 // ── HELPERS ────────────────────────────────────────────────────────
@@ -3064,9 +3147,39 @@ function setupLiveSync() {
       S.procs = procs;
       if(S.tab==='procedures') renderProcs(document.getElementById('content'));
     }, e => console.log('procedures listener error:', e));
+
+    // Shift handoff notes — sticky notes left at end-of-day for the next
+    // shift. Single-field orderBy (no composite index needed); unresolved
+    // filtering happens client-side since the list is always small.
+    db.collection('handoffNotes').orderBy('ts','desc').onSnapshot(snap => {
+      S.handoffNotes = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(n=>!n.resolved);
+      if(S.tab==='home') renderHome(document.getElementById('content'));
+      else if(S.tab==='today') renderToday(document.getElementById('content'));
+    }, e => console.log('handoffNotes listener error:', e));
   } catch(e) {
     console.log('setupLiveSync error:', e);
   }
+}
+
+function markHandoffComplete(id) {
+  if(!db) { toast('Not connected — try again when online'); return; }
+  db.collection('handoffNotes').doc(id).update({resolved:true})
+    .catch(e => console.log('markHandoffComplete failed:', e));
+}
+
+// Sticky-note banner for unresolved handoff notes — shown on Home and Today.
+function renderHandoffNotesHtml() {
+  if(!S.handoffNotes || !S.handoffNotes.length) return '';
+  return S.handoffNotes.map(n=>`
+    <div style="margin:12px 14px;padding:14px 16px;background:#FFF4C2;border-radius:10px;
+                box-shadow:0 4px 14px rgba(0,0,0,0.25);transform:rotate(-1deg);
+                border:1px solid rgba(0,0,0,0.06)">
+      <div style="font-size:11px;font-weight:700;color:#8a6d00;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">📌 Handoff from ${n.day||'last shift'}</div>
+      ${n.text?`<div style="font-size:14px;color:#2a2200;line-height:1.4;margin-bottom:8px">${n.text}</div>`:''}
+      ${n.audio?`<audio controls src="${n.audio}" style="width:100%;margin-bottom:8px;height:32px"></audio>`:''}
+      <button onclick="markHandoffComplete('${n.id}')" style="padding:7px 14px;border-radius:20px;border:none;background:#2a2200;color:#FFF4C2;font-size:12px;font-weight:600;cursor:pointer">✅ Complete</button>
+    </div>
+  `).join('');
 }
 
 // One-time bootstrap: if the procedures collection has never been seeded,
