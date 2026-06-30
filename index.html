@@ -3068,10 +3068,13 @@ function initFirestore() {
 // before being used as a map key.
 function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
 
-// Firestore TTL deletes a document once this field's timestamp is in the
-// past. Requires a TTL policy enabled in the console on the target field
-// (see expireAt usage on damageReports/handoffNotes) — the field alone does
-// nothing until that policy is turned on.
+// Firestore TTL would auto-delete a document once this field's timestamp is
+// in the past, but enabling that policy requires the paid Blaze plan (a
+// billing account on file), which we're intentionally not doing to keep
+// this project 100% free. The field is written anyway — it's free to store
+// and costs nothing to leave unused — so TTL can be turned on later with
+// zero code changes if the storage math ever actually becomes a concern
+// (at current photo/audio sizes, that's realistically years away).
 function ttlTimestamp(days) {
   return firebase.firestore.Timestamp.fromMillis(Date.now() + days*24*60*60*1000);
 }
