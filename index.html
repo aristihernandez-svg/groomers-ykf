@@ -2592,9 +2592,11 @@ function showEOD() {
      <label>Summary (auto-generated)</label>
      <textarea id="eodTxt" readonly style="height:200px;font-size:12px;line-height:1.5;background:var(--bg3)">${msg}</textarea>`,
     async()=>{
-      const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy');
       const noteText = document.getElementById('eodNote')?.value.trim() || '';
       const audio = S.pendingHandoffAudio || '';
+      // Save the handoff note FIRST — this is the important part, and must
+      // not get skipped if the clipboard copy below throws on some browser.
+      let saveMsg = '';
       if((noteText || audio) && db) {
         try {
           await db.collection('handoffNotes').add({
@@ -2602,14 +2604,19 @@ function showEOD() {
             resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
             expireAt: ttlTimestamp(120)
           });
-          toast('✅ Copied — handoff note saved for next shift');
+          saveMsg = 'Handoff note saved for next shift';
         } catch(e) {
           console.log('Handoff note save failed:', e);
-          toast('✅ Copied — but handoff note failed to save (offline?)');
+          saveMsg = '⚠️ Handoff note failed to save (offline?)';
         }
-      } else {
-        toast('✅ Copied — paste into WhatsApp');
       }
+      // Then best-effort copy the summary — never lets a clipboard failure
+      // block saving the note or closing the modal.
+      let copyOk = false;
+      try {
+        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
+      } catch(e) { console.log('Clipboard copy failed:', e); }
+      toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
       closeModal();
     });
@@ -2625,21 +2632,32 @@ async function recordHandoffVoice() {
   const btn = document.getElementById('eodVoiceBtn');
   const status = document.getElementById('eodVoiceStatus');
   if(handoffRecorder && handoffRecorder.state==='recording') { handoffRecorder.stop(); return; }
+  if(!window.MediaRecorder) {
+    toast('Voice recording isn\'t supported on this browser');
+    return;
+  }
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({audio:true});
   } catch(e) {
     console.log('Mic unavailable:', e);
-    toast('Microphone unavailable');
+    toast('Microphone unavailable — check permissions');
     return;
   }
   const chunks=[];
   let seconds=0;
   const maxSeconds=60;
+  // Safari/iOS doesn't support webm/opus at all — probe for a format the
+  // browser actually supports instead of assuming one.
+  const mime = ['audio/webm;codecs=opus','audio/mp4','audio/webm']
+    .find(m => window.MediaRecorder.isTypeSupported && window.MediaRecorder.isTypeSupported(m));
   try {
-    handoffRecorder = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus', audioBitsPerSecond:24000});
+    handoffRecorder = mime ? new MediaRecorder(stream, {mimeType:mime, audioBitsPerSecond:24000}) : new MediaRecorder(stream);
   } catch(e) {
-    handoffRecorder = new MediaRecorder(stream); // fallback for browsers without opus/webm support
+    console.log('MediaRecorder construction failed:', e);
+    toast('Could not start recording on this device');
+    stream.getTracks().forEach(t=>t.stop());
+    return;
   }
   handoffRecorder.ondataavailable = e => { if(e.data.size>0) chunks.push(e.data); };
   const timer = setInterval(()=>{
