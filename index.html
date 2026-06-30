@@ -708,6 +708,8 @@ const DAY_EMOJIS= ['☀','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🗓
 const DAY_COLORS= ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','#D4860A'];
 const TODAY     = new Date().getDay();
 
+const FLEET_TAILS = ['IOC','IOJ','IOB','IOE','DAX','IAW','XAW','XDP'];
+
 const AREA_COLORS = {
   'AIRCRAFT':'#1A4A5C',"CR GROOMERS' CORNER":'#1A3A5C',
   'CR OFFICE':'#5C3A1A','MX HANGAR':'#2E5C1A',
@@ -759,6 +761,8 @@ const S = {
   auditGroomer: '',     // name of groomer doing this month's audit
   pastAudits: [],       // [{month, groomer, completedAt}] loaded from Firestore
   pastAuditView: null,  // month string being viewed, or null
+  flightLog: {},        // {tabName: {arr:[], dep:[], date:''}}
+  flightDropdown: null, // null | {tabName, type:'arr'|'dep'}
 };
 
 const NAV_ITEMS = [
@@ -1495,12 +1499,135 @@ function renderWeek(el) {
 
 async function showDay(idx) {
   S.dayView=idx; S.inDay=true;
+  S.flightDropdown=null;
   const tabName=DAYS[idx];
   if(!S.tasks[tabName]) {
     document.getElementById('content').innerHTML=`<div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Loading ${DAY_NAMES[idx]}...</div></div>`;
     await fetchDay(tabName);
   }
+  loadFlightLog(tabName);
+  // Pull latest flight log from Firestore for non-today days (today uses onSnapshot)
+  if(idx!==TODAY && db) {
+    db.collection('taskState').doc(tabName).get()
+      .then(snap=>{ if(snap.exists){ flightLogFromFirestore(tabName,snap.data()); renderDayDetail(document.getElementById('content')); }})
+      .catch(()=>{});
+  }
   renderDayDetail(document.getElementById('content'));
+}
+
+// ── FLIGHT LOG ────────────────────────────────────────────────────
+function flightLogKey(tabName) { return 'fl_'+tabName; }
+
+function loadFlightLog(tabName) {
+  if(S.flightLog[tabName]) return;
+  try {
+    const cached=JSON.parse(localStorage.getItem(flightLogKey(tabName))||'null');
+    const today=new Date().toDateString();
+    if(cached && cached.date===today) { S.flightLog[tabName]=cached; return; }
+  } catch(e){}
+  S.flightLog[tabName]={arr:[],dep:[],date:new Date().toDateString()};
+}
+
+function saveFlightLog(tabName) {
+  const log=S.flightLog[tabName]; if(!log) return;
+  log.date=new Date().toDateString();
+  try { localStorage.setItem(flightLogKey(tabName),JSON.stringify(log)); } catch(e){}
+  if(!db) return;
+  db.collection('taskState').doc(tabName).set(
+    {_arr:log.arr, _dep:log.dep, _flDate:log.date}, {merge:true}
+  ).catch(e=>console.log('saveFlightLog failed:',e));
+}
+
+function flightLogFromFirestore(tabName, data) {
+  const today=new Date().toDateString();
+  if(data._flDate && data._flDate!==today) return;
+  if(!S.flightLog[tabName]) S.flightLog[tabName]={arr:[],dep:[],date:today};
+  if(data._arr) S.flightLog[tabName].arr=[...new Set(data._arr)];
+  if(data._dep) S.flightLog[tabName].dep=[...new Set(data._dep)];
+}
+
+function addTail(tabName, type, tail) {
+  tail=(tail||'').trim().toUpperCase(); if(!tail) return;
+  loadFlightLog(tabName);
+  const log=S.flightLog[tabName];
+  if(!log[type].includes(tail)) log[type]=[...log[type],tail];
+  S.flightDropdown=null;
+  saveFlightLog(tabName);
+  renderDayDetail(document.getElementById('content'));
+}
+
+function removeTail(tabName, type, tail) {
+  loadFlightLog(tabName);
+  S.flightLog[tabName][type]=S.flightLog[tabName][type].filter(t=>t!==tail);
+  saveFlightLog(tabName);
+  renderDayDetail(document.getElementById('content'));
+}
+
+function toggleFlightDropdown(tabName, type) {
+  if(S.flightDropdown && S.flightDropdown.tabName===tabName && S.flightDropdown.type===type)
+    S.flightDropdown=null;
+  else S.flightDropdown={tabName,type};
+  renderDayDetail(document.getElementById('content'));
+}
+
+function renderFlightLog(tabName) {
+  loadFlightLog(tabName);
+  const log=S.flightLog[tabName];
+  const ddOpen=S.flightDropdown?.tabName===tabName;
+
+  function section(type, label, icon, color) {
+    const tails=log[type]||[];
+    const isOpen=ddOpen && S.flightDropdown.type===type;
+    const used=new Set(tails);
+    const fleetOptions=FLEET_TAILS.filter(t=>!used.has(t));
+
+    const pills=tails.map(t=>`
+      <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:${color}22;border:1px solid ${color}55;color:var(--t1);font-size:13px;font-weight:700">
+        ${t}
+        <span onclick="event.stopPropagation();removeTail('${tabName}','${type}','${t}')"
+          style="color:var(--t3);font-size:15px;line-height:1;cursor:pointer;margin-left:2px">×</span>
+      </div>`).join('');
+
+    const dropdown=isOpen?`
+      <div style="position:absolute;left:0;right:0;z-index:200;background:var(--card);border:1px solid var(--border2);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.3)">
+        ${fleetOptions.map(t=>`
+          <div onclick="addTail('${tabName}','${type}','${t}')"
+            style="padding:13px 16px;font-size:14px;font-weight:700;color:var(--t1);border-bottom:1px solid var(--border);cursor:pointer;letter-spacing:0.5px">
+            ${t}
+          </div>`).join('')}
+        <div style="padding:8px 12px;display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);background:var(--glass)">
+          <input id="customTail_${type}" placeholder="Other tail…" maxlength="6"
+            onclick="event.stopPropagation()"
+            style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;outline:none"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter'){event.preventDefault();addTail('${tabName}','${type}',this.value)}">
+          <button onclick="addTail('${tabName}','${type}',document.getElementById('customTail_${type}').value)"
+            style="padding:8px 14px;border-radius:8px;border:none;background:${color};color:#fff;font-size:13px;font-weight:700;cursor:pointer">Add</button>
+        </div>
+      </div>`:''
+
+    return `
+      <div style="border-bottom:1px solid var(--border);padding:10px 14px">
+        <div onclick="toggleFlightDropdown('${tabName}','${type}')"
+          style="display:flex;align-items:center;gap:10px;cursor:pointer;position:relative;z-index:${isOpen?201:1}">
+          <div style="width:34px;height:34px;border-radius:10px;background:${color}22;border:1px solid ${color}55;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${color}">${label}</div>
+            ${tails.length===0?`<div style="font-size:12px;color:var(--t3);margin-top:1px">Tap to log a tail number</div>`:''}
+          </div>
+          <div style="font-size:18px;color:var(--t3);transition:transform 0.15s;transform:rotate(${isOpen?'90deg':'0deg'})">›</div>
+        </div>
+        ${tails.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${pills}</div>`:''}
+        <div style="position:relative">${dropdown}</div>
+      </div>`;
+  }
+
+  return `
+    <div style="background:var(--glass);border-bottom:2px solid var(--border2)">
+      <div style="padding:8px 14px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase">✈ Flight Log</div>
+      ${section('arr','Arrivals','🛬','#1A7A40')}
+      ${section('dep','Departures','🛫','#1A4A8A')}
+    </div>`;
 }
 
 function renderDayDetail(el) {
@@ -1519,6 +1646,7 @@ function renderDayDetail(el) {
       <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`;
+  html+=renderFlightLog(tabName);
   html+=renderGroupsDay(tasks,tabName);
   html+=renderNotes(notes,tabName);
   html+='<div style="height:90px"></div>';
@@ -3905,6 +4033,7 @@ function setupLiveSync() {
       const today = new Date().toDateString();
       if(data._date && data._date !== today) return;
       S.tasks[tabName].forEach(t => { const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+      flightLogFromFirestore(tabName, data);
       // Defer re-render by 150ms so it never fires mid-tap (prevents wrong
       // task being toggled when DOM rebuilds under the user's finger).
       if(!touchActive) {
