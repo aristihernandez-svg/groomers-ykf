@@ -766,6 +766,7 @@ window.addEventListener('load', async () => {
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
+        seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
       })
       .catch(e => console.log('Boot fetch error:', e));
   }, 1800);
@@ -1098,20 +1099,50 @@ function loadBoredFallback() {
 
 async function syncAll() {
   toast('Syncing...');
-  // Fetch all data fresh from sheets
+  // Tasks and the bored board's content still come from Sheets, so refresh
+  // those. Shopping/contacts/procedures are now live via Firestore listeners
+  // and refresh themselves automatically — re-fetching them from Sheets here
+  // would briefly overwrite live data, so they're intentionally skipped.
   await Promise.all([
     fetchDay(DAYS[TODAY]),
-    fetchShopping(),
-    fetchContacts(),
     fetchBored()
   ]);
   // If viewing a specific day, refresh that too
   if(S.inDay) await fetchDay(DAYS[S.dayView]);
-  // Clear local shopping cache so fresh sheet data takes priority
-  localStorage.removeItem('gykf_shop_state');
-  localStorage.removeItem('gykf_contacts'); // force fresh contact fetch
   render();
   toast('✅ Synced');
+}
+
+// Pulls the current Shopping and Contacts sheet rows and upserts them into
+// Firestore. Use after a bulk-edit session in Sheets (pasting many rows is
+// easier there than typing them into the app one at a time). Safe to run
+// repeatedly — matching items/contacts are updated, not duplicated.
+async function importFromSheets() {
+  if(!db) { toast('Firestore not available — check your connection'); return; }
+  if(!confirm('Import current Shopping + Contacts sheet rows into the live app?\n\nThis adds new items and updates existing ones with matching names — it won\'t remove anything.')) return;
+  toast('Importing from Sheets...');
+  try {
+    await fetchShopping();
+    const shopBatch = db.batch();
+    S.shopping.forEach(item=>{
+      const id = fsDocId(item.item+'__'+item.store);
+      shopBatch.set(db.collection('shoppingCatalog').doc(id), {item:item.item, cabinet:item.cabinet, store:item.store, notes:item.notes||''}, {merge:true});
+    });
+    await shopBatch.commit();
+
+    await fetchContacts();
+    const conBatch = db.batch();
+    S.contacts.forEach(c=>{
+      const id = fsDocId(c.name);
+      conBatch.set(db.collection('contacts').doc(id), {name:c.name, address:c.address||'', notes:c.notes||'', phone:c.phone||'', role:c.role||'', code:c.code||''}, {merge:true});
+    });
+    await conBatch.commit();
+
+    toast('✅ Imported from Sheets — live everywhere now');
+  } catch(e) {
+    console.error('importFromSheets failed:', e);
+    toast('❌ Import failed — check console');
+  }
 }
 
 async function api(data) {
@@ -1259,6 +1290,13 @@ async function renderHome(el) {
         <div onclick="if(!['standard-night','standard-day'].includes(S.theme))setTheme(S.theme==='premium'?'standard-night':'standard-day')" style="flex:1;padding:11px;border-radius:var(--radius-sm);text-align:center;cursor:pointer;background:${['standard-night','standard-day'].includes(S.theme)?'var(--accent-dim)':'var(--glass)'};border:1px solid ${['standard-night','standard-day'].includes(S.theme)?'var(--accent-border)':'var(--border)'};font-size:13px;font-weight:${['standard-night','standard-day'].includes(S.theme)?600:400};color:${['standard-night','standard-day'].includes(S.theme)?'var(--accent)':'var(--t2)'}">Standard</div>
       </div>
       <div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center">Tap 🌙 / ☀️ in the top bar to switch day &amp; night</div>
+    </div>
+
+    <!-- Admin: bulk import -->
+    <div style="padding:0 14px 24px">
+      <div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Admin</div>
+      <button onclick="importFromSheets()" style="width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer">🔄 Import bulk edits from Sheets</button>
+      <div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center">Shopping items and contacts only — for after a bulk-edit session in the spreadsheet</div>
     </div>
   `;
 
@@ -1702,7 +1740,7 @@ function loadProcs() {
 
 function renderProcs(el) {
   document.getElementById('barTitle').textContent='Skycare';
-  document.getElementById('fab').style.display='none';
+  showFab(openAddProcedure);
   let html='<div class="proc-list">';
   Object.entries(S.procs).forEach(([key,p])=>{
     const done=p.done.length;
@@ -1737,6 +1775,10 @@ function renderProcs(el) {
         <div class="proc-actions">
           <button class="proc-act-btn" onclick="resetProc('${key}')">🔄 Reset steps</button>
           <button class="proc-act-btn" onclick="openDmgReport('${key}')" style="color:#C0392B">📸 Damage report</button>
+        </div>
+        <div class="proc-actions">
+          <button class="proc-act-btn" onclick="editProcedure('${key}')">✏️ Edit procedure</button>
+          <button class="proc-act-btn" onclick="deleteProcedure('${key}')" style="color:var(--red)">🗑 Delete</button>
         </div>
         <div class="dmg-section" id="dmg-${key}" style="${dmg.length?'':'display:none'}">
           <div class="dmg-hdr">📸 Damage Reports</div>
@@ -1840,10 +1882,11 @@ function renderContactsList(q) {
               <span>📍</span><span>${c.address}</span>
             </div>` : ''}
           ${c.notes ? `<div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-style:italic">${c.notes}</div>` : ''}
-          ${hasAddr ? `
-            <a href="${mapsUrl}" target="_blank" class="maps-btn">
-              🗺 Open in Maps
-            </a>` : ''}
+          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
+            ${hasAddr ? `<a href="${mapsUrl}" target="_blank" class="maps-btn">🗺 Open in Maps</a>` : ''}
+            <span onclick="editContact(${S.contacts.indexOf(c)})" style="margin-left:auto;font-size:13px;color:var(--t3);cursor:pointer;padding:4px 6px">✏️</span>
+            <span onclick="deleteContact(${S.contacts.indexOf(c)})" style="font-size:14px;color:var(--t3);cursor:pointer;padding:4px 6px">🗑</span>
+          </div>
         </div>`;
     });
   }
@@ -1863,7 +1906,10 @@ function renderContactsList(q) {
             <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px">${c.name}</div>
             ${c.address ? `<div style="font-size:12px;color:var(--t2);margin-bottom:4px">📍 ${c.address}</div>` : ''}
             ${c.notes ? `<div style="font-size:11px;color:var(--t3)">${c.notes}</div>` : ''}
-
+            <div style="display:flex;gap:8px;margin-top:6px">
+              <span onclick="editContact(${S.contacts.indexOf(c)})" style="font-size:13px;color:var(--t3);cursor:pointer;padding:4px 6px">✏️</span>
+              <span onclick="deleteContact(${S.contacts.indexOf(c)})" style="font-size:14px;color:var(--t3);cursor:pointer;padding:4px 6px">🗑</span>
+            </div>
           </div>
           ${code ? `
             <div style="
@@ -1909,6 +1955,8 @@ function renderContactsList(q) {
               display:flex;align-items:center;justify-content:center;
               font-size:20px;flex-shrink:0;text-decoration:none;
             ">📞</a>` : ''}
+          <span onclick="editContact(${S.contacts.indexOf(c)})" style="font-size:13px;color:var(--t3);cursor:pointer;padding:4px 6px">✏️</span>
+          <span onclick="deleteContact(${S.contacts.indexOf(c)})" style="font-size:14px;color:var(--t3);cursor:pointer;padding:4px 6px">🗑</span>
         </div>`;
     });
   }
@@ -2288,6 +2336,10 @@ function openAddNote(tabName) {
     });
 }
 
+// Deterministic Firestore doc id from arbitrary text — lets repeated
+// add/import calls upsert the same item instead of creating duplicates.
+function fsDocId(text) { return fsKey(text).slice(0,400) || ('id'+Date.now()); }
+
 function openAddShopItem() {
   openModal('Add Shopping Item',
     `<label>Item name</label>
@@ -2301,9 +2353,14 @@ function openAddShopItem() {
       const cabinet=document.getElementById('mSC').value.trim();
       const store=document.getElementById('mSS').value;
       if(!item) return;
-      S.shopping.push({item,cabinet,store,status:'To Buy',checked:true,notes:''});
-      await api({action:'addShopItem',item,cabinet,store,toBuy:true});
+      const id=fsDocId(item+'__'+store);
+      S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:''});
+      fsSetShopState(item,true,'To Buy'); // it's a new item, default to "to buy"
       closeModal(); renderShopping(document.getElementById('content')); toast('Item added ✓');
+      if(db) {
+        db.collection('shoppingCatalog').doc(id).set({item,cabinet,store,notes:''})
+          .catch(e => { console.log('Add shopping item Firestore write failed:', e); toast('⚠️ Saved locally — will retry sync when online'); });
+      }
     });
 }
 
@@ -2317,11 +2374,128 @@ function openAddContact() {
       const address=document.getElementById('mCA').value.trim();
       const notes=document.getElementById('mCO').value.trim();
       if(!name) return;
-      S.contacts.push({name,address,notes});
+      const id=fsDocId(name);
+      S.contacts.push({id,name,address,notes});
       localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
-      await api({action:'addContact',name,address,notes});
       closeModal(); renderContacts(document.getElementById('content')); toast('Contact added ✓');
+      if(db) {
+        db.collection('contacts').doc(id).set({name,address,notes})
+          .catch(e => { console.log('Add contact Firestore write failed:', e); toast('⚠️ Saved locally — will retry sync when online'); });
+      }
     });
+}
+
+function editContact(idx) {
+  const c = S.contacts[idx];
+  if(!c) return;
+  openModal('✏️ Edit Contact',
+    `<label>Name / Store</label><input id="eCN" value="${c.name}">
+     <label>Address</label><input id="eCA" value="${c.address||''}">
+     <label>Notes</label><input id="eCO" value="${c.notes||''}">`,
+    async()=>{
+      const name=document.getElementById('eCN').value.trim();
+      const address=document.getElementById('eCA').value.trim();
+      const notes=document.getElementById('eCO').value.trim();
+      if(!name) return;
+      const oldId = c.id || fsDocId(c.name);
+      const newId = fsDocId(name);
+      S.contacts[idx] = {...c, id:newId, name, address, notes};
+      localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
+      closeModal(); renderContacts(document.getElementById('content')); toast('Contact updated ✓');
+      if(db) {
+        if(newId !== oldId) db.collection('contacts').doc(oldId).delete().catch(()=>{});
+        db.collection('contacts').doc(newId).set({name, address, notes, phone:c.phone||'', role:c.role||'', code:c.code||''})
+          .catch(e => console.log('Edit contact Firestore write failed:', e));
+      }
+    });
+}
+
+function deleteContact(idx) {
+  const c = S.contacts[idx];
+  if(!c) return;
+  if(!confirm(`Delete "${c.name}"?`)) return;
+  const id = c.id || fsDocId(c.name);
+  if(db) db.collection('contacts').doc(id).delete().catch(e => console.log('Delete contact Firestore write failed:', e));
+  S.contacts.splice(idx,1);
+  localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
+  renderContacts(document.getElementById('content'));
+  toast('Contact deleted');
+}
+
+// ── PROCEDURE EDITOR ──────────────────────────────────────────────
+// Steps are entered one per line as "Step text | optional note" — simple
+// to type on mobile, no add/remove-row UI needed.
+function parseStepsText(text) {
+  return text.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const [t,n] = line.split('|');
+    return {t:(t||'').trim(), n:(n||'').trim()};
+  });
+}
+function stepsToText(steps) {
+  return (steps||[]).map(s=>s.n ? `${s.t} | ${s.n}` : s.t).join('\n');
+}
+
+function openAddProcedure() {
+  openModal('Add Procedure',
+    `<label>Icon (emoji)</label><input id="pIcon" value="✈" placeholder="✈">
+     <label>Title</label><input id="pTitle" placeholder="Procedure name...">
+     <label>Warning (optional)</label><input id="pWarn" placeholder="⚠ Safety note shown at the top...">
+     <label>Video URL (optional)</label><input id="pVideo" placeholder="https://...">
+     <label>Steps — one per line, optionally "Step text | note"</label>
+     <textarea id="pSteps" style="height:140px" placeholder="Check valve is closed | Safety step
+Connect hose
+Tighten fittings"></textarea>`,
+    ()=>{
+      const title=document.getElementById('pTitle').value.trim();
+      if(!title){toast('Add a title first');return;}
+      const icon=document.getElementById('pIcon').value.trim()||'✈';
+      const warn=document.getElementById('pWarn').value.trim();
+      const video=document.getElementById('pVideo').value.trim();
+      const steps=parseStepsText(document.getElementById('pSteps').value);
+      const key=fsDocId(title.toLowerCase());
+      S.procs[key]={title,icon,warn,video,steps,open:false,done:[]};
+      closeModal(); renderProcs(document.getElementById('content')); toast('Procedure added ✓');
+      if(db) {
+        db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
+          .catch(e => console.log('Add procedure Firestore write failed:', e));
+      }
+    });
+}
+
+function editProcedure(key) {
+  const p = S.procs[key];
+  if(!p) return;
+  openModal('✏️ Edit Procedure',
+    `<label>Icon (emoji)</label><input id="pIcon" value="${p.icon}">
+     <label>Title</label><input id="pTitle" value="${p.title}">
+     <label>Warning (optional)</label><input id="pWarn" value="${p.warn||''}">
+     <label>Video URL (optional)</label><input id="pVideo" value="${p.video||''}">
+     <label>Steps — one per line, optionally "Step text | note"</label>
+     <textarea id="pSteps" style="height:140px">${stepsToText(p.steps)}</textarea>`,
+    ()=>{
+      const title=document.getElementById('pTitle').value.trim();
+      if(!title){toast('Add a title first');return;}
+      const icon=document.getElementById('pIcon').value.trim()||'✈';
+      const warn=document.getElementById('pWarn').value.trim();
+      const video=document.getElementById('pVideo').value.trim();
+      const steps=parseStepsText(document.getElementById('pSteps').value);
+      S.procs[key]={...p,title,icon,warn,video,steps};
+      closeModal(); renderProcs(document.getElementById('content')); toast('Procedure updated ✓');
+      if(db) {
+        db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
+          .catch(e => console.log('Edit procedure Firestore write failed:', e));
+      }
+    });
+}
+
+function deleteProcedure(key) {
+  const p = S.procs[key];
+  if(!p) return;
+  if(!confirm(`Delete the "${p.title}" procedure? This can't be undone.`)) return;
+  delete S.procs[key];
+  renderProcs(document.getElementById('content'));
+  toast('Procedure deleted');
+  if(db) db.collection('procedures').doc(key).delete().catch(e => console.log('Delete procedure Firestore write failed:', e));
 }
 
 function openAddBored() {
@@ -2471,24 +2645,26 @@ function editShopItem(idx) {
       const newCab=document.getElementById('eSC').value.trim();
       const newStore=document.getElementById('eSS').value;
       if(!newItem) return;
-      S.shopping[idx] = {...item, item:newItem, cabinet:newCab, store:newStore};
+      const oldId = item.id || fsDocId(item.item+'__'+item.store);
+      const newId = fsDocId(newItem+'__'+newStore);
+      S.shopping[idx] = {...item, id:newId, item:newItem, cabinet:newCab, store:newStore};
       saveShoppingState();
-      // Delete old item and add new one in sheet
-      if(newItem !== item.item) {
-        await api({action:'deleteShopItem', item:item.item});
-      }
-      await api({action:'addShopItem', item:newItem, cabinet:newCab, store:newStore, toBuy:item.checked});
       closeModal();
       renderShopping(document.getElementById('content'));
       toast('Item updated ✓');
+      if(db) {
+        if(newId !== oldId) db.collection('shoppingCatalog').doc(oldId).delete().catch(()=>{});
+        db.collection('shoppingCatalog').doc(newId).set({item:newItem, cabinet:newCab, store:newStore, notes:item.notes||''})
+          .catch(e => console.log('Edit shopping item Firestore write failed:', e));
+      }
     });
 }
 
 function deleteShopItem(idx) {
   const item = S.shopping[idx];
   if(!confirm(`Delete "${item.item}"?`)) return;
-  // Remove from backend (sheet)
-  api({action:'deleteShopItem', item:item.item});
+  const id = item.id || fsDocId(item.item+'__'+item.store);
+  if(db) db.collection('shoppingCatalog').doc(id).delete().catch(e => console.log('Delete shopping item Firestore write failed:', e));
   // Remove from local state and cache
   S.shopping.splice(idx,1);
   saveShoppingState();
@@ -2839,9 +3015,65 @@ function setupLiveSync() {
       saveDmg();
       if(S.tab==='procedures') renderProcs(document.getElementById('content'));
     }, e => console.log('damageReports listener error:', e));
+
+    // Shopping catalog (item/store/cabinet) — live so an item added by one
+    // groomer shows up on every phone immediately, not just the checked flag.
+    db.collection('shoppingCatalog').onSnapshot(snap => {
+      if(snap.empty) return; // nothing imported/added yet — keep Sheets-sourced fallback
+      const prevChecked = {}; S.shopping.forEach(i=>prevChecked[i.item]={checked:i.checked,status:i.status});
+      S.shopping = snap.docs.map(d=>{
+        const v=d.data();
+        const prior = prevChecked[v.item];
+        return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'',
+          checked: prior?.checked||false, status: prior?.status||'In Stock'};
+      });
+      restoreShoppingState();
+      if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+    }, e => console.log('shoppingCatalog listener error:', e));
+
+    // Contacts/locations catalog — live.
+    db.collection('contacts').onSnapshot(snap => {
+      if(snap.empty) return; // nothing imported/added yet — keep Sheets-sourced fallback
+      S.contacts = snap.docs.map(d=>({id:d.id, ...d.data()}));
+      if(S.tab==='contacts') renderContacts(document.getElementById('content'));
+    }, e => console.log('contacts listener error:', e));
+
+    // Procedures catalog — live. Steps are read-only reference material, so
+    // there's no per-step completion state to sync here, only the content.
+    db.collection('procedures').onSnapshot(snap => {
+      if(snap.empty) return; // not seeded yet — keep built-in defaults
+      const procs = {};
+      snap.forEach(d => {
+        const v=d.data();
+        const existing = S.procs[d.id];
+        procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
+          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[]};
+      });
+      S.procs = procs;
+      if(S.tab==='procedures') renderProcs(document.getElementById('content'));
+    }, e => console.log('procedures listener error:', e));
   } catch(e) {
     console.log('setupLiveSync error:', e);
   }
+}
+
+// One-time bootstrap: if the procedures collection has never been seeded,
+// push the app's built-in default procedures into Firestore so they become
+// editable/live from here on. Harmless no-op on every later boot once seeded.
+async function seedProceduresIfEmpty() {
+  if(!db) return;
+  try {
+    const snap = await db.collection('procedures').limit(1).get();
+    if(!snap.empty) return;
+    const batch = db.batch();
+    Object.entries(S.procs).forEach(([key,p])=>{
+      batch.set(db.collection('procedures').doc(key), {
+        title:p.title, icon:p.icon, warn:p.warn||'', video:p.video||'', steps:p.steps
+      });
+    });
+    await batch.commit();
+    console.log('Seeded built-in procedures into Firestore');
+  } catch(e) { console.log('seedProceduresIfEmpty failed:', e); }
 }
 
 // Best-effort write-through to Firestore. Local state has already been
