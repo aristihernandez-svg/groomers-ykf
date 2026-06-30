@@ -3180,56 +3180,8 @@ function setupDraggableNav() {
       items.forEach(i=>i.classList.remove('dragging','drag-over'));
     });
 
-    // Touch drag support for mobile
-    let touchStartX=0, touchStartY=0, clone=null;
-    item.addEventListener('touchstart', e=>{
-      if(e.touches.length!==1) return;
-      // Remove any stale drag clones from a previously interrupted gesture
-      document.querySelectorAll('[data-nav-drag-clone]').forEach(c=>c.remove());
-      clone=null;
-      touchStartX=e.touches[0].clientX;
-      touchStartY=e.touches[0].clientY;
-    },{passive:true});
-
-    item.addEventListener('touchmove', e=>{
-      if(!clone&&Math.abs(e.touches[0].clientX-touchStartX)>10){
-        clone=item.cloneNode(true);
-        clone.setAttribute('data-nav-drag-clone','1');
-        clone.style.cssText='position:fixed;opacity:0.7;pointer-events:none;z-index:999;background:var(--accent-dim);border-radius:8px';
-        document.body.appendChild(clone);
-        dragSrcEl=item;
-        item.classList.add('dragging');
-      }
-      if(clone){
-        clone.style.left=(e.touches[0].clientX-30)+'px';
-        clone.style.top=(e.touches[0].clientY-30)+'px';
-        // Find target
-        clone.style.display='none';
-        const el2=document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY);
-        clone.style.display='';
-        const target=el2?.closest('.nb');
-        items.forEach(i=>i.classList.remove('drag-over'));
-        if(target&&target!==item) target.classList.add('drag-over');
-      }
-    },{passive:true});
-
-    item.addEventListener('touchend', e=>{
-      if(clone){
-        document.body.removeChild(clone); clone=null;
-        const target=nav.querySelector('.nb.drag-over');
-        if(target&&target!==item){
-          const allItems=[...nav.querySelectorAll('.nb')];
-          const srcIdx=allItems.indexOf(item);
-          const dstIdx=allItems.indexOf(target);
-          if(srcIdx<dstIdx) nav.insertBefore(item,target.nextSibling);
-          else nav.insertBefore(item,target);
-          const order=[...nav.querySelectorAll('.nb')].map(n=>n.id.replace('nb-',''));
-          localStorage.setItem('gykf_nav_order',JSON.stringify(order));
-        }
-        items.forEach(i=>i.classList.remove('drag-over','dragging'));
-        dragSrcEl=null;
-      }
-    },{passive:true});
+    // Touch drag disabled on mobile — horizontal swipe scrolls the nav bar
+    // and the clone logic was firing during normal scroll gestures.
   });
 }
 
