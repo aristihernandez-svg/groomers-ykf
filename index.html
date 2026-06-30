@@ -1918,13 +1918,16 @@ function renderCrewCarsList(el) {
     S.pastAudits.forEach(a=>{
       const ts=a.completedAt?.toDate?a.completedAt.toDate():new Date(a.completedAt||0);
       const dateStr=ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
-      html+=`<div class="car-list-item" onclick="S.crewCarsView='past';S.pastAuditView='${a.month}';render()">
-        <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📋</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${a.month}</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">By ${a.groomer||'Unknown'} · ${dateStr}</div>
+      html+=`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border)">
+        <div class="car-list-item" onclick="S.crewCarsView='past';S.pastAuditView='${a.month}';render()" style="flex:1;border-bottom:none">
+          <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📋</div>
+          <div style="flex:1">
+            <div style="font-size:14px;font-weight:700;color:var(--t1)">${a.month}</div>
+            <div style="font-size:12px;color:var(--t3);margin-top:2px">By ${a.groomer||'Unknown'} · ${dateStr}</div>
+          </div>
+          <div style="color:var(--border2);font-size:20px">›</div>
         </div>
-        <div style="color:var(--border2);font-size:20px">›</div>
+        <button onclick="deleteAuditMonth('${a.month}')" style="padding:8px 12px;margin-right:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:13px;cursor:pointer;flex-shrink:0">🗑</button>
       </div>`;
     });
   }
@@ -2267,9 +2270,10 @@ function renderPastAuditView(el, month) {
       <button onclick="S.crewCarsView='list';S.pastAuditView=null;render()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${month}</span>
     </div>
-    <div style="padding:14px;display:flex;gap:8px">
-      <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer">📧 Send Email</button>
+    <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer">📧 Email</button>
       <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">📄 PDF</button>
+      <button onclick="deleteAuditMonth('${month}')" style="padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:13px;font-weight:600;cursor:pointer">🗑 Delete</button>
     </div>`;
 
   CREW_CARS.forEach(car=>{
@@ -2282,6 +2286,7 @@ function renderPastAuditView(el, month) {
           <div style="font-size:13px;font-weight:700;color:var(--t1)">${car.name}</div>
           <div style="font-size:11px;color:var(--t3)">${photos.length} photo${photos.length!==1?'s':''} · ${d.done?'✅ Done':'⏳ Pending'}</div>
         </div>
+        <button onclick="deleteCarAudit('${month}','${car.key}')" style="padding:5px 9px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:12px;cursor:pointer;flex-shrink:0">🗑</button>
       </div>
       ${photos.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
         ${photos.map(p=>`<div style="position:relative;width:calc(14.28% - 5px)">
@@ -2293,6 +2298,39 @@ function renderPastAuditView(el, month) {
   });
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
+}
+
+// ── DELETE AUDIT ──────────────────────────────────────────────
+function deleteAuditMonth(month) {
+  if(!checkAdminPin('delete the entire '+month+' audit')) return;
+  if(!confirm(`Delete the complete ${month} audit? This removes all cars and photos permanently.`)) return;
+  if(!db){toast('No connection');return;}
+  const batch=db.batch();
+  batch.delete(db.collection('auditArchive').doc(month));
+  CREW_CARS.forEach(c=>batch.delete(db.collection('auditCars').doc(month+'-'+c.key)));
+  batch.commit()
+    .then(()=>{
+      S.pastAudits=S.pastAudits.filter(a=>a.month!==month);
+      CREW_CARS.forEach(c=>{ delete S.carAudits[month+'-'+c.key]; });
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+      S.crewCarsView='list'; S.pastAuditView=null;
+      render(); toast('🗑 Audit deleted');
+    })
+    .catch(e=>{ console.log('deleteAuditMonth failed:',e); toast('Delete failed'); });
+}
+
+function deleteCarAudit(month, carKey) {
+  const car=CREW_CARS.find(c=>c.key===carKey);
+  if(!checkAdminPin('delete '+car?.name+' from the '+month+' audit')) return;
+  if(!confirm(`Delete ${car?.name}'s audit for ${month}?`)) return;
+  if(!db){toast('No connection');return;}
+  db.collection('auditCars').doc(month+'-'+carKey).delete()
+    .then(()=>{
+      delete S.carAudits[month+'-'+carKey];
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+      render(); toast('🗑 '+car?.name+' audit deleted');
+    })
+    .catch(e=>{ console.log('deleteCarAudit failed:',e); toast('Delete failed'); });
 }
 function openCrewCarLog(key) {
   const cur = S.crewCarStatus[key] || {fuel:0, oil:'ok', cleaned:'', notes:''};
