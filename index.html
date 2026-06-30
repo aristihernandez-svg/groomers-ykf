@@ -623,6 +623,30 @@ body::before{
 
 /* PHOTO PREVIEW */
 .photo-preview{width:100%;border-radius:var(--radius-sm);margin:8px 0;max-height:200px;object-fit:cover;display:none;border:1px solid var(--border)}
+
+/* ── CREW CARS ── */
+.car-list-item{display:flex;align-items:center;gap:14px;padding:15px 16px;background:var(--glass);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+[data-theme="standard-night"] .car-list-item,[data-theme="standard-day"] .car-list-item{background:var(--bg2)}
+.car-list-item:active{background:var(--glass2)}
+.car-icon{width:44px;height:44px;border-radius:50%;background:var(--accent-dim);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.car-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.car-detail-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:15}
+.log-entry{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:1px solid var(--border)}
+.log-dot{width:10px;height:10px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.log-type{font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:0.5px}
+.log-val{font-size:14px;color:var(--t1);font-weight:600;margin-top:2px}
+.log-date{font-size:11px;color:var(--t3);margin-top:1px}
+.stat-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center;flex:1}
+.stat-label{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.stat-val{font-size:15px;font-weight:700;color:var(--t1)}
+.stat-date{font-size:10px;color:var(--t3);margin-top:3px}
+/* audit */
+.audit-photo-wrap{position:relative;width:calc(33% - 4px);aspect-ratio:1;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border)}
+.audit-photo-wrap img{width:100%;height:100%;object-fit:cover}
+.audit-rating{position:absolute;bottom:4px;left:4px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;color:#fff}
+.rating-good{background:#1a7a40}
+.rating-fair{background:#C08000}
+.rating-poor{background:#C03030}
 </style>
 </head>
 <body>
@@ -691,6 +715,19 @@ const PROC_VIDEOS = {
   o2:'',westwind:'',metro:'', // paste YouTube URLs here
 };
 
+const CREW_CARS = [
+  {key:'escape',  name:'Ford Escape',     fuel:'gasoline'},
+  {key:'elantra', name:'Hyundai Elantra', fuel:'gasoline'},
+  {key:'micra',   name:'Nissan Micra',    fuel:'gasoline'},
+  {key:'impala',  name:'Chevrolet Impala',fuel:'gasoline'},
+  {key:'whtruck', name:'White MX Truck',  fuel:'gasoline'},
+  {key:'brtruck', name:'Brown MX Truck',  fuel:'gasoline'},
+  {key:'kubota',  name:'Kubota',          fuel:'diesel'},
+  {key:'civic',   name:'Honda Civic',     fuel:'gasoline'},
+];
+
+const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
+
 // ── STATE ──────────────────────────────────────────────────────────
 const S = {
   tab:'home', dayView:TODAY, inDay:false,
@@ -706,8 +743,11 @@ const S = {
   dark: localStorage.getItem('gykf_dark')==='1',
   handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
   pendingHandoffAudio: null,
-  crewCarStatus: {}, // {carKey: {fuel, oil, cleaned, notes}}
-  buyerOut: false,  // true when someone is actively out shopping
+  crewCarStatus: {}, // legacy — replaced by crewCarData
+  buyerOut: false,
+  crewCarsView: null,   // null | 'list' | carKey | 'audit-overview' | 'audit-'+carKey
+  crewCarData: {},      // {carKey: {fuel, oilChange, washed, log:[]}}
+  auditData: null,      // current month audit {month, groomer, cars:{carKey:{done,comments,photos:[]}}}
 };
 
 const NAV_ITEMS = [
@@ -742,7 +782,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
     updateThemeToggleBtn();
-    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg();
+    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadAuditData();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
@@ -829,7 +869,13 @@ function render() {
     case 'today':      renderToday(el); break;
     case 'week':       S.inDay?renderDayDetail(el):renderWeek(el); break;
     case 'shopping':   renderShopping(el); break;
-    case 'procedures': renderProcs(el); break;
+    case 'procedures':
+      if(S.crewCarsView==='list') renderCrewCarsList(el);
+      else if(S.crewCarsView==='audit-overview') renderAuditOverview(el);
+      else if(S.crewCarsView&&S.crewCarsView.startsWith('audit-')) renderCarAudit(el,S.crewCarsView.slice(6));
+      else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
+      else renderProcs(el);
+      break;
     case 'contacts':   renderContacts(el); break;
     case 'bored':        renderBored(el); break;
   }
@@ -1712,6 +1758,438 @@ function loadCrewCarStatus() {
 function saveCrewCarStatus() {
   try { localStorage.setItem('gykf_ccs',JSON.stringify(S.crewCarStatus)); } catch(e){}
 }
+
+// ── CREW CAR DATA ─────────────────────────────────────────────
+function loadCrewCarData() {
+  try { S.crewCarData=JSON.parse(localStorage.getItem('gykf_ccd')||'{}'); } catch(e){ S.crewCarData={}; }
+}
+function saveCrewCarData() {
+  try { localStorage.setItem('gykf_ccd',JSON.stringify(S.crewCarData)); } catch(e){}
+  if(db) {
+    db.collection('crewCarData').doc('all').set(S.crewCarData)
+      .catch(e=>console.log('crewCarData Firestore write failed:', e));
+  }
+}
+function loadAuditData() {
+  try { S.auditData=JSON.parse(localStorage.getItem('gykf_audit')||'null'); } catch(e){ S.auditData=null; }
+}
+function saveAuditData() {
+  try { localStorage.setItem('gykf_audit', JSON.stringify(S.auditData)); } catch(e){}
+}
+
+function carData(key) {
+  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[]};
+  return S.crewCarData[key];
+}
+
+// Status dot colour: green = logged recently, amber = >2 weeks, red = >4 weeks or never
+function carStatusColor(dateStr) {
+  if(!dateStr) return 'var(--red)';
+  const days = Math.floor((Date.now()-new Date(dateStr).getTime())/86400000);
+  if(days<=14) return 'var(--green)';
+  if(days<=28) return '#E8A000';
+  return 'var(--red)';
+}
+function daysSince(dateStr) {
+  if(!dateStr) return null;
+  return Math.floor((Date.now()-new Date(dateStr).getTime())/86400000);
+}
+function fmtDate(dateStr) {
+  if(!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+}
+
+// ── CREW CARS NAVIGATION ──────────────────────────────────────
+function openCrewCars() {
+  S.crewCarsView='list';
+  render();
+}
+function openCarDetail(key) {
+  S.crewCarsView=key;
+  render();
+}
+function openAuditOverview() {
+  // Start or resume audit for current month
+  const month=new Date().toLocaleDateString('en-CA',{month:'long',year:'numeric'});
+  if(!S.auditData || S.auditData.month!==month) {
+    S.auditData={month, groomer:'', started:new Date().toISOString(), cars:{}};
+    CREW_CARS.forEach(c=>{ S.auditData.cars[c.key]={done:false,comments:'',photos:[]}; });
+    saveAuditData();
+  }
+  S.crewCarsView='audit-overview';
+  render();
+}
+function openCarAudit(key) {
+  S.crewCarsView='audit-'+key;
+  render();
+}
+function backToCarList() { S.crewCarsView='list'; render(); }
+function backToProcs() { S.crewCarsView=null; render(); }
+function backToAuditOverview() { S.crewCarsView='audit-overview'; render(); }
+
+// ── RENDER: CREW CARS LIST ────────────────────────────────────
+function renderCrewCarsList(el) {
+  document.getElementById('barTitle').textContent='Crew Cars';
+  document.getElementById('fab').style.display='none';
+  let html=`
+    <div class="car-detail-bar" style="background:var(--bg2)">
+      <button class="back-btn" onclick="backToProcs()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
+      <button onclick="openAuditOverview()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📋 Monthly Audit</button>
+    </div>`;
+  CREW_CARS.forEach(car=>{
+    const d=carData(car.key);
+    const worstColor=[d.fuel?carStatusColor(d.log.filter(l=>l.type==='fuel').slice(-1)[0]?.date):null,
+      carStatusColor(d.oilChange), carStatusColor(d.washed)]
+      .reduce((worst,c)=>{
+        const rank={'var(--red)':0,'#E8A000':1,'var(--green)':2};
+        return (rank[c]??2)<(rank[worst]??2)?c:worst;
+      },'var(--green)');
+    const ds=daysSince(d.washed);
+    const sub=d.washed?`Last washed ${ds===0?'today':ds===1?'yesterday':ds+' days ago'}`:'No records yet';
+    html+=`
+      <div class="car-list-item" onclick="openCarDetail('${car.key}')">
+        <div class="car-icon">${car.fuel==='diesel'?'🚜':'🚗'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">${sub}</div>
+        </div>
+        <div class="car-status-dot" style="background:${worstColor}"></div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+  });
+  html+=`<div style="padding:14px 16px">
+    <div style="font-size:11px;color:var(--t3);line-height:1.6">
+      🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged
+    </div>
+  </div><div style="height:60px"></div>`;
+  el.innerHTML=html;
+}
+
+// ── RENDER: CAR DETAIL ────────────────────────────────────────
+function renderCarDetail(el, key) {
+  const car=CREW_CARS.find(c=>c.key===key);
+  if(!car){backToCarList();return;}
+  const d=carData(key);
+  document.getElementById('barTitle').textContent=car.name;
+  document.getElementById('fab').style.display='none';
+  const fuelLog=d.log.filter(l=>l.type==='fuel').slice(-1)[0];
+  const oilLog=d.log.filter(l=>l.type==='oil').slice(-1)[0];
+  const washLog=d.log.filter(l=>l.type==='wash').slice(-1)[0];
+
+  let html=`
+    <div class="car-detail-bar">
+      <button class="back-btn" onclick="backToCarList()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${car.name}${car.fuel==='diesel'?' · Diesel':''}</span>
+    </div>
+
+    <!-- Status cards -->
+    <div style="padding:14px 14px 8px;display:flex;gap:8px">
+      <div class="stat-card">
+        <div class="stat-label">⛽ Fuel</div>
+        <div class="stat-val" style="color:${fuelLog?'var(--t1)':'var(--red)'}">${fuelLog?fuelLog.value:'—'}</div>
+        <div class="stat-date">${fuelLog?fmtDate(fuelLog.date):'Never logged'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🛢 Oil Change</div>
+        <div class="stat-val" style="color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'—'}</div>
+        <div class="stat-date">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago':'Never logged'}</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">🧹 Washed</div>
+        <div class="stat-val" style="color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</div>
+        <div class="stat-date">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'Never logged'}</div>
+      </div>
+    </div>
+
+    <!-- Log button -->
+    <div style="padding:0 14px 14px">
+      <button onclick="openCarLogModal('${key}')" style="width:100%;padding:13px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--bg);font-size:14px;font-weight:700;border:none;cursor:pointer">+ Log Update</button>
+    </div>
+
+    <!-- Running log -->
+    <div style="padding:8px 16px 6px;font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)">History</div>`;
+
+  if(!d.log.length) {
+    html+=`<div class="empty"><div class="empty-icon">📋</div><p>No entries yet — tap Log Update to start tracking.</p></div>`;
+  } else {
+    const sorted=[...d.log].reverse();
+    const colors={fuel:'#1A6B8A',oil:'#C08000',wash:'#1a7a40'};
+    const labels={fuel:'Fuel',oil:'Oil Change',wash:'Washed'};
+    sorted.forEach(entry=>{
+      html+=`<div class="log-entry">
+        <div class="log-dot" style="background:${colors[entry.type]||'var(--t3)'}"></div>
+        <div style="flex:1">
+          <div class="log-type">${labels[entry.type]||entry.type}</div>
+          <div class="log-val">${entry.value}</div>
+          <div class="log-date">${fmtDate(entry.date)}${entry.logged?' · '+entry.logged:''}</div>
+        </div>
+      </div>`;
+    });
+  }
+  html+=`<div style="height:80px"></div>`;
+  el.innerHTML=html;
+}
+
+// ── LOG ENTRY MODAL ───────────────────────────────────────────
+function openCarLogModal(key) {
+  const car=CREW_CARS.find(c=>c.key===key);
+  const today=new Date().toISOString().split('T')[0];
+  openModal(`Log — ${car.name}`,
+    `<label>Type</label>
+     <select id="clType" onchange="toggleLogFields()">
+       <option value="fuel">⛽ Fuel level</option>
+       <option value="oil">🛢 Oil change</option>
+       <option value="wash">🧹 Washed</option>
+     </select>
+     <div id="clFuelRow">
+       <label>Fuel level</label>
+       <select id="clFuel">${FUEL_LEVELS.map(f=>`<option value="${f}">${f}</option>`).join('')}</select>
+     </div>
+     <label>Date</label>
+     <input id="clDate" type="date" value="${today}">`,
+    ()=>{
+      const type=document.getElementById('clType').value;
+      const date=document.getElementById('clDate').value||today;
+      const value=type==='fuel'
+        ? document.getElementById('clFuel').value
+        : type==='oil' ? 'Oil changed' : 'Washed';
+      const d=carData(key);
+      const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+      d.log.push({type,value,date,logged});
+      if(type==='oil') d.oilChange=date;
+      if(type==='wash') d.washed=date;
+      if(type==='fuel') d.fuel=value;
+      saveCrewCarData();
+      closeModal();
+      renderCarDetail(document.getElementById('content'),key);
+      toast('Logged ✓');
+    });
+  // small delay to let modal render before hiding fuel row if needed
+  setTimeout(()=>toggleLogFields(),50);
+}
+function toggleLogFields() {
+  const t=document.getElementById('clType')?.value;
+  const fr=document.getElementById('clFuelRow');
+  if(fr) fr.style.display=t==='fuel'?'block':'none';
+}
+
+// ── RENDER: AUDIT OVERVIEW ────────────────────────────────────
+function renderAuditOverview(el) {
+  document.getElementById('barTitle').textContent='Monthly Audit';
+  document.getElementById('fab').style.display='none';
+  const a=S.auditData;
+  if(!a){backToCarList();return;}
+  const done=CREW_CARS.filter(c=>a.cars[c.key]?.done).length;
+  const pct=Math.round(done/CREW_CARS.length*100);
+  let html=`
+    <div class="car-detail-bar">
+      <button class="back-btn" onclick="backToCarList()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${a.month}</span>
+    </div>
+
+    <!-- Progress -->
+    <div style="padding:14px 16px 10px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:6px">
+        <span>${done} of ${CREW_CARS.length} cars audited</span>
+        <span style="font-weight:700;color:var(--t1)">${pct}%</span>
+      </div>
+      <div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden">
+        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 0.4s"></div>
+      </div>
+    </div>
+
+    <!-- Groomer name -->
+    <div style="padding:0 14px 14px">
+      <label style="font-size:12px;color:var(--t3);font-weight:500;display:block;margin-bottom:4px">Your name (groomer doing the audit)</label>
+      <input id="auditGroomer" value="${a.groomer||''}" placeholder="Your name..." oninput="S.auditData.groomer=this.value;saveAuditData()"
+        style="width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none">
+    </div>`;
+
+  CREW_CARS.forEach(car=>{
+    const cd=a.cars[car.key]||{done:false,photos:[],comments:''};
+    const photoCount=cd.photos.length;
+    html+=`
+      <div class="car-list-item" onclick="openCarAudit('${car.key}')">
+        <div style="width:36px;height:36px;border-radius:50%;background:${cd.done?'var(--green-dim)':'var(--glass2)'};border:1.5px solid ${cd.done?'var(--green)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${cd.done?'✅':car.fuel==='diesel'?'🚜':'🚗'}</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">${cd.done?'Done · '+photoCount+' photo'+(photoCount!==1?'s':''):photoCount?photoCount+' photo'+(photoCount!==1?'s':'')+' · tap to complete':'Tap to start'}</div>
+        </div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+  });
+
+  html+=`<div style="padding:14px">
+    <button onclick="generateAuditReport()" ${done<CREW_CARS.length?'disabled':''} style="width:100%;padding:13px;border-radius:var(--radius-sm);background:${done===CREW_CARS.length?'linear-gradient(135deg,var(--accent),var(--accent2))':'var(--glass)'};color:${done===CREW_CARS.length?'var(--bg)':'var(--t3)'};font-size:14px;font-weight:700;border:1px solid var(--border);cursor:${done===CREW_CARS.length?'pointer':'default'}">
+      ${done===CREW_CARS.length?'📧 Generate & Send Report':'Complete all cars to generate report'}
+    </button>
+    ${done===CREW_CARS.length?'':'<div style="font-size:11px;color:var(--t3);text-align:center;margin-top:6px">'+( CREW_CARS.length-done)+' car'+(CREW_CARS.length-done!==1?'s':'')+' remaining</div>'}
+  </div><div style="height:60px"></div>`;
+  el.innerHTML=html;
+}
+
+// ── RENDER: CAR AUDIT ─────────────────────────────────────────
+let auditPhotoTarget=null;
+function renderCarAudit(el, key) {
+  const car=CREW_CARS.find(c=>c.key===key);
+  if(!car||!S.auditData){backToAuditOverview();return;}
+  document.getElementById('barTitle').textContent=car.name+' Audit';
+  document.getElementById('fab').style.display='none';
+  const cd=S.auditData.cars[key]||{done:false,photos:[],comments:''};
+  S.auditData.cars[key]=cd;
+
+  let html=`
+    <div class="car-detail-bar">
+      <button class="back-btn" onclick="backToAuditOverview()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${car.name}</span>
+    </div>
+
+    <!-- Photos -->
+    <div style="padding:14px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase">Photos (${cd.photos.length}/7)</div>
+    <div style="padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:6px">`;
+
+  cd.photos.forEach((p,i)=>{
+    const ratingClass=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
+    html+=`<div class="audit-photo-wrap">
+      <img src="${p.src}" onclick="viewPhoto('${p.src}')">
+      <div class="audit-rating ${ratingClass}">${p.rating}</div>
+      <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+    </div>`;
+  });
+
+  if(cd.photos.length<7) {
+    html+=`<div onclick="triggerAuditPhoto('${key}')" style="width:calc(33% - 4px);aspect-ratio:1;border-radius:var(--radius-sm);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:24px;background:var(--glass)">+</div>`;
+  }
+
+  html+=`</div>
+
+    <!-- Photo notes -->
+    ${cd.photos.length?`<div style="padding:0 14px 14px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Photo Notes & Ratings</div>
+      ${cd.photos.map((p,i)=>`
+        <div style="background:var(--glass);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;border:1px solid var(--border)">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+            <img src="${p.src}" style="width:36px;height:36px;border-radius:6px;object-fit:cover">
+            <span style="font-size:12px;color:var(--t2);font-weight:600">Photo ${i+1}</span>
+            <select onchange="setAuditRating('${key}',${i},this.value)" style="margin-left:auto;padding:4px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--glass2);font-size:12px;color:var(--t1)">
+              <option value="Good" ${p.rating==='Good'?'selected':''}>✅ Good</option>
+              <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️ Fair</option>
+              <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴 Poor</option>
+            </select>
+          </div>
+          <input value="${p.note||''}" placeholder="Note for this photo (optional)..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
+            style="width:100%;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none">
+        </div>`).join('')}
+    </div>`:''}
+
+    <!-- Comments -->
+    <div style="padding:0 14px 14px">
+      <label style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">Comments for this car</label>
+      <textarea id="auditComments" placeholder="Overall condition, issues found, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
+        style="width:100%;min-height:80px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;line-height:1.5;outline:none">${cd.comments||''}</textarea>
+    </div>
+
+    <!-- Mark done -->
+    <div style="padding:0 14px 20px">
+      <button onclick="markCarAuditDone('${key}')" style="width:100%;padding:13px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
+        ${cd.done?'✅ Audit complete — tap to undo':'✓ Mark this car as done'}
+      </button>
+    </div>
+    <div style="height:60px"></div>`;
+  el.innerHTML=html;
+}
+
+function triggerAuditPhoto(key) {
+  auditPhotoTarget=key;
+  S.photoCtx='audit';
+  const input=document.getElementById('photoInput');
+  input.value='';
+  input.click();
+}
+function removeAuditPhoto(key,i) {
+  if(!confirm('Remove this photo?')) return;
+  S.auditData.cars[key].photos.splice(i,1);
+  saveAuditData();
+  renderCarAudit(document.getElementById('content'),key);
+}
+function setAuditRating(key,i,val) {
+  S.auditData.cars[key].photos[i].rating=val;
+  saveAuditData();
+}
+function setAuditPhotoNote(key,i,val) {
+  S.auditData.cars[key].photos[i].note=val;
+  saveAuditData();
+}
+function setAuditComments(key,val) {
+  S.auditData.cars[key].comments=val;
+  saveAuditData();
+}
+function markCarAuditDone(key) {
+  const cd=S.auditData.cars[key];
+  cd.done=!cd.done;
+  saveAuditData();
+  renderCarAudit(document.getElementById('content'),key);
+  if(cd.done) toast('✅ '+CREW_CARS.find(c=>c.key===key)?.name+' audit done');
+}
+
+// ── GENERATE & SEND REPORT ────────────────────────────────────
+function generateAuditReport() {
+  const a=S.auditData;
+  if(!a){toast('No audit data');return;}
+  const groomer=a.groomer||'Unknown';
+  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  let body=`CREW CAR MONTHLY AUDIT REPORT\n`;
+  body+=`Date: ${now}\n`;
+  body+=`Audited by: ${groomer}\n`;
+  body+=`Period: ${a.month}\n`;
+  body+=`${'─'.repeat(40)}\n\n`;
+
+  CREW_CARS.forEach(car=>{
+    const cd=a.cars[car.key]||{};
+    body+=`${car.name.toUpperCase()}\n`;
+    body+=`Photos: ${(cd.photos||[]).length}\n`;
+    if(cd.photos?.length) {
+      cd.photos.forEach((p,i)=>{
+        body+=`  Photo ${i+1}: ${p.rating||'—'}${p.note?' — '+p.note:''}\n`;
+      });
+    }
+    if(cd.comments) body+=`Comments: ${cd.comments}\n`;
+    body+=`\n`;
+  });
+
+  body+=`${'─'.repeat(40)}\n`;
+  body+=`Sent from Skycare · YKF Grooming Team`;
+
+  const subject=encodeURIComponent(`Crew Car Audit — ${a.month} — ${groomer}`);
+  const encodedBody=encodeURIComponent(body);
+
+  openModal('📧 Send Audit Report',
+    `<p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.5">Choose where to open the report. Add the recipient email and attach your photos manually from the app.</p>
+     <label>Recipient email</label>
+     <input id="rptEmail" type="email" placeholder="mechanic@example.com" style="margin-bottom:14px">
+     <div class="mbtn-row" style="flex-direction:column;gap:10px">
+       <button onclick="sendReport('gmail','${subject}',\`${body.replace(/`/g,'\\`')}\`)" class="mbtn" style="background:#D44638;color:#fff;border:none">✉️ Open in Gmail</button>
+       <button onclick="sendReport('outlook','${subject}',\`${body.replace(/`/g,'\\`')}\`)" class="mbtn" style="background:#0072C6;color:#fff;border:none">✉️ Open in Outlook</button>
+     </div>`,
+    null);
+  document.getElementById('mSave').style.display='none';
+}
+
+function sendReport(method, subject, body) {
+  const to=encodeURIComponent(document.getElementById('rptEmail')?.value||'');
+  const s=encodeURIComponent(subject||'Crew Car Audit Report');
+  const b=encodeURIComponent(body||'');
+  let url='';
+  if(method==='gmail') {
+    url=`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${s}&body=${b}`;
+  } else {
+    url=`https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${s}&body=${b}`;
+  }
+  window.open(url,'_blank');
+  closeModal();
+  toast('📧 Opening mail app — attach photos manually');
+}
 function openCrewCarLog(key) {
   const cur = S.crewCarStatus[key] || {fuel:0, oil:'ok', cleaned:'', notes:''};
   openModal('🚐 Log Car Status',
@@ -1844,28 +2322,7 @@ function loadProcs() {
         {t:"Remove all ground equipment from ramp",n:""},
         {t:"Notify Crew Chief — aircraft ready for departure",n:""},
       ]},
-    crewcar1:{title:"Crew Van 1",icon:"🚐",open:false,done:[],warn:"",
-      video:'', isCrewCar:true,
-      steps:[
-        {t:"Check fuel — log jerry cans",n:"Use 'Log Status' button below"},
-        {t:"Check oil level",n:"Top up if low"},
-        {t:"Visual inspection exterior — note damage",n:""},
-        {t:"Clean interior — remove garbage, wipe surfaces",n:""},
-        {t:"Vacuum floor mats",n:""},
-        {t:"Check tire pressure (visual)",n:""},
-        {t:"Log mileage",n:""},
-      ]},
-    crewcar2:{title:"Crew Van 2",icon:"🚐",open:false,done:[],warn:"",
-      video:'', isCrewCar:true,
-      steps:[
-        {t:"Check fuel — log jerry cans",n:"Use 'Log Status' button below"},
-        {t:"Check oil level",n:"Top up if low"},
-        {t:"Visual inspection exterior — note damage",n:""},
-        {t:"Clean interior — remove garbage, wipe surfaces",n:""},
-        {t:"Vacuum floor mats",n:""},
-        {t:"Check tire pressure (visual)",n:""},
-        {t:"Log mileage",n:""},
-      ]},
+    crewcars:{title:"Crew Cars",icon:"🚗",open:false,done:[],warn:"",video:'',isCrewCarsHub:true,steps:[]},
   };
 }
 
@@ -1874,6 +2331,24 @@ function renderProcs(el) {
   showFab(openAddProcedure);
   let html='<div class="proc-list">';
   Object.entries(S.procs).forEach(([key,p])=>{
+    // Skip legacy crew van entries superseded by Crew Cars hub
+    if(key==='crewcar1'||key==='crewcar2') return;
+    // Crew Cars hub — special navigation card
+    if(p.isCrewCarsHub) {
+      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
+      const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
+      const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
+      html+=`<div class="car-list-item" onclick="openCrewCars()" style="margin:0 14px 10px;border-radius:var(--radius-sm);background:var(--glass2);border:1px solid var(--border2)">
+        <div class="car-icon" style="background:var(--accent-dim);border:1.5px solid var(--accent-border)">🚗</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">Crew Cars</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">${CREW_CARS.length} vehicles · tap to manage</div>
+        </div>
+        <div class="car-status-dot" style="background:${dot}"></div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+      return;
+    }
     const done=p.done.length;
     const dmg=S.dmgReports[key]||[];
     html+=`<div class="pcard ${p.open?'open':''}" id="pc-${key}">
@@ -2393,6 +2868,13 @@ function applyCapturedPhoto(src) {
     S.pendingPhoto=src;
     const btn=document.getElementById('notePhotoBtn');
     if(btn) btn.textContent='📷 Photo attached ✓';
+  } else if(S.photoCtx==='audit' && auditPhotoTarget) {
+    const key=auditPhotoTarget;
+    if(!S.auditData||!S.auditData.cars[key]) return;
+    S.auditData.cars[key].photos.push({src,rating:'Good',note:''});
+    saveAuditData();
+    renderCarAudit(document.getElementById('content'),key);
+    toast('Photo added ✓');
   }
 }
 // Camera photos can be several MB as base64, which blows through
@@ -3317,6 +3799,20 @@ function setupLiveSync() {
       if(S.tab==='shopping') renderShopping(document.getElementById('content'));
     }, e => console.log('shopSession listener error:', e));
 
+    // Crew car data — live sync across all phones
+    db.collection('crewCarData').doc('all').onSnapshot(snap => {
+      if(!snap.exists) return;
+      const data=snap.data();
+      Object.assign(S.crewCarData, data);
+      try { localStorage.setItem('gykf_ccd',JSON.stringify(S.crewCarData)); } catch(e){}
+      const v=S.crewCarsView;
+      if(v && v!==null && S.tab==='procedures') {
+        const el=document.getElementById('content');
+        if(v==='list') renderCrewCarsList(el);
+        else if(!v.startsWith('audit')) renderCarDetail(el,v);
+      }
+    }, e => console.log('crewCarData listener error:', e));
+
     // Damage reports — fully live: every report any groomer files appears
     // on every phone immediately, and stays available for future reference.
     db.collection('damageReports').orderBy('ts','asc').onSnapshot(snap => {
@@ -3364,8 +3860,9 @@ function setupLiveSync() {
         const existing = S.procs[d.id];
         // Preserve isCrewCar from local procs if Firestore doc doesn't have it
         const isCrewCar = v.isCrewCar || existing?.isCrewCar || false;
+        const isCrewCarsHub = v.isCrewCarsHub || existing?.isCrewCarsHub || false;
         procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
-          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[], isCrewCar};
+          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[], isCrewCar, isCrewCarsHub};
       });
       // Preserve any locally-known procedures not yet in Firestore (e.g. just added)
       Object.keys(S.procs).forEach(key=>{ if(!procs[key]) procs[key]=S.procs[key]; });
