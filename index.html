@@ -2143,7 +2143,8 @@ function openDmgReport(key) {
         if(db) {
           db.collection('damageReports').add({
             procKey:key, text:report.text, photo:report.photo, date:report.date,
-            ts: firebase.firestore.FieldValue.serverTimestamp()
+            ts: firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: ttlTimestamp(120)
           }).catch(e => console.log('Damage report Firestore sync failed (offline?):', e));
         }
       } catch(e) {
@@ -2598,7 +2599,8 @@ function showEOD() {
         try {
           await db.collection('handoffNotes').add({
             text:noteText, audio, day:DAY_NAMES[TODAY], date:dateStr,
-            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp()
+            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: ttlTimestamp(120)
           });
           toast('✅ Copied — handoff note saved for next shift');
         } catch(e) {
@@ -3065,6 +3067,14 @@ function initFirestore() {
 // nested path, so task text (which can contain periods) needs sanitizing
 // before being used as a map key.
 function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
+
+// Firestore TTL deletes a document once this field's timestamp is in the
+// past. Requires a TTL policy enabled in the console on the target field
+// (see expireAt usage on damageReports/handoffNotes) — the field alone does
+// nothing until that policy is turned on.
+function ttlTimestamp(days) {
+  return firebase.firestore.Timestamp.fromMillis(Date.now() + days*24*60*60*1000);
+}
 
 function setupLiveSync() {
   if(!db) return;
