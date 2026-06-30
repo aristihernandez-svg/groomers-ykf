@@ -2462,7 +2462,18 @@ Tighten fittings"></textarea>`,
     });
 }
 
+// Lightweight deterrent against accidental/casual edits by regular crew —
+// not real security (the PIN lives in the client source), just a speed bump.
+const ADMIN_PIN = '0000';
+function checkAdminPin(actionLabel) {
+  const pin = prompt(`Enter admin PIN to ${actionLabel}:`);
+  if(pin === null) return false; // cancelled
+  if(pin !== ADMIN_PIN) { toast('❌ Incorrect PIN'); return false; }
+  return true;
+}
+
 function editProcedure(key) {
+  if(!checkAdminPin('edit this procedure')) return;
   const p = S.procs[key];
   if(!p) return;
   openModal('✏️ Edit Procedure',
@@ -2489,6 +2500,7 @@ function editProcedure(key) {
 }
 
 function deleteProcedure(key) {
+  if(!checkAdminPin('delete this procedure')) return;
   const p = S.procs[key];
   if(!p) return;
   if(!confirm(`Delete the "${p.title}" procedure? This can't be undone.`)) return;
