@@ -1390,6 +1390,7 @@ function renderToday(el) {
       <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`;
+  html+=renderFlightLog(tabName);
   html+=renderGroups(tasks,tabName);
   html+=renderNotes(notes,tabName);
   html+='<div style="height:90px"></div>';
