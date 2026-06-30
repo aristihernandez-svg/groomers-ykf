@@ -12,6 +12,7 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -741,6 +742,7 @@ window.addEventListener('load', async () => {
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
+    initFirestore(); // best-effort; app works locally even if this fails
   } catch(e) {
     console.log('Boot setup error:', e);
   }
@@ -761,7 +763,10 @@ window.addEventListener('load', async () => {
     }
     // Then fetch fresh data in background — never blocks the UI from showing
     Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
-      .then(() => { if(S.tab==='home') renderHome(document.getElementById('content')); else render(); })
+      .then(() => {
+        if(S.tab==='home') renderHome(document.getElementById('content')); else render();
+        setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
+      })
       .catch(e => console.log('Boot fetch error:', e));
   }, 1800);
 });
@@ -1951,12 +1956,14 @@ function renderBored(el) {
 function toggleT(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
   haptic(); api({action:'toggleTask',tabName,task:S.tasks[tabName][idx].task});
+  fsSetTaskDone(tabName, S.tasks[tabName][idx].task, S.tasks[tabName][idx].done);
   renderToday(document.getElementById('content'));
   toast(S.tasks[tabName][idx].done?'✓ Done':'Unchecked');
 }
 function toggleTDay(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
   haptic(); api({action:'toggleTask',tabName,task:S.tasks[tabName][idx].task});
+  fsSetTaskDone(tabName, S.tasks[tabName][idx].task, S.tasks[tabName][idx].done);
   renderDayDetail(document.getElementById('content'));
   toast(S.tasks[tabName][idx].done?'✓ Done':'Unchecked');
 }
@@ -1974,6 +1981,7 @@ function toggleShop(idx) {
   haptic('medium');
   saveShoppingState(); // persist locally
   api({action:'toggleShop',item:S.shopping[idx].item});
+  fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
   renderShopping(document.getElementById('content'));
   toast(S.shopping[idx].checked?'🔴 To Buy':'✅ In Stock');
 }
@@ -1990,6 +1998,7 @@ function resetShop() {
 function toggleBored(idx) {
   S.bored[idx].done=!S.bored[idx].done;
   haptic(); api({action:'toggleBored',task:S.bored[idx].task});
+  fsSetBoredDone(S.bored[idx].task, S.bored[idx].done);
   localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
   renderBored(document.getElementById('content'));
   toast(S.bored[idx].done?'✓ Done!':'Unchecked');
@@ -2070,10 +2079,20 @@ function openDmgReport(key) {
         localStorage.removeItem('gykf_dmg_draft');
         if(!S.dmgReports[key]) S.dmgReports[key]=[];
         const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-        S.dmgReports[key].push({text:text||'(no description)',photo,date});
+        const report = {text:text||'(no description)',photo,date};
+        S.dmgReports[key].push(report); // optimistic local save — works offline too
         saveDmg(); closeModal();
         renderProcs(document.getElementById('content'));
         toast('Damage report saved 📸');
+        // Best-effort: also push to Firestore so every groomer's phone sees
+        // it immediately. The live listener (setupLiveSync) will reconcile
+        // this into S.dmgReports with its real doc id once it comes back.
+        if(db) {
+          db.collection('damageReports').add({
+            procKey:key, text:report.text, photo:report.photo, date:report.date,
+            ts: firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(e => console.log('Damage report Firestore sync failed (offline?):', e));
+        }
       } catch(e) {
         console.error('Damage report save error:', e);
         toast('❌ Could not save — try again');
@@ -2201,10 +2220,16 @@ function deleteDmgReport(key, idx) {
   if(!confirm('Delete this damage report? This can\'t be undone.')) return;
   const list = S.dmgReports[key];
   if(!list || !list[idx]) return;
+  const fsId = dmgReportIds[key]?.[idx];
   list.splice(idx,1);
+  dmgReportIds[key]?.splice(idx,1);
   saveDmg();
   renderProcs(document.getElementById('content'));
   toast('🗑 Damage report deleted');
+  if(db && fsId) {
+    db.collection('damageReports').doc(fsId).delete()
+      .catch(e => console.log('Damage report Firestore delete failed (offline?):', e));
+  }
 }
 
 // ── MODALS ─────────────────────────────────────────────────────────
@@ -2737,12 +2762,105 @@ let fbMessaging = null;
 
 async function initFirebase() {
   try {
-    firebase.initializeApp(FIREBASE_CONFIG);
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     fbMessaging = firebase.messaging();
     console.log('Firebase initialized');
   } catch(e) {
     console.log('Firebase init error:', e);
   }
+}
+
+// ── LIVE SYNC (Firestore) ────────────────────────────────────────────
+// Sheets/the Apps Script backend stay the source of truth for *content*
+// (task wording, shopping catalog, contacts, procedures). Firestore only
+// carries fast-changing *shared state* — done/checked flags and damage
+// reports — so every groomer's phone updates instantly when a teammate
+// makes a change, instead of waiting for a manual sync tap.
+let db = null;
+let dmgReportIds = {}; // procKey -> [firestore doc id per report, aligned with S.dmgReports[procKey]]
+
+function initFirestore() {
+  try {
+    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+    db = firebase.firestore();
+    console.log('Firestore initialized');
+  } catch(e) {
+    console.log('Firestore unavailable — app continues working locally:', e);
+    db = null;
+  }
+}
+
+// Firestore treats "." in a field name written through a plain object as a
+// nested path, so task text (which can contain periods) needs sanitizing
+// before being used as a map key.
+function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
+
+function setupLiveSync() {
+  if(!db) return;
+  try {
+    // Today's task done-state, shared live across every groomer's phone.
+    const tabName = DAYS[TODAY];
+    db.collection('taskState').doc(tabName).onSnapshot(snap => {
+      const data = snap.data(); if(!data || !S.tasks[tabName]) return;
+      S.tasks[tabName].forEach(t => { const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+      if(S.tab==='today') renderToday(document.getElementById('content'));
+      else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+    }, e => console.log('taskState listener error:', e));
+
+    // Shopping checked/to-buy state.
+    db.collection('shopState').doc('state').onSnapshot(snap => {
+      const data = snap.data(); if(!data) return;
+      S.shopping.forEach(i => {
+        const v=data[fsKey(i.item)];
+        if(v!==undefined) { i.checked=v.checked; i.status=v.status; }
+      });
+      saveShoppingState();
+      if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+    }, e => console.log('shopState listener error:', e));
+
+    // Bored board done-state.
+    db.collection('boredState').doc('state').onSnapshot(snap => {
+      const data = snap.data(); if(!data) return;
+      S.bored.forEach(b => { const v=data[fsKey(b.task)]; if(v!==undefined) b.done=v; });
+      if(S.tab==='bored') renderBored(document.getElementById('content'));
+    }, e => console.log('boredState listener error:', e));
+
+    // Damage reports — fully live: every report any groomer files appears
+    // on every phone immediately, and stays available for future reference.
+    db.collection('damageReports').orderBy('ts','asc').onSnapshot(snap => {
+      const byProc = {}; const idsByProc = {};
+      snap.forEach(doc => {
+        const d = doc.data();
+        (byProc[d.procKey] ||= []).push({text:d.text, photo:d.photo||'', date:d.date});
+        (idsByProc[d.procKey] ||= []).push(doc.id);
+      });
+      S.dmgReports = byProc;
+      dmgReportIds = idsByProc;
+      saveDmg();
+      if(S.tab==='procedures') renderProcs(document.getElementById('content'));
+    }, e => console.log('damageReports listener error:', e));
+  } catch(e) {
+    console.log('setupLiveSync error:', e);
+  }
+}
+
+// Best-effort write-through to Firestore. Local state has already been
+// updated by the caller, so a failed/offline write just means this device
+// won't broadcast the change until it's back online — nothing is lost.
+function fsSetTaskDone(tabName, task, done) {
+  if(!db) return;
+  db.collection('taskState').doc(tabName).set({[fsKey(task)]:done}, {merge:true})
+    .catch(e => console.log('fsSetTaskDone failed (offline?):', e));
+}
+function fsSetShopState(item, checked, status) {
+  if(!db) return;
+  db.collection('shopState').doc('state').set({[fsKey(item)]:{checked,status}}, {merge:true})
+    .catch(e => console.log('fsSetShopState failed (offline?):', e));
+}
+function fsSetBoredDone(task, done) {
+  if(!db) return;
+  db.collection('boredState').doc('state').set({[fsKey(task)]:done}, {merge:true})
+    .catch(e => console.log('fsSetBoredDone failed (offline?):', e));
 }
 
 async function requestNotificationPermission() {
