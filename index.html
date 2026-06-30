@@ -753,9 +753,12 @@ const S = {
   crewCarStatus: {}, // legacy — replaced by crewCarData
   buyerOut: false,
   procView: null,        // null | procKey — which procedure is open full-screen
-  crewCarsView: null,   // null | 'list' | carKey | 'audit-overview' | 'audit-'+carKey
+  crewCarsView: null,   // null | 'list' | carKey | 'past-audit'
   crewCarData: {},      // {carKey: {fuel, oilChange, washed, log:[]}}
-  auditData: null,      // current month audit {month, groomer, cars:{carKey:{done,comments,photos:[]}}}
+  carAudits: {},        // {'{month}-{carKey}': {photos, comments, done, groomer, completedAt}}
+  auditGroomer: '',     // name of groomer doing this month's audit
+  pastAudits: [],       // [{month, groomer, completedAt}] loaded from Firestore
+  pastAuditView: null,  // month string being viewed, or null
 };
 
 const NAV_ITEMS = [
@@ -790,7 +793,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
     updateThemeToggleBtn();
-    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadAuditData();
+    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
@@ -819,6 +822,7 @@ window.addEventListener('load', async () => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
         seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
+        loadPastAudits();
       })
       .catch(e => console.log('Boot fetch error:', e));
   }, 1800);
@@ -879,8 +883,7 @@ function render() {
     case 'shopping':   renderShopping(el); break;
     case 'procedures':
       if(S.crewCarsView==='list') renderCrewCarsList(el);
-      else if(S.crewCarsView==='audit-overview') renderAuditOverview(el);
-      else if(S.crewCarsView&&S.crewCarsView.startsWith('audit-')) renderCarAudit(el,S.crewCarsView.slice(6));
+      else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
       else if(S.procView) renderProcDetail(el,S.procView);
       else renderProcs(el);
@@ -1779,11 +1782,33 @@ function saveCrewCarData() {
       .catch(e=>console.log('crewCarData Firestore write failed:', e));
   }
 }
-function loadAuditData() {
-  try { S.auditData=JSON.parse(localStorage.getItem('gykf_audit')||'null'); } catch(e){ S.auditData=null; }
+function auditMonth() {
+  return new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
 }
-function saveAuditData() {
-  try { localStorage.setItem('gykf_audit', JSON.stringify(S.auditData)); } catch(e){}
+function auditDocKey(carKey) { return auditMonth()+'-'+carKey; }
+function loadCarAudits() {
+  try { S.carAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.carAudits={}; }
+  try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
+}
+function saveCarAudit(carKey) {
+  try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+  try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
+  if(!db) return;
+  const month=auditMonth();
+  const data={...S.carAudits[auditDocKey(carKey)], month, carKey};
+  db.collection('auditCars').doc(auditDocKey(carKey)).set(data)
+    .catch(e=>console.log('saveCarAudit Firestore failed:',e));
+}
+function carAuditData(carKey) {
+  const k=auditDocKey(carKey);
+  if(!S.carAudits[k]) S.carAudits[k]={photos:[],comments:'',done:false,completedAt:null};
+  return S.carAudits[k];
+}
+function loadPastAudits() {
+  if(!db) return;
+  db.collection('auditArchive').orderBy('completedAt','desc').limit(12).get()
+    .then(snap=>{ S.pastAudits=snap.docs.map(d=>d.data()); render(); })
+    .catch(e=>console.log('loadPastAudits failed:',e));
 }
 
 function carData(key) {
@@ -1817,24 +1842,8 @@ function openCarDetail(key) {
   S.crewCarsView=key;
   render();
 }
-function openAuditOverview() {
-  // Start or resume audit for current month
-  const month=new Date().toLocaleDateString('en-CA',{month:'long',year:'numeric'});
-  if(!S.auditData || S.auditData.month!==month) {
-    S.auditData={month, groomer:'', started:new Date().toISOString(), cars:{}};
-    CREW_CARS.forEach(c=>{ S.auditData.cars[c.key]={done:false,comments:'',photos:[]}; });
-    saveAuditData();
-  }
-  S.crewCarsView='audit-overview';
-  render();
-}
-function openCarAudit(key) {
-  S.crewCarsView='audit-'+key;
-  render();
-}
 function backToCarList() { S.crewCarsView='list'; render(); }
 function backToProcs() { S.crewCarsView=null; render(); }
-function backToAuditOverview() { S.crewCarsView='audit-overview'; render(); }
 
 // ── RENDER: CREW CARS LIST ────────────────────────────────────
 function carSquareIcon(car, size=48, radius=10) {
@@ -1852,8 +1861,28 @@ function renderCrewCarsList(el) {
     <div class="car-detail-bar" style="background:var(--bg2)">
       <button class="back-btn" onclick="backToProcs()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
-      <button onclick="openAuditOverview()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📋 Audit</button>
     </div>`;
+
+  // ── Monthly audit progress ──
+  const month=auditMonth();
+  const auditDone=CREW_CARS.filter(c=>carAuditData(c.key).done).length;
+  const allDone=auditDone===CREW_CARS.length;
+  const alreadyArchived=S.pastAudits.some(a=>a.month===month);
+  const pct=Math.round(auditDone/CREW_CARS.length*100);
+  html+=`
+    <div style="padding:12px 14px;background:var(--glass2);border-bottom:1px solid var(--border)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;font-weight:600;color:var(--t2)">📋 ${month} Audit</span>
+        <span style="font-size:12px;font-weight:700;color:${allDone?'var(--green)':'var(--t1)'}">${auditDone}/${CREW_CARS.length} done</span>
+      </div>
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:${allDone&&!alreadyArchived?'10px':'0'}">
+        <div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
+      </div>
+      ${allDone&&!alreadyArchived?`<button onclick="archiveAudit()" style="width:100%;padding:10px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer">✅ Save Audit to Records</button>`:''}
+      ${alreadyArchived?`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;text-align:center">✅ ${month} audit saved to records</div>`:''}
+    </div>`;
+
+  // ── Car list ──
   CREW_CARS.forEach(car=>{
     const d=carData(car.key);
     const worstColor=[carStatusColor(d.oilChange), carStatusColor(d.washed)]
@@ -1863,9 +1892,13 @@ function renderCrewCarsList(el) {
       },'var(--green)');
     const ds=daysSince(d.washed);
     const sub=d.washed?`Last washed ${ds===0?'today':ds===1?'yesterday':ds+' days ago'}`:'No records yet';
+    const auditCD=carAuditData(car.key);
     html+=`
       <div class="car-list-item" onclick="openCarDetail('${car.key}')">
-        ${carSquareIcon(car)}
+        <div style="position:relative">
+          ${carSquareIcon(car)}
+          ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:14px;height:14px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:8px">✓</div>`:''}
+        </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
           <div style="font-size:12px;color:var(--t3);margin-top:2px">${car.label} · ${sub}</div>
@@ -1874,11 +1907,29 @@ function renderCrewCarsList(el) {
         <div style="color:var(--border2);font-size:20px">›</div>
       </div>`;
   });
+
   html+=`<div style="padding:10px 16px 4px">
-    <div style="font-size:11px;color:var(--t3);line-height:1.8">
-      🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged
-    </div>
-  </div><div style="height:80px"></div>`;
+    <div style="font-size:11px;color:var(--t3);line-height:1.8">🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged</div>
+  </div>`;
+
+  // ── Past audits ──
+  if(S.pastAudits.length) {
+    html+=`<div style="padding:16px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;border-top:1px solid var(--border);margin-top:8px">Past Audits</div>`;
+    S.pastAudits.forEach(a=>{
+      const ts=a.completedAt?.toDate?a.completedAt.toDate():new Date(a.completedAt||0);
+      const dateStr=ts.toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+      html+=`<div class="car-list-item" onclick="S.crewCarsView='past';S.pastAuditView='${a.month}';render()">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📋</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${a.month}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">By ${a.groomer||'Unknown'} · ${dateStr}</div>
+        </div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+    });
+  }
+
+  html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
 }
 
@@ -1955,6 +2006,7 @@ function renderCarDetail(el, key) {
       </div>`;
     });
   }
+  html+=auditSectionHTML(key);
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
 }
@@ -2002,221 +2054,245 @@ function toggleLogFields() {
   if(fr) fr.style.display=t==='fuel'?'block':'none';
 }
 
-// ── RENDER: AUDIT OVERVIEW ────────────────────────────────────
-function renderAuditOverview(el) {
-  document.getElementById('barTitle').textContent='Monthly Audit';
-  document.getElementById('fab').style.display='none';
-  const a=S.auditData;
-  if(!a){backToCarList();return;}
-  const done=CREW_CARS.filter(c=>a.cars[c.key]?.done).length;
-  const pct=Math.round(done/CREW_CARS.length*100);
-  let html=`
-    <div class="car-detail-bar">
-      <button class="back-btn" onclick="backToCarList()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${a.month}</span>
-    </div>
+// ── AUDIT HELPERS ─────────────────────────────────────────────
+let auditPhotoTarget=null;
 
-    <!-- Progress -->
-    <div style="padding:14px 16px 10px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--t2);margin-bottom:6px">
-        <span>${done} of ${CREW_CARS.length} cars audited</span>
-        <span style="font-weight:700;color:var(--t1)">${pct}%</span>
-      </div>
-      <div style="background:var(--border);border-radius:3px;height:5px;overflow:hidden">
-        <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 0.4s"></div>
-      </div>
-    </div>
+function auditSectionHTML(key) {
+  const cd=carAuditData(key);
+  const month=auditMonth();
+  let h=`
+  <div style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
+    <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📋 Monthly Audit — ${month}</div>
 
     <!-- Groomer name -->
-    <div style="padding:0 14px 14px">
-      <label style="font-size:12px;color:var(--t3);font-weight:500;display:block;margin-bottom:4px">Your name (groomer doing the audit)</label>
-      <input id="auditGroomer" value="${a.groomer||''}" placeholder="Your name..." oninput="S.auditData.groomer=this.value;saveAuditData()"
-        style="width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none">
-    </div>`;
+    <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
+      style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:10px">
 
-  CREW_CARS.forEach(car=>{
-    const cd=a.cars[car.key]||{done:false,photos:[],comments:''};
-    const photoCount=cd.photos.length;
-    html+=`
-      <div class="car-list-item" onclick="openCarAudit('${car.key}')">
-        <div style="width:36px;height:36px;border-radius:50%;background:${cd.done?'var(--green-dim)':'var(--glass2)'};border:1.5px solid ${cd.done?'var(--green)':'var(--border2)'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${cd.done?'✅':car.fuel==='diesel'?'🚜':'🚗'}</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">${cd.done?'Done · '+photoCount+' photo'+(photoCount!==1?'s':''):photoCount?photoCount+' photo'+(photoCount!==1?'s':'')+' · tap to complete':'Tap to start'}</div>
-        </div>
-        <div style="color:var(--border2);font-size:20px">›</div>
-      </div>`;
-  });
-
-  html+=`<div style="padding:14px">
-    <button onclick="generateAuditReport()" ${done<CREW_CARS.length?'disabled':''} style="width:100%;padding:13px;border-radius:var(--radius-sm);background:${done===CREW_CARS.length?'linear-gradient(135deg,var(--accent),var(--accent2))':'var(--glass)'};color:${done===CREW_CARS.length?'var(--bg)':'var(--t3)'};font-size:14px;font-weight:700;border:1px solid var(--border);cursor:${done===CREW_CARS.length?'pointer':'default'}">
-      ${done===CREW_CARS.length?'📧 Generate & Send Report':'Complete all cars to generate report'}
-    </button>
-    ${done===CREW_CARS.length?'':'<div style="font-size:11px;color:var(--t3);text-align:center;margin-top:6px">'+( CREW_CARS.length-done)+' car'+(CREW_CARS.length-done!==1?'s':'')+' remaining</div>'}
-  </div><div style="height:60px"></div>`;
-  el.innerHTML=html;
-}
-
-// ── RENDER: CAR AUDIT ─────────────────────────────────────────
-let auditPhotoTarget=null;
-function renderCarAudit(el, key) {
-  const car=CREW_CARS.find(c=>c.key===key);
-  if(!car||!S.auditData){backToAuditOverview();return;}
-  document.getElementById('barTitle').textContent=car.name+' Audit';
-  document.getElementById('fab').style.display='none';
-  const cd=S.auditData.cars[key]||{done:false,photos:[],comments:''};
-  S.auditData.cars[key]=cd;
-
-  let html=`
-    <div class="car-detail-bar">
-      <button class="back-btn" onclick="backToAuditOverview()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${car.name}</span>
-    </div>
-
-    <!-- Photos -->
-    <div style="padding:14px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase">Photos (${cd.photos.length}/7)</div>
-    <div style="padding:0 14px 10px;display:flex;flex-wrap:wrap;gap:6px">`;
+    <!-- Photo grid -->
+    <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Photos ${cd.photos.length}/7</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
 
   cd.photos.forEach((p,i)=>{
-    const ratingClass=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
-    html+=`<div class="audit-photo-wrap">
+    const rc=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
+    h+=`<div class="audit-photo-wrap">
       <img src="${p.src}" onclick="viewPhoto('${p.src}')">
-      <div class="audit-rating ${ratingClass}">${p.rating}</div>
-      <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center">✕</button>
+      <div class="audit-rating ${rc}">${p.rating}</div>
+      <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">✕</button>
     </div>`;
   });
 
   if(cd.photos.length<7) {
-    html+=`<div onclick="triggerAuditPhoto('${key}')" style="width:calc(33% - 4px);aspect-ratio:1;border-radius:var(--radius-sm);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:24px;background:var(--glass)">+</div>`;
+    h+=`<div onclick="triggerAuditPhoto('${key}')" style="width:calc(33% - 4px);aspect-ratio:1;border-radius:var(--radius-sm);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:24px;background:var(--glass)">+</div>`;
+  }
+  h+=`</div>`;
+
+  if(cd.photos.length) {
+    h+=`<div style="margin-bottom:10px">`;
+    cd.photos.forEach((p,i)=>{
+      h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:6px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <img src="${p.src}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0">
+        <span style="font-size:11px;color:var(--t3);flex-shrink:0">Photo ${i+1}</span>
+        <select onchange="setAuditRating('${key}',${i},this.value)" style="padding:3px 6px;border-radius:12px;border:1px solid var(--border2);background:var(--glass2);font-size:11px;color:var(--t1);flex-shrink:0">
+          <option value="Good" ${p.rating==='Good'?'selected':''}>✅ Good</option>
+          <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️ Fair</option>
+          <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴 Poor</option>
+        </select>
+        <input value="${p.note||''}" placeholder="Note..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
+          style="flex:1;min-width:0;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:12px;font-family:inherit;color:var(--t1);outline:none">
+      </div>`;
+    });
+    h+=`</div>`;
   }
 
-  html+=`</div>
+  h+=`<textarea placeholder="Comments — condition, issues, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
+    style="width:100%;min-height:70px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:10px">${cd.comments||''}</textarea>
 
-    <!-- Photo notes -->
-    ${cd.photos.length?`<div style="padding:0 14px 14px">
-      <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Photo Notes & Ratings</div>
-      ${cd.photos.map((p,i)=>`
-        <div style="background:var(--glass);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:8px;border:1px solid var(--border)">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-            <img src="${p.src}" style="width:36px;height:36px;border-radius:6px;object-fit:cover">
-            <span style="font-size:12px;color:var(--t2);font-weight:600">Photo ${i+1}</span>
-            <select onchange="setAuditRating('${key}',${i},this.value)" style="margin-left:auto;padding:4px 8px;border-radius:20px;border:1px solid var(--border2);background:var(--glass2);font-size:12px;color:var(--t1)">
-              <option value="Good" ${p.rating==='Good'?'selected':''}>✅ Good</option>
-              <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️ Fair</option>
-              <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴 Poor</option>
-            </select>
-          </div>
-          <input value="${p.note||''}" placeholder="Note for this photo (optional)..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
-            style="width:100%;padding:8px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none">
-        </div>`).join('')}
-    </div>`:''}
-
-    <!-- Comments -->
-    <div style="padding:0 14px 14px">
-      <label style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px">Comments for this car</label>
-      <textarea id="auditComments" placeholder="Overall condition, issues found, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
-        style="width:100%;min-height:80px;padding:10px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;line-height:1.5;outline:none">${cd.comments||''}</textarea>
-    </div>
-
-    <!-- Mark done -->
-    <div style="padding:0 14px 20px">
-      <button onclick="markCarAuditDone('${key}')" style="width:100%;padding:13px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
-        ${cd.done?'✅ Audit complete — tap to undo':'✓ Mark this car as done'}
-      </button>
-    </div>
-    <div style="height:60px"></div>`;
-  el.innerHTML=html;
+  <button onclick="markCarAuditDone('${key}')"
+    style="width:100%;padding:12px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
+    ${cd.done?'✅ Audit complete — tap to undo':'✓ Mark audit done for this car'}
+  </button>
+  </div>`;
+  return h;
 }
 
 function triggerAuditPhoto(key) {
   auditPhotoTarget=key;
   S.photoCtx='audit';
   const input=document.getElementById('photoInput');
-  input.value='';
-  input.click();
+  input.value=''; input.click();
 }
 function removeAuditPhoto(key,i) {
   if(!confirm('Remove this photo?')) return;
-  S.auditData.cars[key].photos.splice(i,1);
-  saveAuditData();
-  renderCarAudit(document.getElementById('content'),key);
+  carAuditData(key).photos.splice(i,1);
+  saveCarAudit(key); render();
 }
-function setAuditRating(key,i,val) {
-  S.auditData.cars[key].photos[i].rating=val;
-  saveAuditData();
-}
-function setAuditPhotoNote(key,i,val) {
-  S.auditData.cars[key].photos[i].note=val;
-  saveAuditData();
-}
-function setAuditComments(key,val) {
-  S.auditData.cars[key].comments=val;
-  saveAuditData();
-}
+function setAuditRating(key,i,val) { carAuditData(key).photos[i].rating=val; saveCarAudit(key); }
+function setAuditPhotoNote(key,i,val) { carAuditData(key).photos[i].note=val; saveCarAudit(key); }
+function setAuditComments(key,val) { carAuditData(key).comments=val; saveCarAudit(key); }
 function markCarAuditDone(key) {
-  const cd=S.auditData.cars[key];
+  const cd=carAuditData(key);
   cd.done=!cd.done;
-  saveAuditData();
-  renderCarAudit(document.getElementById('content'),key);
+  if(cd.done) { cd.completedAt=new Date().toISOString(); cd.groomer=S.auditGroomer||''; }
+  saveCarAudit(key); render();
   if(cd.done) toast('✅ '+CREW_CARS.find(c=>c.key===key)?.name+' audit done');
 }
 
-// ── GENERATE & SEND REPORT ────────────────────────────────────
-function generateAuditReport() {
-  const a=S.auditData;
-  if(!a){toast('No audit data');return;}
-  const groomer=a.groomer||'Unknown';
-  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  let body=`CREW CAR MONTHLY AUDIT REPORT\n`;
-  body+=`Date: ${now}\n`;
-  body+=`Audited by: ${groomer}\n`;
-  body+=`Period: ${a.month}\n`;
-  body+=`${'─'.repeat(40)}\n\n`;
-
-  CREW_CARS.forEach(car=>{
-    const cd=a.cars[car.key]||{};
-    body+=`${car.name.toUpperCase()}\n`;
-    body+=`Photos: ${(cd.photos||[]).length}\n`;
-    if(cd.photos?.length) {
-      cd.photos.forEach((p,i)=>{
-        body+=`  Photo ${i+1}: ${p.rating||'—'}${p.note?' — '+p.note:''}\n`;
-      });
-    }
-    if(cd.comments) body+=`Comments: ${cd.comments}\n`;
-    body+=`\n`;
-  });
-
-  body+=`${'─'.repeat(40)}\n`;
-  body+=`Sent from Skycare · YKF Grooming Team`;
-
-  const subject=encodeURIComponent(`Crew Car Audit — ${a.month} — ${groomer}`);
-  const encodedBody=encodeURIComponent(body);
-
-  openModal('📧 Send Audit Report',
-    `<p style="font-size:13px;color:var(--t2);margin-bottom:14px;line-height:1.5">Choose where to open the report. Add the recipient email and attach your photos manually from the app.</p>
-     <label>Recipient email</label>
-     <input id="rptEmail" type="email" placeholder="mechanic@example.com" style="margin-bottom:14px">
-     <div class="mbtn-row" style="flex-direction:column;gap:10px">
-       <button onclick="sendReport('gmail','${subject}',\`${body.replace(/`/g,'\\`')}\`)" class="mbtn" style="background:#D44638;color:#fff;border:none">✉️ Open in Gmail</button>
-       <button onclick="sendReport('outlook','${subject}',\`${body.replace(/`/g,'\\`')}\`)" class="mbtn" style="background:#0072C6;color:#fff;border:none">✉️ Open in Outlook</button>
-     </div>`,
-    null);
-  document.getElementById('mSave').style.display='none';
+// ── ARCHIVE AUDIT ─────────────────────────────────────────────
+async function archiveAudit() {
+  const month=auditMonth();
+  const groomer=S.auditGroomer||'Unknown';
+  if(!db){toast('No connection');return;}
+  try {
+    await db.collection('auditArchive').doc(month).set({
+      month, groomer, completedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      cars:CREW_CARS.map(c=>c.key)
+    });
+    toast('✅ Audit saved to records');
+    loadPastAudits();
+    render();
+  } catch(e) { console.log('archiveAudit failed:',e); toast('Save failed — check connection'); }
 }
 
-function sendReport(method, subject, body) {
+// ── SEND AUDIT BY EMAIL ───────────────────────────────────────
+function openSendAuditEmail(month) {
+  const cars=CREW_CARS.map(c=>{
+    const d=S.carAudits[month+'-'+c.key]||{};
+    let s=`${c.name.toUpperCase()}\n`;
+    s+=`Photos: ${(d.photos||[]).length}\n`;
+    (d.photos||[]).forEach((p,i)=>{ s+=`  Photo ${i+1}: ${p.rating||'—'}${p.note?' — '+p.note:''}\n`; });
+    if(d.comments) s+=`Comments: ${d.comments}\n`;
+    if(d.groomer) s+=`Audited by: ${d.groomer}\n`;
+    return s;
+  }).join('\n');
+  const groomer=S.auditGroomer||'Team';
+  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const body=`CREW CAR MONTHLY AUDIT REPORT\nDate: ${now}\nPeriod: ${month}\nGroomer: ${groomer}\n${'─'.repeat(40)}\n\n${cars}\n${'─'.repeat(40)}\nSent from Skycare · YKF`;
+  const sub=encodeURIComponent(`Crew Car Audit — ${month} — ${groomer}`);
+  const enc=encodeURIComponent(body);
+  openModal('📧 Send Audit Report',
+    `<label>Recipient email</label>
+     <input id="rptEmail" type="email" placeholder="manager@example.com" style="margin-bottom:14px">
+     <div style="display:flex;flex-direction:column;gap:10px">
+       <button onclick="doSendReport('gmail',\`${sub}\`,\`${enc}\`)" style="padding:12px;border-radius:var(--radius-sm);background:#D44638;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer">✉️ Open in Gmail</button>
+       <button onclick="doSendReport('outlook',\`${sub}\`,\`${enc}\`)" style="padding:12px;border-radius:var(--radius-sm);background:#0072C6;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer">✉️ Open in Outlook</button>
+     </div>`, null);
+  document.getElementById('mSave').style.display='none';
+}
+function doSendReport(method,sub,enc) {
   const to=encodeURIComponent(document.getElementById('rptEmail')?.value||'');
-  const s=encodeURIComponent(subject||'Crew Car Audit Report');
-  const b=encodeURIComponent(body||'');
-  let url='';
-  if(method==='gmail') {
-    url=`https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${s}&body=${b}`;
-  } else {
-    url=`https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${s}&body=${b}`;
-  }
-  window.open(url,'_blank');
-  closeModal();
-  toast('📧 Opening mail app — attach photos manually');
+  const url=method==='gmail'
+    ? `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${sub}&body=${enc}`
+    : `https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${sub}&body=${enc}`;
+  window.open(url,'_blank'); closeModal();
+  toast('📧 Email app opened');
+}
+
+// ── GENERATE PDF ──────────────────────────────────────────────
+function generateAuditPDF(month) {
+  const groomer=S.auditGroomer||'Team';
+  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  let carSections='';
+  CREW_CARS.forEach(car=>{
+    const d=S.carAudits[month+'-'+car.key]||{};
+    const photos=d.photos||[];
+    const poorCount=photos.filter(p=>p.rating==='Poor').length;
+    const fairCount=photos.filter(p=>p.rating==='Fair').length;
+    carSections+=`
+      <div class="car-section">
+        <div class="car-title">
+          <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" class="car-thumb" onerror="this.style.display='none'">
+          <div>
+            <div class="car-name">${car.name}</div>
+            <div class="car-meta">${car.label} · ${poorCount?'🔴 '+poorCount+' Poor issue'+(poorCount!==1?'s':''):''}${fairCount?' ⚠️ '+fairCount+' Fair':''}${!poorCount&&!fairCount?'✅ All Good':''}</div>
+          </div>
+          <div class="car-status ${d.done?'done':'pending'}">${d.done?'✅ Done':'⏳ Pending'}</div>
+        </div>
+        ${photos.length?`<div class="photo-grid">${photos.map(p=>`
+          <div class="photo-cell">
+            <img src="${p.src}" class="photo-img">
+            <div class="photo-rating rating-${p.rating?.toLowerCase()}">${p.rating||'—'}</div>
+            ${p.note?`<div class="photo-note">${p.note}</div>`:''}
+          </div>`).join('')}</div>`:'<p class="no-photos">No photos taken</p>'}
+        ${d.comments?`<div class="comments"><strong>Comments:</strong> ${d.comments}</div>`:''}
+        ${d.groomer?`<div class="groomer-sig">Audited by: ${d.groomer}</div>`:''}
+      </div>`;
+  });
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Crew Car Audit — ${month}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#1a1a1a;padding:32px;background:#fff}
+    h1{font-size:22px;font-weight:800;margin-bottom:4px}
+    .meta{color:#666;font-size:12px;margin-bottom:24px;border-bottom:2px solid #1a1a1a;padding-bottom:12px}
+    .car-section{margin-bottom:28px;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;break-inside:avoid}
+    .car-title{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f5f5f5;border-bottom:1px solid #e0e0e0}
+    .car-thumb{width:56px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0}
+    .car-name{font-size:15px;font-weight:700}
+    .car-meta{font-size:11px;color:#666;margin-top:2px}
+    .car-status{margin-left:auto;font-size:12px;font-weight:600;white-space:nowrap}
+    .car-status.done{color:#1a7a40}
+    .car-status.pending{color:#999}
+    .photo-grid{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
+    .photo-cell{width:calc(14.28% - 7px);min-width:80px}
+    .photo-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:block}
+    .photo-rating{font-size:10px;font-weight:700;text-align:center;margin-top:3px;padding:2px 4px;border-radius:4px}
+    .rating-good{background:#d4edda;color:#1a7a40}
+    .rating-fair{background:#fff3cd;color:#856404}
+    .rating-poor{background:#f8d7da;color:#842029}
+    .photo-note{font-size:10px;color:#555;margin-top:2px;text-align:center}
+    .no-photos{padding:12px 16px;color:#999;font-style:italic;font-size:12px}
+    .comments{padding:10px 16px;background:#fffbf0;border-top:1px solid #e0e0e0;font-size:12px;color:#444}
+    .groomer-sig{padding:6px 16px 10px;font-size:11px;color:#888;font-style:italic}
+    @media print{body{padding:16px}.car-section{break-inside:avoid}}
+  </style></head><body>
+  <h1>Crew Car Monthly Audit</h1>
+  <div class="meta">Period: ${month} &nbsp;·&nbsp; Groomer: ${groomer} &nbsp;·&nbsp; Generated: ${now}</div>
+  ${carSections}
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  w.document.write(html);
+  w.document.close();
+  setTimeout(()=>w.print(),600);
+}
+
+// ── PAST AUDIT VIEW ───────────────────────────────────────────
+function renderPastAuditView(el, month) {
+  if(!month){backToCarList();return;}
+  document.getElementById('barTitle').textContent='Audit · '+month;
+  document.getElementById('fab').style.display='none';
+  let html=`
+    <div class="car-detail-bar">
+      <button onclick="S.crewCarsView='list';S.pastAuditView=null;render()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${month}</span>
+    </div>
+    <div style="padding:14px;display:flex;gap:8px">
+      <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer">📧 Send Email</button>
+      <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">📄 PDF</button>
+    </div>`;
+
+  CREW_CARS.forEach(car=>{
+    const d=S.carAudits[month+'-'+car.key]||{};
+    const photos=d.photos||[];
+    html+=`<div style="border-bottom:1px solid var(--border);padding:12px 14px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        ${carSquareIcon(car,36,8)}
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:700;color:var(--t1)">${car.name}</div>
+          <div style="font-size:11px;color:var(--t3)">${photos.length} photo${photos.length!==1?'s':''} · ${d.done?'✅ Done':'⏳ Pending'}</div>
+        </div>
+      </div>
+      ${photos.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
+        ${photos.map(p=>`<div style="position:relative;width:calc(14.28% - 5px)">
+          <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px">
+          <div style="position:absolute;bottom:2px;left:2px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:${p.rating==='Good'?'#1a7a40':p.rating==='Fair'?'#856404':'#842029'};color:#fff">${p.rating||''}</div>
+        </div>`).join('')}</div>`:''}
+      ${d.comments?`<div style="font-size:12px;color:var(--t2);background:var(--glass);padding:8px 10px;border-radius:var(--radius-sm)">${d.comments}</div>`:''}
+    </div>`;
+  });
+  html+=`<div style="height:80px"></div>`;
+  el.innerHTML=html;
 }
 function openCrewCarLog(key) {
   const cur = S.crewCarStatus[key] || {fuel:0, oil:'ok', cleaned:'', notes:''};
@@ -2903,10 +2979,9 @@ function applyCapturedPhoto(src) {
     if(btn) btn.textContent='📷 Photo attached ✓';
   } else if(S.photoCtx==='audit' && auditPhotoTarget) {
     const key=auditPhotoTarget;
-    if(!S.auditData||!S.auditData.cars[key]) return;
-    S.auditData.cars[key].photos.push({src,rating:'Good',note:''});
-    saveAuditData();
-    renderCarAudit(document.getElementById('content'),key);
+    carAuditData(key).photos.push({src,rating:'Good',note:''});
+    saveCarAudit(key);
+    render();
     toast('Photo added ✓');
   }
 }
