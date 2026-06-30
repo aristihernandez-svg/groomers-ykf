@@ -986,7 +986,7 @@ async function fetchDay(tabName) {
       }
       if(colB.toUpperCase().includes('SPECIAL NOTES')||colB.includes('📝')) return;
       if(colB==='Task'||colA==='#') return;
-      if(isNum && colB) tasks.push({task:colB,freq:colC,area,done:false});
+      if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,freq:colC,area,done:false});
     });
     S.tasks[tabName]=tasks;
   } catch(e){ S.tasks[tabName]=S.tasks[tabName]||fallback(); }
@@ -1628,6 +1628,7 @@ function renderFlightLog(tabName) {
       <div style="padding:7px 14px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase">✈ Flight Log</div>
       ${section('arr','Arrivals','🛬','#1A7A40')}
       ${section('dep','Departures','🛫','#1A4A8A')}
+      ${section('grm','Groomed','✂️','#8B4A00')}
     </div>`;
 }
 
@@ -3500,6 +3501,15 @@ function showEOD() {
   let msg=`✈ *SKYCARE — END OF DAY REPORT*\n📅 ${dateStr} · ${timeStr}\n${'─'.repeat(30)}\n\n`;
   msg+=`📊 *${done.length}/${tasks.length} tasks completed (${pct}%)*\n\n`;
 
+  // Flight log
+  const flog=S.flightLog[tabName]||{};
+  const flLines=[
+    ...(flog.arr||[]).map(t=>`  🛬 Arrival ${t}`),
+    ...(flog.dep||[]).map(t=>`  🛫 Departure ${t}`),
+    ...(flog.grm||[]).map(t=>`  ✂️ Groomed ${t}`),
+  ];
+  if(flLines.length) msg+=`✈ *Flight Activity:*\n${flLines.join('\n')}\n\n`;
+
   // Always show completed tasks
   if(done.length>0) {
     msg+=`✅ *Completed:*\n${done.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
@@ -3846,7 +3856,6 @@ function saveDmg() {
 function loadDmg() { try{S.dmgReports=JSON.parse(localStorage.getItem('gykf_dmg')||'{}');}catch(e){S.dmgReports={};} }
 function fallback() {
   return [
-    {task:"Clean aircraft (exterior & interior)",freq:"Daily",area:"AIRCRAFT",done:false},
     {task:"Check O₂ beds & refill if needed",freq:"Daily",area:"AIRCRAFT",done:false},
     {task:"Clean groomer corner's floor",freq:"Daily",area:"CR GROOMERS' CORNER",done:false},
     {task:"Sweep hangar",freq:"Daily",area:"MX HANGAR",done:false},
