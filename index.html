@@ -628,6 +628,13 @@ body::before{
 .car-list-item{display:flex;align-items:center;gap:14px;padding:15px 16px;background:var(--glass);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
 [data-theme="standard-night"] .car-list-item,[data-theme="standard-day"] .car-list-item{background:var(--bg2)}
 .car-list-item:active{background:var(--glass2)}
+.proc-nav-card{display:flex;align-items:center;gap:14px;padding:13px 16px;background:var(--glass);border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.proc-nav-card:active{background:var(--glass2)}
+.proc-nav-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.proc-nav-body{flex:1;min-width:0}
+.proc-nav-title{font-size:14px;font-weight:700;color:var(--t1)}
+.proc-nav-sub{font-size:12px;color:var(--t3);margin-top:2px}
+.proc-nav-arr{color:var(--border2);font-size:20px;flex-shrink:0}
 .car-icon{width:44px;height:44px;border-radius:50%;background:var(--accent-dim);border:1.5px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .car-status-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .car-detail-bar{display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:15}
@@ -716,14 +723,14 @@ const PROC_VIDEOS = {
 };
 
 const CREW_CARS = [
-  {key:'escape',  name:'Ford Escape',     fuel:'gasoline'},
-  {key:'elantra', name:'Hyundai Elantra', fuel:'gasoline'},
-  {key:'micra',   name:'Nissan Micra',    fuel:'gasoline'},
-  {key:'impala',  name:'Chevrolet Impala',fuel:'gasoline'},
-  {key:'whtruck', name:'White MX Truck',  fuel:'gasoline'},
-  {key:'brtruck', name:'Brown MX Truck',  fuel:'gasoline'},
-  {key:'kubota',  name:'Kubota',          fuel:'diesel'},
-  {key:'civic',   name:'Honda Civic',     fuel:'gasoline'},
+  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV'},
+  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan'},
+  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback'},
+  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan'},
+  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup'},
+  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup'},
+  {key:'kubota',  name:'Kubota',           fuel:'diesel',   color:'#C85F10', color2:'#F07A30', label:'UTV · Diesel'},
+  {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan'},
 ];
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
@@ -745,6 +752,7 @@ const S = {
   pendingHandoffAudio: null,
   crewCarStatus: {}, // legacy — replaced by crewCarData
   buyerOut: false,
+  procView: null,        // null | procKey — which procedure is open full-screen
   crewCarsView: null,   // null | 'list' | carKey | 'audit-overview' | 'audit-'+carKey
   crewCarData: {},      // {carKey: {fuel, oilChange, washed, log:[]}}
   auditData: null,      // current month audit {month, groomer, cars:{carKey:{done,comments,photos:[]}}}
@@ -874,6 +882,7 @@ function render() {
       else if(S.crewCarsView==='audit-overview') renderAuditOverview(el);
       else if(S.crewCarsView&&S.crewCarsView.startsWith('audit-')) renderCarAudit(el,S.crewCarsView.slice(6));
       else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
+      else if(S.procView) renderProcDetail(el,S.procView);
       else renderProcs(el);
       break;
     case 'contacts':   renderContacts(el); break;
@@ -1828,6 +1837,12 @@ function backToProcs() { S.crewCarsView=null; render(); }
 function backToAuditOverview() { S.crewCarsView='audit-overview'; render(); }
 
 // ── RENDER: CREW CARS LIST ────────────────────────────────────
+function carSquareIcon(car, size=48, radius=10) {
+  return `<div style="width:${size}px;height:${size}px;border-radius:${radius}px;background:linear-gradient(145deg,${car.color},${car.color2});flex-shrink:0;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px ${car.color}55">
+    <div style="font-size:${Math.round(size*0.42)}px">${car.fuel==='diesel'?'🚜':'🚗'}</div>
+  </div>`;
+}
+
 function renderCrewCarsList(el) {
   document.getElementById('barTitle').textContent='Crew Cars';
   document.getElementById('fab').style.display='none';
@@ -1835,12 +1850,11 @@ function renderCrewCarsList(el) {
     <div class="car-detail-bar" style="background:var(--bg2)">
       <button class="back-btn" onclick="backToProcs()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
-      <button onclick="openAuditOverview()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📋 Monthly Audit</button>
+      <button onclick="openAuditOverview()" style="padding:6px 14px;border-radius:20px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📋 Audit</button>
     </div>`;
   CREW_CARS.forEach(car=>{
     const d=carData(car.key);
-    const worstColor=[d.fuel?carStatusColor(d.log.filter(l=>l.type==='fuel').slice(-1)[0]?.date):null,
-      carStatusColor(d.oilChange), carStatusColor(d.washed)]
+    const worstColor=[carStatusColor(d.oilChange), carStatusColor(d.washed)]
       .reduce((worst,c)=>{
         const rank={'var(--red)':0,'#E8A000':1,'var(--green)':2};
         return (rank[c]??2)<(rank[worst]??2)?c:worst;
@@ -1849,20 +1863,20 @@ function renderCrewCarsList(el) {
     const sub=d.washed?`Last washed ${ds===0?'today':ds===1?'yesterday':ds+' days ago'}`:'No records yet';
     html+=`
       <div class="car-list-item" onclick="openCarDetail('${car.key}')">
-        <div class="car-icon">${car.fuel==='diesel'?'🚜':'🚗'}</div>
+        ${carSquareIcon(car)}
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">${sub}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">${car.label} · ${sub}</div>
         </div>
         <div class="car-status-dot" style="background:${worstColor}"></div>
         <div style="color:var(--border2);font-size:20px">›</div>
       </div>`;
   });
-  html+=`<div style="padding:14px 16px">
-    <div style="font-size:11px;color:var(--t3);line-height:1.6">
+  html+=`<div style="padding:10px 16px 4px">
+    <div style="font-size:11px;color:var(--t3);line-height:1.8">
       🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged
     </div>
-  </div><div style="height:60px"></div>`;
+  </div><div style="height:80px"></div>`;
   el.innerHTML=html;
 }
 
@@ -1879,8 +1893,15 @@ function renderCarDetail(el, key) {
 
   let html=`
     <div class="car-detail-bar">
-      <button class="back-btn" onclick="backToCarList()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${car.name}${car.fuel==='diesel'?' · Diesel':''}</span>
+      <button class="back-btn" onclick="backToCarList()" style="color:#fff;font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:#fff;flex:1">${car.name}</span>
+    </div>
+
+    <!-- Car hero banner -->
+    <div style="background:linear-gradient(160deg,${car.color},${car.color2});padding:24px 20px 28px;margin-top:-1px;position:relative;overflow:hidden">
+      <div style="position:absolute;right:-10px;bottom:-10px;font-size:90px;opacity:0.18;line-height:1">${car.fuel==='diesel'?'🚜':'🚗'}</div>
+      <div style="font-size:26px;font-weight:800;color:#fff;letter-spacing:-0.5px">${car.name}</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.75);margin-top:4px">${car.label}${car.fuel==='diesel'?' · Diesel · ':'  · '}${car.fuel==='diesel'?'Diesel fuel required':'Gasoline'}</div>
     </div>
 
     <!-- Status cards -->
@@ -2215,7 +2236,7 @@ function openCrewCarLog(key) {
       S.crewCarStatus[key] = {fuel, oil, cleaned, notes, loggedAt: new Date().toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
       saveCrewCarStatus();
       closeModal();
-      renderProcs(document.getElementById('content'));
+      render();
       toast('Car status logged ✓');
       if(db) {
         db.collection('crewCarStatus').doc(key).set({...S.crewCarStatus[key]})
@@ -2331,110 +2352,115 @@ function renderProcs(el) {
   showFab(openAddProcedure);
   let html='<div class="proc-list">';
   Object.entries(S.procs).forEach(([key,p])=>{
-    // Skip legacy crew van entries superseded by Crew Cars hub
     if(key==='crewcar1'||key==='crewcar2') return;
-    // Crew Cars hub — special navigation card
     if(p.isCrewCarsHub) {
-      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
       const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
+      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
       const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
-      html+=`<div class="car-list-item" onclick="openCrewCars()" style="margin:0 14px 10px;border-radius:var(--radius-sm);background:var(--glass2);border:1px solid var(--border2)">
-        <div class="car-icon" style="background:var(--accent-dim);border:1.5px solid var(--accent-border)">🚗</div>
-        <div style="flex:1">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">Crew Cars</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">${CREW_CARS.length} vehicles · tap to manage</div>
+      html+=`<div class="proc-nav-card" onclick="openCrewCars()">
+        <div class="proc-nav-icon" style="background:linear-gradient(145deg,var(--accent),var(--accent2))">🚗</div>
+        <div class="proc-nav-body">
+          <div class="proc-nav-title">Crew Cars</div>
+          <div class="proc-nav-sub">${CREW_CARS.length} vehicles · tap to manage</div>
         </div>
         <div class="car-status-dot" style="background:${dot}"></div>
-        <div style="color:var(--border2);font-size:20px">›</div>
+        <div class="proc-nav-arr">›</div>
       </div>`;
       return;
     }
     const done=p.done.length;
+    const total=p.steps.length;
     const dmg=S.dmgReports[key]||[];
-    html+=`<div class="pcard ${p.open?'open':''}" id="pc-${key}">
-      <div class="pcard-hdr" onclick="toggleProc('${key}')">
-        <div class="picon">${p.icon}</div>
-        <div style="flex:1">
-          <div class="ptitle">${p.title}</div>
-          <div class="psub">${done}/${p.steps.length} steps · ${dmg.length} damage report${dmg.length!==1?'s':''}</div>
-        </div>
-        <div class="parr">›</div>
+    const pct=total?Math.round(done/total*100):0;
+    html+=`<div class="proc-nav-card" onclick="S.procView='${key}';render()">
+      <div class="proc-nav-icon" style="background:var(--glass2);border:1.5px solid var(--border2);font-size:22px">${p.icon}</div>
+      <div class="proc-nav-body">
+        <div class="proc-nav-title">${p.title}</div>
+        <div class="proc-nav-sub">${done}/${total} steps${dmg.length?` · ${dmg.length} report${dmg.length!==1?'s':''}`:''}</div>
+        ${total?`<div style="margin-top:5px;height:3px;border-radius:2px;background:var(--border);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:2px;transition:width 0.3s"></div>
+        </div>`:''}
       </div>
-      <div class="pbody">
-        ${p.warn?`<div class="pwarn">${p.warn}</div>`:''}
-        ${p.video
-          ? `<a class="video-btn" href="${p.video}" target="_blank">
-               <span class="vicon">▶️</span><span>Watch procedure video</span>
-             </a>`
-          : `<div class="video-btn" style="opacity:0.4;cursor:default">
-               <span class="vicon">▶️</span><span>Video coming soon</span>
-             </div>`}
-        ${p.steps.map((s,i)=>`
-          <div class="pstep ${p.done.includes(i)?'done':''} ${s.g?'green-step':''}"
-               onclick="toggleStep('${key}',${i})">
-            <div class="snum">${p.done.includes(i)?'✓':i+1}</div>
-            <div class="sinfo">
-              <div class="stxt">${s.t}</div>
-              ${s.n?`<div class="snote">${s.n}</div>`:''}
-            </div>
-          </div>`).join('')}
-        ${p.isCrewCar ? (() => {
-          const st = S.crewCarStatus[key] || {};
-          const fuelTxt = st.fuel!=null ? (st.fuel===0?'Empty':`${st.fuel} can${st.fuel!==1?'s':''}`) : '—';
-          const oilColor = st.oil==='change'?'var(--red)':st.oil==='low'?'#E8A000':'var(--green)';
-          const oilTxt = st.oil==='change'?'🔴 Needs change':st.oil==='low'?'⚠️ Low':st.oil?'✅ OK':'—';
-          const cleanedTxt = st.cleaned ? new Date(st.cleaned).toLocaleDateString('en-CA',{month:'short',day:'numeric'}) : '—';
-          return `<div style="background:var(--glass2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 14px;margin:10px 0">
-            <div style="font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">📊 Last Status ${st.loggedAt?'· '+st.loggedAt:''}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
-              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
-                <div style="font-size:18px;margin-bottom:4px">⛽</div>
-                <div style="font-size:12px;font-weight:700;color:var(--t1)">${fuelTxt}</div>
-                <div style="font-size:10px;color:var(--t3)">Fuel</div>
-              </div>
-              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
-                <div style="font-size:18px;margin-bottom:4px">🛢</div>
-                <div style="font-size:11px;font-weight:700;color:${oilColor}">${oilTxt}</div>
-                <div style="font-size:10px;color:var(--t3)">Oil</div>
-              </div>
-              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
-                <div style="font-size:18px;margin-bottom:4px">🧹</div>
-                <div style="font-size:12px;font-weight:700;color:var(--t1)">${cleanedTxt}</div>
-                <div style="font-size:10px;color:var(--t3)">Cleaned</div>
-              </div>
-            </div>
-            ${st.notes?`<div style="margin-top:8px;font-size:11px;color:var(--t2);font-style:italic">${st.notes}</div>`:''}
-            <button onclick="openCrewCarLog('${key}')" style="width:100%;margin-top:10px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">📝 Log Status</button>
-          </div>`;
-        })() : ''}
-        <div class="proc-actions">
-          <button class="proc-act-btn" onclick="resetProc('${key}')">🔄 Reset steps</button>
-          <button class="proc-act-btn" onclick="openDmgReport('${key}')" style="color:#C0392B">📸 Damage report</button>
+      <div class="proc-nav-arr">›</div>
+    </div>`;
+  });
+  html+='</div><div style="height:80px"></div>';
+  el.innerHTML=html;
+}
+
+function renderProcDetail(el, key) {
+  const p=S.procs[key];
+  if(!p){S.procView=null;render();return;}
+  document.getElementById('barTitle').textContent=p.title;
+  document.getElementById('fab').style.display='none';
+  const dmg=S.dmgReports[key]||[];
+  const done=p.done.length;
+  const total=p.steps.length;
+  const pct=total?Math.round(done/total*100):0;
+  let html=`
+    <div class="car-detail-bar">
+      <button onclick="S.procView=null;render()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${p.title}</span>
+    </div>
+
+    <!-- Procedure hero -->
+    <div style="background:var(--glass2);border-bottom:1px solid var(--border);padding:20px 18px 16px;display:flex;align-items:center;gap:16px">
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${p.icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:800;color:var(--t1)">${p.title}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px">${done}/${total} steps complete · ${pct}%</div>
+        <div style="margin-top:7px;height:4px;border-radius:2px;background:var(--border);overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
         </div>
-        <div class="proc-actions">
-          <button class="proc-act-btn" onclick="editProcedure('${key}')">✏️ Edit procedure</button>
-          <button class="proc-act-btn" onclick="deleteProcedure('${key}')" style="color:var(--red)">🗑 Delete</button>
-        </div>
-        <div class="dmg-section" id="dmg-${key}" style="${dmg.length?'':'display:none'}">
-          <div class="dmg-hdr">📸 Damage Reports</div>
-          <div class="dmg-body">
-            <div class="dmg-list">
-              ${dmg.map((d,di)=>`<div class="dmg-item">
-                <div>${d.text}</div>
-                <div style="font-size:11px;color:#888;margin-top:2px">${d.date}</div>
-                ${d.photo?`<img class="dmg-item-photo" src="${d.photo}" onclick="viewPhoto('${d.photo}')">`:''}
-                <div style="display:flex;gap:6px;margin-top:8px">
-                  <button type="button" onclick="shareDmgReport('${key}',${di})" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(232,64,64,0.25);background:var(--glass2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer">📤 Share to mechanic</button>
-                  <button type="button" onclick="deleteDmgReport('${key}',${di})" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t3);font-size:12px;font-weight:600;cursor:pointer">🗑</button>
-                </div>
-              </div>`).join('')}
-            </div>
-          </div>
-        </div>
+      </div>
+    </div>
+
+    ${p.warn?`<div class="pwarn" style="margin:12px 14px 0">${p.warn}</div>`:''}
+
+    ${p.video
+      ? `<div style="padding:12px 14px 0"><a class="video-btn" href="${p.video}" target="_blank"><span class="vicon">▶️</span><span>Watch procedure video</span></a></div>`
+      : `<div style="padding:12px 14px 0"><div class="video-btn" style="opacity:0.4;cursor:default"><span class="vicon">▶️</span><span>Video coming soon</span></div></div>`}
+
+    <div style="padding:14px 14px 6px;font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">Steps</div>`;
+
+  p.steps.forEach((s,i)=>{
+    html+=`<div class="pstep ${p.done.includes(i)?'done':''} ${s.g?'green-step':''}" onclick="toggleStep('${key}',${i})" style="margin:0 14px 8px;border-radius:var(--radius-sm)">
+      <div class="snum">${p.done.includes(i)?'✓':i+1}</div>
+      <div class="sinfo">
+        <div class="stxt">${s.t}</div>
+        ${s.n?`<div class="snote">${s.n}</div>`:''}
       </div>
     </div>`;
   });
-  html+='</div>';
+
+  html+=`
+    <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="proc-act-btn" onclick="resetProc('${key}')" style="flex:1">🔄 Reset steps</button>
+      <button class="proc-act-btn" onclick="openDmgReport('${key}')" style="flex:1;color:#C0392B">📸 Damage report</button>
+    </div>
+    <div style="padding:0 14px 14px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="proc-act-btn" onclick="editProcedure('${key}')" style="flex:1">✏️ Edit</button>
+      <button class="proc-act-btn" onclick="deleteProcedure('${key}')" style="flex:1;color:var(--red)">🗑 Delete</button>
+    </div>`;
+
+  if(dmg.length) {
+    html+=`<div class="dmg-section" style="margin:0 14px 14px">
+      <div class="dmg-hdr">📸 Damage Reports</div>
+      <div class="dmg-body"><div class="dmg-list">
+        ${dmg.map((d,di)=>`<div class="dmg-item">
+          <div>${d.text}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${d.date}</div>
+          ${d.photo?`<img class="dmg-item-photo" src="${d.photo}" onclick="viewPhoto('${d.photo}')">`:''}
+          <div style="display:flex;gap:6px;margin-top:8px">
+            <button type="button" onclick="shareDmgReport('${key}',${di})" style="flex:1;padding:8px;border-radius:6px;border:1px solid rgba(232,64,64,0.25);background:var(--glass2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer">📤 Share to mechanic</button>
+            <button type="button" onclick="deleteDmgReport('${key}',${di})" style="padding:8px 12px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t3);font-size:12px;font-weight:600;cursor:pointer">🗑</button>
+          </div>
+        </div>`).join('')}
+      </div></div>
+    </div>`;
+  }
+
+  html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
 }
 
@@ -2727,13 +2753,13 @@ function toggleBored(id) {
   renderBored(document.getElementById('content'));
   toast(S.bored[idx].done?'✓ Done!':'Unchecked');
 }
-function toggleProc(key) { S.procs[key].open=!S.procs[key].open; renderProcs(document.getElementById('content')); }
+function toggleProc(key) { S.procView=key; render(); }
 function toggleStep(key,idx) {
   const d=S.procs[key].done, i=d.indexOf(idx);
   i>-1?d.splice(i,1):d.push(idx); haptic();
-  renderProcs(document.getElementById('content'));
+  render();
 }
-function resetProc(key) { S.procs[key].done=[]; renderProcs(document.getElementById('content')); toast('Steps reset'); }
+function resetProc(key) { S.procs[key].done=[]; render(); toast('Steps reset'); }
 function deleteTask(tabName,idx) {
   const t=S.tasks[tabName][idx];
   S.tasks[tabName].splice(idx,1);
@@ -2809,7 +2835,7 @@ function openDmgReport(key) {
         const report = {text:text||'(no description)',photo,date};
         S.dmgReports[key].push(report); // optimistic local save — works offline too
         saveDmg(); closeModal();
-        renderProcs(document.getElementById('content'));
+        render();
         toast('Damage report saved 📸');
         // Best-effort: also push to Firestore so every groomer's phone sees
         // it immediately. The live listener (setupLiveSync) will reconcile
@@ -2959,7 +2985,7 @@ function deleteDmgReport(key, idx) {
   list.splice(idx,1);
   dmgReportIds[key]?.splice(idx,1);
   saveDmg();
-  renderProcs(document.getElementById('content'));
+  render();
   toast('🗑 Damage report deleted');
   if(db && fsId) {
     db.collection('damageReports').doc(fsId).delete()
@@ -3141,7 +3167,7 @@ Tighten fittings"></textarea>`,
       const steps=parseStepsText(document.getElementById('pSteps').value);
       const key=fsDocId(title.toLowerCase());
       S.procs[key]={title,icon,warn,video,steps,open:false,done:[]};
-      closeModal(); renderProcs(document.getElementById('content')); toast('Procedure added ✓');
+      closeModal(); render(); toast('Procedure added ✓');
       if(db) {
         db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
           .catch(e => console.log('Add procedure Firestore write failed:', e));
@@ -3178,7 +3204,7 @@ function editProcedure(key) {
       const video=document.getElementById('pVideo').value.trim();
       const steps=parseStepsText(document.getElementById('pSteps').value);
       S.procs[key]={...p,title,icon,warn,video,steps};
-      closeModal(); renderProcs(document.getElementById('content')); toast('Procedure updated ✓');
+      closeModal(); render(); toast('Procedure updated ✓');
       if(db) {
         db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
           .catch(e => console.log('Edit procedure Firestore write failed:', e));
@@ -3192,7 +3218,8 @@ function deleteProcedure(key) {
   if(!p) return;
   if(!confirm(`Delete the "${p.title}" procedure? This can't be undone.`)) return;
   delete S.procs[key];
-  renderProcs(document.getElementById('content'));
+  S.procView=null;
+  render();
   toast('Procedure deleted');
   if(db) db.collection('procedures').doc(key).delete().catch(e => console.log('Delete procedure Firestore write failed:', e));
 }
@@ -3825,7 +3852,7 @@ function setupLiveSync() {
       S.dmgReports = byProc;
       dmgReportIds = idsByProc;
       saveDmg();
-      if(S.tab==='procedures') renderProcs(document.getElementById('content'));
+      if(S.tab==='procedures') render();
     }, e => console.log('damageReports listener error:', e));
 
     // Shopping catalog (item/store/cabinet) — live so an item added by one
@@ -3867,7 +3894,7 @@ function setupLiveSync() {
       // Preserve any locally-known procedures not yet in Firestore (e.g. just added)
       Object.keys(S.procs).forEach(key=>{ if(!procs[key]) procs[key]=S.procs[key]; });
       S.procs = procs;
-      if(S.tab==='procedures') renderProcs(document.getElementById('content'));
+      if(S.tab==='procedures') render();
     }, e => console.log('procedures listener error:', e));
 
     // Shift handoff notes — sticky notes left at end-of-day for the next
