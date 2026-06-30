@@ -1582,49 +1582,49 @@ function renderFlightLog(tabName) {
     const fleetOptions=FLEET_TAILS.filter(t=>!used.has(t));
 
     const pills=tails.map(t=>`
-      <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;background:${color}22;border:1px solid ${color}55;color:var(--t1);font-size:13px;font-weight:700">
+      <div style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;background:${color};color:#fff;font-size:13px;font-weight:800;letter-spacing:0.5px">
         ${t}
         <span onclick="event.stopPropagation();removeTail('${tabName}','${type}','${t}')"
-          style="color:var(--t3);font-size:15px;line-height:1;cursor:pointer;margin-left:2px">×</span>
+          style="font-size:14px;line-height:1;cursor:pointer;margin-left:3px;opacity:0.7">×</span>
       </div>`).join('');
 
-    const dropdown=isOpen?`
-      <div style="position:absolute;left:0;right:0;z-index:200;background:var(--card);border:1px solid var(--border2);border-top:none;border-radius:0 0 12px 12px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.3)">
-        ${fleetOptions.map(t=>`
-          <div onclick="addTail('${tabName}','${type}','${t}')"
-            style="padding:13px 16px;font-size:14px;font-weight:700;color:var(--t1);border-bottom:1px solid var(--border);cursor:pointer;letter-spacing:0.5px">
-            ${t}
-          </div>`).join('')}
-        <div style="padding:8px 12px;display:flex;gap:8px;align-items:center;border-top:1px solid var(--border);background:var(--glass)">
-          <input id="customTail_${type}" placeholder="Other tail…" maxlength="6"
-            onclick="event.stopPropagation()"
-            style="flex:1;padding:8px 10px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;outline:none"
-            oninput="this.value=this.value.toUpperCase()"
-            onkeydown="if(event.key==='Enter'){event.preventDefault();addTail('${tabName}','${type}',this.value)}">
-          <button onclick="addTail('${tabName}','${type}',document.getElementById('customTail_${type}').value)"
-            style="padding:8px 14px;border-radius:8px;border:none;background:${color};color:#fff;font-size:13px;font-weight:700;cursor:pointer">Add</button>
-        </div>
-      </div>`:''
+    const tailRows=fleetOptions.map(t=>`
+      <div onclick="addTail('${tabName}','${type}','${t}')"
+        style="padding:12px 16px 12px 54px;font-size:15px;font-weight:800;color:var(--t1);border-bottom:1px solid var(--border);cursor:pointer;letter-spacing:1px;background:var(--card)">
+        ${t}
+      </div>`).join('');
 
     return `
-      <div style="border-bottom:1px solid var(--border);padding:10px 14px">
+      <div style="border-bottom:1px solid var(--border)">
         <div onclick="toggleFlightDropdown('${tabName}','${type}')"
-          style="display:flex;align-items:center;gap:10px;cursor:pointer;position:relative;z-index:${isOpen?201:1}">
-          <div style="width:34px;height:34px;border-radius:10px;background:${color}22;border:1px solid ${color}55;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0">${icon}</div>
+          style="display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;background:var(--card)">
+          <div style="width:36px;height:36px;border-radius:10px;background:${color};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>
           <div style="flex:1">
             <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${color}">${label}</div>
-            ${tails.length===0?`<div style="font-size:12px;color:var(--t3);margin-top:1px">Tap to log a tail number</div>`:''}
+            ${tails.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:5px">${pills}</div>`
+              :`<div style="font-size:12px;color:var(--t3);margin-top:1px">Tap to log a tail number</div>`}
           </div>
-          <div style="font-size:18px;color:var(--t3);transition:transform 0.15s;transform:rotate(${isOpen?'90deg':'0deg'})">›</div>
+          <div style="font-size:20px;color:var(--t3);transition:transform 0.2s;transform:rotate(${isOpen?'270':'90'}deg)">›</div>
         </div>
-        ${tails.length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${pills}</div>`:''}
-        <div style="position:relative">${dropdown}</div>
+        ${isOpen?`
+        <div style="background:var(--bg);border-top:1px solid var(--border)">
+          ${tailRows}
+          <div style="padding:10px 14px;display:flex;gap:8px;align-items:center;background:var(--card);border-top:1px solid var(--border2)">
+            <input id="customTail_${type}" placeholder="Other tail (e.g. ABC)…" maxlength="8"
+              onclick="event.stopPropagation()"
+              style="flex:1;padding:10px 12px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;outline:none"
+              oninput="this.value=this.value.toUpperCase()"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();addTail('${tabName}','${type}',this.value)}">
+            <button onclick="addTail('${tabName}','${type}',document.getElementById('customTail_${type}').value)"
+              style="padding:10px 16px;border-radius:8px;border:none;background:${color};color:#fff;font-size:13px;font-weight:800;cursor:pointer">Add</button>
+          </div>
+        </div>`:''}
       </div>`;
   }
 
   return `
-    <div style="background:var(--glass);border-bottom:2px solid var(--border2)">
-      <div style="padding:8px 14px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase">✈ Flight Log</div>
+    <div style="background:var(--card);border-bottom:2px solid var(--border2)">
+      <div style="padding:7px 14px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase">✈ Flight Log</div>
       ${section('arr','Arrivals','🛬','#1A7A40')}
       ${section('dep','Departures','🛫','#1A4A8A')}
     </div>`;
