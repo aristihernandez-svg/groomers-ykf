@@ -706,6 +706,8 @@ const S = {
   dark: localStorage.getItem('gykf_dark')==='1',
   handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
   pendingHandoffAudio: null,
+  crewCarStatus: {}, // {carKey: {fuel, oil, cleaned, notes}}
+  buyerOut: false,  // true when someone is actively out shopping
 };
 
 const NAV_ITEMS = [
@@ -1547,21 +1549,30 @@ function renderShopping(el) {
         ">${S.tripNotes}</textarea>
     </div>`;
 
+  // "To Buy" filter removed — use Cart view instead
+  if(S.shopFilter==='tobuy') S.shopFilter='all';
+
+  // Buyer-out banner
+  const buyerBanner = S.buyerOut ? `
+    <div style="margin:8px 12px 0;padding:10px 14px;background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.3);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <span style="font-size:12px;color:var(--green);font-weight:600">🛍 Someone is out shopping — new items will be seen</span>
+      <button onclick="setBuyerOut(false)" style="font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--green);background:transparent;color:var(--green);cursor:pointer;font-weight:600">Done</button>
+    </div>` : '';
+
   let html=`<div class="shop-filters">
+    ${buyerBanner}
     <div class="shop-bar">
       <button class="chip" onclick="setSF('all')"
         style="background:${S.shopFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
-      <button class="chip" onclick="setSF('tobuy')"
-        style="background:${S.shopFilter==='tobuy'?'var(--red)':'var(--glass)'};color:${S.shopFilter==='tobuy'?'#fff':'var(--t2)'};border-color:${S.shopFilter==='tobuy'?'var(--red)':'var(--border2)'}">🔴 To Buy</button>
       <button class="chip" onclick="setSV()"
         style="background:${S.shopView==='cart'?'var(--green)':'var(--glass)'};color:${S.shopView==='cart'?'#fff':'var(--t2)'};border-color:${S.shopView==='cart'?'var(--green)':'var(--border2)'}">🛒 Cart</button>
-      ${stores.map((s,si)=>{const a=S.shopFilter===s;return `<button class="chip" onclick="setSFByIndex(${si})" style="background:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?(STORE_COLORS[s]||'var(--accent)'):'var(--border2)'}">${s}</button>`;}).join('')}
+      ${stores.map(s=>{const a=S.shopFilter===s;const col=STORE_COLORS[s]||'var(--accent)';return `<button class="chip" data-sf="${s.replace(/"/g,'&quot;')}" onclick="setSF(this.dataset.sf)" style="background:${a?col:'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?col:'var(--border2)'}">${s}</button>`;}).join('')}
     </div>
     <div class="shop-bar2">
       <span class="chip-label">📍</span>
       <button class="chip" onclick="setSLF('all')"
         style="background:${S.shopLocFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopLocFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopLocFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
-      ${locs.map((l,li)=>{const a=S.shopLocFilter===l;return `<button class="chip" onclick="setSLFByIndex(${li})" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
+      ${locs.map(l=>{const a=S.shopLocFilter===l;return `<button class="chip" data-slf="${l.replace(/"/g,'&quot;')}" onclick="setSLF(this.dataset.slf)" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
     </div>
     <div class="search-wrap">
       <div class="search-inner">
@@ -1650,10 +1661,15 @@ function renderCart(el, items) {
     </div>`;
 
   let html=`<div class="shop-filters">
-    <div class="shop-bar">
+    <div class="shop-bar" style="flex-wrap:wrap;gap:6px;padding-bottom:8px">
       <button class="chip" onclick="setSV()"
-        style="background:#2E7D32;color:#fff">← Back to list</button>
-      <span style="padding:5px 10px;font-size:13px;color:var(--t2)">${toBuy.length} items to buy</span>
+        style="background:#2E7D32;color:#fff;border-color:#2E7D32">← Back to list</button>
+      <button class="chip" onclick="resetShop()"
+        style="background:var(--green-dim);color:var(--green);border-color:rgba(46,204,138,0.3);font-weight:600">✅ Reset all to stock</button>
+      ${S.buyerOut
+        ? `<button class="chip" onclick="setBuyerOut(false)" style="background:rgba(46,204,138,0.2);color:var(--green);border-color:rgba(46,204,138,0.4);font-weight:600">🛍 Out shopping — tap when back</button>`
+        : `<button class="chip" onclick="setBuyerOut(true)" style="background:var(--glass);color:var(--t2)">🚗 Mark as out shopping</button>`}
+      <span style="padding:5px 4px;font-size:12px;color:var(--t3)">${toBuy.length} item${toBuy.length!==1?'s':''} to buy</span>
     </div>
   </div>`;
 
@@ -1686,7 +1702,48 @@ function renderCart(el, items) {
 }
 
 // ── PROCEDURES ─────────────────────────────────────────────────────
+function loadCrewCarStatus() {
+  try { S.crewCarStatus=JSON.parse(localStorage.getItem('gykf_ccs')||'{}'); } catch(e){ S.crewCarStatus={}; }
+}
+function saveCrewCarStatus() {
+  try { localStorage.setItem('gykf_ccs',JSON.stringify(S.crewCarStatus)); } catch(e){}
+}
+function openCrewCarLog(key) {
+  const cur = S.crewCarStatus[key] || {fuel:0, oil:'ok', cleaned:'', notes:''};
+  openModal('🚐 Log Car Status',
+    `<label>Jerry cans of fuel (full = 1)</label>
+     <select id="ccFuel">
+       ${[0,0.25,0.5,0.75,1,1.5,2,3,4].map(v=>`<option value="${v}" ${cur.fuel==v?'selected':''}>${v===0?'Empty':v+' can'+(v!==1?'s':'')}</option>`).join('')}
+     </select>
+     <label>Oil level</label>
+     <select id="ccOil">
+       <option value="ok" ${cur.oil==='ok'?'selected':''}>✅ OK</option>
+       <option value="low" ${cur.oil==='low'?'selected':''}>⚠️ Low — top up soon</option>
+       <option value="change" ${cur.oil==='change'?'selected':''}>🔴 Needs oil change</option>
+     </select>
+     <label>Last interior clean (date)</label>
+     <input id="ccCleaned" type="date" value="${cur.cleaned}">
+     <label>Notes (damage, issues, mileage...)</label>
+     <textarea id="ccNotes" style="height:60px">${cur.notes||''}</textarea>`,
+    ()=>{
+      const fuel = parseFloat(document.getElementById('ccFuel').value)||0;
+      const oil  = document.getElementById('ccOil').value;
+      const cleaned = document.getElementById('ccCleaned').value;
+      const notes = document.getElementById('ccNotes').value.trim();
+      S.crewCarStatus[key] = {fuel, oil, cleaned, notes, loggedAt: new Date().toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})};
+      saveCrewCarStatus();
+      closeModal();
+      renderProcs(document.getElementById('content'));
+      toast('Car status logged ✓');
+      if(db) {
+        db.collection('crewCarStatus').doc(key).set({...S.crewCarStatus[key]})
+          .catch(e=>console.log('crewCarStatus Firestore write failed:', e));
+      }
+    });
+}
+
 function loadProcs() {
+  loadCrewCarStatus();
   S.procs={
     o2:{title:"O₂ Med Beds",icon:"🫁",open:false,done:[],
       warn:"⚠ Fill SLOWLY. No dirty/oily hands. Stop and ask lead if unsure.",
@@ -1740,6 +1797,71 @@ function loadProcs() {
         {t:"Nose & rear cargo compartments ✦",n:"2nd groomer",g:true},
         {t:"Fuselage & engine cowlings",n:""},
       ]},
+    astra:{title:"Astra Groom",icon:"✈",open:false,done:[],warn:"",
+      video:'',
+      steps:[
+        {t:"Leather/fabric seats — Citra or leather cleaner",n:""},
+        {t:"Vacuum floor & carpet thoroughly",n:""},
+        {t:"Cockpit: instruments, CBs, panel",n:""},
+        {t:"Windshields — aviation-safe cleaner",n:""},
+        {t:"Tables & tray surfaces",n:""},
+        {t:"Walls with diluted Citra",n:""},
+        {t:"Rails ✦",n:"2nd groomer",g:true},
+        {t:"Deep clean cockpit (q-tips) ✦",n:"2nd groomer",g:true},
+        {t:"Engines, under wings & landing gear",n:""},
+        {t:"Cargo compartments ✦",n:"2nd groomer",g:true},
+        {t:"Belly ✦",n:"2nd groomer",g:true},
+        {t:"Entire fuselage ✦",n:"2nd groomer",g:true},
+        {t:"Mop floor (IAW)",n:""},
+        {t:"Put sun shades on before leaving",n:""},
+      ]},
+    arrival:{title:"Arrival Groom",icon:"🛬",open:false,done:[],warn:"",
+      video:'',
+      steps:[
+        {t:"Confirm aircraft parked & safe to approach — chocks set",n:""},
+        {t:"Position ground equipment & prepare supplies",n:""},
+        {t:"Passenger cabin — quick wipe: tray tables, arm rests, windows",n:""},
+        {t:"Vacuum high-traffic areas (aisle, entrance)",n:""},
+        {t:"Lavatory — clean & restock paper & soap",n:""},
+        {t:"Commissary — restock coffee, water, cups, blankets",n:""},
+        {t:"Remove all garbage bags & replace liners",n:""},
+        {t:"Exterior walk-around — note any visible damage",n:"Log anything in damage report"},
+        {t:"Report cabin condition to Crew Chief",n:""},
+      ]},
+    departure:{title:"Departure Groom",icon:"🛫",open:false,done:[],warn:"",
+      video:'',
+      steps:[
+        {t:"Final cabin sweep — remove all personal items & debris",n:""},
+        {t:"Wipe tray tables, arm rests, windows",n:""},
+        {t:"Check overhead bins — clear & latched",n:""},
+        {t:"Lavatory — final clean, stock full",n:""},
+        {t:"Ensure magazines, safety cards in pockets",n:""},
+        {t:"Exterior walk-around — windows clean, no FOD on ramp",n:""},
+        {t:"Remove all ground equipment from ramp",n:""},
+        {t:"Notify Crew Chief — aircraft ready for departure",n:""},
+      ]},
+    crewcar1:{title:"Crew Van 1",icon:"🚐",open:false,done:[],warn:"",
+      video:'', isCrewCar:true,
+      steps:[
+        {t:"Check fuel — log jerry cans",n:"Use 'Log Status' button below"},
+        {t:"Check oil level",n:"Top up if low"},
+        {t:"Visual inspection exterior — note damage",n:""},
+        {t:"Clean interior — remove garbage, wipe surfaces",n:""},
+        {t:"Vacuum floor mats",n:""},
+        {t:"Check tire pressure (visual)",n:""},
+        {t:"Log mileage",n:""},
+      ]},
+    crewcar2:{title:"Crew Van 2",icon:"🚐",open:false,done:[],warn:"",
+      video:'', isCrewCar:true,
+      steps:[
+        {t:"Check fuel — log jerry cans",n:"Use 'Log Status' button below"},
+        {t:"Check oil level",n:"Top up if low"},
+        {t:"Visual inspection exterior — note damage",n:""},
+        {t:"Clean interior — remove garbage, wipe surfaces",n:""},
+        {t:"Vacuum floor mats",n:""},
+        {t:"Check tire pressure (visual)",n:""},
+        {t:"Log mileage",n:""},
+      ]},
   };
 }
 
@@ -1777,6 +1899,35 @@ function renderProcs(el) {
               ${s.n?`<div class="snote">${s.n}</div>`:''}
             </div>
           </div>`).join('')}
+        ${p.isCrewCar ? (() => {
+          const st = S.crewCarStatus[key] || {};
+          const fuelTxt = st.fuel!=null ? (st.fuel===0?'Empty':`${st.fuel} can${st.fuel!==1?'s':''}`) : '—';
+          const oilColor = st.oil==='change'?'var(--red)':st.oil==='low'?'#E8A000':'var(--green)';
+          const oilTxt = st.oil==='change'?'🔴 Needs change':st.oil==='low'?'⚠️ Low':st.oil?'✅ OK':'—';
+          const cleanedTxt = st.cleaned ? new Date(st.cleaned).toLocaleDateString('en-CA',{month:'short',day:'numeric'}) : '—';
+          return `<div style="background:var(--glass2);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px 14px;margin:10px 0">
+            <div style="font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">📊 Last Status ${st.loggedAt?'· '+st.loggedAt:''}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;text-align:center">
+              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
+                <div style="font-size:18px;margin-bottom:4px">⛽</div>
+                <div style="font-size:12px;font-weight:700;color:var(--t1)">${fuelTxt}</div>
+                <div style="font-size:10px;color:var(--t3)">Fuel</div>
+              </div>
+              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
+                <div style="font-size:18px;margin-bottom:4px">🛢</div>
+                <div style="font-size:11px;font-weight:700;color:${oilColor}">${oilTxt}</div>
+                <div style="font-size:10px;color:var(--t3)">Oil</div>
+              </div>
+              <div style="background:var(--glass);border-radius:var(--radius-sm);padding:8px">
+                <div style="font-size:18px;margin-bottom:4px">🧹</div>
+                <div style="font-size:12px;font-weight:700;color:var(--t1)">${cleanedTxt}</div>
+                <div style="font-size:10px;color:var(--t3)">Cleaned</div>
+              </div>
+            </div>
+            ${st.notes?`<div style="margin-top:8px;font-size:11px;color:var(--t2);font-style:italic">${st.notes}</div>`:''}
+            <button onclick="openCrewCarLog('${key}')" style="width:100%;margin-top:10px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">📝 Log Status</button>
+          </div>`;
+        })() : ''}
         <div class="proc-actions">
           <button class="proc-act-btn" onclick="resetProc('${key}')">🔄 Reset steps</button>
           <button class="proc-act-btn" onclick="openDmgReport('${key}')" style="color:#C0392B">📸 Damage report</button>
@@ -1878,7 +2029,10 @@ function renderContactsList(q) {
     html += `<div style="padding:14px 16px 10px;font-size:15px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--accent);background:linear-gradient(90deg,var(--accent-dim),transparent);border-left:4px solid var(--accent);border-bottom:1px solid var(--border);margin-top:4px">📍 &nbsp;Stores & Suppliers</div>`;
     stores.forEach(c => {
       const hasAddr = c.address && c.address.length > 5 && /\d/.test(c.address);
-      const mapsUrl = `https://maps.google.com/?q=${encodeURIComponent(c.address||c.name+' Kitchener ON')}`;
+      const q = encodeURIComponent(c.address || c.name + ' Kitchener ON');
+      const gMapsUrl  = `https://maps.google.com/?q=${q}`;
+      const wazeUrl   = `https://waze.com/ul?q=${q}&navigate=yes`;
+      const appleMapsUrl = `https://maps.apple.com/?q=${q}`;
       html += `
         <div style="padding:13px 16px;background:var(--glass);border-bottom:1px solid var(--border)">
           <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:4px">${c.name}</div>
@@ -1887,8 +2041,12 @@ function renderContactsList(q) {
               <span>📍</span><span>${c.address}</span>
             </div>` : ''}
           ${c.notes ? `<div style="font-size:11px;color:var(--t3);margin-bottom:6px;font-style:italic">${c.notes}</div>` : ''}
-          <div style="display:flex;gap:8px;align-items:center;margin-top:6px">
-            ${hasAddr ? `<a href="${mapsUrl}" target="_blank" class="maps-btn">🗺 Open in Maps</a>` : ''}
+          <div style="display:flex;gap:6px;align-items:center;margin-top:6px;flex-wrap:wrap">
+            ${hasAddr ? `
+              <a href="${gMapsUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:16px;background:rgba(64,144,255,0.10);color:#6EB0FF;font-size:11px;font-weight:600;border:1px solid rgba(64,144,255,0.20);text-decoration:none">🗺 Google</a>
+              <a href="${wazeUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:16px;background:rgba(100,200,100,0.10);color:#5CCC70;font-size:11px;font-weight:600;border:1px solid rgba(100,200,100,0.20);text-decoration:none">🔵 Waze</a>
+              <a href="${appleMapsUrl}" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:6px 10px;border-radius:16px;background:rgba(255,100,50,0.10);color:#FF8A60;font-size:11px;font-weight:600;border:1px solid rgba(255,100,50,0.20);text-decoration:none">🍎 Apple</a>
+            ` : ''}
             <span onclick="editContact(${S.contacts.indexOf(c)})" style="margin-left:auto;font-size:13px;color:var(--t3);cursor:pointer;padding:4px 6px">✏️</span>
             <span onclick="deleteContact(${S.contacts.indexOf(c)})" style="font-size:14px;color:var(--t3);cursor:pointer;padding:4px 6px">🗑</span>
           </div>
@@ -2036,21 +2194,49 @@ function toggleShop(idx) {
   S.shopping[idx].checked=!S.shopping[idx].checked;
   S.shopping[idx].status=S.shopping[idx].checked?'To Buy':'In Stock';
   haptic('medium');
-  saveShoppingState(); // persist locally
+  saveShoppingState();
   api({action:'toggleShop',item:S.shopping[idx].item});
   fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
   renderShopping(document.getElementById('content'));
-  toast(S.shopping[idx].checked?'🔴 To Buy':'✅ In Stock');
+  if(S.shopping[idx].checked && S.buyerOut) {
+    toast('🔔 Added to list — buyer is out and will see this!');
+  } else {
+    toast(S.shopping[idx].checked?'🔴 Needs restocking':'✅ In Stock');
+  }
+}
+
+function setBuyerOut(active) {
+  S.buyerOut = active;
+  if(db) {
+    if(active) {
+      db.collection('shopSession').doc('active').set({active:true, ts:firebase.firestore.FieldValue.serverTimestamp()})
+        .catch(e=>console.log('setBuyerOut failed:', e));
+      toast('🚗 Marked as out shopping — others will be notified when adding items');
+    } else {
+      db.collection('shopSession').doc('active').delete()
+        .catch(e=>console.log('setBuyerOut clear failed:', e));
+      toast('✅ Back from shopping');
+    }
+  } else {
+    renderShopping(document.getElementById('content'));
+  }
 }
 function resetShop() {
   const n=S.shopping.filter(i=>i.checked).length;
   if(!n){toast('Already all In Stock ✅');return;}
   if(!confirm(`Reset ${n} items to In Stock?`)) return;
   S.shopping.forEach(i=>{i.checked=false;i.status='In Stock';});
-  saveShoppingState(); // persist locally
+  saveShoppingState();
   api({action:'resetShop'});
+  // Sync to Firestore so all phones see the reset instantly
+  if(db) {
+    const clearState = {};
+    S.shopping.forEach(i=>{ clearState[fsKey(i.item)]={checked:false,status:'In Stock'}; });
+    db.collection('shopState').doc('state').set(clearState)
+      .catch(e=>console.log('resetShop Firestore sync failed:', e));
+  }
   renderShopping(document.getElementById('content'));
-  toast(`✅ ${n} items reset`);
+  toast(`✅ ${n} items reset to In Stock`);
 }
 function toggleBored(id) {
   const idx = S.bored.findIndex(b=>String(b.id)===String(id));
@@ -2079,6 +2265,13 @@ function resetDay() {
   const tabName=DAYS[TODAY];
   if(!confirm('Reset all of today\'s tasks?')) return;
   S.tasks[tabName]?.forEach(t=>t.done=false);
+  // Sync reset to Firestore so every phone sees it immediately
+  if(db) {
+    const clearState = {_date: new Date().toDateString()};
+    S.tasks[tabName]?.forEach(t=>{ clearState[fsKey(t.task)]=false; });
+    db.collection('taskState').doc(tabName).set(clearState)
+      .catch(e=>console.log('resetDay Firestore sync failed:', e));
+  }
   renderToday(document.getElementById('content'));
   toast('🔄 Today reset');
 }
@@ -2630,6 +2823,14 @@ function showEOD() {
 // reload the PWA mid-flow. Hard-capped at 60s to stay well under Firestore's
 // 1MB document size limit once base64-encoded.
 let handoffRecorder = null;
+
+// Prevent Firestore listeners from re-rendering while the user is mid-tap —
+// otherwise a live update can swap DOM elements under the finger and cause
+// the wrong task/item to be toggled.
+let touchActive = false;
+document.addEventListener('touchstart', ()=>{ touchActive=true; }, {passive:true, capture:true});
+document.addEventListener('touchend',   ()=>{ touchActive=false; }, {passive:true, capture:true});
+document.addEventListener('touchcancel',()=>{ touchActive=false; }, {passive:true, capture:true});
 async function recordHandoffVoice() {
   const btn = document.getElementById('eodVoiceBtn');
   const status = document.getElementById('eodVoiceStatus');
@@ -2979,6 +3180,9 @@ function setupDraggableNav() {
     let touchStartX=0, touchStartY=0, clone=null;
     item.addEventListener('touchstart', e=>{
       if(e.touches.length!==1) return;
+      // Remove any stale drag clones from a previously interrupted gesture
+      document.querySelectorAll('[data-nav-drag-clone]').forEach(c=>c.remove());
+      clone=null;
       touchStartX=e.touches[0].clientX;
       touchStartY=e.touches[0].clientY;
     },{passive:true});
@@ -2986,6 +3190,7 @@ function setupDraggableNav() {
     item.addEventListener('touchmove', e=>{
       if(!clone&&Math.abs(e.touches[0].clientX-touchStartX)>10){
         clone=item.cloneNode(true);
+        clone.setAttribute('data-nav-drag-clone','1');
         clone.style.cssText='position:fixed;opacity:0.7;pointer-events:none;z-index:999;background:var(--accent-dim);border-radius:8px';
         document.body.appendChild(clone);
         dragSrcEl=item;
@@ -3110,9 +3315,22 @@ function setupLiveSync() {
     const tabName = DAYS[TODAY];
     db.collection('taskState').doc(tabName).onSnapshot(snap => {
       const data = snap.data(); if(!data || !S.tasks[tabName]) return;
+      // Ignore states written on a different calendar day (weekly cycle fix —
+      // last Monday's done-flags must not re-appear this Monday).
+      const today = new Date().toDateString();
+      if(data._date && data._date !== today) return;
       S.tasks[tabName].forEach(t => { const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v; });
-      if(S.tab==='today') renderToday(document.getElementById('content'));
-      else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+      // Defer re-render by 150ms so it never fires mid-tap (prevents wrong
+      // task being toggled when DOM rebuilds under the user's finger).
+      if(!touchActive) {
+        if(S.tab==='today') renderToday(document.getElementById('content'));
+        else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+      } else {
+        setTimeout(()=>{
+          if(S.tab==='today') renderToday(document.getElementById('content'));
+          else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+        }, 200);
+      }
     }, e => console.log('taskState listener error:', e));
 
     // Shopping checked/to-buy state.
@@ -3130,8 +3348,18 @@ function setupLiveSync() {
     db.collection('boredState').doc('state').onSnapshot(snap => {
       const data = snap.data(); if(!data) return;
       S.bored.forEach(b => { const v=data[fsKey(b.task)]; if(v!==undefined) b.done=v; });
-      if(S.tab==='bored') renderBored(document.getElementById('content'));
+      if(S.tab==='bored') {
+        if(!touchActive) renderBored(document.getElementById('content'));
+        else setTimeout(()=>{ if(S.tab==='bored') renderBored(document.getElementById('content')); }, 200);
+      }
     }, e => console.log('boredState listener error:', e));
+
+    // Buyer-out session — when someone marks themselves as actively shopping,
+    // a banner appears on all phones so adding new items triggers an alert.
+    db.collection('shopSession').doc('active').onSnapshot(snap => {
+      S.buyerOut = snap.exists && snap.data()?.active === true;
+      if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+    }, e => console.log('shopSession listener error:', e));
 
     // Damage reports — fully live: every report any groomer files appears
     // on every phone immediately, and stays available for future reference.
@@ -3178,9 +3406,13 @@ function setupLiveSync() {
       snap.forEach(d => {
         const v=d.data();
         const existing = S.procs[d.id];
+        // Preserve isCrewCar from local procs if Firestore doc doesn't have it
+        const isCrewCar = v.isCrewCar || existing?.isCrewCar || false;
         procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
-          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[]};
+          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[], isCrewCar};
       });
+      // Preserve any locally-known procedures not yet in Firestore (e.g. just added)
+      Object.keys(S.procs).forEach(key=>{ if(!procs[key]) procs[key]=S.procs[key]; });
       S.procs = procs;
       if(S.tab==='procedures') renderProcs(document.getElementById('content'));
     }, e => console.log('procedures listener error:', e));
@@ -3225,16 +3457,19 @@ function renderHandoffNotesHtml() {
 async function seedProceduresIfEmpty() {
   if(!db) return;
   try {
-    const snap = await db.collection('procedures').limit(1).get();
-    if(!snap.empty) return;
+    const snap = await db.collection('procedures').get();
+    const existingKeys = new Set(snap.docs.map(d=>d.id));
+    const missingEntries = Object.entries(S.procs).filter(([key])=>!existingKeys.has(key));
+    if(!missingEntries.length) return;
     const batch = db.batch();
-    Object.entries(S.procs).forEach(([key,p])=>{
+    missingEntries.forEach(([key,p])=>{
       batch.set(db.collection('procedures').doc(key), {
-        title:p.title, icon:p.icon, warn:p.warn||'', video:p.video||'', steps:p.steps
+        title:p.title, icon:p.icon, warn:p.warn||'', video:p.video||'',
+        steps:p.steps, isCrewCar:p.isCrewCar||false
       });
     });
     await batch.commit();
-    console.log('Seeded built-in procedures into Firestore');
+    console.log('Seeded missing procedures:', missingEntries.map(([k])=>k));
   } catch(e) { console.log('seedProceduresIfEmpty failed:', e); }
 }
 
@@ -3243,8 +3478,10 @@ async function seedProceduresIfEmpty() {
 // won't broadcast the change until it's back online — nothing is lost.
 function fsSetTaskDone(tabName, task, done) {
   if(!db) return;
-  db.collection('taskState').doc(tabName).set({[fsKey(task)]:done}, {merge:true})
-    .catch(e => console.log('fsSetTaskDone failed (offline?):', e));
+  // Include today's date so stale states from last week are ignored on load
+  db.collection('taskState').doc(tabName).set(
+    {[fsKey(task)]:done, _date: new Date().toDateString()}, {merge:true}
+  ).catch(e => console.log('fsSetTaskDone failed (offline?):', e));
 }
 function fsSetShopState(item, checked, status) {
   if(!db) return;
