@@ -1987,21 +1987,25 @@ function renderBored(el) {
       <p>No tasks yet. Tap + to add.</p></div>`; return;
   }
   let html='<div class="bored-list">';
-  S.bored.forEach((b,i)=>{
+  S.bored.forEach((b)=>{
     html+=`
-    <div class="swipe-wrap" data-idx="${i}">
+    <div class="swipe-wrap" data-id="${b.id}">
       <div class="swipe-action-left">✏️ Edit</div>
       <div class="swipe-action-right">🗑 Delete</div>
-      <div class="bitem ${b.done?'done':''}" onclick="toggleBored(${i})">
+      <div class="bitem ${b.done?'done':''}" onclick="toggleBored('${b.id}')">
         <div class="bcb ${b.done?'on':''}">${b.done?'✓':''}</div>
         <div class="btxt">${b.task}</div>
       </div>
     </div>`;
   });
   el.innerHTML=html+'</div>';
-  el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
-    const i=parseInt(w.dataset.idx);
-    if(!isNaN(i)) setupSwipeTwoWay(w,()=>editBoredItem(i),()=>deleteBoredItem(i));
+  // Look up by stable id rather than array index — an index captured at
+  // render time can go stale if a live Firestore update (e.g. a teammate
+  // toggling a different item) triggers a re-render mid-gesture, which was
+  // causing swipe-delete to occasionally remove the wrong item(s).
+  el.querySelectorAll('.swipe-wrap[data-id]').forEach(w=>{
+    const id=w.dataset.id;
+    setupSwipeTwoWay(w,()=>editBoredItem(id),()=>deleteBoredItem(id));
   });
 }
 
@@ -2048,17 +2052,15 @@ function resetShop() {
   renderShopping(document.getElementById('content'));
   toast(`✅ ${n} items reset`);
 }
-function toggleBored(idx) {
+function toggleBored(id) {
+  const idx = S.bored.findIndex(b=>String(b.id)===String(id));
+  if(idx===-1) return;
   S.bored[idx].done=!S.bored[idx].done;
   haptic(); api({action:'toggleBored',task:S.bored[idx].task});
   fsSetBoredDone(S.bored[idx].task, S.bored[idx].done);
   localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
   renderBored(document.getElementById('content'));
   toast(S.bored[idx].done?'✓ Done!':'Unchecked');
-}
-function deleteBored(idx) {
-  if(!confirm('Remove from Bored Board?')) return;
-  S.bored.splice(idx,1); renderBored(document.getElementById('content'));
 }
 function toggleProc(key) { S.procs[key].open=!S.procs[key].open; renderProcs(document.getElementById('content')); }
 function toggleStep(key,idx) {
@@ -2788,7 +2790,9 @@ function deleteShopItem(idx) {
 }
 
 // ── EDIT BORED ITEM ───────────────────────────────────────────
-function editBoredItem(idx) {
+function editBoredItem(id) {
+  const idx = S.bored.findIndex(b=>String(b.id)===String(id));
+  if(idx===-1) return;
   const item = S.bored[idx];
   openModal('✏️ Edit Task',
     `<label>Task</label>
@@ -2804,7 +2808,9 @@ function editBoredItem(idx) {
     });
 }
 
-function deleteBoredItem(idx) {
+function deleteBoredItem(id) {
+  const idx = S.bored.findIndex(b=>String(b.id)===String(id));
+  if(idx===-1) return;
   if(!confirm(`Delete this task?`)) return;
   const task = S.bored[idx].task;
   // Call backend to delete from sheet
