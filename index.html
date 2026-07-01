@@ -3346,9 +3346,11 @@ function renderBored(el) {
 }
 
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
+let _lastSelfWrite = 0; // suppress listener re-render for own writes
 function toggleT(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
   haptic(); api({action:'toggleTask',tabName,task:S.tasks[tabName][idx].task});
+  _lastSelfWrite = Date.now();
   fsSetTaskDone(tabName, S.tasks[tabName][idx].task, S.tasks[tabName][idx].done);
   renderToday(document.getElementById('content'));
   toast(S.tasks[tabName][idx].done?'✓ Done':'Unchecked');
@@ -3356,6 +3358,7 @@ function toggleT(tabName,idx) {
 function toggleTDay(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
   haptic(); api({action:'toggleTask',tabName,task:S.tasks[tabName][idx].task});
+  _lastSelfWrite = Date.now();
   fsSetTaskDone(tabName, S.tasks[tabName][idx].task, S.tasks[tabName][idx].done);
   renderDayDetail(document.getElementById('content'));
   toast(S.tasks[tabName][idx].done?'✓ Done':'Unchecked');
@@ -4354,7 +4357,24 @@ function fallback() {
     {task:"Put back Credit Card",freq:"Daily",area:"CLOSURE",done:false},
   ];
 }
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(reg => {
+    // When a new SW is found, activate it immediately
+    reg.addEventListener('updatefound', () => {
+      const sw = reg.installing;
+      sw.addEventListener('statechange', () => {
+        if(sw.state === 'installed' && navigator.serviceWorker.controller) {
+          sw.postMessage({type:'SKIP_WAITING'});
+        }
+      });
+    });
+  }).catch(()=>{});
+  // When new SW takes control, reload once to get fresh code
+  let _swRefreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if(!_swRefreshing) { _swRefreshing = true; location.reload(); }
+  });
+}
 
 // ── QR CODE GENERATOR (pure JS, no library) ──────────────────
 function drawQR(canvasId, url) {
@@ -4533,6 +4553,8 @@ function setupLiveSync() {
       if(data._date && data._date !== today) return;
       S.tasks[tabName].forEach(t => { const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v; });
       flightLogFromFirestore(tabName, data);
+      // Skip re-render if this snapshot is echoing our own write (< 600ms ago)
+      if(Date.now() - _lastSelfWrite < 600) return;
       // Defer re-render by 150ms so it never fires mid-tap (prevents wrong
       // task being toggled when DOM rebuilds under the user's finger).
       if(!touchActive) {
@@ -4555,8 +4577,15 @@ function setupLiveSync() {
       });
       saveShoppingState();
       const el=document.getElementById('content');
-      if(S.tab==='shopping') renderShopping(el);
-      else if(S.tab==='home'||S.tab==='today') render();
+      if(!touchActive) {
+        if(S.tab==='shopping') renderShopping(el);
+        else if(S.tab==='home'||S.tab==='today') render();
+      } else {
+        setTimeout(()=>{
+          if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+          else if(S.tab==='home'||S.tab==='today') render();
+        }, 200);
+      }
     }, e => console.log('shopState listener error:', e));
 
     // Bored board done-state.
