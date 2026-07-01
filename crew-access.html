@@ -98,7 +98,7 @@ let _gaugeValue = null;
 // ── Firestore sync ──
 db.collection('crewCarData').doc('all').onSnapshot(snap => {
   if(snap.exists) Object.assign(carData, snap.data());
-  render();
+  if(view === 'list') render(); // don't rebuild gauge while user is editing
 });
 
 // ── Helpers ──
@@ -277,7 +277,7 @@ async function saveDetail(key) {
   if(ckm)d.currentKm=ckm;
   d.crewNote=note;
   try {
-    await db.collection('crewCarData').doc('all').set(carData);
+    await db.collection('crewCarData').doc('all').set({[key]: carData[key]}, {merge: true});
     toast('✅ Saved — thank you!');
   } catch(e){ toast('❌ Save failed — check connection'); }
 }
