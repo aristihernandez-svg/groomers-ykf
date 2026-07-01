@@ -3892,8 +3892,7 @@ function drawQR(canvasId, url) {
     ctx.fillText('Scan on phone', size/2, size/2-10);
     ctx.fillText('camera app', size/2, size/2+10);
   };
-  // Use Google Charts QR API (free, no key)
-  img.src = `https://chart.googleapis.com/chart?chs=180x180&cht=qr&chl=${encodeURIComponent(url)}&choe=UTF-8`;
+  img.src = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&color=0B1120&bgcolor=ffffff`;
 }
 
 // ── DRAGGABLE NAV ICONS ───────────────────────────────────────
