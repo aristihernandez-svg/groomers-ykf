@@ -336,7 +336,7 @@ body::before{
 [data-theme="standard-night"] .nav{background:#111111;border-top:1px solid rgba(255,255,255,0.08)}
 [data-theme="standard-day"] .nav{background:#FFFFFF;border-top:1px solid rgba(0,0,0,0.08)}
 .nav::-webkit-scrollbar{display:none}
-.nb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:10px 16px 8px;cursor:pointer;border-top:2px solid transparent;transition:all 0.2s;min-width:66px}
+.nb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:8px 14px 6px;cursor:pointer;border-top:2px solid transparent;transition:all 0.2s;min-width:60px}
 .nb.on{border-top-color:#1A3A5C}
 .nb.on .ni{color:#1A3A5C}
 .nb.on .nl{color:#1A3A5C;font-weight:700}
@@ -2045,6 +2045,7 @@ function renderCart(el, items) {
           <div class="sinfo">
             <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:var(--accent);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
+            ${item.notes && String(item.notes)!=='false' && item.notes.trim() ? `<div style="font-size:11px;color:var(--t3);margin-top:2px;font-style:italic">${item.notes}</div>` : ''}
           </div>
           ${cqty>1?`<span style="background:${isCH?'var(--accent)':col};color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;flex-shrink:0">×${cqty}</span>`:''}
         </div>`;

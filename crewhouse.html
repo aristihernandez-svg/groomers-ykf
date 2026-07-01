@@ -62,17 +62,11 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-let catalog = [];   // {id, item, notes}  — only Crew House items
-let shopState = {}; // {id: {checked, status}}
+let catalog = [];   // {id, item, notes, store}  — only Crew House items
+let shopState = {}; // {fsKey: {checked, status, qty, source}}
 let view = 'list';  // 'list' | 'add'
 
-// One-time cleanup: delete old items that were wrongly tagged store='Crew House'
-db.collection('shoppingCatalog').where('store','==','Crew House').get().then(snap => {
-  if(snap.empty) return;
-  const batch = db.batch();
-  snap.docs.forEach(doc => batch.delete(doc.ref));
-  return batch.commit();
-}).catch(()=>{});
+const STORES = ['Zehrs','Costco','A1 Cash & Carry','Home Depot','Canadian Tire','Monarch Oil','Supplier'];
 
 // Live catalog listener — items located at Crew House (cabinet filter)
 db.collection('shoppingCatalog').onSnapshot(snap => {
@@ -192,14 +186,20 @@ function showAddForm() {
 }
 
 function renderAdd() {
+  const storeOpts = STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
   document.getElementById('app').innerHTML = `
     <div class="form-wrap">
       <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">Add Item to List</div>
       <div style="font-size:12px;color:var(--t3);margin-bottom:16px">This will appear in the Groomers' shopping list under <b style="color:var(--t2)">Crew House</b>.</div>
       <label>Item name *</label>
       <input type="text" id="inName" placeholder="e.g. Dish soap" autofocus>
+      <label>Where to buy *</label>
+      <select id="inStore" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none">
+        <option value="" disabled selected>Select a store…</option>
+        ${storeOpts}
+      </select>
       <label>Notes (optional)</label>
-      <textarea id="inNotes" placeholder="Brand, size, quantity details..."></textarea>
+      <textarea id="inNotes" placeholder="Brand, size, any details for the groomer..."></textarea>
       <button class="save-btn" onclick="saveItem()">➕ Add to Shopping List</button>
       <button class="cancel-btn" onclick="cancelAdd()">Cancel</button>
     </div>`;
@@ -207,16 +207,18 @@ function renderAdd() {
 }
 
 async function saveItem() {
-  const name = (document.getElementById('inName')?.value||'').trim();
+  const name  = (document.getElementById('inName')?.value||'').trim();
+  const store = (document.getElementById('inStore')?.value||'').trim();
   const notes = (document.getElementById('inNotes')?.value||'').trim();
-  if(!name) { toast('⚠️ Please enter an item name'); return; }
+  if(!name)  { toast('⚠️ Please enter an item name'); return; }
+  if(!store) { toast('⚠️ Please select a store'); return; }
 
   const id = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60) + '_' + Date.now();
   try {
     await db.collection('shoppingCatalog').doc(id).set({
       item: name,
-      notes: notes,
-      store: 'Crew House',
+      notes: notes || '',
+      store: store,
       cabinet: 'Crew House'
     });
     toast('✅ Added to shopping list!');
