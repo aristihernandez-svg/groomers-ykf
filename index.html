@@ -2699,7 +2699,7 @@ function renderProcs(el) {
           <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1.2">${p.title}</div>
           <div style="font-size:11px;color:var(--t3);margin-top:3px">
             ${p.isCrewCarsHub?`${CREW_CARS.length} vehicles`:
-              `${done}/${total} steps${dmg.length?` · ${dmg.length} report${dmg.length!==1?'s':''}`:''}`}
+              dmg.length?`${dmg.length} damage report${dmg.length!==1?'s':''}`:``}
           </div>
         </div>
       </div>`;
@@ -2759,7 +2759,6 @@ function renderProcDetail(el, key) {
       <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${p.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:17px;font-weight:800;color:var(--t1)">${p.title}</div>
-        <div style="font-size:12px;color:var(--t3);margin-top:3px">${done}/${total} steps complete</div>
       </div>
     </div>
 
