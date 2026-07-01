@@ -25,8 +25,8 @@ messaging.onBackgroundMessage((payload) => {
 
   self.registration.showNotification(title || '✈ Skycare', {
     body: body || '☕ Hurry... gotta make coffee!',
-    icon: icon || './icon-192.svg',
-    badge: './icon-192.svg',
+    icon: icon || './cars/Metroliner_logo-removebg-preview.png',
+    badge: './cars/Metroliner_logo-removebg-preview.png',
     tag: 'skycare-coffee',
     renotify: true,
     vibrate: [200, 100, 200],

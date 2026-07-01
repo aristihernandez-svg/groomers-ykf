@@ -4339,7 +4339,7 @@ function setupLiveSync() {
       const title = data.title || '✈ Skycare';
       const body = data.body || '';
       if (Notification.permission === 'granted') {
-        new Notification(title, { body, icon: './icon-192.png', tag: data.tag || 'skycare', renotify: true });
+        new Notification(title, { body, icon: './cars/Metroliner_logo-removebg-preview.png', tag: data.tag || 'skycare', renotify: true });
       } else {
         toast(`🔔 ${title}${body ? ' — ' + body : ''}`);
       }
@@ -4495,8 +4495,8 @@ function scheduleLocalNotifications() {
       if (Notification.permission === 'granted') {
         new Notification('✈ Skycare', {
           body: message,
-          icon: './icon-192.svg',
-          badge: './icon-192.svg',
+          icon: './cars/Metroliner_logo-removebg-preview.png',
+          badge: './cars/Metroliner_logo-removebg-preview.png',
           tag: `coffee-${hour}`,
           renotify: true,
         });
