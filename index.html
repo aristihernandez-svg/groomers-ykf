@@ -2762,10 +2762,7 @@ function renderProcDetail(el, key) {
       <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${p.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:17px;font-weight:800;color:var(--t1)">${p.title}</div>
-        <div style="font-size:12px;color:var(--t3);margin-top:3px">${done}/${total} steps complete · ${pct}%</div>
-        <div style="margin-top:7px;height:4px;border-radius:2px;background:var(--border);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
-        </div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px">${done}/${total} steps complete</div>
       </div>
     </div>
 
@@ -3012,8 +3009,7 @@ function renderBored(el) {
     <div class="swipe-wrap" data-id="${b.id}">
       <div class="swipe-action-left">✏️ Edit</div>
       <div class="swipe-action-right">🗑 Delete</div>
-      <div class="bitem ${b.done?'done':''}" onclick="toggleBored('${b.id}')">
-        <div class="bcb ${b.done?'on':''}">${b.done?'✓':''}</div>
+      <div class="bitem">
         <div class="btxt">${b.task}</div>
       </div>
     </div>`;
