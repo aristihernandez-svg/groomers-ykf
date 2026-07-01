@@ -1765,7 +1765,8 @@ function renderShopping(el) {
   const bar1Scroll = document.querySelector('.shop-bar')?.scrollLeft || 0;
   const bar2Scroll = document.querySelector('.shop-bar2')?.scrollLeft || 0;
   const items=S.shopping;
-  const stores=[...new Set(items.map(i=>i.store).filter(Boolean))];
+  const normStore = s => /mx\s*han[gh]?[ae]r/i.test(s) ? 'MX Hangar' : s;
+  const stores=[...new Set(items.map(i=>i.store).filter(Boolean).map(normStore))];
   const locs=[...new Set(items.map(i=>i.cabinet).filter(Boolean))];
   const q=S.shopSearch.toLowerCase().trim();
 
@@ -1845,6 +1846,7 @@ function renderShopping(el) {
     filtered.forEach(item=>{
       const ri=items.indexOf(item);
       const dot=STORE_COLORS[item.store]||'#888';
+      const qty=item.qty||1;
       html+=`
       <div class="swipe-wrap" data-idx="${ri}">
         <div class="swipe-action-left">✏️ Edit</div>
@@ -1857,6 +1859,11 @@ function renderShopping(el) {
               <span style="font-weight:600;color:var(--t1)"><span class="sdot" style="background:${dot}"></span>${item.store}</span>
               <span style="color:var(--t2)">${item.cabinet}</span>
             </div>
+          </div>
+          <div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:3px;padding:0 4px;flex-shrink:0">
+            <button onclick="changeQty(${ri},-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--glass);color:var(--t1);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">−</button>
+            <span style="min-width:22px;text-align:center;font-size:13px;font-weight:700;color:var(--t1)">${qty}</span>
+            <button onclick="changeQty(${ri},1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--glass);color:var(--t1);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">+</button>
           </div>
         </div>
       </div>`;
@@ -2001,8 +2008,107 @@ function loadPastAudits() {
 }
 
 function carData(key) {
-  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[]};
+  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[],nextServiceKm:'',warnAtKm:'',regExpiry:'',insuranceExpiry:''};
   return S.crewCarData[key];
+}
+
+function fuelTankSvg(value, size=38) {
+  const LEVELS = {'Empty':0,'1/4':0.25,'1/2':0.5,'3/4':0.75,'Full':1};
+  const pct = LEVELS[value] ?? -1;
+  const W=44, H=36, bx=4, by=11, bw=30, bh=22, rx=4;
+  const fillH = pct>=0 ? Math.round(bh*pct) : 0;
+  const fillY = by + bh - fillH;
+  const col = pct<0?'var(--t3)':pct>=0.5?'#27ae60':pct>=0.25?'#f1c40f':'#c0392b';
+  return `<svg viewBox="0 0 ${W} ${H}" width="${size}" height="${Math.round(size*H/W)}" style="display:block;flex-shrink:0">
+    <rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${rx}" fill="var(--border2)" opacity="0.5"/>
+    ${pct>0?`<rect x="${bx}" y="${fillY}" width="${bw}" height="${fillH}" rx="${rx}" fill="${col}" opacity="0.9"/>`:''}
+    <rect x="${bx+5}" y="${by-5}" width="${bw-10}" height="6" rx="2" fill="var(--t3)" opacity="0.5"/>
+    <rect x="${bx+bw}" y="${by+4}" width="8" height="4" rx="2" fill="var(--t3)" opacity="0.5"/>
+    <rect x="${bx+bw+6}" y="${by}" width="4" height="8" rx="2" fill="var(--t3)" opacity="0.4"/>
+  </svg>`;
+}
+
+function regExpiredColor(iso) {
+  if(!iso) return 'var(--t3)';
+  const diff = Math.floor((new Date(iso) - new Date()) / 86400000);
+  return diff < 0 ? 'var(--red)' : diff < 30 ? '#E8A000' : 'var(--green)';
+}
+
+function openOilServiceModal(key) {
+  const d = carData(key);
+  openModal('🛢 KM Service Log',
+    `<div style="background:var(--glass2);border-radius:12px;padding:12px;margin-bottom:14px;font-size:13px;color:var(--t2)">
+       <div style="font-weight:700;color:var(--t1);margin-bottom:4px">Last oil change</div>
+       <div>${d.oilChange ? fmtDate(d.oilChange) + (daysSince(d.oilChange)!=null ? ' · '+daysSince(d.oilChange)+' days ago' : '') : 'No record'}</div>
+       ${d.nextServiceKm?`<div style="margin-top:4px">Next service: <b>${Number(d.nextServiceKm).toLocaleString()} km</b></div>`:''}
+     </div>
+     <label>Log today as oil change date?</label>
+     <select id="mOLogToday">
+       <option value="yes">Yes — log today</option>
+       <option value="no">No — just update KM info</option>
+     </select>
+     <label>Next service (KM)</label>
+     <input type="number" id="mOKM" placeholder="e.g. 125000" value="${d.nextServiceKm||''}">
+     <label>Warn me at (KM)</label>
+     <input type="number" id="mOWKM" placeholder="e.g. 120000" value="${d.warnAtKm||''}">`,
+    async() => {
+      const logToday = document.getElementById('mOLogToday').value === 'yes';
+      const km = document.getElementById('mOKM').value.trim();
+      const wkm = document.getElementById('mOWKM').value.trim();
+      if(km) d.nextServiceKm = km;
+      if(wkm) d.warnAtKm = wkm;
+      if(logToday) {
+        const today = new Date().toISOString().split('T')[0];
+        const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+        d.oilChange = today;
+        d.log.push({type:'oil',value:'Oil changed',date:today,logged});
+      }
+      saveCrewCarData();
+      renderCarDetail(document.getElementById('content'), key);
+      toast(logToday ? '🛢 Oil service logged' : '🛢 KM info updated');
+    });
+}
+
+function openOilInfoPopup(key) {
+  const d = carData(key);
+  const nextKm = d.nextServiceKm ? Number(d.nextServiceKm).toLocaleString()+' km' : '—';
+  const warnKm = d.warnAtKm ? Number(d.warnAtKm).toLocaleString()+' km' : '—';
+  openModal('🛢 Service Info',
+    `<div style="display:flex;flex-direction:column;gap:10px">
+       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
+         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Last oil change</div>
+         <div style="font-size:16px;font-weight:700;color:var(--t1)">${d.oilChange?fmtDate(d.oilChange):'No record'}</div>
+         ${d.oilChange&&daysSince(d.oilChange)!=null?`<div style="font-size:12px;color:var(--t3);margin-top:2px">${daysSince(d.oilChange)} days ago</div>`:''}
+       </div>
+       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
+         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Next service</div>
+         <div style="font-size:16px;font-weight:700;color:var(--t1)">${nextKm}</div>
+       </div>
+       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
+         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Warn at</div>
+         <div style="font-size:16px;font-weight:700;color:#E8A000">${warnKm}</div>
+       </div>
+     </div>`,
+    null);
+  document.getElementById('mSave').style.display='none';
+}
+
+function openRegInsuranceModal(key, type) {
+  const d = carData(key);
+  const label = type==='reg' ? '📄 Registration' : '🛡 Insurance';
+  const field = type==='reg' ? 'regExpiry' : 'insuranceExpiry';
+  const today = new Date().toISOString().split('T')[0];
+  openModal(label+' Expiry',
+    `<label>Expiry date</label>
+     <input type="date" id="mREDate" value="${d[field]||today}">`,
+    async() => {
+      const val = document.getElementById('mREDate').value;
+      if(!val) return;
+      d[field] = val;
+      saveCrewCarData();
+      renderCarDetail(document.getElementById('content'), key);
+      toast(label+' date saved');
+    });
 }
 
 // Status dot colour: green = logged recently, amber = >2 weeks, red = >4 weeks or never
@@ -2086,14 +2192,19 @@ function renderCrewCarsList(el) {
     const ds=daysSince(d.washed);
     const sub=d.washed?`Last washed ${ds===0?'today':ds===1?'yesterday':ds+' days ago'}`:'No records yet';
     const auditCD=carAuditData(car.key);
+    const todayIso=new Date().toISOString().split('T')[0];
+    const regExp=d.regExpiry&&d.regExpiry<todayIso;
+    const insExp=d.insuranceExpiry&&d.insuranceExpiry<todayIso;
+    const docAlert=regExp||insExp;
+    const docBadge=docAlert?`<span title="${regExp?'Registration expired ':''}${insExp?'Insurance expired':''}" style="font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
     html+=`
-      <div class="car-list-item" onclick="openCarDetail('${car.key}')">
+      <div class="car-list-item" onclick="openCarDetail('${car.key}')" style="${docAlert?'border-left:3px solid var(--red);':''}">
         <div style="position:relative">
           ${carSquareIcon(car)}
           ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:14px;height:14px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:8px">✓</div>`:''}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</div>
           <div style="font-size:12px;color:var(--t3);margin-top:2px">${car.label} · ${sub}</div>
         </div>
         <div class="car-status-dot" style="background:${worstColor}"></div>
@@ -2162,24 +2273,45 @@ function renderCarDetail(el, key) {
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
 
       <!-- Fuel card -->
-      <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
-        <span style="font-size:30px">⛽</span>
+      <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+        ${fuelTankSvg(fuelLog?.value||'')}
         <span style="font-size:12px;font-weight:800;color:var(--t1)">${fuelLog?fuelLog.value:'—'}</span>
         <span style="font-size:10px;color:var(--t3)">${fuelLog?fmtDate(fuelLog.date):'No record'}</span>
       </div>
 
       <!-- Oil Change card -->
-      <div onclick="openCarCalendar('${key}','oil')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+      <div onclick="openOilServiceModal('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center;position:relative">
+        <div onclick="event.stopPropagation();openOilInfoPopup('${key}')" style="position:absolute;top:7px;right:9px;font-size:14px;cursor:pointer;line-height:1">ℹ️</div>
         <span style="font-size:30px">🛢</span>
         <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'—'}</span>
         <span style="font-size:10px;color:var(--t3)">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago':'No record'}</span>
       </div>
 
       <!-- Washed card -->
-      <div onclick="openCarCalendar('${key}','wash')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+      <div onclick="openCarCalendar('${key}','wash')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
         <span style="font-size:30px">🧹</span>
         <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</span>
         <span style="font-size:10px;color:var(--t3)">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'No record'}</span>
+      </div>
+    </div>
+
+    <!-- Registration & Insurance -->
+    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
+      <div onclick="openRegInsuranceModal('${key}','reg')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+        <span style="font-size:22px">📄</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Registration</div>
+          <div style="font-size:14px;font-weight:700;color:${regExpiredColor(d.regExpiry)}">${d.regExpiry?fmtDate(d.regExpiry):'Set expiry date'}</div>
+        </div>
+        <span style="color:var(--border2);font-size:18px">›</span>
+      </div>
+      <div onclick="openRegInsuranceModal('${key}','insurance')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+        <span style="font-size:22px">🛡</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Insurance</div>
+          <div style="font-size:14px;font-weight:700;color:${regExpiredColor(d.insuranceExpiry)}">${d.insuranceExpiry?fmtDate(d.insuranceExpiry):'Set expiry date'}</div>
+        </div>
+        <span style="color:var(--border2);font-size:18px">›</span>
       </div>
     </div>`;
 
@@ -3252,6 +3384,15 @@ function toggleShop(idx) {
   }
 }
 
+function changeQty(idx, delta) {
+  const item = S.shopping[idx];
+  if(!item) return;
+  item.qty = Math.max(1, (item.qty||1) + delta);
+  saveShoppingState();
+  fsSetShopState(item.item, item.checked, item.status, item.qty);
+  renderShopping(document.getElementById('content'));
+}
+
 function setBuyerOut(active) {
   S.buyerOut = active;
   if(db) {
@@ -3534,7 +3675,8 @@ async function shareDmgReport(key, idx) {
   const report = (S.dmgReports[key]||[])[idx];
   if(!report) return;
   const procTitle = S.procs[key]?.title || key;
-  const text = `Damage Report — ${procTitle}\n${report.text}\n${report.date}`;
+  const tailStr = report.tailNumber ? `\nTail #: ${report.tailNumber}` : '';
+  const text = `Damage Report — ${procTitle}${tailStr}\n${report.text}\n${report.date}`;
 
   let file = null;
   if(report.photo) {
@@ -3639,11 +3781,13 @@ function openAddNote(tabName) {
 function fsDocId(text) { return fsKey(text).slice(0,400) || ('id'+Date.now()); }
 
 function openAddShopItem() {
+  const existingLocs = [...new Set(S.shopping.map(i=>i.cabinet).filter(Boolean))].sort();
   openModal('Add Shopping Item',
     `<label>Item name</label>
      <input id="mSI" placeholder="Item...">
      <label>Location / Cabinet</label>
-     <input id="mSC" placeholder="e.g. MX Hangar, Crew House...">
+     <input id="mSC" list="mSCList" placeholder="Select or type a location...">
+     <datalist id="mSCList">${existingLocs.map(l=>`<option value="${l}">`).join('')}</datalist>
      <label>Store</label>
      <select id="mSS">${[...Object.keys(STORE_COLORS),'Crew House'].map(s=>`<option value="${s}">${s}</option>`).join('')}</select>`,
     async()=>{
@@ -3933,7 +4077,7 @@ function showEOD() {
       S.pendingHandoffAudio = null;
       closeModal();
     });
-  document.getElementById('mSave').textContent='📋 Copy & Close';
+  document.getElementById('mSave').textContent='💾 Save & Close';
 }
 
 // In-page voice recording for the handoff note — same reasoning as the
@@ -4407,7 +4551,7 @@ function setupLiveSync() {
       const data = snap.data(); if(!data) return;
       S.shopping.forEach(i => {
         const v=data[fsKey(i.item)];
-        if(v!==undefined) { i.checked=v.checked; i.status=v.status; }
+        if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; }
       });
       saveShoppingState();
       const el=document.getElementById('content');
@@ -4602,9 +4746,11 @@ function fsSetTaskDone(tabName, task, done) {
     {[fsKey(task)]:done, _date: new Date().toDateString()}, {merge:true}
   ).catch(e => console.log('fsSetTaskDone failed (offline?):', e));
 }
-function fsSetShopState(item, checked, status) {
+function fsSetShopState(item, checked, status, qty) {
   if(!db) return;
-  db.collection('shopState').doc('state').set({[fsKey(item)]:{checked,status}}, {merge:true})
+  const upd = {checked, status};
+  if(qty !== undefined) upd.qty = qty;
+  db.collection('shopState').doc('state').set({[fsKey(item)]:upd}, {merge:true})
     .catch(e => console.log('fsSetShopState failed (offline?):', e));
 }
 function fsSetBoredDone(task, done) {
