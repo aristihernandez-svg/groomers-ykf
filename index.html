@@ -244,14 +244,14 @@ body::before{
 /* ── Harry Potter living portrait ── */
 .hp-portrait-wrap{display:inline-flex;flex-direction:column;align-items:center;margin-bottom:16px}
 .hp-portrait{
-  position:relative;width:180px;height:224px;border-radius:6px;overflow:hidden;
+  position:relative;width:160px;height:187px;border-radius:6px;overflow:hidden;
   box-shadow:0 0 0 3px #6B4D0E,0 0 0 6px #C8A84B,0 0 0 9px #6B4D0E,0 0 0 13px #3A2C06,0 10px 40px rgba(0,0,0,0.7);
-  animation:hpBreath 6s ease-in-out infinite;
+  animation:hpBreath 5s ease-in-out infinite;
 }
 .hp-portrait img{
   position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;object-position:center 10%;
-  opacity:0;filter:sepia(10%) contrast(1.06) brightness(0.98);
+  object-fit:cover;object-position:center top;
+  opacity:0;filter:sepia(8%) contrast(1.05) brightness(0.99);
 }
 .hp-nameplate{
   background:linear-gradient(90deg,#4A3508,#C8A84B,#C8A84B,#4A3508);
@@ -262,28 +262,29 @@ body::before{
 }
 @keyframes hpBreath{
   0%,100%{transform:scale(1) rotate(0deg)}
-  30%{transform:scale(1.01) rotate(0.4deg)}
-  70%{transform:scale(1.01) rotate(-0.4deg)}
+  35%{transform:scale(1.008) rotate(0.3deg)}
+  70%{transform:scale(1.008) rotate(-0.3deg)}
 }
-/* 24s cycle — 7 frames */
-/* f1=0464 warm smile (resting)  f2=0457 slight smile
-   f3=0460 talking               f4=0461 shocked
-   f5=0462 laughing              f6=0463 big grin
+/* 10s cycle — burst of 6 frames in ~2s, long rest on warm smile
+   f1=0464 warm smile (resting)  f2=0457 slight smile
+   f3=0460 talking/mouth open    f4=0461 shocked
+   f5=0462 laughing hard         f6=0463 big grin
    f7=0456 neutral/serious       */
-.hp-f1{animation:hpF1 24s ease-in-out infinite}
-.hp-f2{animation:hpF2 24s ease-in-out infinite}
-.hp-f3{animation:hpF3 24s ease-in-out infinite}
-.hp-f4{animation:hpF4 24s ease-in-out infinite}
-.hp-f5{animation:hpF5 24s ease-in-out infinite}
-.hp-f6{animation:hpF6 24s ease-in-out infinite}
-.hp-f7{animation:hpF7 24s ease-in-out infinite}
-@keyframes hpF1{0%{opacity:1}22%{opacity:1}25%{opacity:0}92%{opacity:0}95%{opacity:1}100%{opacity:1}}
-@keyframes hpF2{0%{opacity:0}22%{opacity:0}25%{opacity:1}37%{opacity:1}40%{opacity:0}100%{opacity:0}}
-@keyframes hpF3{0%{opacity:0}37%{opacity:0}40%{opacity:1}50%{opacity:1}53%{opacity:0}100%{opacity:0}}
-@keyframes hpF4{0%{opacity:0}50%{opacity:0}53%{opacity:1}60%{opacity:1}62%{opacity:0}100%{opacity:0}}
-@keyframes hpF5{0%{opacity:0}60%{opacity:0}62%{opacity:1}71%{opacity:1}74%{opacity:0}100%{opacity:0}}
-@keyframes hpF6{0%{opacity:0}71%{opacity:0}74%{opacity:1}83%{opacity:1}86%{opacity:0}100%{opacity:0}}
-@keyframes hpF7{0%{opacity:0}83%{opacity:0}86%{opacity:1}92%{opacity:1}95%{opacity:0}100%{opacity:0}}
+.hp-f1{animation:hpF1 10s linear infinite}
+.hp-f2{animation:hpF2 10s linear infinite}
+.hp-f3{animation:hpF3 10s linear infinite}
+.hp-f4{animation:hpF4 10s linear infinite}
+.hp-f5{animation:hpF5 10s linear infinite}
+.hp-f6{animation:hpF6 10s linear infinite}
+.hp-f7{animation:hpF7 10s linear infinite}
+/* resting 0-55%, burst 55-75%, back to smile 75-85%, neutral 85-95%, return 95-100% */
+@keyframes hpF1{0%{opacity:1}54%{opacity:1}55%{opacity:0}74%{opacity:0}75%{opacity:1}84%{opacity:1}85%{opacity:0}95%{opacity:0}96%{opacity:1}100%{opacity:1}}
+@keyframes hpF2{0%{opacity:0}54%{opacity:0}55%{opacity:1}58%{opacity:1}59%{opacity:0}100%{opacity:0}}
+@keyframes hpF3{0%{opacity:0}58%{opacity:0}59%{opacity:1}62%{opacity:1}63%{opacity:0}100%{opacity:0}}
+@keyframes hpF4{0%{opacity:0}62%{opacity:0}63%{opacity:1}66%{opacity:1}67%{opacity:0}100%{opacity:0}}
+@keyframes hpF5{0%{opacity:0}66%{opacity:0}67%{opacity:1}70%{opacity:1}71%{opacity:0}100%{opacity:0}}
+@keyframes hpF6{0%{opacity:0}70%{opacity:0}71%{opacity:1}74%{opacity:1}75%{opacity:0}100%{opacity:0}}
+@keyframes hpF7{0%{opacity:0}84%{opacity:0}85%{opacity:1}95%{opacity:1}96%{opacity:0}100%{opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
