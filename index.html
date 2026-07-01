@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#1A3A5C">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -322,7 +322,7 @@ body::before{
 .ptr-spin{width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
 
 /* CONTENT */
-.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(70px + var(--safe-b));background:var(--bg)}
+.content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(88px + var(--safe-b));background:var(--bg)}
 
 /* NAV */
 .nav{
@@ -330,18 +330,18 @@ body::before{
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-top:1px solid var(--border);
   display:flex;overflow-x:auto;scrollbar-width:none;
-  flex-shrink:0;padding-bottom:var(--safe-b);
+  flex-shrink:0;padding-bottom:calc(var(--safe-b) + 10px);
 }
 [data-theme="premium-day"] .nav{background:rgba(232,237,248,0.95)}
 [data-theme="standard-night"] .nav{background:#111111;border-top:1px solid rgba(255,255,255,0.08)}
 [data-theme="standard-day"] .nav{background:#FFFFFF;border-top:1px solid rgba(0,0,0,0.08)}
 .nav::-webkit-scrollbar{display:none}
-.nb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:9px 16px 7px;cursor:pointer;border-top:2px solid transparent;transition:all 0.2s;min-width:64px}
+.nb{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;padding:12px 18px 10px;cursor:pointer;border-top:2px solid transparent;transition:all 0.2s;min-width:72px}
 .nb.on{border-top-color:#1A3A5C}
 .nb.on .ni{color:#1A3A5C}
 .nb.on .nl{color:#1A3A5C;font-weight:700}
-.ni{font-size:20px;color:#607080;margin-bottom:2px;transition:color 0.2s;display:flex;align-items:center;justify-content:center;height:24px}
-.nl{font-size:10px;color:#607080;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:color 0.2s}
+.ni{font-size:24px;color:#607080;margin-bottom:3px;transition:color 0.2s;display:flex;align-items:center;justify-content:center;height:28px}
+.nl{font-size:11px;color:#607080;white-space:nowrap;font-weight:500;letter-spacing:0.3px;transition:color 0.2s}
 
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
@@ -470,7 +470,7 @@ body::before{
 .chip-label{font-size:10px;color:var(--t3);padding:2px 12px 0;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
 .search-wrap{padding:8px 12px;border-bottom:1px solid var(--border)}
 .search-inner{position:relative}
-.search-inp{width:100%;padding:10px 36px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:14px;font-family:inherit;color:var(--t1);outline:none}
+.search-inp{width:100%;padding:13px 40px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:16px;font-family:inherit;color:var(--t1);outline:none}
 .search-inp:focus{border-color:var(--accent-border)}
 .search-inp::placeholder{color:var(--t3)}
 .s-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--t3);pointer-events:none}
