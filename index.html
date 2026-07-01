@@ -1320,7 +1320,7 @@ async function renderHome(el) {
           <div style="margin-bottom:8px;animation:bob 2.5s ease-in-out infinite;display:inline-flex">
             <img src="${planes[TODAY]}" alt="${names[TODAY]}" style="width:120px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(200,168,75,0.4))">
           </div>
-          <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px">${names[TODAY]}</div>`;
+          `;
         return `<div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
           <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
         </div>`;
@@ -2719,8 +2719,8 @@ function renderAuditsHub(el) {
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
       <div onclick="S.crewCarsFromAudits=true;openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
         <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
-          <img src="cars/escape-removebg-preview.png" alt="Crew Cars" style="width:100%;height:100%;object-fit:contain;padding:10px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4))">
+        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:10px;border-bottom:1px solid var(--border)">
+          ${CREW_CARS.map(c=>`<img src="${c.img}" alt="${c.label}" style="width:38px;height:28px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.5))">`).join('')}
         </div>
         <div style="padding:10px 12px 12px">
           <div style="font-size:13px;font-weight:800;color:var(--t1)">Crew Cars</div>
