@@ -2170,6 +2170,26 @@ function regExpiredColor(iso) {
   return diff < 0 ? 'var(--red)' : diff < 30 ? '#E8A000' : 'var(--green)';
 }
 
+function openKmEdit(key) {
+  const d = carData(key);
+  openModal('🛣️ Update Odometer',
+    `<label style="font-size:12px;color:var(--t2);font-weight:600;display:block;margin-bottom:6px">Current KM</label>
+     <input id="kmEditVal" type="number" inputmode="numeric" placeholder="e.g. 98500"
+       value="${d.currentKm||''}"
+       style="width:100%;padding:13px;border-radius:10px;border:1px solid var(--border2);background:var(--bg3);color:var(--t1);font-size:17px;font-family:inherit;outline:none">
+     ${d.nextServiceKm?`<div style="margin-top:10px;font-size:12px;color:var(--t3)">Next service at <b style="color:var(--t2)">${Number(d.nextServiceKm).toLocaleString()} km</b></div>`:''}`,
+    [{label:'Save', primary:true, fn:()=>{
+      const val = (document.getElementById('kmEditVal')?.value||'').trim();
+      if(!val) return;
+      d.currentKm = val;
+      saveCrewCarData();
+      renderCarDetail(document.getElementById('content'), key);
+      toast('✅ KM updated');
+    }}]
+  );
+  setTimeout(()=>document.getElementById('kmEditVal')?.focus(),120);
+}
+
 function openOilServiceModal(key) {
   const d = carData(key);
   openModal('🛢 KM Service Log',
@@ -2464,13 +2484,14 @@ function renderCarDetail(el, key) {
 
     <!-- Current KM & Crew Note -->
     <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
-      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+      <div onclick="openKmEdit('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
         <span style="font-size:22px">🛣️</span>
         <div style="flex:1">
           <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Current KM</div>
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${d.currentKm?Number(d.currentKm).toLocaleString()+' km':'Not logged'}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${d.currentKm?Number(d.currentKm).toLocaleString()+' km':'Tap to enter'}</div>
           ${d.nextServiceKm&&d.currentKm&&(parseInt(d.nextServiceKm)-parseInt(d.currentKm))<=500?`<div style="font-size:11px;color:var(--red);font-weight:700;margin-top:2px">⚠️ Oil service due in ${Math.max(0,parseInt(d.nextServiceKm)-parseInt(d.currentKm))} km</div>`:''}
         </div>
+        <span style="color:var(--border2);font-size:18px">✏️</span>
       </div>
       ${d.crewNote?`<div style="background:#FFF59D;background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);border-radius:4px 4px 0 4px;padding:12px 14px;box-shadow:2px 4px 12px rgba(0,0,0,0.25)">
         <div style="font-size:10px;font-weight:700;color:#8a6d00;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">📋 Crew Note</div>
