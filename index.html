@@ -1689,8 +1689,8 @@ function renderDayDetail(el) {
   setBarLogo();
   showFab(()=>openAddTask(tabName));
   let html=`
-    <div class="dbar" style="background:${DAY_COLORS[idx]}">
-      <button class="back-btn" onclick="backWeek()">‹</button>
+    <div class="dbar" style="background:${DAY_COLORS[idx]};cursor:pointer" onclick="backWeek()">
+      <span style="font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600">${DAY_NAMES[idx]}${idx===TODAY?' — Today':''}</span>
     </div>
     <div class="prog-wrap" style="top:44px">
@@ -2040,8 +2040,8 @@ function renderCrewCarsList(el) {
   document.getElementById('barTitle').textContent='Crew Cars';
   document.getElementById('fab').style.display='none';
   let html=`
-    <div class="car-detail-bar" style="background:var(--bg2)">
-      <button class="back-btn" onclick="backToProcs()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+    <div class="car-detail-bar" style="background:var(--bg2);cursor:pointer" onclick="backToProcs()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
     </div>`;
 
@@ -2130,8 +2130,8 @@ function renderCarDetail(el, key) {
   const washLog=d.log.filter(l=>l.type==='wash').slice(-1)[0];
 
   let html=`
-    <div class="car-detail-bar">
-      <button class="back-btn" onclick="backToCarList()" style="color:#fff;font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+    <div class="car-detail-bar" style="cursor:pointer" onclick="backToCarList()">
+      <span style="color:#fff;font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600;color:#fff;flex:1">${car.name}</span>
     </div>
 
@@ -2448,8 +2448,8 @@ function renderPastAuditView(el, month) {
   document.getElementById('barTitle').textContent='Audit · '+month;
   document.getElementById('fab').style.display='none';
   let html=`
-    <div class="car-detail-bar">
-      <button onclick="S.crewCarsView='list';S.pastAuditView=null;render()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+    <div class="car-detail-bar" style="cursor:pointer" onclick="S.crewCarsView='list';S.pastAuditView=null;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${month}</span>
     </div>
     <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
@@ -2712,8 +2712,8 @@ function renderAuditsHub(el) {
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
   el.innerHTML=`
-    <div class="dbar" style="background:var(--navy2,#0d1f3c)">
-      <button class="back-btn" onclick="S.auditsView=false;render()">‹</button>
+    <div class="dbar" style="background:var(--navy2,#0d1f3c);cursor:pointer" onclick="S.auditsView=false;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600">Audits</span>
     </div>
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
@@ -2741,8 +2741,8 @@ function renderProcDetail(el, key) {
   const total=p.steps.length;
   const pct=total?Math.round(done/total*100):0;
   let html=`
-    <div class="car-detail-bar">
-      <button onclick="S.procView=null;render()" style="color:var(--accent);font-size:24px;background:none;border:none;cursor:pointer">‹</button>
+    <div class="car-detail-bar" style="cursor:pointer" onclick="S.procView=null;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${p.title}</span>
     </div>
 
