@@ -772,6 +772,7 @@ const S = {
   buyerOut: false,
   procView: null,        // null | procKey — which procedure is open full-screen
   crewCarsView: null,   // null | 'list' | carKey | 'past-audit'
+  crewCarsFromAudits: false, // true when crew cars was opened from the Audits hub
   crewCarData: {},      // {carKey: {fuel, oilChange, washed, log:[]}}
   carAudits: {},        // {'{month}-{carKey}': {photos, comments, done, groomer, completedAt}}
   auditGroomer: '',     // name of groomer doing this month's audit
@@ -878,6 +879,9 @@ function buildNav() {
 function goTab(id) {
   S.renderV++;
   S.tab=id; S.inDay=false;
+  // Reset all sub-navigation so returning to a tab always starts at the top level
+  S.auditsView=false; S.procView=null; S.crewCarsView=null;
+  S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1558,7 +1562,11 @@ function loadFlightLog(tabName) {
   try {
     const cached=JSON.parse(localStorage.getItem(flightLogKey(tabName))||'null');
     const today=new Date().toDateString();
-    if(cached && cached.date===today) { S.flightLog[tabName]=cached; return; }
+    if(cached && cached.date===today) {
+      // Guarantee all three arrays exist even if cached before grm was added
+      cached.arr=cached.arr||[]; cached.dep=cached.dep||[]; cached.grm=cached.grm||[];
+      S.flightLog[tabName]=cached; return;
+    }
   } catch(e){}
   S.flightLog[tabName]={arr:[],dep:[],grm:[],date:new Date().toDateString()};
 }
@@ -1589,21 +1597,27 @@ function addTail(tabName, type, tail) {
   if(!log[type]) log[type]=[];
   if(!log[type].includes(tail)) log[type]=[...log[type],tail];
   saveFlightLog(tabName);
-  renderDayDetail(document.getElementById('content'));
+  reRenderDayView();
 }
 
 function removeTail(tabName, type, tail) {
   loadFlightLog(tabName);
   S.flightLog[tabName][type]=S.flightLog[tabName][type].filter(t=>t!==tail);
   saveFlightLog(tabName);
-  renderDayDetail(document.getElementById('content'));
+  reRenderDayView();
+}
+
+function reRenderDayView() {
+  const el=document.getElementById('content');
+  if(S.tab==='today') renderToday(el);
+  else renderDayDetail(el);
 }
 
 function toggleFlightDropdown(tabName, type) {
   if(S.flightDropdown && S.flightDropdown.tabName===tabName && S.flightDropdown.type===type)
     S.flightDropdown=null;
   else S.flightDropdown={tabName,type};
-  renderDayDetail(document.getElementById('content'));
+  reRenderDayView();
 }
 
 function renderFlightLog(tabName) {
@@ -2007,7 +2021,11 @@ function openCarDetail(key) {
   render();
 }
 function backToCarList() { S.crewCarsView='list'; render(); }
-function backToProcs() { S.crewCarsView=null; render(); }
+function backToProcs() {
+  S.crewCarsView=null;
+  if(S.crewCarsFromAudits) { S.auditsView=true; S.crewCarsFromAudits=false; }
+  render();
+}
 
 // ── RENDER: CREW CARS LIST ────────────────────────────────────
 function carSquareIcon(car, size=48, radius=10) {
@@ -2699,7 +2717,7 @@ function renderAuditsHub(el) {
       <span style="font-size:15px;font-weight:600">Audits</span>
     </div>
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
-      <div onclick="S.auditsView=false;openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
+      <div onclick="S.crewCarsFromAudits=true;openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
         <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
         <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
           <img src="cars/escape-removebg-preview.png" alt="Crew Cars" style="width:100%;height:100%;object-fit:contain;padding:10px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4))">
