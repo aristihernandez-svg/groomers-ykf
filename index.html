@@ -174,7 +174,7 @@
    GLOBAL STYLES — use token vars everywhere
 ══════════════════════════════════════════════ */
 html,body{
-  height:100%;overflow:hidden;
+  height:100vh;height:100dvh;overflow:hidden;
   font-family:'Inter',-apple-system,sans-serif;
   background:var(--bg);color:var(--t1);
 }
@@ -293,7 +293,7 @@ body::before{
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
 /* APP */
-#app{display:flex;flex-direction:column;height:100%;opacity:0;transition:opacity 0.3s;position:relative;z-index:1}
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;opacity:0;transition:opacity 0.3s;position:relative;z-index:1}
 #app.show{opacity:1}
 
 /* TOPBAR */
@@ -3613,7 +3613,15 @@ function toggleShop(idx) {
     broadcastNotif('🛒 Shopping', `${S.shopping[idx].item} needs restocking`, 'shopping');
     toast(S.buyerOut ? '🔔 Added to list — buyer is out and will see this!' : '🔴 Needs restocking');
   } else {
-    toast('✅ In Stock');
+    const itemName=S.shopping[idx].item;
+    toastUndo('✅ Marked as in stock',()=>{
+      const i=S.shopping.findIndex(s=>s.item===itemName);
+      if(i<0) return;
+      S.shopping[i].checked=true; S.shopping[i].status='To Buy';
+      saveShoppingState();
+      fsSetShopState(S.shopping[i].item,true,'To Buy');
+      renderShopping(document.getElementById('content'));
+    });
   }
 }
 
@@ -4387,8 +4395,16 @@ function showFab(fn) {
 function fabClick() {} // overridden by showFab
 function toast(msg) {
   const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
+  t.innerHTML=`<span>${msg}</span>`; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
+}
+let _undoFn=null;
+function toastUndo(msg, fn) {
+  _undoFn=fn;
+  const t=document.getElementById('toast');
+  t.innerHTML=`<span>${msg}</span><span onclick="_undoFn&&_undoFn();_undoFn=null;document.getElementById('toast').classList.remove('show')" style="margin-left:12px;font-weight:800;text-decoration:underline;cursor:pointer;color:#fff">Undo</span>`;
+  t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>{t.classList.remove('show');_undoFn=null;},4000);
 }
 // ── SWIPE HANDLER (two-direction) ────────────────────────────
 function setupSwipeTwoWay(el, onLeft, onRight) {
