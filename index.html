@@ -2600,44 +2600,79 @@ function loadProcs() {
   };
 }
 
+// Images to use as procedure tile icons (keyed by proc key)
+const PROC_IMAGES = {
+  metro:    'cars/Metroliner_logo-removebg-preview.png',
+  westwind: 'cars/Westwind-removebg-preview.png',
+  astra:    'cars/Astra-removebg-preview.png',
+  crewcars: 'cars/escape.png',
+};
+
 function renderProcs(el) {
   setBarLogo();
   showFab(openAddProcedure);
-  let html='<div class="proc-list">';
-  Object.entries(S.procs).forEach(([key,p])=>{
-    if(key==='crewcar1'||key==='crewcar2') return;
-    if(p.isCrewCarsHub) {
-      const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
-      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
-      const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
-      html+=`<div class="proc-nav-card" onclick="openCrewCars()">
-        <div class="proc-nav-icon" style="background:linear-gradient(145deg,var(--accent),var(--accent2))">🚗</div>
-        <div class="proc-nav-body">
-          <div class="proc-nav-title">Crew Cars</div>
-          <div class="proc-nav-sub">${CREW_CARS.length} vehicles · tap to manage</div>
-        </div>
-        <div class="car-status-dot" style="background:${dot}"></div>
-        <div class="proc-nav-arr">›</div>
-      </div>`;
-      return;
-    }
+
+  const entries=Object.entries(S.procs).filter(([k])=>k!=='crewcar1'&&k!=='crewcar2');
+
+  const tiles=entries.map(([key,p])=>{
     const done=p.done.length;
     const total=p.steps.length;
-    const dmg=S.dmgReports[key]||[];
     const pct=total?Math.round(done/total*100):0;
-    html+=`<div class="proc-nav-card" onclick="S.procView='${key}';render()">
-      <div class="proc-nav-icon" style="background:var(--glass2);border:1.5px solid var(--border2);font-size:22px">${p.icon}</div>
-      <div class="proc-nav-body">
-        <div class="proc-nav-title">${p.title}</div>
-        <div class="proc-nav-sub">${done}/${total} steps${dmg.length?` · ${dmg.length} report${dmg.length!==1?'s':''}`:''}</div>
-        ${total?`<div style="margin-top:5px;height:3px;border-radius:2px;background:var(--border);overflow:hidden">
-          <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:2px;transition:width 0.3s"></div>
-        </div>`:''}
-      </div>
-      <div class="proc-nav-arr">›</div>
-    </div>`;
-  });
-  html+='</div><div style="height:80px"></div>';
+    const dmg=S.dmgReports[key]||[];
+    const img=PROC_IMAGES[key];
+
+    let iconHtml;
+    if(p.isCrewCarsHub) {
+      iconHtml=`<img src="${PROC_IMAGES.crewcars}" alt="Crew Cars"
+        style="width:100%;height:100%;object-fit:cover;object-position:center">`;
+    } else if(img) {
+      iconHtml=`<img src="${img}" alt="${p.title}"
+        style="width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4))">`;
+    } else {
+      iconHtml=`<span style="font-size:38px">${p.icon}</span>`;
+    }
+
+    const statusDot = p.isCrewCarsHub ? (()=>{
+      const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
+      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
+      return `<div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000'};box-shadow:0 0 6px currentColor"></div>`;
+    })() : '';
+
+    const onclick=p.isCrewCarsHub?`openCrewCars()`:`S.procView='${key}';render()`;
+
+    return `
+      <div onclick="${onclick}" style="
+        background:var(--glass2);border:1px solid var(--border2);border-radius:16px;
+        overflow:hidden;cursor:pointer;display:flex;flex-direction:column;
+        transition:transform 0.15s,box-shadow 0.15s;position:relative;
+        active:transform:scale(0.97)
+      ">
+        ${statusDot}
+        <!-- Icon area -->
+        <div style="
+          background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));
+          height:130px;display:flex;align-items:center;justify-content:center;
+          overflow:hidden;border-bottom:1px solid var(--border)
+        ">${iconHtml}</div>
+        <!-- Label area -->
+        <div style="padding:10px 12px 12px">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);line-height:1.2">${p.title}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">
+            ${p.isCrewCarsHub?`${CREW_CARS.length} vehicles`:
+              `${done}/${total} steps${dmg.length?` · ${dmg.length} report${dmg.length!==1?'s':''}`:''}`}
+          </div>
+          ${total?`<div style="margin-top:6px;height:3px;border-radius:2px;background:var(--border);overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:2px"></div>
+          </div>`:''}
+        </div>
+      </div>`;
+  }).join('');
+
+  const html=`
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${tiles}
+    </div>
+    <div style="height:80px"></div>`;
   el.innerHTML=html;
 }
 
