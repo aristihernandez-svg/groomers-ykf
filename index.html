@@ -742,13 +742,13 @@ const PROC_VIDEOS = {
 
 const CREW_CARS = [
   {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png'},
-  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra.png'},
-  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra.png'},
-  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala.png'},
-  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck.png'},
-  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck.png'},
-  {key:'kubota',  name:'Kubota',           fuel:'diesel',   color:'#C85F10', color2:'#F07A30', label:'UTV · Diesel', img:'cars/kubota.png'},
-  {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan',      img:'cars/civic.png'},
+  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png'},
+  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png'},
+  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala-removebg-preview.png'},
+  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck-removebg-preview.png'},
+  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck-removebg-preview.png'},
+  {key:'kubota',  name:'Kubota',           fuel:'diesel',   color:'#C85F10', color2:'#F07A30', label:'UTV · Diesel', img:'cars/kubota-removebg-preview.png'},
+  {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan',      img:'cars/civic-removebg-preview.png'},
 ];
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
@@ -2031,7 +2031,7 @@ function backToProcs() {
 function carSquareIcon(car, size=48, radius=10) {
   const fallback=`background:linear-gradient(145deg,${car.color},${car.color2});display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.42)}px`;
   return `<div style="width:${size}px;height:${size}px;border-radius:${radius}px;overflow:hidden;flex-shrink:0;box-shadow:0 2px 8px ${car.color}55;background:linear-gradient(145deg,${car.color},${car.color2})">
-    <img src="${car.img}" alt="${car.name}" style="width:100%;height:100%;object-fit:cover;object-position:center"
+    <img src="${car.img}" alt="${car.name}" style="width:100%;height:100%;object-fit:contain;padding:4px"
       onerror="this.parentNode.innerHTML='<div style=\\'width:100%;height:100%;${fallback}\\'>${car.fuel==='diesel'?'🚜':'🚗'}</div>'">
   </div>`;
 }
@@ -2138,7 +2138,7 @@ function renderCarDetail(el, key) {
     <!-- Car hero banner -->
     <div style="position:relative;height:180px;overflow:hidden;background:linear-gradient(160deg,${car.color},${car.color2})">
       <img src="${car.img}" alt="${car.name}"
-        style="width:100%;height:100%;object-fit:cover;object-position:center"
+        style="width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))"
         onerror="this.style.display='none'">
       <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.1) 60%)"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px">
