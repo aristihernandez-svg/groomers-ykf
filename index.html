@@ -286,6 +286,7 @@ body::before{
 @keyframes hpF6{0%{opacity:0}70%{opacity:0}71%{opacity:1}74%{opacity:1}75%{opacity:0}100%{opacity:0}}
 @keyframes hpF7{0%{opacity:0}84%{opacity:0}85%{opacity:1}95%{opacity:1}96%{opacity:0}100%{opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes notePopIn{from{transform:scale(0.88) translateY(-6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
@@ -860,6 +861,7 @@ const S = {
   flightLog: {},        // {tabName: {arr:[], dep:[], date:''}}
   flightDropdown: null, // null | {tabName, type:'arr'|'dep'}
   auditsView: false,    // true = inside Audits hub
+  dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
 };
 
 const NAV_ITEMS = [
@@ -1510,7 +1512,9 @@ function renderToday(el) {
   const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
+  const todayIso = weekIsoDate(TODAY);
   let html=renderHandoffNotesHtml();
+  html+=renderDayNoteWidget(todayIso, true);
   html+=`
     <div class="reset-day-bar">
       <button class="reset-day-btn" onclick="resetDay()">🔄 Reset today's tasks</button>
@@ -1788,6 +1792,7 @@ function renderDayDetail(el) {
       <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`;
+  html+=renderDayNoteWidget(weekIsoDate(idx));
   html+=renderFlightLog(tabName);
   html+=renderGroupsDay(tasks,tabName);
   html+=renderNotes(notes,tabName);
@@ -4801,6 +4806,17 @@ function setupLiveSync() {
       else if(S.tab==='today') renderToday(document.getElementById('content'));
     }, e => console.log('handoffNotes listener error:', e));
 
+    // Day notes — per-date team reminders
+    db.collection('dayNotes').onSnapshot(snap => {
+      snap.forEach(doc => { S.dayNotes[doc.id] = doc.data(); });
+      // Remove deleted docs
+      const liveIds = new Set(snap.docs.map(d=>d.id));
+      Object.keys(S.dayNotes).forEach(k=>{ if(!liveIds.has(k)) delete S.dayNotes[k]; });
+      const el = document.getElementById('content');
+      if(S.tab==='today') renderToday(el);
+      else if(S.tab==='week' && S.inDay) renderDayDetail(el);
+    }, e => console.log('dayNotes listener error:', e));
+
     // Broadcast notifications — fired by any device writing to this collection
     db.collection('notifications').orderBy('ts','desc').limit(1).onSnapshot(snap => {
       if (snap.empty) return;
@@ -4838,6 +4854,113 @@ function markHandoffComplete(id) {
   if(!db) { toast('Not connected — try again when online'); return; }
   db.collection('handoffNotes').doc(id).update({resolved:true})
     .catch(e => console.log('markHandoffComplete failed:', e));
+}
+
+// ── DAY NOTES ──────────────────────────────────────────────────────────
+// Per-calendar-date sticky notes pinned to Week tab and Today's tab.
+
+function weekIsoDate(dayIdx) {
+  const now = new Date();
+  const diff = dayIdx - now.getDay();
+  const d = new Date(now);
+  d.setDate(now.getDate() + diff);
+  return d.toISOString().split('T')[0];
+}
+
+window._dayNoteOpen = {};
+window._dayNoteTimer = {};
+
+function renderDayNoteWidget(isoDate, isToday) {
+  const note = S.dayNotes[isoDate] || {};
+  const text = note.text || '';
+  const isOpen = !!window._dayNoteOpen[isoDate];
+  const hasText = text.trim().length > 0;
+
+  // On Today tab: only show if there's content
+  if(isToday && !hasText) return '';
+
+  const btnLabel = isToday
+    ? '📌 Day note'
+    : (hasText ? '📝 Day note' : '📝 Add note for this day');
+
+  return `<div style="margin:6px 14px 4px">
+    <button onclick="toggleDayNote('${isoDate}')"
+      style="display:flex;align-items:center;gap:7px;background:${hasText?'#FFF59D':'rgba(255,255,255,0.07)'};
+             border:1.5px ${hasText?'dashed #C8A84B':'dashed rgba(255,255,255,0.18)'};
+             border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;
+             color:${hasText?'#333':'var(--t2)'};cursor:pointer;width:100%;text-align:left">
+      ${btnLabel}
+      ${hasText?`<span style="margin-left:auto;width:9px;height:9px;background:#F39C12;border-radius:50%;flex-shrink:0"></span>`:''}
+    </button>
+    ${isOpen ? `
+    <div id="dayNoteCard_${isoDate}" style="
+      margin-top:6px;
+      background:#FFF59D;
+      background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);
+      border-radius:4px 4px 0 4px;
+      box-shadow:3px 5px 16px rgba(0,0,0,0.32);
+      padding:12px 12px 50px;
+      position:relative;
+      animation:notePopIn 0.18s ease both">
+      <textarea id="dayNoteTA_${isoDate}"
+        placeholder="Write your reminder here..."
+        oninput="scheduleSaveDayNote('${isoDate}')"
+        style="width:100%;border:none;background:transparent;resize:none;
+               font-family:inherit;font-size:14px;font-weight:600;color:#1c1c1c;
+               line-height:1.5;outline:none;min-height:90px;box-sizing:border-box;
+               caret-color:#333">${text.replace(/</g,'&lt;')}</textarea>
+      <div style="position:absolute;bottom:10px;right:12px">
+        <button onclick="completeDayNote('${isoDate}')"
+          style="background:#27AE60;color:#fff;border:none;border-radius:20px;
+                 padding:8px 20px;font-size:12px;font-weight:700;cursor:pointer;
+                 box-shadow:0 2px 8px rgba(0,0,0,0.2)">
+          ✅ Complete
+        </button>
+      </div>
+    </div>` : ''}
+  </div>`;
+}
+
+function toggleDayNote(isoDate) {
+  window._dayNoteOpen[isoDate] = !window._dayNoteOpen[isoDate];
+  const el = document.getElementById('content');
+  if(S.tab==='today') renderToday(el);
+  else if(S.tab==='week' && S.inDay) renderDayDetail(el);
+  if(window._dayNoteOpen[isoDate]) {
+    setTimeout(()=>{
+      const ta = document.getElementById('dayNoteTA_'+isoDate);
+      if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+    }, 60);
+  }
+}
+
+function scheduleSaveDayNote(isoDate) {
+  const ta = document.getElementById('dayNoteTA_'+isoDate);
+  if(!ta) return;
+  const text = ta.value;
+  if(!S.dayNotes[isoDate]) S.dayNotes[isoDate] = {};
+  S.dayNotes[isoDate].text = text;
+  clearTimeout(window._dayNoteTimer[isoDate]);
+  window._dayNoteTimer[isoDate] = setTimeout(()=>{
+    fsSaveDayNote(isoDate);
+  }, 800);
+}
+
+function completeDayNote(isoDate) {
+  delete S.dayNotes[isoDate];
+  delete window._dayNoteOpen[isoDate];
+  if(db) db.collection('dayNotes').doc(isoDate).delete().catch(()=>{});
+  const el = document.getElementById('content');
+  if(S.tab==='today') renderToday(el);
+  else if(S.tab==='week' && S.inDay) renderDayDetail(el);
+}
+
+function fsSaveDayNote(isoDate) {
+  if(!db) return;
+  const note = S.dayNotes[isoDate];
+  if(!note || !note.text) return;
+  db.collection('dayNotes').doc(isoDate).set({text: note.text})
+    .catch(e => console.log('fsSaveDayNote failed:', e));
 }
 
 // Sticky-note banner for unresolved handoff notes — shown on Home and Today.
