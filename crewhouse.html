@@ -138,7 +138,9 @@ function renderList() {
 
 function itemHtml(item, checked) {
   const key = fsKey(item.item);
-  return `<div class="item-row ${checked?'tobuy':''}" onclick="toggleItem('${key}','${item.item.replace(/'/g,"\\'")}')">
+  const safeKey  = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  return `<div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
     <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
     <div style="flex:1;min-width:0">
       <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
@@ -150,16 +152,21 @@ function itemHtml(item, checked) {
 function toggleItem(key, name) {
   const cur = shopState[key] || {};
   const nowChecked = !cur.checked;
-  shopState[key] = {checked: nowChecked, status: nowChecked ? 'tobuy' : '', qty: cur.qty||1};
-  // Optimistic local update
+  const newStatus = nowChecked ? 'To Buy' : 'In Stock';
+  const newQty = cur.qty || 1;
+  shopState[key] = {checked: nowChecked, status: newStatus, qty: newQty};
   render();
-  // Sync to Firestore — same shopState collection the main app reads
+  console.log('[crewhouse] toggleItem key=', key, 'name=', name, 'checked=', nowChecked);
   db.collection('shopState').doc('state').set(
-    {[key]: {checked: nowChecked, status: nowChecked ? 'tobuy' : '', qty: cur.qty||1}},
+    {[key]: {checked: nowChecked, status: newStatus, qty: newQty}},
     {merge: true}
   ).then(() => {
+    console.log('[crewhouse] Firestore write OK for key:', key);
     toast(nowChecked ? `🛒 Added to cart` : `✅ Removed from cart`);
-  }).catch(() => toast('❌ Could not sync — check connection'));
+  }).catch(e => {
+    console.error('[crewhouse] Firestore write FAILED:', e);
+    toast('❌ Could not sync — check connection');
+  });
 }
 
 function showAddForm() {
