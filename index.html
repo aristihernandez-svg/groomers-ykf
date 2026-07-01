@@ -741,7 +741,7 @@ const PROC_VIDEOS = {
 };
 
 const CREW_CARS = [
-  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape.png'},
+  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png'},
   {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra.png'},
   {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra.png'},
   {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala.png'},
@@ -779,6 +779,7 @@ const S = {
   pastAuditView: null,  // month string being viewed, or null
   flightLog: {},        // {tabName: {arr:[], dep:[], date:''}}
   flightDropdown: null, // null | {tabName, type:'arr'|'dep'}
+  auditsView: false,    // true = inside Audits hub
 };
 
 const NAV_ITEMS = [
@@ -909,6 +910,7 @@ function render() {
       if(S.crewCarsView==='list') renderCrewCarsList(el);
       else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
+      else if(S.auditsView) renderAuditsHub(el);
       else if(S.procView) renderProcDetail(el,S.procView);
       else renderProcs(el);
       break;
@@ -2596,7 +2598,7 @@ function loadProcs() {
         {t:"Mop floor (IAW)",n:""},
         {t:"Put sun shades on before leaving",n:""},
       ]},
-    crewcars:{title:"Crew Cars",icon:"🚗",open:false,done:[],warn:"",video:'',isCrewCarsHub:true,steps:[]},
+    audits:{title:"Audits",icon:"📁",open:false,done:[],warn:"",video:'',isAuditsHub:true,steps:[]},
   };
 }
 
@@ -2605,7 +2607,7 @@ const PROC_IMAGES = {
   metro:    'cars/Metroliner_logo-removebg-preview.png',
   westwind: 'cars/Westwind-removebg-preview.png',
   astra:    'cars/Astra-removebg-preview.png',
-  crewcars: 'cars/escape.png',
+  crewcars: 'cars/escape-removebg-preview.png',
 };
 
 function renderProcs(el) {
@@ -2622,7 +2624,16 @@ function renderProcs(el) {
     const img=PROC_IMAGES[key];
 
     let iconHtml;
-    if(p.isCrewCarsHub) {
+    if(p.isAuditsHub) {
+      iconHtml=`<svg viewBox="0 0 64 64" width="56" height="56" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="6" y="18" width="52" height="38" rx="5" fill="#C8A84B" opacity="0.15"/>
+        <rect x="6" y="18" width="52" height="38" rx="5" stroke="#C8A84B" stroke-width="2.5"/>
+        <path d="M6 28h52" stroke="#C8A84B" stroke-width="2"/>
+        <path d="M6 24c0-3.3 2.7-6 6-6h14l4 6H6z" fill="#C8A84B" opacity="0.9"/>
+        <rect x="18" y="34" width="28" height="3" rx="1.5" fill="#C8A84B" opacity="0.6"/>
+        <rect x="18" y="42" width="20" height="3" rx="1.5" fill="#C8A84B" opacity="0.4"/>
+      </svg>`;
+    } else if(p.isCrewCarsHub) {
       iconHtml=`<img src="${PROC_IMAGES.crewcars}" alt="Crew Cars"
         style="width:100%;height:100%;object-fit:cover;object-position:center">`;
     } else if(img) {
@@ -2632,13 +2643,8 @@ function renderProcs(el) {
       iconHtml=`<span style="font-size:38px">${p.icon}</span>`;
     }
 
-    const statusDot = p.isCrewCarsHub ? (()=>{
-      const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
-      const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
-      return `<div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000'};box-shadow:0 0 6px currentColor"></div>`;
-    })() : '';
-
-    const onclick=p.isCrewCarsHub?`openCrewCars()`:`S.procView='${key}';render()`;
+    const statusDot = '';
+    const onclick=p.isAuditsHub?`S.auditsView=true;render()`:p.isCrewCarsHub?`openCrewCars()`:`S.procView='${key}';render()`;
 
     return `
       <div onclick="${onclick}" style="
@@ -2674,6 +2680,32 @@ function renderProcs(el) {
     </div>
     <div style="height:80px"></div>`;
   el.innerHTML=html;
+}
+
+function renderAuditsHub(el) {
+  setBarLogo();
+  document.getElementById('fab').style.display='none';
+  const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
+  const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
+  const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
+  el.innerHTML=`
+    <div class="dbar" style="background:var(--navy2,#0d1f3c)">
+      <button class="back-btn" onclick="S.auditsView=false;render()">‹</button>
+      <span style="font-size:15px;font-weight:600">Audits</span>
+    </div>
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
+      <div onclick="S.auditsView=false;openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
+        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
+        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
+          <img src="cars/escape-removebg-preview.png" alt="Crew Cars" style="width:100%;height:100%;object-fit:contain;padding:10px;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4))">
+        </div>
+        <div style="padding:10px 12px 12px">
+          <div style="font-size:13px;font-weight:800;color:var(--t1)">Crew Cars</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">${CREW_CARS.length} vehicles · tap to manage</div>
+        </div>
+      </div>
+    </div>
+    <div style="height:80px"></div>`;
 }
 
 function renderProcDetail(el, key) {
