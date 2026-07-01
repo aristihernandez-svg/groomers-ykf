@@ -4853,6 +4853,20 @@ function setupLiveSync() {
       }
     }, e => console.log('boredState listener error:', e));
 
+    // One-time silent cleanup: fix shoppingCatalog docs where notes === false or 'false'
+    db.collection('shoppingCatalog').get().then(snap => {
+      const batch = db.batch();
+      let count = 0;
+      snap.docs.forEach(doc => {
+        const n = doc.data().notes;
+        if(n === false || n === 'false' || n === null) {
+          batch.update(doc.ref, {notes: ''});
+          count++;
+        }
+      });
+      if(count > 0) batch.commit().then(()=>console.log(`Cleaned ${count} catalog notes`));
+    }).catch(()=>{});
+
     // Buyer-out session — when someone marks themselves as actively shopping,
     // a banner appears on all phones so adding new items triggers an alert.
     db.collection('shopSession').doc('active').onSnapshot(snap => {
