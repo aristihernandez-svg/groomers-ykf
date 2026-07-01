@@ -1395,6 +1395,16 @@ function renderToday(el) {
       <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`;
+  const AIRCRAFT_BANNERS_T = {2:'cars/Metroliner_logo-removebg-preview.png', 4:'cars/Navajo_logo-removebg-preview.png'};
+  const AIRCRAFT_NAMES_T   = {2:'Metroliner', 4:'Navajo'};
+  if(AIRCRAFT_BANNERS_T[TODAY]) html+=`
+    <div style="background:linear-gradient(135deg,#0a1628,#1a3a5c);padding:18px 20px 10px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
+      <img src="${AIRCRAFT_BANNERS_T[TODAY]}" alt="${AIRCRAFT_NAMES_T[TODAY]}" style="height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">
+      <div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#7aaadd;text-transform:uppercase">Aircraft on duty</div>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:2px">${AIRCRAFT_NAMES_T[TODAY]}</div>
+      </div>
+    </div>`;
   html+=renderFlightLog(tabName);
   html+=renderGroups(tasks,tabName);
   html+=renderNotes(notes,tabName);
