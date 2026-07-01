@@ -2078,6 +2078,38 @@ function saveCarStatus(key, val) {
   renderCrewCarsList(document.getElementById('content'));
 }
 
+function openStatusDrop(key, btn) {
+  document.querySelectorAll('.status-drop').forEach(d=>d.remove());
+  const SC={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
+  const d=carData(key);
+  const rect=btn.getBoundingClientRect();
+  const drop=document.createElement('div');
+  drop.className='status-drop';
+  drop.style.cssText=`position:fixed;top:${rect.bottom+6}px;left:${rect.left}px;z-index:2000;
+    background:var(--bg2);border:1px solid var(--border2);border-radius:12px;
+    overflow:hidden;box-shadow:0 8px 28px rgba(0,0,0,0.55);min-width:130px`;
+  drop.innerHTML=Object.entries(SC).map(([s,col])=>`
+    <div onclick="pickStatus('${key}','${s}')"
+      style="padding:11px 18px;font-size:13px;font-weight:700;color:${col};cursor:pointer;
+             background:${d.status===s?col+'18':'transparent'};display:flex;align-items:center;gap:8px">
+      <span style="width:8px;height:8px;border-radius:50%;background:${col};flex-shrink:0"></span>${s}
+    </div>`).join('')+`
+    <div onclick="pickStatus('${key}','')"
+      style="padding:10px 18px;font-size:12px;color:var(--t3);cursor:pointer;border-top:1px solid var(--border)">
+      Clear status
+    </div>`;
+  document.body.appendChild(drop);
+  setTimeout(()=>document.addEventListener('click',()=>drop.remove(),{once:true}),10);
+}
+
+function pickStatus(key, val) {
+  document.querySelectorAll('.status-drop').forEach(d=>d.remove());
+  const d=carData(key);
+  d.status=val;
+  saveCrewCarData();
+  renderCrewCarsList(document.getElementById('content'));
+}
+
 function auditMonth() {
   return new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
 }
@@ -2297,49 +2329,49 @@ function renderCrewCarsList(el) {
     const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
     const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
     const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const fuelPct=fs?fs.pct:null;
-    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;
+    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;   // red bg at ½
+    const fuelFlash=fuelPct!==null&&fuelPct<=0.25;  // ⛽ flashes at ¼
     const anyAlert=oilWarn||fuelAlert||docAlert;
     const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.25?'#E74C3C':fuelPct<0.5?'#F1C40F':fuelPct<0.75?'#82E06A':'#27AE60';
-    const STATUS_OPTS=['CR','MX','N/A','OUT'];
-    const STATUS_COLORS={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
-    const statusPills=STATUS_OPTS.map(s=>{
-      const active=d.status===s;
-      const col=STATUS_COLORS[s]||'var(--border2)';
-      return `<button onclick="event.stopPropagation();saveCarStatus('${car.key}','${s}')"
-        style="padding:3px 9px;border-radius:20px;border:1.5px solid ${active?col:'var(--border2)'};
-               background:${active?col+'22':'transparent'};color:${active?col:'var(--t3)'};
-               font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s">${s}</button>`;
-    }).join('');
+    const SC={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
+    const curSt=d.status||'';
+    const stChip=curSt
+      ? `<button onclick="event.stopPropagation();openStatusDrop('${car.key}',this)"
+           style="padding:3px 10px;border-radius:20px;border:1.5px solid ${SC[curSt]||'var(--border2)'};
+                  background:${(SC[curSt]||'#888')+'22'};color:${SC[curSt]||'var(--t2)'};
+                  font-size:11px;font-weight:700;cursor:pointer">${curSt} ▾</button>`
+      : `<button onclick="event.stopPropagation();openStatusDrop('${car.key}',this)"
+           style="padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border2);
+                  background:transparent;color:var(--t3);font-size:11px;font-weight:600;cursor:pointer">Status ▾</button>`;
     html+=`
       <div onclick="openCarDetail('${car.key}')" style="
-        display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px;
-        border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;
-        background:${anyAlert?'rgba(231,76,60,0.10)':'var(--glass)'};
-        ${anyAlert?'border-left:3px solid var(--red)':'border-left:3px solid transparent'}">
+        display:flex;align-items:flex-start;gap:13px;padding:16px 14px 14px;
+        border-bottom:2px solid ${anyAlert?'rgba(231,76,60,0.25)':'var(--border)'};
+        cursor:pointer;transition:background 0.15s;
+        background:${anyAlert?'rgba(231,76,60,0.11)':'var(--glass)'};
+        ${anyAlert?'border-left:4px solid var(--red)':'border-left:4px solid transparent'}">
         <div style="position:relative;flex-shrink:0;margin-top:2px">
-          ${carSquareIcon(car,52,11)}
-          ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:14px;height:14px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:8px">✓</div>`:''}
+          ${carSquareIcon(car,58,12)}
+          ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:15px;height:15px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px">✓</div>`:''}
         </div>
         <div style="flex:1;min-width:0">
-          <!-- Name row -->
-          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            <span style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
-            <span style="font-size:15px;margin-left:auto">⛽</span>
+          <!-- Name + icons -->
+          <div style="display:flex;align-items:center;gap:5px">
+            <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
+            <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
             <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
           </div>
-          <!-- Status pills -->
-          <div style="display:flex;gap:4px;margin-top:7px;flex-wrap:wrap" onclick="event.stopPropagation()">
-            ${statusPills}
-          </div>
+          <!-- Status dropdown chip -->
+          <div style="margin-top:8px" onclick="event.stopPropagation()">${stChip}</div>
           <!-- Fuel bar -->
-          <div style="margin-top:9px;display:flex;align-items:center;gap:7px">
+          <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
             <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
               <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
             </div>
             <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
           </div>
         </div>
-        <div style="color:var(--border2);font-size:20px;margin-top:2px">›</div>
+        <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
       </div>`;
   });
 
