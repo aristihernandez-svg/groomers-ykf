@@ -2745,7 +2745,7 @@ function renderAuditsHub(el) {
 function renderProcDetail(el, key) {
   const p=S.procs[key];
   if(!p){S.procView=null;render();return;}
-  document.getElementById('barTitle').textContent=p.title;
+  setBarLogo();
   document.getElementById('fab').style.display='none';
   const dmg=S.dmgReports[key]||[];
   const done=p.done.length;
