@@ -2158,61 +2158,31 @@ function renderCarDetail(el, key) {
       </div>
     </div>
 
-    <!-- Status cards -->
-    <div style="padding:14px 14px 8px;display:flex;gap:8px">
-      <div class="stat-card">
-        <div class="stat-label">⛽ Fuel</div>
-        <div class="stat-val" style="color:${fuelLog?'var(--t1)':'var(--red)'}">${fuelLog?fuelLog.value:'—'}</div>
-        <div class="stat-date">${fuelLog?fmtDate(fuelLog.date):'Never logged'}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🛢 Oil Change</div>
-        <div class="stat-val" style="color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'—'}</div>
-        <div class="stat-date">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago':'Never logged'}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">🧹 Washed</div>
-        <div class="stat-val" style="color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</div>
-        <div class="stat-date">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'Never logged'}</div>
-      </div>
-    </div>
+    <!-- Action cards -->
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
 
-    <!-- Action buttons -->
-    <div style="padding:0 14px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
-      <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;active:opacity:0.7">
-        <span style="font-size:28px">⛽</span>
-        <span style="font-size:11px;font-weight:700;color:var(--t2);text-align:center">Fuel</span>
+      <!-- Fuel card -->
+      <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+        <span style="font-size:30px">⛽</span>
+        <span style="font-size:12px;font-weight:800;color:var(--t1)">${fuelLog?fuelLog.value:'—'}</span>
+        <span style="font-size:10px;color:var(--t3)">${fuelLog?fmtDate(fuelLog.date):'No record'}</span>
       </div>
-      <div onclick="openOilModal('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-        <span style="font-size:28px">🛢</span>
-        <span style="font-size:11px;font-weight:700;color:var(--t2);text-align:center">Oil Change</span>
-      </div>
-      <div onclick="openWashModal('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:14px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer">
-        <span style="font-size:28px">🧹</span>
-        <span style="font-size:11px;font-weight:700;color:var(--t2);text-align:center">Washed</span>
-      </div>
-    </div>
 
-    <!-- Running log -->
-    <div style="padding:8px 16px 6px;font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)">History</div>`;
+      <!-- Oil Change card -->
+      <div onclick="openCarCalendar('${key}','oil')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+        <span style="font-size:30px">🛢</span>
+        <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'—'}</span>
+        <span style="font-size:10px;color:var(--t3)">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago':'No record'}</span>
+      </div>
 
-  if(!d.log.length) {
-    html+=`<div class="empty"><div class="empty-icon">📋</div><p>No entries yet — tap an action above to start tracking.</p></div>`;
-  } else {
-    const sorted=[...d.log].reverse();
-    const colors={fuel:'#1A6B8A',oil:'#C08000',wash:'#1a7a40'};
-    const labels={fuel:'Fuel',oil:'Oil Change',wash:'Washed'};
-    sorted.forEach(entry=>{
-      html+=`<div class="log-entry">
-        <div class="log-dot" style="background:${colors[entry.type]||'var(--t3)'}"></div>
-        <div style="flex:1">
-          <div class="log-type">${labels[entry.type]||entry.type}</div>
-          <div class="log-val">${entry.value}</div>
-          <div class="log-date">${fmtDate(entry.date)}${entry.logged?' · '+entry.logged:''}</div>
-        </div>
-      </div>`;
-    });
-  }
+      <!-- Washed card -->
+      <div onclick="openCarCalendar('${key}','wash')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:14px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+        <span style="font-size:30px">🧹</span>
+        <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</span>
+        <span style="font-size:10px;color:var(--t3)">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'No record'}</span>
+      </div>
+    </div>`;
+
   html+=auditSectionHTML(key);
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
@@ -2223,118 +2193,163 @@ let _fuelGaugeKey = null;
 let _fuelGaugeValue = null;
 
 const FUEL_STOPS = [
-  {label:'E',  value:'Empty',   angle:-90},
-  {label:'¼',  value:'1/4',     angle:-45},
-  {label:'½',  value:'1/2',     angle:0},
-  {label:'¾',  value:'3/4',     angle:45},
-  {label:'F',  value:'Full',    angle:90},
+  {label:'E',  value:'Empty', pct:0},
+  {label:'¼',  value:'1/4',  pct:0.25},
+  {label:'½',  value:'1/2',  pct:0.5},
+  {label:'¾',  value:'3/4',  pct:0.75},
+  {label:'F',  value:'Full', pct:1},
 ];
 
 function openFuelGauge(key) {
   _fuelGaugeKey = key;
   const d = carData(key);
   const lastFuel = d.log.filter(l=>l.type==='fuel').slice(-1)[0];
-  const currentStop = FUEL_STOPS.find(s=>s.value===lastFuel?.value) || FUEL_STOPS[2];
-  _fuelGaugeValue = currentStop.value;
+  const initStop = FUEL_STOPS.find(s=>s.value===lastFuel?.value) || FUEL_STOPS[2];
+  _fuelGaugeValue = initStop.value;
 
-  // Build gauge SVG — semicircle, needle snaps to tapped stop
-  const W=280, H=160, cx=W/2, cy=H-10, R=110;
-  // Arc path from -90° to +90° (left to right)
-  function polar(deg, r){ const rad=(deg-90)*Math.PI/180; return [cx+r*Math.sin(rad), cy-r*Math.cos(rad)]; }
-  const [ax,ay]=polar(-90,R), [bx,by]=polar(90,R);
+  const W=300, H=170, cx=W/2, cy=H-14, R=110;
+  // pct 0→1 maps to angle -180°→0° on the unit circle (left to right semicircle)
+  function pctToXY(pct, r){ const a = Math.PI - pct*Math.PI; return [cx + r*Math.cos(a), cy - r*Math.sin(a)]; }
+  function pctToAngleDeg(pct){ return -180 + pct*180; } // for needle rotation relative to pointing up
 
-  // Coloured arc segments
-  const segColors=['#c0392b','#e67e22','#f1c40f','#2ecc71','#27ae60'];
-  const segAngles=[-90,-45,0,45,90];
-  let arcSegs='';
-  for(let i=0;i<4;i++){
-    const [x1,y1]=polar(segAngles[i],R);
-    const [x2,y2]=polar(segAngles[i+1],R);
-    const large=Math.abs(segAngles[i+1]-segAngles[i])>180?1:0;
-    arcSegs+=`<path d="M${x1},${y1} A${R},${R} 0 ${large},1 ${x2},${y2}" stroke="${segColors[i]}" stroke-width="18" fill="none" stroke-linecap="butt" opacity="0.35" class="fuel-seg" data-idx="${i}"/>`;
-    arcSegs+=`<path d="M${x1},${y1} A${R},${R} 0 ${large},1 ${x2},${y2}" stroke="${segColors[i]}" stroke-width="18" fill="none" stroke-linecap="butt" opacity="0" class="fuel-seg-hit" data-idx="${i}" style="cursor:pointer" onclick="_fuelTapSeg(${i})"/>`;
+  // Track arc (full semicircle)
+  const [tx0,ty0]=pctToXY(0,R), [tx1,ty1]=pctToXY(1,R);
+
+  // Fill arc up to initStop.pct
+  function fillArc(pct){
+    if(pct<=0) return '';
+    const [fx,fy]=pctToXY(pct,R);
+    const large=pct>0.5?1:0;
+    return `<path id="fuelFill" d="M${tx0},${ty0} A${R},${R} 0 ${large},1 ${fx},${fy}" stroke="url(#fuelGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>`;
   }
 
-  // Tap zones (invisible wide arcs for easier finger tapping)
-  let tapZones='';
-  FUEL_STOPS.forEach((s,i)=>{
-    const [tx,ty]=polar(s.angle,R);
-    tapZones+=`<circle cx="${tx}" cy="${ty}" r="22" fill="transparent" style="cursor:pointer" onclick="_fuelTapStop(${i})"/>`;
-  });
-
-  // Labels
-  let labels='';
-  FUEL_STOPS.forEach(s=>{
-    const [lx,ly]=polar(s.angle,R+24);
-    labels+=`<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="700" fill="var(--t2)" class="fuel-label" data-val="${s.value}">${s.label}</text>`;
-  });
+  // Label positions
+  const labelHTML = FUEL_STOPS.map(s=>{
+    const [lx,ly]=pctToXY(s.pct, R+22);
+    return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle" font-size="12" font-weight="700" fill="var(--t3)">${s.label}</text>`;
+  }).join('');
 
   // Tick marks
-  let ticks='';
-  FUEL_STOPS.forEach(s=>{
-    const [ix,iy]=polar(s.angle,R-12);
-    const [ox,oy]=polar(s.angle,R+12);
-    ticks+=`<line x1="${ix}" y1="${iy}" x2="${ox}" y2="${oy}" stroke="var(--border2)" stroke-width="2"/>`;
-  });
+  const tickHTML = FUEL_STOPS.map(s=>{
+    const [ix,iy]=pctToXY(s.pct,R-10);
+    const [ox,oy]=pctToXY(s.pct,R+10);
+    return `<line x1="${ix}" y1="${iy}" x2="${ox}" y2="${oy}" stroke="var(--border2)" stroke-width="2"/>`;
+  }).join('');
 
-  const svg=`<svg id="fuelGaugeSvg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" style="display:block;margin:0 auto;overflow:visible">
-    <!-- Track -->
-    <path d="M${ax},${ay} A${R},${R} 0 0,1 ${bx},${by}" stroke="var(--border)" stroke-width="18" fill="none" stroke-linecap="round"/>
-    ${arcSegs}
-    ${ticks}
-    ${labels}
-    <!-- Needle -->
-    <g id="fuelNeedle" style="transform-origin:${cx}px ${cy}px;transform:rotate(${currentStop.angle}deg);transition:transform 0.35s cubic-bezier(.4,0,.2,1)">
-      <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-R+18}" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"/>
-      <circle cx="${cx}" cy="${cy}" r="7" fill="var(--gold)"/>
-    </g>
-    <!-- Selected dot -->
-    <circle id="fuelDot" cx="${polar(currentStop.angle,R)[0]}" cy="${polar(currentStop.angle,R)[1]}" r="10" fill="var(--gold)" opacity="0.9"/>
-    ${tapZones}
-  </svg>
-  <div id="fuelReadout" style="text-align:center;font-size:22px;font-weight:800;color:var(--gold);margin-top:4px;letter-spacing:1px">${currentStop.value}</div>
-  <div style="text-align:center;font-size:11px;color:var(--t3);margin-top:4px">Tap the gauge · tap outside to save</div>`;
+  // Needle pivot at cx,cy; points upward then rotates
+  // At pct=0 (E) needle points left (-90° from up = rotate(-90deg))
+  // At pct=1 (F) needle points right (+90°)
+  // So rotation = (pct - 0.5)*180 degrees
+  const initRot = (initStop.pct - 0.5)*180;
+  const [ndx,ndy]=pctToXY(initStop.pct,R);
 
-  // Use overlay directly (no save button needed — tap outside saves)
+  const gaugeHTML=`
+  <div style="background:var(--bg3);border-radius:16px;padding:16px 8px 8px;user-select:none">
+    <svg id="fuelGaugeSvg" viewBox="0 0 ${W} ${H}" width="100%" style="display:block;touch-action:none;overflow:visible">
+      <defs>
+        <linearGradient id="fuelGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#c0392b"/>
+          <stop offset="40%" stop-color="#f1c40f"/>
+          <stop offset="100%" stop-color="#27ae60"/>
+        </linearGradient>
+      </defs>
+      <!-- Track -->
+      <path d="M${tx0},${ty0} A${R},${R} 0 1,1 ${tx1},${ty1}" stroke="var(--border)" stroke-width="16" fill="none" stroke-linecap="round"/>
+      <!-- Fill -->
+      ${fillArc(initStop.pct)}
+      ${tickHTML}
+      ${labelHTML}
+      <!-- Needle -->
+      <g id="fuelNeedle" style="transform-origin:${cx}px ${cy}px;transform:rotate(${initRot}deg);transition:transform 0.15s ease">
+        <line x1="${cx}" y1="${cy}" x2="${cx}" y2="${cy-R+14}" stroke="var(--gold)" stroke-width="3.5" stroke-linecap="round"/>
+      </g>
+      <circle cx="${cx}" cy="${cy}" r="8" fill="var(--gold)"/>
+      <circle id="fuelDot" cx="${ndx}" cy="${ndy}" r="9" fill="var(--gold)" stroke="var(--bg3)" stroke-width="2"/>
+      <!-- Invisible drag surface covering full semicircle area -->
+      <rect x="0" y="0" width="${W}" height="${H}" fill="transparent"
+        id="fuelDragZone"
+        onmousedown="_fuelDragStart(event)" ontouchstart="_fuelDragStart(event)"/>
+    </svg>
+    <div id="fuelReadout" style="text-align:center;font-size:26px;font-weight:800;color:var(--gold);margin-top:2px;letter-spacing:1px">${initStop.value}</div>
+    <div style="text-align:center;font-size:11px;color:var(--t3);margin-top:2px">Drag the needle · tap outside to save</div>
+  </div>`;
+
   document.getElementById('mTitle').textContent='⛽ Fuel Level';
-  document.getElementById('mFields').innerHTML=svg;
+  document.getElementById('mFields').innerHTML=gaugeHTML;
   document.getElementById('mSave').style.display='none';
-  S.mCtx = null;
+  S.mCtx=null;
   document.getElementById('overlay').classList.add('open');
+  document.getElementById('overlay').onclick=(e)=>{
+    if(!document.getElementById('modal').contains(e.target)) _saveFuelAndClose();
+  };
+  // Attach drag listeners after render
+  setTimeout(()=>_fuelAttachDrag(cx,cy,R,W,H),50);
+}
 
-  // Override backdrop click to save instead of just close
-  document.getElementById('overlay').onclick = (e) => {
-    if (!document.getElementById('modal').contains(e.target)) {
-      _saveFuelAndClose();
+function _fuelAttachDrag(cx,cy,R,W,H){
+  const svg=document.getElementById('fuelGaugeSvg');
+  if(!svg) return;
+  let dragging=false;
+
+  function pctFromEvent(e){
+    const rect=svg.getBoundingClientRect();
+    const clientX=e.touches?e.touches[0].clientX:e.clientX;
+    const clientY=e.touches?e.touches[0].clientY:e.clientY;
+    const scaleX=W/rect.width;
+    const sx=(clientX-rect.left)*scaleX;
+    const sy=(clientY-rect.top)*(H/rect.height);
+    // Angle from cx,cy — atan2 gives angle in radians; map to pct
+    const dx=sx-cx, dy=cy-sy; // dy inverted (SVG y-down)
+    let angle=Math.atan2(dy,dx); // -π to π; 0=right, π=left
+    // Clamp to top semicircle: angle between 0 and π
+    angle=Math.max(0,Math.min(Math.PI,angle));
+    return 1 - angle/Math.PI; // pct: angle=π→0(E), angle=0→1(F)
+  }
+
+  function applyPct(pct){
+    pct=Math.max(0,Math.min(1,pct));
+    // Snap to nearest stop
+    const stop=FUEL_STOPS.reduce((a,b)=>Math.abs(b.pct-pct)<Math.abs(a.pct-pct)?b:a);
+    if(stop.value===_fuelGaugeValue) return;
+    _fuelGaugeValue=stop.value;
+    // Update needle
+    const rot=(stop.pct-0.5)*180;
+    const needle=document.getElementById('fuelNeedle');
+    if(needle) needle.style.transform=`rotate(${rot}deg)`;
+    // Update dot
+    const a=Math.PI - stop.pct*Math.PI;
+    const dx=cx+R*Math.cos(a), dy=cy-R*Math.sin(a);
+    const dot=document.getElementById('fuelDot');
+    if(dot){dot.setAttribute('cx',dx);dot.setAttribute('cy',dy);}
+    // Update fill arc
+    const [tx0,ty0]=[cx+R*Math.cos(Math.PI), cy];
+    const [fx,fy]=[dx,dy];
+    const large=stop.pct>0.5?1:0;
+    const fillEl=document.getElementById('fuelFill');
+    if(fillEl){
+      if(stop.pct<=0){fillEl.setAttribute('d','');}
+      else{fillEl.setAttribute('d',`M${tx0},${ty0} A${R},${R} 0 ${large},1 ${fx},${fy}`);}
     }
-  };
+    // Update readout
+    const r=document.getElementById('fuelReadout');
+    if(r) r.textContent=stop.value;
+    haptic('light');
+  }
+
+  svg.addEventListener('touchstart',e=>{dragging=true;applyPct(pctFromEvent(e));e.preventDefault();},{passive:false});
+  svg.addEventListener('touchmove',e=>{if(dragging){applyPct(pctFromEvent(e));e.preventDefault();}},{passive:false});
+  svg.addEventListener('touchend',()=>{dragging=false;},{passive:true});
+  svg.addEventListener('mousedown',e=>{dragging=true;applyPct(pctFromEvent(e));});
+  window.addEventListener('mousemove',e=>{if(dragging)applyPct(pctFromEvent(e));});
+  window.addEventListener('mouseup',()=>{dragging=false;});
 }
 
-function _fuelTapStop(idx) {
-  const stop = FUEL_STOPS[idx];
-  _fuelGaugeValue = stop.value;
-  const needle = document.getElementById('fuelNeedle');
-  if(needle) needle.style.transform = `rotate(${stop.angle}deg)`;
-  const readout = document.getElementById('fuelReadout');
-  if(readout) readout.textContent = stop.value;
-  // Move gold dot
-  const W=280, H=160, cx=W/2, cy=H-10, R=110;
-  function polar(deg, r){ const rad=(deg-90)*Math.PI/180; return [cx+r*Math.sin(rad), cy-r*Math.cos(rad)]; }
-  const [dx,dy]=polar(stop.angle,R);
-  const dot=document.getElementById('fuelDot');
-  if(dot){ dot.setAttribute('cx',dx); dot.setAttribute('cy',dy); }
-  haptic('medium');
-}
-function _fuelTapSeg(segIdx) { _fuelTapStop(segIdx); }
-
-function _saveFuelAndClose() {
-  // Restore normal backdrop behaviour
-  document.getElementById('overlay').onclick = (e) => {
-    if (!document.getElementById('modal').contains(e.target)) closeModal();
+function _saveFuelAndClose(){
+  document.getElementById('overlay').onclick=(e)=>{
+    if(!document.getElementById('modal').contains(e.target)) closeModal();
   };
-  if(!_fuelGaugeKey || !_fuelGaugeValue) { closeModal(); return; }
-  const key=_fuelGaugeKey;
-  const value=_fuelGaugeValue;
+  if(!_fuelGaugeKey||!_fuelGaugeValue){closeModal();return;}
+  const key=_fuelGaugeKey, value=_fuelGaugeValue;
   _fuelGaugeKey=null; _fuelGaugeValue=null;
   const today=new Date().toISOString().split('T')[0];
   const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
@@ -2347,41 +2362,87 @@ function _saveFuelAndClose() {
   toast(`⛽ Fuel logged — ${value}`);
 }
 
-function openOilModal(key) {
+function openCarCalendar(key, type){
+  const label=type==='oil'?'🛢 Oil Change':'🧹 Washed';
   const today=new Date().toISOString().split('T')[0];
-  openModal('🛢 Oil Change',
-    `<label>Date</label>
-     <input id="clDate" type="date" value="${today}">`,
-    ()=>{
-      const date=document.getElementById('clDate').value||today;
-      const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-      const d=carData(key);
-      d.log.push({type:'oil',value:'Oil changed',date,logged});
-      d.oilChange=date;
-      saveCrewCarData();
-      closeModal();
-      renderCarDetail(document.getElementById('content'),key);
-      toast('🛢 Oil change logged ✓');
-    });
+  // Build a full month calendar
+  const now=new Date();
+  let _calYear=now.getFullYear(), _calMonth=now.getMonth();
+
+  function buildCal(yr,mo){
+    const first=new Date(yr,mo,1).getDay();
+    const days=new Date(yr,mo+1,0).getDate();
+    const monthName=new Date(yr,mo,1).toLocaleString('en-CA',{month:'long',year:'numeric'});
+    let g=`<div style="background:var(--bg3);border-radius:16px;padding:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <button onclick="_calNav(-1,'${key}','${type}')" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px 10px">‹</button>
+        <span style="font-size:14px;font-weight:700;color:var(--t1)">${monthName}</span>
+        <button onclick="_calNav(1,'${key}','${type}')" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px 10px">›</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+        ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div style="font-size:10px;font-weight:600;color:var(--t3);padding:4px 0">${d}</div>`).join('')}
+        ${Array(first).fill('<div></div>').join('')}
+        ${Array.from({length:days},(_,i)=>{
+          const dd=i+1;
+          const iso=`${yr}-${String(mo+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+          const isToday=iso===today;
+          return `<div onclick="_calPick('${key}','${type}','${iso}')" style="padding:7px 2px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;${isToday?'background:var(--accent);color:var(--bg)':'color:var(--t1)'}">${dd}</div>`;
+        }).join('')}
+      </div>
+    </div>`;
+    return g;
+  }
+
+  window._calState={key,type,yr:_calYear,mo:_calMonth};
+  openModal(label, buildCal(_calYear,_calMonth));
+  document.getElementById('mSave').style.display='none';
 }
 
-function openWashModal(key) {
-  const today=new Date().toISOString().split('T')[0];
-  openModal('🧹 Washed',
-    `<label>Date</label>
-     <input id="clDate" type="date" value="${today}">`,
-    ()=>{
-      const date=document.getElementById('clDate').value||today;
-      const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-      const d=carData(key);
-      d.log.push({type:'wash',value:'Washed',date,logged});
-      d.washed=date;
-      saveCrewCarData();
-      closeModal();
-      renderCarDetail(document.getElementById('content'),key);
-      toast('🧹 Wash logged ✓');
-    });
-}
+window._calNav=function(dir,key,type){
+  const s=window._calState;
+  s.mo+=dir;
+  if(s.mo>11){s.mo=0;s.yr++;}
+  if(s.mo<0){s.mo=11;s.yr--;}
+  // Rebuild calendar in place
+  const now=new Date();
+  const today=now.toISOString().split('T')[0];
+  const first=new Date(s.yr,s.mo,1).getDay();
+  const days=new Date(s.yr,s.mo+1,0).getDate();
+  const monthName=new Date(s.yr,s.mo,1).toLocaleString('en-CA',{month:'long',year:'numeric'});
+  const label=type==='oil'?'🛢 Oil Change':'🧹 Washed';
+  let g=`<div style="background:var(--bg3);border-radius:16px;padding:14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <button onclick="_calNav(-1,'${key}','${type}')" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px 10px">‹</button>
+      <span style="font-size:14px;font-weight:700;color:var(--t1)">${monthName}</span>
+      <button onclick="_calNav(1,'${key}','${type}')" style="background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:4px 10px">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+      ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div style="font-size:10px;font-weight:600;color:var(--t3);padding:4px 0">${d}</div>`).join('')}
+      ${Array(first).fill('<div></div>').join('')}
+      ${Array.from({length:days},(_,i)=>{
+        const dd=i+1;
+        const iso=`${s.yr}-${String(s.mo+1).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+        const isToday=iso===today;
+        return `<div onclick="_calPick('${key}','${type}','${iso}')" style="padding:7px 2px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;${isToday?'background:var(--accent);color:var(--bg)':'color:var(--t1)'}">${dd}</div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  document.getElementById('mTitle').textContent=label;
+  document.getElementById('mFields').innerHTML=g;
+};
+
+window._calPick=function(key,type,iso){
+  const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+  const d=carData(key);
+  const value=type==='oil'?'Oil changed':'Washed';
+  d.log.push({type,value,date:iso,logged});
+  if(type==='oil') d.oilChange=iso;
+  if(type==='wash') d.washed=iso;
+  saveCrewCarData();
+  closeModal();
+  renderCarDetail(document.getElementById('content'),key);
+  toast(type==='oil'?`🛢 Oil change logged — ${iso}`:`🧹 Wash logged — ${iso}`);
+};
 
 // ── AUDIT HELPERS ─────────────────────────────────────────────
 let auditPhotoTarget=null;
