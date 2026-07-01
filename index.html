@@ -3400,112 +3400,51 @@ function renderBored(el) {
       <p>No tasks yet. Tap + to add.</p></div>`; return;
   }
 
-  const third = Math.ceil(S.bored.length / 3);
-  const groupA = S.bored.slice(0, third);
-  const groupB = S.bored.slice(third, third*2);
-  const groupC = S.bored.slice(third*2);
+  const noteColors = [
+    {bg:'#FFF59D',fold:'rgba(0,0,0,0.13)'},
+    {bg:'#B3E5FC',fold:'rgba(0,0,0,0.12)'},
+    {bg:'#C8E6C9',fold:'rgba(0,0,0,0.12)'},
+    {bg:'#FFCCBC',fold:'rgba(0,0,0,0.13)'},
+    {bg:'#E1BEE7',fold:'rgba(0,0,0,0.12)'},
+    {bg:'#F8BBD0',fold:'rgba(0,0,0,0.12)'},
+  ];
+  const FOLD = 24; // px
 
-  // Sticky note colours cycling
-  const noteColors = ['#FFF176','#B3E5FC','#C8E6C9','#FFCCBC','#E1BEE7','#F8BBD0'];
+  let html = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 12px 90px">`;
 
-  // Auto-icon from keywords
-  function boredIcon(task) {
-    const t = task.toLowerCase();
-    if(/clean|wipe|wash|sweep|polish|scrub/.test(t)) return '🧹';
-    if(/organ|label|reorgan|inventor|sort/.test(t)) return '📦';
-    if(/tool|fix|repair|paint|touch/.test(t)) return '🔧';
-    if(/check|inspect|log|tag|verify/.test(t)) return '✅';
-    if(/fuel|car|truck|vehicle/.test(t)) return '⛽';
-    if(/study|read|memo|sop|com/.test(t)) return '📖';
-    if(/oxygen|o₂|bottle/.test(t)) return '🫧';
-    if(/window|wall|floor|drain/.test(t)) return '🏢';
-    return '⚡';
-  }
-
-  const sectionLabel = (letter, title) =>
-    `<div style="padding:14px 16px 8px;font-size:10px;font-weight:800;color:var(--t3);letter-spacing:2px;text-transform:uppercase;display:flex;align-items:center;gap:8px">
-       <span style="background:var(--accent);color:var(--bg);border-radius:6px;padding:2px 8px;font-size:10px">Option ${letter}</span>
-       <span>${title}</span>
-     </div>`;
-
-  // ── Option A: Sticky note grid ──
-  let htmlA = sectionLabel('A','Sticky Notes');
-  htmlA += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 12px 12px">`;
-  groupA.forEach((b,i)=>{
-    const col = noteColors[i % noteColors.length];
-    const rot = (i%2===0?-1:1) * (0.5 + (i%3)*0.4);
-    htmlA += `<div data-id="${b.id}" onclick="toggleBoredById('${b.id}')"
-      style="background:${col};border-radius:10px;padding:14px 12px;min-height:90px;
-             transform:rotate(${rot}deg);box-shadow:2px 3px 10px rgba(0,0,0,0.25);
-             cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;
-             position:relative;${b.done?'opacity:0.5':''}">
-        <div style="font-size:13px;font-weight:600;color:#1a1a1a;line-height:1.4;
-                    ${b.done?'text-decoration:line-through;':''}">
-          ${b.task}
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px">
-          <span onclick="event.stopPropagation();editBoredItem('${b.id}')"
-                style="font-size:14px;opacity:0.5;cursor:pointer">✏️</span>
-          <span onclick="event.stopPropagation();deleteBoredItem('${b.id}')"
-                style="font-size:14px;opacity:0.5;cursor:pointer">🗑</span>
-        </div>
-      </div>`;
-  });
-  htmlA += `</div>`;
-
-  // ── Option B: Activity cards with accent stripe + icon ──
-  const stripeColors = ['#4A90E2','#27AE60','#E67E22','#9B59B6','#E74C3C','#16A085','#D35400'];
-  let htmlB = sectionLabel('B','Activity Cards');
-  groupB.forEach((b,i)=>{
-    const col = stripeColors[i % stripeColors.length];
-    const icon = boredIcon(b.task);
-    htmlB += `
-    <div class="swipe-wrap" data-id="${b.id}">
-      <div class="swipe-action-left">✏️ Edit</div>
-      <div class="swipe-action-right">🗑 Delete</div>
-      <div onclick="toggleBoredById('${b.id}')"
-        style="display:flex;align-items:center;gap:0;background:var(--glass);
-               border-bottom:1px solid var(--border);cursor:pointer;
-               ${b.done?'opacity:0.5':''}">
-        <div style="width:4px;align-self:stretch;background:${col};border-radius:0;flex-shrink:0"></div>
-        <div style="font-size:24px;padding:14px 12px;flex-shrink:0">${icon}</div>
-        <div style="flex:1;padding:14px 12px 14px 0;font-size:14px;font-weight:600;
-                    color:var(--t1);line-height:1.4;
-                    ${b.done?'text-decoration:line-through;color:var(--t3)':''}">
-          ${b.task}
-        </div>
+  S.bored.forEach((b, i) => {
+    const {bg, fold} = noteColors[i % noteColors.length];
+    const rot = (i%2===0 ? -1 : 1) * (0.4 + (i%4)*0.25);
+    html += `
+    <div data-id="${b.id}" onclick="toggleBoredById('${b.id}')"
+      style="
+        position:relative;
+        background-color:${bg};
+        background-image:linear-gradient(225deg,${fold} ${FOLD}px,transparent ${FOLD}px);
+        border-radius:4px 4px 0 4px;
+        padding:13px 11px ${FOLD+6}px 13px;
+        min-height:96px;
+        transform:rotate(${rot}deg);
+        box-shadow:3px 4px 14px rgba(0,0,0,0.26);
+        cursor:pointer;
+        transition:transform 0.15s,box-shadow 0.15s;
+        ${b.done?'opacity:0.42':''}
+      ">
+      <div style="font-size:13px;font-weight:600;color:#1c1c1c;line-height:1.45;
+                  ${b.done?'text-decoration:line-through;color:#555':''}">
+        ${b.task}
+      </div>
+      <div style="position:absolute;bottom:7px;right:9px;display:flex;gap:6px">
+        <span onclick="event.stopPropagation();editBoredItem('${b.id}')"
+              style="font-size:14px;opacity:0.35;cursor:pointer">✏️</span>
+        <span onclick="event.stopPropagation();deleteBoredItem('${b.id}')"
+              style="font-size:14px;opacity:0.35;cursor:pointer">🗑</span>
       </div>
     </div>`;
   });
 
-  // ── Option C: Pill chips ──
-  let htmlC = sectionLabel('C','Pill Chips');
-  htmlC += `<div style="display:flex;flex-wrap:wrap;gap:10px;padding:0 12px 20px">`;
-  groupC.forEach((b,i)=>{
-    const col = stripeColors[i % stripeColors.length];
-    htmlC += `<div data-id="${b.id}" onclick="toggleBoredById('${b.id}')"
-      style="background:var(--glass2);border:2px solid ${col};border-radius:20px;
-             padding:10px 16px;cursor:pointer;font-size:13px;font-weight:600;
-             color:${b.done?'var(--t3)':'var(--t1)'};line-height:1.4;
-             ${b.done?'opacity:0.5;text-decoration:line-through;':''}
-             display:flex;align-items:center;gap:8px">
-        <span style="color:${col};font-size:16px">${boredIcon(b.task)}</span>
-        ${b.task}
-      </div>`;
-  });
-  htmlC += `</div>`;
-
-  el.innerHTML = `<div style="padding-bottom:80px">${htmlA}
-    <div style="height:1px;background:var(--border);margin:4px 0"></div>
-    ${htmlB}
-    <div style="height:1px;background:var(--border);margin:4px 0"></div>
-    ${htmlC}
-  </div>`;
-
-  el.querySelectorAll('.swipe-wrap[data-id]').forEach(w=>{
-    const id=w.dataset.id;
-    setupSwipeTwoWay(w,()=>editBoredItem(id),()=>deleteBoredItem(id));
-  });
+  html += `</div>`;
+  el.innerHTML = html;
 }
 
 function toggleBoredById(id) {
