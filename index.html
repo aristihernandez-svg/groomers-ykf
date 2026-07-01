@@ -240,6 +240,50 @@ body::before{
 .sp-bar{width:160px;height:1px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:8px;overflow:hidden}
 .sp-fill{height:100%;background:linear-gradient(90deg,#C8A84B,#E8C86A);animation:prog 2s ease forwards;box-shadow:0 0 8px #C8A84B}
 @keyframes prog{to{width:100%}}
+
+/* ── Harry Potter living portrait ── */
+.hp-portrait-wrap{display:inline-flex;flex-direction:column;align-items:center;margin-bottom:16px}
+.hp-portrait{
+  position:relative;width:180px;height:224px;border-radius:6px;overflow:hidden;
+  box-shadow:0 0 0 3px #6B4D0E,0 0 0 6px #C8A84B,0 0 0 9px #6B4D0E,0 0 0 13px #3A2C06,0 10px 40px rgba(0,0,0,0.7);
+  animation:hpBreath 6s ease-in-out infinite;
+}
+.hp-portrait img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;object-position:center 10%;
+  opacity:0;filter:sepia(10%) contrast(1.06) brightness(0.98);
+}
+.hp-nameplate{
+  background:linear-gradient(90deg,#4A3508,#C8A84B,#C8A84B,#4A3508);
+  color:#0B1120;font-size:11px;font-weight:800;letter-spacing:2.5px;
+  text-transform:uppercase;text-align:center;
+  padding:5px 28px 4px;border-radius:0 0 4px 4px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.5);
+}
+@keyframes hpBreath{
+  0%,100%{transform:scale(1) rotate(0deg)}
+  30%{transform:scale(1.01) rotate(0.4deg)}
+  70%{transform:scale(1.01) rotate(-0.4deg)}
+}
+/* 24s cycle — 7 frames */
+/* f1=0464 warm smile (resting)  f2=0457 slight smile
+   f3=0460 talking               f4=0461 shocked
+   f5=0462 laughing              f6=0463 big grin
+   f7=0456 neutral/serious       */
+.hp-f1{animation:hpF1 24s ease-in-out infinite}
+.hp-f2{animation:hpF2 24s ease-in-out infinite}
+.hp-f3{animation:hpF3 24s ease-in-out infinite}
+.hp-f4{animation:hpF4 24s ease-in-out infinite}
+.hp-f5{animation:hpF5 24s ease-in-out infinite}
+.hp-f6{animation:hpF6 24s ease-in-out infinite}
+.hp-f7{animation:hpF7 24s ease-in-out infinite}
+@keyframes hpF1{0%{opacity:1}22%{opacity:1}25%{opacity:0}92%{opacity:0}95%{opacity:1}100%{opacity:1}}
+@keyframes hpF2{0%{opacity:0}22%{opacity:0}25%{opacity:1}37%{opacity:1}40%{opacity:0}100%{opacity:0}}
+@keyframes hpF3{0%{opacity:0}37%{opacity:0}40%{opacity:1}50%{opacity:1}53%{opacity:0}100%{opacity:0}}
+@keyframes hpF4{0%{opacity:0}50%{opacity:0}53%{opacity:1}60%{opacity:1}62%{opacity:0}100%{opacity:0}}
+@keyframes hpF5{0%{opacity:0}60%{opacity:0}62%{opacity:1}71%{opacity:1}74%{opacity:0}100%{opacity:0}}
+@keyframes hpF6{0%{opacity:0}71%{opacity:0}74%{opacity:1}83%{opacity:1}86%{opacity:0}100%{opacity:0}}
+@keyframes hpF7{0%{opacity:0}83%{opacity:0}86%{opacity:1}92%{opacity:1}95%{opacity:0}100%{opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -664,25 +708,23 @@ body::before{
 </head>
 <body>
 <div id="splash">
-  <div class="splash-ring">
-    <div class="sp-plane" id="spPlane"><svg viewBox="0 0 64 64" width="52" height="52" fill="#E8C86A"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg></div>
+  <div class="hp-portrait-wrap">
+    <div class="hp-portrait">
+      <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
+      <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
+      <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
+      <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
+      <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
+      <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
+      <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
+    </div>
+    <div class="hp-nameplate">Emerson</div>
   </div>
   <div class="sp-title">Groomers YKF</div>
   <div class="sp-divider"></div>
   <div class="sp-sub">Aviation Grooming Team</div>
   <div class="sp-bar"><div class="sp-fill"></div></div>
 </div>
-<script>
-(function(){
-  const day=new Date().getDay();
-  const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
-  const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
-  if(planes[day]){
-    document.getElementById('spPlane').innerHTML=
-      `<img src="${planes[day]}" alt="${names[day]}" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(200,168,75,0.5))">`;
-  }
-})();
-</script>
 
 <div id="app">
   <div class="bar">
@@ -1329,18 +1371,18 @@ async function renderHome(el) {
       background:linear-gradient(180deg,var(--navy2) 0%,transparent 100%);
       border-bottom:1px solid var(--border);
     ">
-      ${(()=>{
-        const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
-        const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
-        if(planes[TODAY]) return `
-          <div style="margin-bottom:8px;animation:bob 2.5s ease-in-out infinite;display:inline-flex">
-            <img src="${planes[TODAY]}" alt="${names[TODAY]}" style="width:120px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(200,168,75,0.4))">
-          </div>
-          `;
-        return `<div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
-          <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
-        </div>`;
-      })()}
+      <div class="hp-portrait-wrap">
+        <div class="hp-portrait" style="width:150px;height:188px">
+          <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
+          <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
+          <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
+          <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
+          <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
+          <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
+          <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
+        </div>
+        <div class="hp-nameplate">Emerson</div>
+      </div>
       <div style="margin-bottom:4px"><img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:32px;object-fit:contain;filter:brightness(0) invert(1)"></div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
 
