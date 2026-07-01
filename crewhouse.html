@@ -140,12 +140,19 @@ function itemHtml(item, checked) {
   const key = fsKey(item.item);
   const safeKey  = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
   const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const qty = shopState[key]?.qty || 1;
+  const notes = item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ? item.notes : '';
   return `<div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
     <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
     <div style="flex:1;min-width:0">
       <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
-      ${item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ?`<div class="item-notes">${item.notes}</div>`:''}
+      ${notes?`<div class="item-notes">${notes}</div>`:''}
     </div>
+    ${checked ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(74,144,217,0.4);border-radius:20px;overflow:hidden">
+      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,-1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">−</button>
+      <span style="min-width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)">${qty}</span>
+      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">+</button>
+    </div>` : ''}
   </div>`;
 }
 
@@ -154,19 +161,29 @@ function toggleItem(key, name) {
   const nowChecked = !cur.checked;
   const newStatus = nowChecked ? 'To Buy' : 'In Stock';
   const newQty = cur.qty || 1;
-  shopState[key] = {checked: nowChecked, status: newStatus, qty: newQty};
+  const newSource = nowChecked ? 'crewhouse' : '';
+  shopState[key] = {checked: nowChecked, status: newStatus, qty: newQty, source: newSource};
   render();
-  console.log('[crewhouse] toggleItem key=', key, 'name=', name, 'checked=', nowChecked);
   db.collection('shopState').doc('state').set(
-    {[key]: {checked: nowChecked, status: newStatus, qty: newQty}},
+    {[key]: {checked: nowChecked, status: newStatus, qty: newQty, source: newSource}},
     {merge: true}
   ).then(() => {
-    console.log('[crewhouse] Firestore write OK for key:', key);
     toast(nowChecked ? `🛒 Added to cart` : `✅ Removed from cart`);
   }).catch(e => {
     console.error('[crewhouse] Firestore write FAILED:', e);
     toast('❌ Could not sync — check connection');
   });
+}
+
+function changeQty(key, delta) {
+  const cur = shopState[key] || {};
+  const newQty = Math.max(1, (cur.qty || 1) + delta);
+  shopState[key] = {...cur, qty: newQty};
+  render();
+  db.collection('shopState').doc('state').set(
+    {[key]: {...cur, qty: newQty}},
+    {merge: true}
+  ).catch(e => console.error('[crewhouse] qty write FAILED:', e));
 }
 
 function showAddForm() {

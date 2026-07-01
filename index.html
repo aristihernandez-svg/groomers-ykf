@@ -2037,13 +2037,14 @@ function renderCart(el, items) {
       sitems.forEach(item=>{
         const ri=items.indexOf(item);
         const cqty = item.qty||1;
-        html+=`<div class="srow" style="background:var(--glass);border-left:3px solid ${col}" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
-          <div class="scb" style="background:${col};border-color:${col};color:#fff">✓</div>
+        const isCH = item.source === 'crewhouse';
+        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':'var(--glass)'};border-left:3px solid ${isCH?'var(--accent)':col}" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
+          <div class="scb" style="background:${isCH?'var(--accent)':col};border-color:${isCH?'var(--accent)':col};color:#fff">✓</div>
           <div class="sinfo">
-            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}</div>
+            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:var(--accent);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
           </div>
-          ${cqty>1?`<span style="background:${col};color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;flex-shrink:0">×${cqty}</span>`:''}
+          ${cqty>1?`<span style="background:${isCH?'var(--accent)':col};color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;flex-shrink:0">×${cqty}</span>`:''}
         </div>`;
       });
     });
@@ -4798,7 +4799,7 @@ function setupLiveSync() {
       const data = snap.data(); if(!data) return;
       S.shopping.forEach(i => {
         const v=data[fsKey(i.item)];
-        if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; }
+        if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; i.source=v.source||''; }
       });
       saveShoppingState();
       const el=document.getElementById('content');
@@ -4863,12 +4864,12 @@ function setupLiveSync() {
     // groomer shows up on every phone immediately, not just the checked flag.
     db.collection('shoppingCatalog').onSnapshot(snap => {
       if(snap.empty) return; // nothing imported/added yet — keep Sheets-sourced fallback
-      const prevChecked = {}; S.shopping.forEach(i=>prevChecked[i.item]={checked:i.checked,status:i.status});
+      const prevChecked = {}; S.shopping.forEach(i=>prevChecked[i.item]={checked:i.checked,status:i.status,source:i.source||''});
       S.shopping = snap.docs.map(d=>{
         const v=d.data();
         const prior = prevChecked[v.item];
         return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'',
-          checked: prior?.checked||false, status: prior?.status||'In Stock'};
+          checked: prior?.checked||false, status: prior?.status||'In Stock', source: prior?.source||''};
       });
       restoreShoppingState();
       if(S.tab==='shopping') renderShopping(document.getElementById('content'));
