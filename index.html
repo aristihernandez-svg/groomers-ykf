@@ -708,23 +708,43 @@ body::before{
 </head>
 <body>
 <div id="splash">
-  <div class="hp-portrait-wrap">
-    <div class="hp-portrait">
-      <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
-      <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
-      <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
-      <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
-      <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
-      <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
-      <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
-    </div>
-    <div class="hp-nameplate">Emerson</div>
-  </div>
+  <div id="spHero"></div>
   <div class="sp-title">Groomers YKF</div>
   <div class="sp-divider"></div>
   <div class="sp-sub">Aviation Grooming Team</div>
   <div class="sp-bar"><div class="sp-fill"></div></div>
 </div>
+<script>
+(function(){
+  const day=new Date().getDay();
+  const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
+  const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
+  const hero=document.getElementById('spHero');
+  if(day===3){
+    // Wednesday — Emerson's living portrait
+    hero.innerHTML=`<div class="hp-portrait-wrap">
+      <div class="hp-portrait">
+        <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
+        <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
+        <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
+        <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
+        <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
+        <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
+        <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
+      </div>
+      <div class="hp-nameplate">Emerson</div>
+    </div>`;
+  } else if(planes[day]){
+    hero.innerHTML=`<div class="splash-ring"><div class="sp-plane">
+      <img src="${planes[day]}" alt="${names[day]}" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(200,168,75,0.5))">
+    </div></div>`;
+  } else {
+    hero.innerHTML=`<div class="splash-ring"><div class="sp-plane">
+      <svg viewBox="0 0 64 64" width="52" height="52" fill="#E8C86A"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
+    </div></div>`;
+  }
+})();
+</script>
 
 <div id="app">
   <div class="bar">
@@ -1371,18 +1391,30 @@ async function renderHome(el) {
       background:linear-gradient(180deg,var(--navy2) 0%,transparent 100%);
       border-bottom:1px solid var(--border);
     ">
-      <div class="hp-portrait-wrap">
-        <div class="hp-portrait" style="width:150px;height:188px">
-          <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
-          <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
-          <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
-          <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
-          <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
-          <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
-          <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
-        </div>
-        <div class="hp-nameplate">Emerson</div>
-      </div>
+      ${TODAY===3
+        ? `<div class="hp-portrait-wrap">
+            <div class="hp-portrait" style="width:150px;height:188px">
+              <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
+              <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
+              <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
+              <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
+              <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
+              <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
+              <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
+            </div>
+            <div class="hp-nameplate">Emerson</div>
+           </div>`
+        : (()=>{
+            const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
+            const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
+            if(planes[TODAY]) return `<div style="margin-bottom:8px;animation:bob 2.5s ease-in-out infinite;display:inline-flex">
+              <img src="${planes[TODAY]}" alt="${names[TODAY]}" style="width:120px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(200,168,75,0.4))">
+            </div>`;
+            return `<div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
+              <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
+            </div>`;
+          })()
+      }
       <div style="margin-bottom:4px"><img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:32px;object-fit:contain;filter:brightness(0) invert(1)"></div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
 
