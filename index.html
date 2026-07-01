@@ -2272,7 +2272,7 @@ function renderCrewCarsList(el) {
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</div>
           ${(()=>{ const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const pct=fs?fs.pct:null;
-            const col=pct===null?'var(--border)':pct<0.25?'var(--red)':pct<0.5?'#E8A000':'var(--green)';
+            const col=pct===null?'var(--border)':pct<0.25?'#E74C3C':pct<0.5?'#F1C40F':pct<0.75?'#82E06A':'#27AE60';
             const lbl=pct===null?'—':d.fuel;
             return `<div style="margin-top:5px;display:flex;align-items:center;gap:7px">
               <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
