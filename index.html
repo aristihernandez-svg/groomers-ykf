@@ -1298,10 +1298,19 @@ async function renderHome(el) {
       background:linear-gradient(180deg,var(--navy2) 0%,transparent 100%);
       border-bottom:1px solid var(--border);
     ">
-      <div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
-        <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
-      </div>
-      <div style="font-size:24px;font-weight:800;color:var(--t1);letter-spacing:1px">Skycare</div>
+      ${(()=>{
+        const planes={2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png'};
+        const names={2:'Metroliner',4:'Navajo'};
+        if(planes[TODAY]) return `
+          <div style="margin-bottom:8px;animation:bob 2.5s ease-in-out infinite;display:inline-flex">
+            <img src="${planes[TODAY]}" alt="${names[TODAY]}" style="width:120px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(200,168,75,0.4))">
+          </div>
+          <div style="font-size:13px;font-weight:800;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:4px">${names[TODAY]}</div>`;
+        return `<div style="margin-bottom:10px;filter:drop-shadow(0 4px 20px var(--gold-dim));animation:takeoff 4.5s cubic-bezier(0.4,0,0.2,1) infinite;display:inline-flex;color:var(--gold)">
+          <svg viewBox="0 0 64 64" width="60" height="60" fill="currentColor"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
+        </div>`;
+      })()}
+      <div style="margin-bottom:4px"><img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:32px;object-fit:contain;filter:brightness(0) invert(1)"></div>
       <div style="font-size:13px;color:var(--t2);margin-top:3px;font-weight:600">${dateStr}</div>
 
     </div>
@@ -1405,16 +1414,6 @@ function renderToday(el) {
     <div class="prog-wrap">
       <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  const AIRCRAFT_BANNERS_T = {2:'cars/Metroliner_logo-removebg-preview.png', 4:'cars/Navajo_logo-removebg-preview.png'};
-  const AIRCRAFT_NAMES_T   = {2:'Metroliner', 4:'Navajo'};
-  if(AIRCRAFT_BANNERS_T[TODAY]) html+=`
-    <div style="background:linear-gradient(135deg,#0a1628,#1a3a5c);padding:18px 20px 10px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
-      <img src="${AIRCRAFT_BANNERS_T[TODAY]}" alt="${AIRCRAFT_NAMES_T[TODAY]}" style="height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">
-      <div>
-        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#7aaadd;text-transform:uppercase">Aircraft on duty</div>
-        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:2px">${AIRCRAFT_NAMES_T[TODAY]}</div>
-      </div>
     </div>`;
   html+=renderFlightLog(tabName);
   html+=renderGroups(tasks,tabName);
@@ -1674,16 +1673,6 @@ function renderDayDetail(el) {
     <div class="prog-wrap" style="top:44px">
       <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
-    </div>`;
-  const AIRCRAFT_BANNERS = {2:'cars/Metroliner_logo-removebg-preview.png', 4:'cars/Navajo_logo-removebg-preview.png'};
-  const AIRCRAFT_NAMES   = {2:'Metroliner', 4:'Navajo'};
-  if(AIRCRAFT_BANNERS[idx]) html+=`
-    <div style="background:linear-gradient(135deg,#0a1628,#1a3a5c);padding:18px 20px 10px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
-      <img src="${AIRCRAFT_BANNERS[idx]}" alt="${AIRCRAFT_NAMES[idx]}" style="height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">
-      <div>
-        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#7aaadd;text-transform:uppercase">Aircraft on duty</div>
-        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:2px">${AIRCRAFT_NAMES[idx]}</div>
-      </div>
     </div>`;
   html+=renderFlightLog(tabName);
   html+=renderGroupsDay(tasks,tabName);
