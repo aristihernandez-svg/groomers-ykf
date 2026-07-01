@@ -670,7 +670,7 @@ body::before{
 <div id="app">
   <div class="bar">
     <span style="font-size:22px;cursor:pointer;color:var(--gold)" onclick="goTab('home')">✈</span>
-    <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer">Skycare</span>
+    <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer"><img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare"></span>
     <span class="bar-pill" id="barDay"></span>
     <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable coffee notifications" style="font-size:20px">🔕</button>
     <button class="bar-btn" id="themeToggleBtn" onclick="toggleDayNight()" title="Toggle day/night" style="font-size:20px">🌙</button>
@@ -709,6 +709,11 @@ const DAY_COLORS= ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','
 const TODAY     = new Date().getDay();
 
 const FLEET_TAILS = ['IOC','IOJ','IOB','IOE','DAX','IAW','XAW','XDP'];
+
+function setBarLogo() {
+  document.getElementById('barTitle').innerHTML =
+    '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
+}
 
 const AREA_COLORS = {
   'AIRCRAFT':'#1A4A5C',"CR GROOMERS' CORNER":'#1A3A5C',
@@ -854,7 +859,7 @@ function goTab(id) {
   S.tab=id; S.inDay=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   document.getElementById('eodFab').classList.toggle('show',id==='today');
   document.getElementById('fab').style.display='none';
   render();
@@ -1234,7 +1239,7 @@ const ICONS = {
 };
 
 async function renderHome(el) {
-  document.getElementById('barTitle').textContent = 'Skycare';
+  setBarLogo();
   document.getElementById('eodFab').classList.remove('show');
   document.getElementById('fab').style.display = 'none';
 
@@ -1375,7 +1380,7 @@ async function renderHome(el) {
 
 // ── TODAY ──────────────────────────────────────────────────────────
 function renderToday(el) {
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   document.getElementById('eodFab').classList.add('show');
   showFab(()=>openAddTask(DAYS[TODAY]));
   const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
@@ -1459,7 +1464,7 @@ function renderNotes(notes, tabName) {
 
 // ── WEEK ───────────────────────────────────────────────────────────
 function renderWeek(el) {
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   document.getElementById('fab').style.display='none';
   let html='<div class="week-list">';
   DAYS.forEach((day,i)=>{
@@ -1638,7 +1643,7 @@ function renderDayDetail(el) {
   const tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   showFab(()=>openAddTask(tabName));
   let html=`
     <div class="dbar" style="background:${DAY_COLORS[idx]}">
@@ -1648,6 +1653,16 @@ function renderDayDetail(el) {
     <div class="prog-wrap" style="top:44px">
       <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  const AIRCRAFT_BANNERS = {2:'cars/Metroliner_logo-removebg-preview.png', 4:'cars/Navajo_logo-removebg-preview.png'};
+  const AIRCRAFT_NAMES   = {2:'Metroliner', 4:'Navajo'};
+  if(AIRCRAFT_BANNERS[idx]) html+=`
+    <div style="background:linear-gradient(135deg,#0a1628,#1a3a5c);padding:18px 20px 10px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border)">
+      <img src="${AIRCRAFT_BANNERS[idx]}" alt="${AIRCRAFT_NAMES[idx]}" style="height:80px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,0.5))">
+      <div>
+        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#7aaadd;text-transform:uppercase">Aircraft on duty</div>
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-top:2px">${AIRCRAFT_NAMES[idx]}</div>
+      </div>
     </div>`;
   html+=renderFlightLog(tabName);
   html+=renderGroupsDay(tasks,tabName);
@@ -1699,7 +1714,7 @@ function backWeek() {
 
 // ── SHOPPING ───────────────────────────────────────────────────────
 function renderShopping(el) {
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   showFab(openAddShopItem);
   const scrollTop = el ? el.scrollTop : 0;
   // Save horizontal scroll of filter bars too
@@ -2574,7 +2589,7 @@ function loadProcs() {
 }
 
 function renderProcs(el) {
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   showFab(openAddProcedure);
   let html='<div class="proc-list">';
   Object.entries(S.procs).forEach(([key,p])=>{
@@ -2692,7 +2707,7 @@ function renderProcDetail(el, key) {
 
 // ── CONTACTS ─────────────────────────────────────────────────
 function renderContacts(el) {
-  document.getElementById('barTitle').textContent = 'Skycare';
+  setBarLogo();
   showFab(openAddContact);
 
   // Search state
@@ -2869,7 +2884,7 @@ function renderContactsList(q) {
 
 // ── FLIGHTAWARE IN-APP ───────────────────────────────────────
 function renderBored(el) {
-  document.getElementById('barTitle').textContent='Skycare';
+  setBarLogo();
   showFab(openAddBored);
   if(!S.bored.length) {
     el.innerHTML=`<div class="empty"><div class="empty-icon">💡</div>
