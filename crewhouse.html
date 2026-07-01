@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Skycare — Crew House Shopping</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0B1120;--bg2:#111827;--bg3:#1a2235;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;--accent:#4A90D9;--green:#27AE60;--red:#E74C3C;--radius:16px;--radius-sm:10px}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:100px}
+.bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
+.item-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.item-row:active{background:var(--glass)}
+.item-row.tobuy .item-name{color:var(--accent)}
+.cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all 0.15s}
+.cb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.item-name{font-size:15px;font-weight:600;color:var(--t1)}
+.item-notes{font-size:12px;color:var(--t3);margin-top:2px}
+.badge{display:inline-block;background:rgba(74,144,217,0.2);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px}
+.empty{text-align:center;padding:60px 24px;color:var(--t3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.fab{position:fixed;bottom:28px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2176AE);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#27AE60;color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast.show{opacity:1}
+/* Add form */
+.form-wrap{padding:16px}
+label{display:block;font-size:12px;color:var(--t2);font-weight:600;margin-bottom:5px;margin-top:14px}
+label:first-of-type{margin-top:0}
+input,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none}
+input:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:none;min-height:60px;font-size:14px}
+.save-btn{display:block;width:100%;margin-top:16px;padding:14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),#2176AE);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+.save-btn:active{opacity:0.8}
+.cancel-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
+.section-header{padding:10px 16px 4px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <img src="cars/Skycare_logo-removebg-preview.png" style="height:24px;filter:brightness(0) invert(1)" alt="Skycare">
+  <span class="bar-title">Crew House Shopping</span>
+  <span id="cartCount" style="background:var(--accent);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;display:none"></span>
+</div>
+
+<div id="app"></div>
+<button class="fab" onclick="showAddForm()" title="Add item">+</button>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyA7BHDcP-PVTpsaNu9TTWCnChfI0bnOLi8",
+  authDomain:"groomer-ykf.firebaseapp.com",
+  projectId:"groomer-ykf",
+  storageBucket:"groomer-ykf.firebasestorage.app",
+  messagingSenderId:"384366195372",
+  appId:"1:384366195372:web:35d38ffbc947188d4a6509"
+});
+const db = firebase.firestore();
+
+let catalog = [];   // {id, item, notes}  — only Crew House items
+let shopState = {}; // {id: {checked, status}}
+let view = 'list';  // 'list' | 'add'
+
+// Live catalog listener — only Crew House store
+db.collection('shoppingCatalog').onSnapshot(snap => {
+  catalog = snap.docs
+    .map(d => ({id:d.id, ...d.data()}))
+    .filter(i => (i.store||'').toLowerCase() === 'crew house');
+  render();
+});
+
+// Live shopState listener
+db.collection('shopState').doc('state').onSnapshot(snap => {
+  if(snap.exists) shopState = snap.data() || {};
+  render();
+});
+
+function fsKey(item) {
+  return item.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60);
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+function render() {
+  if(view === 'add') { renderAdd(); return; }
+  renderList();
+}
+
+function renderList() {
+  const toBuyCount = catalog.filter(i => shopState[fsKey(i.item)]?.checked).length;
+  const cc = document.getElementById('cartCount');
+  if(toBuyCount > 0) { cc.textContent = toBuyCount+' to buy'; cc.style.display=''; }
+  else cc.style.display='none';
+
+  if(!catalog.length) {
+    document.getElementById('app').innerHTML = `<div class="empty">
+      <div class="empty-icon">🏠</div>
+      <p style="font-size:15px;font-weight:600;color:var(--t2)">No crew house items yet</p>
+      <p style="font-size:13px;margin-top:6px">Tap + to add something you need</p>
+    </div>`;
+    return;
+  }
+
+  const toBuy = catalog.filter(i => shopState[fsKey(i.item)]?.checked);
+  const rest  = catalog.filter(i => !shopState[fsKey(i.item)]?.checked);
+
+  let html = '';
+
+  if(toBuy.length) {
+    html += `<div class="section-header">🛒 To Buy (${toBuy.length})</div>`;
+    toBuy.forEach(i => html += itemHtml(i, true));
+  }
+
+  if(rest.length) {
+    html += `<div class="section-header">🏠 Crew House Items</div>`;
+    rest.forEach(i => html += itemHtml(i, false));
+  }
+
+  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to add it to the shopping cart ·<br>Tap again to remove it</div>`;
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function itemHtml(item, checked) {
+  const key = fsKey(item.item);
+  return `<div class="item-row ${checked?'tobuy':''}" onclick="toggleItem('${key}','${item.item.replace(/'/g,"\\'")}')">
+    <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
+    <div style="flex:1;min-width:0">
+      <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
+      ${item.notes?`<div class="item-notes">${item.notes}</div>`:''}
+    </div>
+  </div>`;
+}
+
+function toggleItem(key, name) {
+  const cur = shopState[key] || {};
+  const nowChecked = !cur.checked;
+  shopState[key] = {checked: nowChecked, status: nowChecked ? 'tobuy' : '', qty: cur.qty||1};
+  // Optimistic local update
+  render();
+  // Sync to Firestore — same shopState collection the main app reads
+  db.collection('shopState').doc('state').set(
+    {[key]: {checked: nowChecked, status: nowChecked ? 'tobuy' : '', qty: cur.qty||1}},
+    {merge: true}
+  ).then(() => {
+    toast(nowChecked ? `🛒 Added to cart` : `✅ Removed from cart`);
+  }).catch(() => toast('❌ Could not sync — check connection'));
+}
+
+function showAddForm() {
+  view = 'add';
+  render();
+}
+
+function renderAdd() {
+  document.getElementById('app').innerHTML = `
+    <div class="form-wrap">
+      <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">Add Item to List</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">This will appear in the Groomers' shopping list under <b style="color:var(--t2)">Crew House</b>.</div>
+      <label>Item name *</label>
+      <input type="text" id="inName" placeholder="e.g. Dish soap" autofocus>
+      <label>Notes (optional)</label>
+      <textarea id="inNotes" placeholder="Brand, size, quantity details..."></textarea>
+      <button class="save-btn" onclick="saveItem()">➕ Add to Shopping List</button>
+      <button class="cancel-btn" onclick="cancelAdd()">Cancel</button>
+    </div>`;
+  setTimeout(()=>document.getElementById('inName')?.focus(), 80);
+}
+
+async function saveItem() {
+  const name = (document.getElementById('inName')?.value||'').trim();
+  const notes = (document.getElementById('inNotes')?.value||'').trim();
+  if(!name) { toast('⚠️ Please enter an item name'); return; }
+
+  const id = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60) + '_' + Date.now();
+  try {
+    await db.collection('shoppingCatalog').doc(id).set({
+      item: name,
+      notes: notes,
+      store: 'Crew House',
+      cabinet: 'Crew House'
+    });
+    toast('✅ Added to shopping list!');
+    view = 'list';
+    render();
+  } catch(e) {
+    toast('❌ Could not save — check connection');
+  }
+}
+
+function cancelAdd() {
+  view = 'list';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

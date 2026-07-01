@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Skycare — Crew Car Update</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0B1120;--bg2:#111827;--bg3:#1a2235;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;--accent:#4A90D9;--green:#27AE60;--red:#E74C3C;--gold:#F1C40F;--radius:16px;--radius-sm:10px}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:40px}
+.bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
+.car-card{margin:12px 14px;background:var(--glass2);border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;cursor:pointer;display:flex;align-items:center;gap:14px;padding:14px}
+.car-card:active{opacity:0.7}
+.car-icon{width:56px;height:56px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.car-icon img{width:100%;height:100%;object-fit:contain}
+.car-name{font-size:15px;font-weight:700;color:var(--t1)}
+.car-sub{font-size:12px;color:var(--t3);margin-top:3px}
+.fuel-bar-wrap{display:flex;align-items:center;gap:8px;margin-top:6px}
+.fuel-bar-track{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden}
+.fuel-bar-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.arr{color:var(--border2);font-size:20px;margin-left:auto}
+/* Detail view */
+.detail-hero{position:relative;height:160px;overflow:hidden;display:flex;align-items:flex-end}
+.detail-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:10px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))}
+.detail-hero-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.1) 60%)}
+.detail-hero-text{position:relative;z-index:2;padding:14px 18px;width:100%}
+.detail-hero-name{font-size:20px;font-weight:800;color:#fff}
+.detail-hero-sub{font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px}
+.section{margin:14px 14px 0;background:var(--glass2);border:1px solid var(--border2);border-radius:var(--radius);padding:16px}
+.section-label{font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+label{display:block;font-size:12px;color:var(--t2);font-weight:600;margin-bottom:5px;margin-top:12px}
+label:first-of-type{margin-top:0}
+input[type=number],textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none}
+input[type=number]:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:none;min-height:80px;font-size:14px;line-height:1.5}
+.frozen{background:var(--bg);border-color:var(--border);color:var(--t3);cursor:not-allowed}
+.fuel-btns{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:4px}
+.fuel-btn{padding:10px 4px;border-radius:8px;border:1.5px solid var(--border2);background:var(--bg3);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;text-align:center;transition:all 0.15s}
+.fuel-btn.active{border-color:var(--accent);background:rgba(74,144,217,0.2);color:var(--accent)}
+.save-btn{display:block;width:100%;margin-top:14px;padding:14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),#2176AE);color:#fff;font-size:15px;font-weight:800;cursor:pointer;letter-spacing:0.2px}
+.save-btn:active{opacity:0.8}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#27AE60;color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast.show{opacity:1}
+.back-btn{background:none;border:none;color:var(--accent);font-size:24px;line-height:1;cursor:pointer;padding:0 4px}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.crew-note-wrap{background:#FFF59D;background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);border-radius:4px 4px 0 4px;padding:12px 14px;box-shadow:2px 4px 12px rgba(0,0,0,0.3);margin-top:14px}
+.crew-note-label{font-size:10px;font-weight:700;color:#8a6d00;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
+.crew-note-wrap textarea{background:transparent;border:none;outline:none;color:#1c1c1c;font-size:13px;min-height:70px;padding:0}
+.crew-note-wrap textarea:focus{border:none}
+</style>
+</head>
+<body>
+
+<div class="bar" id="bar">
+  <img src="cars/Skycare_logo-removebg-preview.png" style="height:24px;filter:brightness(0) invert(1)" alt="Skycare">
+  <span class="bar-title">Crew Car Update</span>
+</div>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyA7BHDcP-PVTpsaNu9TTWCnChfI0bnOLi8",
+  authDomain:"groomer-ykf.firebaseapp.com",
+  projectId:"groomer-ykf",
+  storageBucket:"groomer-ykf.firebasestorage.app",
+  messagingSenderId:"384366195372",
+  appId:"1:384366195372:web:35d38ffbc947188d4a6509"
+});
+const db = firebase.firestore();
+
+const CREW_CARS = [
+  {key:'escape',  name:'Ford Escape',      color:'#3A6BC4',color2:'#5B8FE8',label:'SUV',       img:'cars/escape-removebg-preview.png'},
+  {key:'elantra', name:'Hyundai Elantra',  color:'#B89A60',color2:'#D4BB82',label:'Sedan',     img:'cars/elantra-removebg-preview.png'},
+  {key:'micra',   name:'Nissan Micra',     color:'#2E7D7B',color2:'#4AA8A6',label:'Hatchback', img:'cars/micra-removebg-preview.png'},
+  {key:'impala',  name:'Chevrolet Impala', color:'#9E9278',color2:'#C0B49A',label:'Sedan',     img:'cars/impala-removebg-preview.png'},
+  {key:'whtruck', name:'White MX Truck',   color:'#7A8A96',color2:'#B0C0CC',label:'Pickup',    img:'cars/whtruck-removebg-preview.png'},
+  {key:'brtruck', name:'Brown MX Truck',   color:'#8B7355',color2:'#B09470',label:'Pickup',    img:'cars/brtruck-removebg-preview.png'},
+  {key:'kubota',  name:'Kubota',           color:'#C85F10',color2:'#F07A30',label:'UTV·Diesel',img:'cars/kubota-removebg-preview.png'},
+  {key:'civic',   name:'Honda Civic',      color:'#8A8A8A',color2:'#C0C0C0',label:'Sedan',     img:'cars/civic-removebg-preview.png'},
+];
+
+const FUEL_STOPS = [
+  {label:'E',  value:'Empty', pct:0},
+  {label:'¼',  value:'1/4',  pct:0.25},
+  {label:'½',  value:'1/2',  pct:0.5},
+  {label:'¾',  value:'3/4',  pct:0.75},
+  {label:'F',  value:'Full', pct:1},
+];
+
+let carData = {};
+let view = 'list'; // 'list' | key
+let selectedFuel = null;
+
+// Load from Firestore
+db.collection('crewCarData').doc('all').onSnapshot(snap => {
+  if(snap.exists) Object.assign(carData, snap.data());
+  render();
+});
+
+function fuelPct(val) {
+  const s = FUEL_STOPS.find(x=>x.value===val);
+  return s ? s.pct : null;
+}
+function fuelColor(pct) {
+  if(pct===null) return 'rgba(255,255,255,0.15)';
+  if(pct < 0.25) return '#E74C3C';
+  if(pct < 0.5)  return '#F1C40F';
+  if(pct < 0.75) return '#82E06A';
+  return '#27AE60';
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2800);
+}
+
+function render() {
+  if(view === 'list') renderList();
+  else renderDetail(view);
+}
+
+function renderList() {
+  document.getElementById('bar').innerHTML = `
+    <img src="cars/Skycare_logo-removebg-preview.png" style="height:24px;filter:brightness(0) invert(1)" alt="Skycare">
+    <span class="bar-title">Crew Car Update</span>`;
+
+  let html = `<div style="padding:10px 14px 2px;font-size:12px;color:rgba(255,255,255,0.35);line-height:1.5">
+    Tap a vehicle to update its fuel level and current KM after use.</div>`;
+
+  CREW_CARS.forEach(car => {
+    const d = carData[car.key] || {};
+    const pct = fuelPct(d.fuel);
+    const col = fuelColor(pct);
+    html += `<div class="car-card" onclick="openDetail('${car.key}')">
+      <div class="car-icon" style="background:linear-gradient(135deg,${car.color},${car.color2})">
+        <img src="${car.img}" alt="${car.name}" onerror="this.style.display='none'">
+      </div>
+      <div style="flex:1;min-width:0">
+        <div class="car-name">${car.name}</div>
+        <div class="car-sub">${car.label}${d.currentKm?' · '+Number(d.currentKm).toLocaleString()+' km':''}</div>
+        <div class="fuel-bar-wrap">
+          <div class="fuel-bar-track">
+            <div class="fuel-bar-fill" style="width:${pct!==null?Math.round(pct*100):0}%;background:${col}"></div>
+          </div>
+          <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.4);flex-shrink:0">⛽ ${d.fuel||'—'}</span>
+        </div>
+      </div>
+      <div class="arr">›</div>
+    </div>`;
+  });
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function openDetail(key) {
+  view = key;
+  const d = carData[key] || {};
+  selectedFuel = d.fuel || null;
+  renderDetail(key);
+}
+
+function renderDetail(key) {
+  const car = CREW_CARS.find(c=>c.key===key);
+  if(!car) { view='list'; render(); return; }
+  const d = carData[key] || {};
+
+  document.getElementById('bar').innerHTML = `
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="bar-title">${car.name}</span>`;
+
+  const fuelBtns = FUEL_STOPS.map(s=>`
+    <button class="fuel-btn ${selectedFuel===s.value?'active':''}"
+      onclick="selectFuel('${s.value}')">${s.label}<br><span style="font-size:10px;font-weight:400">${s.value}</span></button>`).join('');
+
+  const nsKm = d.nextServiceKm ? Number(d.nextServiceKm).toLocaleString()+' km' : 'Not set';
+
+  let html = `
+    <div class="detail-hero" style="background:linear-gradient(160deg,${car.color},${car.color2})">
+      <img src="${car.img}" alt="${car.name}" onerror="this.style.display='none'">
+      <div class="detail-hero-overlay"></div>
+      <div class="detail-hero-text">
+        <div class="detail-hero-name">${car.name}</div>
+        <div class="detail-hero-sub">${car.label}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">⛽ Fuel Level</div>
+      <div class="fuel-btns" id="fuelBtns">${fuelBtns}</div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">🛣️ Odometer</div>
+      <label>Current KM (enter after returning the vehicle)</label>
+      <input type="number" id="inCKM" placeholder="e.g. 98500" value="${d.currentKm||''}" inputmode="numeric">
+      <div style="margin-top:14px;padding:10px 12px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Next Service At</div>
+        <div style="font-size:15px;font-weight:700;color:var(--t2);margin-top:3px">${nsKm}</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-label">📋 Note for the team</div>
+      <div class="crew-note-wrap">
+        <div class="crew-note-label">Sticky Note</div>
+        <textarea id="inNote" placeholder="Any issue, observation or note to leave for the team...">${d.crewNote||''}</textarea>
+      </div>
+    </div>
+
+    <div style="padding:0 14px">
+      <button class="save-btn" onclick="saveDetail('${key}')">💾 Save Update</button>
+    </div>
+    <div style="height:40px"></div>`;
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function selectFuel(value) {
+  selectedFuel = value;
+  document.querySelectorAll('.fuel-btn').forEach(b => {
+    b.classList.toggle('active', b.onclick?.toString().includes(`'${value}'`) ||
+      b.getAttribute('onclick')?.includes(`'${value}'`));
+  });
+  // Re-render just the buttons to update active state
+  const d = FUEL_STOPS.map(s=>`
+    <button class="fuel-btn ${selectedFuel===s.value?'active':''}"
+      onclick="selectFuel('${s.value}')">${s.label}<br><span style="font-size:10px;font-weight:400">${s.value}</span></button>`).join('');
+  const wrap = document.getElementById('fuelBtns');
+  if(wrap) wrap.innerHTML = d;
+}
+
+async function saveDetail(key) {
+  const ckm = document.getElementById('inCKM')?.value.trim();
+  const note = document.getElementById('inNote')?.value.trim();
+  if(!carData[key]) carData[key] = {};
+  const d = carData[key];
+
+  if(selectedFuel) {
+    d.fuel = selectedFuel;
+    const today = new Date().toISOString().split('T')[0];
+    const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+    if(!d.log) d.log = [];
+    d.log.push({type:'fuel', value:selectedFuel, date:today, logged});
+  }
+  if(ckm) d.currentKm = ckm;
+  if(note !== undefined) d.crewNote = note;
+
+  try {
+    await db.collection('crewCarData').doc('all').set(carData);
+    toast('✅ Saved — thank you!');
+  } catch(e) {
+    toast('❌ Save failed — check connection');
+  }
+}
+
+function goBack() {
+  view = 'list';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>

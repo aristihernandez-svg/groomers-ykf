@@ -872,6 +872,7 @@ const NAV_ITEMS = [
   {id:'procedures',  icon:'📋', label:'Procs'},
   {id:'contacts',    icon:'📞', label:'Contacts'},
   {id:'bored',       icon:'💡', label:'Bored'},
+  {id:'fleet',       icon:'✈️',  label:'Fleet'},
 ];
 
 // ── BOOT ───────────────────────────────────────────────────────────
@@ -949,7 +950,8 @@ function buildNav() {
     shopping:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M5 7H3l-1-4h20l-2 11H6L5 7z"/><path d="M5 7l1 6h13"/><circle cx="9" cy="20" r="1.5"/><circle cx="17" cy="20" r="1.5"/></svg>`,
     procedures: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
     contacts:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 14h2a2 2 0 012 2v2a2 2 0 01-2 2H3v-6z"/><path d="M21 14h-2a2 2 0 00-2 2v2a2 2 0 002 2h2v-6z"/><path d="M3 16V12a9 9 0 0118 0v4"/><path d="M12 19v3M10 22h4"/></svg>`,
-    bored:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 017 7c0 2.5-1 4.5-3 6l-1 2H9l-1-2C6 13.5 5 11.5 5 9a7 7 0 017-7z"/></svg>`
+    bored:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 017 7c0 2.5-1 4.5-3 6l-1 2H9l-1-2C6 13.5 5 11.5 5 9a7 7 0 017-7z"/></svg>`,
+    fleet:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M22 16.5L13 8V3a1 1 0 00-2 0v5L2 16.5l2.5.5 4.5-3v3.5l-2 1.5 1.5.5H12h3.5l1.5-.5-2-1.5V14l4.5 3 2.5-.5z"/></svg>`
   };
   document.getElementById('nav').innerHTML = NAV_ITEMS.map(n=>`
     <div class="nb ${n.id==='home'?'on':''}" id="nb-${n.id}" onclick="goTab('${n.id}')">
@@ -1006,6 +1008,7 @@ function render() {
       break;
     case 'contacts':   renderContacts(el); break;
     case 'bored':        renderBored(el); break;
+    case 'fleet':        renderFleet(el); break;
   }
 }
 
@@ -1895,6 +1898,10 @@ function renderShopping(el) {
 
   let html=`<div class="shop-filters">
     ${buyerBanner}
+    <div style="padding:8px 14px 4px;display:flex;justify-content:flex-end">
+      <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crewhouse.html','Crew House Shopping','Scan to add items to the shopping list from the crew house.')"
+        style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 Crew House QR</button>
+    </div>
     <div class="shop-bar">
       <button class="chip" onclick="setSF('all')"
         style="background:${S.shopFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
@@ -2092,7 +2099,7 @@ function loadPastAudits() {
 }
 
 function carData(key) {
-  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[],nextServiceKm:'',warnAtKm:'',regExpiry:'',insuranceExpiry:''};
+  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[],nextServiceKm:'',warnAtKm:'',regExpiry:'',insuranceExpiry:'',currentKm:'',crewNote:''};
   return S.crewCarData[key];
 }
 
@@ -2126,9 +2133,13 @@ function openOilServiceModal(key) {
        <div>${d.oilChange ? fmtDate(d.oilChange) + (daysSince(d.oilChange)!=null ? ' · '+daysSince(d.oilChange)+' days ago' : '') : 'No record'}</div>
        ${d.nextServiceKm?`<div style="margin-top:4px">Next service: <b>${Number(d.nextServiceKm).toLocaleString()} km</b></div>`:''}
      </div>
+     <label>Current KM (odometer)</label>
+     <input type="number" id="mCKM" placeholder="e.g. 98500" value="${d.currentKm||''}">
      <label>Next service (KM)</label>
      <input type="number" id="mOKM" placeholder="e.g. 125000" value="${d.nextServiceKm||''}">`,
     async() => {
+      const ckm = document.getElementById('mCKM').value.trim();
+      if(ckm) d.currentKm = ckm;
       const km = document.getElementById('mOKM').value.trim();
       if(km) d.nextServiceKm = km;
       const today = new Date().toISOString().split('T')[0];
@@ -2228,6 +2239,8 @@ function renderCrewCarsList(el) {
     <div class="car-detail-bar" style="background:var(--bg2);cursor:pointer" onclick="backToProcs()">
       <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
+      <button onclick="event.stopPropagation();openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
+        style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
     </div>`;
 
   // ── Monthly audit progress ──
@@ -2263,6 +2276,8 @@ function renderCrewCarsList(el) {
     const insExp=d.insuranceExpiry&&d.insuranceExpiry<todayIso;
     const docAlert=regExp||insExp;
     const docBadge=docAlert?`<span title="${regExp?'Registration expired ':''}${insExp?'Insurance expired':''}" style="font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
+    const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
+    const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
     html+=`
       <div class="car-list-item" onclick="openCarDetail('${car.key}')" style="${docAlert?'border-left:3px solid var(--red);':''}">
         <div style="position:relative">
@@ -2281,6 +2296,7 @@ function renderCrewCarsList(el) {
               <span style="font-size:11px;font-weight:700;color:var(--t3);flex-shrink:0">⛽ ${lbl}</span>
             </div>`; })()}
         </div>
+        ${oilWarn?`<span style="font-size:18px" title="Oil service due soon">🛢</span>`:''}
         <div class="car-status-dot" style="background:${worstColor}"></div>
         <div style="color:var(--border2);font-size:20px">›</div>
       </div>`;
@@ -2367,6 +2383,22 @@ function renderCarDetail(el, key) {
         <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</span>
         <span style="font-size:10px;color:var(--t3)">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'No record'}</span>
       </div>
+    </div>
+
+    <!-- Current KM & Crew Note -->
+    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
+      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px">
+        <span style="font-size:22px">🛣️</span>
+        <div style="flex:1">
+          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Current KM</div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${d.currentKm?Number(d.currentKm).toLocaleString()+' km':'Not logged'}</div>
+          ${d.nextServiceKm&&d.currentKm&&(parseInt(d.nextServiceKm)-parseInt(d.currentKm))<=500?`<div style="font-size:11px;color:var(--red);font-weight:700;margin-top:2px">⚠️ Oil service due in ${Math.max(0,parseInt(d.nextServiceKm)-parseInt(d.currentKm))} km</div>`:''}
+        </div>
+      </div>
+      ${d.crewNote?`<div style="background:#FFF59D;background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);border-radius:4px 4px 0 4px;padding:12px 14px;box-shadow:2px 4px 12px rgba(0,0,0,0.25)">
+        <div style="font-size:10px;font-weight:700;color:#8a6d00;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">📋 Crew Note</div>
+        <div style="font-size:13px;color:#1c1c1c;line-height:1.5">${d.crewNote}</div>
+      </div>`:''}
     </div>
 
     <!-- Registration & Insurance -->
@@ -4857,6 +4889,184 @@ function markHandoffComplete(id) {
   if(!db) { toast('Not connected — try again when online'); return; }
   db.collection('handoffNotes').doc(id).update({resolved:true})
     .catch(e => console.log('markHandoffComplete failed:', e));
+}
+
+// ── QR CODE POPUP ──────────────────────────────────────────────────────
+function openQrWindow(url, title, desc) {
+  const qr = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(url)}`;
+  const w = window.open('', '_blank', 'width=340,height=420,toolbar=no,menubar=no');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>${title}</title>
+    <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0B1120;color:#fff;font-family:-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;text-align:center}
+    h2{font-size:18px;font-weight:800;margin-bottom:6px;color:#fff}
+    p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:22px}
+    img{border-radius:16px;background:#fff;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+    a{display:block;margin-top:18px;font-size:11px;color:rgba(255,255,255,0.35);word-break:break-all}</style>
+    </head><body>
+    <h2>${title}</h2><p>${desc}</p>
+    <img src="${qr}" width="240" height="240" alt="QR Code">
+    <a href="${url}">${url}</a>
+    </body></html>`);
+  w.document.close();
+}
+
+// ── FLEET TRACKER ───────────────────────────────────────────────────────
+const FLEET_AIRCRAFT = [
+  {reg:'C-GIOC', tail:'IOC', type:'Metroliner', icao24:''},
+  {reg:'C-GIOJ', tail:'IOJ', type:'Metroliner', icao24:''},
+  {reg:'C-GIOB', tail:'IOB', type:'Metroliner', icao24:''},
+  {reg:'C-GIOE', tail:'IOE', type:'Metroliner', icao24:''},
+  {reg:'C-GIOH', tail:'IOH', type:'Metroliner', icao24:''},
+  {reg:'C-GIOA', tail:'IOA', type:'Metroliner', icao24:''},
+  {reg:'C-FIAW', tail:'IAW', type:'Westwind',   icao24:''},
+  {reg:'C-FXAW', tail:'XAW', type:'Westwind',   icao24:''},
+  {reg:'C-FXDP', tail:'XDP', type:'Westwind',   icao24:''},
+  {reg:'C-GDAX', tail:'DAX', type:'Astra',      icao24:''},
+];
+
+let _fleetData = {}; // icao24/callsign → state
+let _fleetLastFetch = 0;
+let _fleetTimer = null;
+
+async function fetchFleetOpenSky() {
+  // Query bounding box around CYKF (Waterloo Region Airport)
+  // lat 43.46, lon -80.38 ± generous margin
+  const url = 'https://opensky-network.org/api/states/all?lamin=42.8&lomin=-81.5&lamax=44.2&lomax=-79.0';
+  try {
+    const r = await fetch(url);
+    if(!r.ok) return null;
+    const data = await r.json();
+    return data.states || [];
+  } catch(e) { return null; }
+}
+
+function fleetCallsignMatch(callsign) {
+  if(!callsign) return null;
+  const cs = callsign.trim().toUpperCase();
+  return FLEET_AIRCRAFT.find(a => {
+    const reg = a.reg.replace('-','').toUpperCase(); // e.g. CGIOC
+    return cs === reg || cs === ('C'+a.tail) || cs.includes(a.tail);
+  }) || null;
+}
+
+async function refreshFleet() {
+  const btn = document.getElementById('fleetRefreshBtn');
+  if(btn) { btn.textContent = '⏳ Fetching...'; btn.disabled = true; }
+  const states = await fetchFleetOpenSky();
+  _fleetData = {};
+  if(states) {
+    states.forEach(s => {
+      const ac = fleetCallsignMatch(s[1]);
+      if(ac) _fleetData[ac.tail] = {
+        callsign: (s[1]||'').trim(),
+        lat: s[6], lon: s[5],
+        altitude: s[7],
+        speed: s[9],
+        onGround: s[8],
+        lastSeen: s[4]
+      };
+    });
+  }
+  _fleetLastFetch = Date.now();
+  renderFleet(document.getElementById('content'));
+}
+
+function flipBoardDigit(val, label) {
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+    <div style="display:flex;gap:3px">
+      ${String(val).padStart(2,'0').split('').map(d=>`
+        <div style="width:36px;height:52px;background:#111;border-radius:6px;border:1px solid #333;
+                    display:flex;align-items:center;justify-content:center;
+                    font-size:32px;font-weight:800;color:#FFD700;font-family:'Courier New',monospace;
+                    box-shadow:inset 0 2px 8px rgba(0,0,0,0.8),0 0 12px rgba(255,215,0,0.08);
+                    position:relative;overflow:hidden">
+          <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(0,0,0,0.25);pointer-events:none"></div>
+          ${d}
+        </div>`).join('')}
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.4);font-weight:600;letter-spacing:1.5px;text-transform:uppercase">${label}</div>
+  </div>`;
+}
+
+function renderFleet(el) {
+  setBarLogo();
+  document.getElementById('fab').style.display='none';
+  const secsSinceFetch = Math.floor((Date.now() - _fleetLastFetch) / 1000);
+  const fetchAge = _fleetLastFetch ? (secsSinceFetch < 60 ? secsSinceFetch+'s ago' : Math.floor(secsSinceFetch/60)+'m ago') : 'Not yet fetched';
+
+  // Flip-board demo countdown (counts up from last fetch, simulating a timer)
+  const elapsed = _fleetLastFetch ? Math.floor((Date.now() - _fleetLastFetch)/1000) : 0;
+  const hh = Math.floor(elapsed/3600), mm = Math.floor((elapsed%3600)/60), ss = elapsed%60;
+
+  let html = `
+    <div style="background:linear-gradient(160deg,#0a0e1a,#0d1520);min-height:100vh;padding-bottom:100px">
+      <!-- Header -->
+      <div style="padding:18px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07)">
+        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">✈ Skycare Aviation</div>
+        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px">Fleet Status Board</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">Data: OpenSky Network · ${fetchAge}</div>
+      </div>
+
+      <!-- Flip board timer -->
+      <div style="margin:18px 16px;background:#0a0d14;border-radius:16px;padding:18px;border:1px solid rgba(255,215,0,0.12);box-shadow:0 4px 32px rgba(0,0,0,0.5)">
+        <div style="font-size:10px;font-weight:700;color:rgba(255,215,0,0.5);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:14px">⏱ Time Since Last Refresh</div>
+        <div style="display:flex;align-items:flex-start;justify-content:center;gap:10px">
+          ${flipBoardDigit(hh,'HRS')}
+          <div style="font-size:36px;font-weight:800;color:#FFD700;margin-top:4px;line-height:1">:</div>
+          ${flipBoardDigit(mm,'MIN')}
+          <div style="font-size:36px;font-weight:800;color:#FFD700;margin-top:4px;line-height:1">:</div>
+          ${flipBoardDigit(ss,'SEC')}
+        </div>
+        <button id="fleetRefreshBtn" onclick="refreshFleet()"
+          style="margin-top:16px;width:100%;padding:12px;border-radius:10px;border:none;
+                 background:linear-gradient(135deg,#FFD700,#F39C12);color:#0a0d14;
+                 font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.3px">
+          🔄 Refresh Fleet Data
+        </button>
+      </div>
+
+      <!-- Fleet board -->
+      <div style="margin:0 16px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,0.06);border-radius:10px 10px 0 0;padding:8px 10px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">
+          <span>Registration</span><span style="text-align:center">Type</span><span style="text-align:right">Status</span>
+        </div>
+        ${FLEET_AIRCRAFT.map(ac => {
+          const live = _fleetData[ac.tail];
+          const statusDot = live ? (live.onGround ? '#F39C12' : '#27AE60') : 'rgba(255,255,255,0.15)';
+          const statusLabel = live ? (live.onGround ? '🟡 On Ground' : '🟢 Airborne') : '⚫ No Signal';
+          const altStr = live && !live.onGround && live.altitude ? `${Math.round(live.altitude*3.28084).toLocaleString()} ft` : '';
+          return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:11px 10px;border-top:1px solid rgba(255,255,255,0.05);align-items:center;background:${live?'rgba(255,255,255,0.03)':'transparent'}">
+            <div>
+              <div style="font-size:14px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</div>
+              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px">${ac.tail}</div>
+            </div>
+            <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.55)">${ac.type}</div>
+            <div style="text-align:right">
+              <div style="font-size:11px;font-weight:700;color:${live?(live.onGround?'#F39C12':'#27AE60'):'rgba(255,255,255,0.25)'}">${statusLabel}</div>
+              ${altStr?`<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px">${altStr}</div>`:''}
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <!-- Note -->
+      <div style="margin:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.07)">
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.6">
+          ℹ️ Live positions from <b style="color:rgba(255,255,255,0.5)">OpenSky Network</b> (free ADS-B). Aircraft registrations shown are estimates — confirm ICAO24 codes with your ops team for exact matching. Refresh every ~60s for best results.
+        </div>
+      </div>
+    </div>`;
+
+  el.innerHTML = html;
+
+  // Auto-tick the flip clock every second
+  clearTimeout(_fleetTimer);
+  if(S.tab === 'fleet') {
+    _fleetTimer = setTimeout(() => {
+      if(S.tab === 'fleet') renderFleet(document.getElementById('content'));
+    }, 1000);
+  }
 }
 
 // ── DAY NOTES ──────────────────────────────────────────────────────────
