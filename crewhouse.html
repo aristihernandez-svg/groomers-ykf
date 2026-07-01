@@ -88,9 +88,7 @@ db.collection('shopState').doc('state').onSnapshot(snap => {
   render();
 });
 
-function fsKey(item) {
-  return item.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60);
-}
+function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
 
 function toast(msg) {
   const t = document.getElementById('toast');
