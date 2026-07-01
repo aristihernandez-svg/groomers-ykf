@@ -488,6 +488,8 @@ body::before{
 .dmg-hdr{background:rgba(232,64,64,0.08);color:var(--red);padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:0.5px}
 .dmg-body{padding:10px 14px}
 .dmg-btn{width:100%;padding:10px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid rgba(232,64,64,0.15);font-size:12px;font-weight:500;color:var(--red);cursor:pointer;margin-bottom:8px;display:flex;align-items:center;justify-content:center;gap:8px}
+.dmg-chip{transition:background 0.15s,color 0.15s,border-color 0.15s}
+.dmg-chip-on{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
 .dmg-photo{width:100%;border-radius:var(--radius-sm);margin-top:6px;max-height:200px;object-fit:cover}
 .dmg-list{display:flex;flex-direction:column;gap:6px;margin-top:8px}
 .dmg-item{background:var(--glass);border-radius:var(--radius-sm);padding:8px 10px;border:1px solid var(--border);font-size:12px;color:var(--t2)}
@@ -692,8 +694,8 @@ body::before{
   <div class="nav" id="nav"></div>
 </div>
 
-<div class="overlay" id="overlay">
-  <div class="modal" id="modal">
+<div class="overlay" id="overlay" onclick="closeModal()">
+  <div class="modal" id="modal" onclick="event.stopPropagation()">
     <h3 id="mTitle">Add</h3>
     <div id="mFields"></div>
     <div class="mbtn-row">
@@ -720,6 +722,11 @@ const DAY_COLORS= ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','
 const TODAY     = new Date().getDay();
 
 const FLEET_TAILS = ['IOC','IOJ','IOB','IOE','DAX','IAW','XAW','XDP'];
+const PROC_TAILS  = {
+  metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
+  westwind: ['IAW','XAW','XDP'],
+  astra:    ['DAX'],
+};
 
 function setBarLogo() {
   document.getElementById('barTitle').innerHTML =
@@ -3158,15 +3165,48 @@ function setSSearch(q){S.shopSearch=q;renderShopping(document.getElementById('co
 function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(document.getElementById('content'));}
 
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
+function _dmgTailChipToggle(el) {
+  el.classList.toggle('dmg-chip-on');
+}
+function _dmgAutoAddTailInput(inp) {
+  const container = document.getElementById('dmgTailManual');
+  if (!container) return;
+  const inputs = container.querySelectorAll('input');
+  // Only add a new row if this is the last input and it now has content
+  if (inp === inputs[inputs.length - 1] && inp.value.trim()) {
+    const row = document.createElement('input');
+    row.type = 'text'; row.placeholder = 'Another tail…'; row.maxLength = 6;
+    row.style.cssText = 'text-transform:uppercase;margin-bottom:6px';
+    row.oninput = function(){ this.value=this.value.toUpperCase(); _dmgAutoAddTailInput(this); };
+    container.appendChild(row);
+  }
+}
+function _collectDmgTails() {
+  const chips = [...document.querySelectorAll('.dmg-chip-on')].map(el=>el.dataset.tail);
+  const manual = [...(document.getElementById('dmgTailManual')?.querySelectorAll('input')||[])]
+    .map(i=>i.value.trim().toUpperCase()).filter(Boolean);
+  return [...new Set([...chips, ...manual])].join(', ');
+}
 function openDmgReport(key) {
   S.photoCtx='dmg'; S.pendingDmgPhoto=null; S.dmgKeyCtx=key; // Set BEFORE modal opens
-  const tailOpts = FLEET_TAILS.map(t=>`<option value="${t}">${t}</option>`).join('');
+  const procTails = PROC_TAILS[key] || [];
+  const chipsHtml = procTails.length
+    ? `<label>Tail (tap to select, multiple ok)</label>
+       <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+         ${procTails.map(t=>`<button type="button" class="dmg-chip" data-tail="${t}"
+           onclick="_dmgTailChipToggle(this)"
+           style="padding:6px 14px;border-radius:20px;border:1px solid var(--border2);
+                  background:var(--glass2);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer">${t}</button>`).join('')}
+       </div>
+       <label>Add tail manually</label>`
+    : `<label>Tail number (optional)</label>`;
   openModal('📸 Damage Report',
-    `<label>Tail Number (optional)</label>
-     <select id="dmgTail" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;margin-bottom:10px">
-       <option value="">— None / N/A —</option>
-       ${tailOpts}
-     </select>
+    `${chipsHtml}
+     <div id="dmgTailManual">
+       <input type="text" placeholder="Type tail…" maxlength="6"
+         style="text-transform:uppercase;margin-bottom:6px"
+         oninput="this.value=this.value.toUpperCase();_dmgAutoAddTailInput(this)">
+     </div>
      <label>Description</label>
      <textarea id="dmgText" placeholder="Describe the damage..." oninput="saveDmgDraft()"></textarea>
      <label>Photo (optional)</label>
@@ -3180,7 +3220,7 @@ function openDmgReport(key) {
       try {
         const text=document.getElementById('dmgText').value.trim();
         const photo = S.pendingDmgPhoto || '';
-        const tailNumber = document.getElementById('dmgTail')?.value || '';
+        const tailNumber = _collectDmgTails();
         if(!text && !photo){toast('Add a description or photo first');return;}
         S.pendingDmgPhoto = null; S.dmgKeyCtx=null; // clear after use
         localStorage.removeItem('gykf_dmg_draft');
