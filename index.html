@@ -844,9 +844,14 @@ window.addEventListener('load', async () => {
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
         seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
         // Remove legacy procedures that were deleted from the app
-        ['arrival','departure'].forEach(key=>{
+        ['arrival','departure','crewcars'].forEach(key=>{
           db.collection('procedures').doc(key).delete().catch(()=>{});
         });
+        // Ensure audits hub exists in Firestore
+        db.collection('procedures').doc('audits').set(
+          {title:'Audits',icon:'📁',warn:'',video:'',steps:[],isAuditsHub:true},
+          {merge:true}
+        ).catch(()=>{});
         loadPastAudits();
       })
       .catch(e => console.log('Boot fetch error:', e));
@@ -4212,15 +4217,19 @@ function setupLiveSync() {
       if(snap.empty) return; // not seeded yet — keep built-in defaults
       const procs = {};
       snap.forEach(d => {
+        if(d.id==='crewcars') return; // replaced by audits hub — skip
         const v=d.data();
         const existing = S.procs[d.id];
-        // Preserve isCrewCar from local procs if Firestore doc doesn't have it
-        const isCrewCar = v.isCrewCar || existing?.isCrewCar || false;
-        const isCrewCarsHub = v.isCrewCarsHub || existing?.isCrewCarsHub || false;
+        const isCrewCar    = v.isCrewCar    || existing?.isCrewCar    || false;
+        const isCrewCarsHub= v.isCrewCarsHub|| existing?.isCrewCarsHub|| false;
+        const isAuditsHub  = v.isAuditsHub  || existing?.isAuditsHub  || false;
         procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
-          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[], isCrewCar, isCrewCarsHub};
+          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[],
+          isCrewCar, isCrewCarsHub, isAuditsHub};
       });
-      // Preserve any locally-known procedures not yet in Firestore (e.g. just added)
+      // Always ensure audits hub is present
+      if(!procs.audits) procs.audits = S.procs.audits || {title:'Audits',icon:'📁',open:false,done:[],warn:'',video:'',isAuditsHub:true,steps:[]};
+      // Preserve any locally-known procedures not yet in Firestore
       Object.keys(S.procs).forEach(key=>{ if(!procs[key]) procs[key]=S.procs[key]; });
       S.procs = procs;
       if(S.tab==='procedures') render();
