@@ -4066,7 +4066,9 @@ function setupLiveSync() {
         if(v!==undefined) { i.checked=v.checked; i.status=v.status; }
       });
       saveShoppingState();
-      if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+      const el=document.getElementById('content');
+      if(S.tab==='shopping') renderShopping(el);
+      else if(S.tab==='home'||S.tab==='today') render();
     }, e => console.log('shopState listener error:', e));
 
     // Bored board done-state.
