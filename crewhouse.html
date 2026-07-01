@@ -66,11 +66,19 @@ let catalog = [];   // {id, item, notes}  — only Crew House items
 let shopState = {}; // {id: {checked, status}}
 let view = 'list';  // 'list' | 'add'
 
-// Live catalog listener — only Crew House store
+// One-time cleanup: delete old items that were wrongly tagged store='Crew House'
+db.collection('shoppingCatalog').where('store','==','Crew House').get().then(snap => {
+  if(snap.empty) return;
+  const batch = db.batch();
+  snap.docs.forEach(doc => batch.delete(doc.ref));
+  return batch.commit();
+}).catch(()=>{});
+
+// Live catalog listener — items located at Crew House (cabinet filter)
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
     .map(d => ({id:d.id, ...d.data()}))
-    .filter(i => i.store === 'Crew House');
+    .filter(i => i.cabinet === 'Crew House');
   render();
 });
 
