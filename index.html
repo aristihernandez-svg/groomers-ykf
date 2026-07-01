@@ -2701,9 +2701,6 @@ function renderProcs(el) {
             ${p.isCrewCarsHub?`${CREW_CARS.length} vehicles`:
               `${done}/${total} steps${dmg.length?` · ${dmg.length} report${dmg.length!==1?'s':''}`:''}`}
           </div>
-          ${total?`<div style="margin-top:6px;height:3px;border-radius:2px;background:var(--border);overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${pct===100?'var(--green)':'var(--accent)'};border-radius:2px"></div>
-          </div>`:''}
         </div>
       </div>`;
   }).join('');
