@@ -39,7 +39,8 @@ textarea{resize:none;min-height:60px;font-size:14px}
 <body>
 
 <div class="bar">
-  <img src="cars/Skycare_logo-removebg-preview.png" style="height:24px;filter:brightness(0) invert(1)" alt="Skycare">
+  <button onclick="goBack()" style="background:none;border:none;color:#4A90D9;font-size:24px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0">‹</button>
+  <img src="cars/Skycare_logo-removebg-preview.png" style="height:22px;filter:brightness(0) invert(1)" alt="Skycare">
   <span class="bar-title">Crew House Shopping</span>
   <span id="cartCount" style="background:var(--accent);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;display:none"></span>
 </div>
@@ -199,6 +200,11 @@ async function saveItem() {
 function cancelAdd() {
   view = 'list';
   render();
+}
+
+function goBack() {
+  if(view !== 'list') { view = 'list'; render(); }
+  else { try{window.close();}catch(e){} history.back(); }
 }
 
 render();

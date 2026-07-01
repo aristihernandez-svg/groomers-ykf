@@ -287,6 +287,8 @@ body::before{
 @keyframes hpF7{0%{opacity:0}84%{opacity:0}85%{opacity:1}95%{opacity:1}96%{opacity:0}100%{opacity:0}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes notePopIn{from{transform:scale(0.88) translateY(-6px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}
+@keyframes oilFlash{0%,100%{opacity:1}50%{opacity:0.08}}
+.oil-flash-icon{animation:oilFlash 0.75s infinite}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
@@ -2069,6 +2071,13 @@ function saveCrewCarData() {
       .catch(e=>console.log('crewCarData Firestore write failed:', e));
   }
 }
+function saveCarStatus(key, val) {
+  const d = carData(key);
+  d.status = (d.status === val) ? '' : val;
+  saveCrewCarData();
+  renderCrewCarsList(document.getElementById('content'));
+}
+
 function auditMonth() {
   return new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
 }
@@ -2099,7 +2108,7 @@ function loadPastAudits() {
 }
 
 function carData(key) {
-  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[],nextServiceKm:'',warnAtKm:'',regExpiry:'',insuranceExpiry:'',currentKm:'',crewNote:''};
+  if(!S.crewCarData[key]) S.crewCarData[key]={fuel:'',oilChange:'',washed:'',log:[],nextServiceKm:'',warnAtKm:'',regExpiry:'',insuranceExpiry:'',currentKm:'',crewNote:'',status:''};
   return S.crewCarData[key];
 }
 
@@ -2262,43 +2271,75 @@ function renderCrewCarsList(el) {
       ${alreadyArchived?`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;text-align:center">✅ ${month} audit saved to records</div>`:''}
     </div>`;
 
-  // ── Car list ──
-  CREW_CARS.forEach(car=>{
+  // ── Car list ── sort alerts to top ──
+  const todayIso=new Date().toISOString().split('T')[0];
+  const sortedCars=[...CREW_CARS].sort((a,b)=>{
+    const da=carData(a.key), db2=carData(b.key);
+    const ckA=parseInt(da.currentKm)||0, nsA=parseInt(da.nextServiceKm)||0;
+    const ckB=parseInt(db2.currentKm)||0, nsB=parseInt(db2.nextServiceKm)||0;
+    const oilA=ckA>0&&nsA>0&&(nsA-ckA)<=500;
+    const oilB=ckB>0&&nsB>0&&(nsB-ckB)<=500;
+    const fsA=FUEL_STOPS.find(s=>s.value===da.fuel); const pctA=fsA?fsA.pct:null;
+    const fsB=FUEL_STOPS.find(s=>s.value===db2.fuel); const pctB=fsB?fsB.pct:null;
+    const fuelA=pctA!==null&&pctA<=0.5;
+    const fuelB=pctB!==null&&pctB<=0.5;
+    const alertA=(oilA||fuelA)?0:1, alertB=(oilB||fuelB)?0:1;
+    return alertA-alertB;
+  });
+
+  sortedCars.forEach(car=>{
     const d=carData(car.key);
-    const worstColor=[carStatusColor(d.oilChange), carStatusColor(d.washed)]
-      .reduce((worst,c)=>{
-        const rank={'var(--red)':0,'#E8A000':1,'var(--green)':2};
-        return (rank[c]??2)<(rank[worst]??2)?c:worst;
-      },'var(--green)');
     const auditCD=carAuditData(car.key);
-    const todayIso=new Date().toISOString().split('T')[0];
     const regExp=d.regExpiry&&d.regExpiry<todayIso;
     const insExp=d.insuranceExpiry&&d.insuranceExpiry<todayIso;
     const docAlert=regExp||insExp;
-    const docBadge=docAlert?`<span title="${regExp?'Registration expired ':''}${insExp?'Insurance expired':''}" style="font-size:11px;background:var(--red);color:#fff;border-radius:6px;padding:1px 6px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
+    const docBadge=docAlert?`<span style="font-size:10px;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
     const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
     const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
+    const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const fuelPct=fs?fs.pct:null;
+    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;
+    const anyAlert=oilWarn||fuelAlert||docAlert;
+    const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.25?'#E74C3C':fuelPct<0.5?'#F1C40F':fuelPct<0.75?'#82E06A':'#27AE60';
+    const STATUS_OPTS=['CR','MX','N/A','OUT'];
+    const STATUS_COLORS={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
+    const statusPills=STATUS_OPTS.map(s=>{
+      const active=d.status===s;
+      const col=STATUS_COLORS[s]||'var(--border2)';
+      return `<button onclick="event.stopPropagation();saveCarStatus('${car.key}','${s}')"
+        style="padding:3px 9px;border-radius:20px;border:1.5px solid ${active?col:'var(--border2)'};
+               background:${active?col+'22':'transparent'};color:${active?col:'var(--t3)'};
+               font-size:11px;font-weight:700;cursor:pointer;transition:all 0.15s">${s}</button>`;
+    }).join('');
     html+=`
-      <div class="car-list-item" onclick="openCarDetail('${car.key}')" style="${docAlert?'border-left:3px solid var(--red);':''}">
-        <div style="position:relative">
-          ${carSquareIcon(car)}
+      <div onclick="openCarDetail('${car.key}')" style="
+        display:flex;align-items:flex-start;gap:12px;padding:14px 14px 12px;
+        border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;
+        background:${anyAlert?'rgba(231,76,60,0.10)':'var(--glass)'};
+        ${anyAlert?'border-left:3px solid var(--red)':'border-left:3px solid transparent'}">
+        <div style="position:relative;flex-shrink:0;margin-top:2px">
+          ${carSquareIcon(car,52,11)}
           ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:14px;height:14px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:8px">✓</div>`:''}
         </div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</div>
-          ${(()=>{ const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const pct=fs?fs.pct:null;
-            const col=pct===null?'var(--border)':pct<0.25?'#E74C3C':pct<0.5?'#F1C40F':pct<0.75?'#82E06A':'#27AE60';
-            const lbl=pct===null?'—':d.fuel;
-            return `<div style="margin-top:5px;display:flex;align-items:center;gap:7px">
-              <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
-                <div style="height:100%;width:${pct===null?0:Math.round(pct*100)}%;background:${col};border-radius:3px;transition:width 0.4s"></div>
-              </div>
-              <span style="font-size:11px;font-weight:700;color:var(--t3);flex-shrink:0">⛽ ${lbl}</span>
-            </div>`; })()}
+          <!-- Name row -->
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
+            <span style="font-size:15px;margin-left:auto">⛽</span>
+            <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
+          </div>
+          <!-- Status pills -->
+          <div style="display:flex;gap:4px;margin-top:7px;flex-wrap:wrap" onclick="event.stopPropagation()">
+            ${statusPills}
+          </div>
+          <!-- Fuel bar -->
+          <div style="margin-top:9px;display:flex;align-items:center;gap:7px">
+            <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
+              <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
+          </div>
         </div>
-        ${oilWarn?`<span style="font-size:18px" title="Oil service due soon">🛢</span>`:''}
-        <div class="car-status-dot" style="background:${worstColor}"></div>
-        <div style="color:var(--border2);font-size:20px">›</div>
+        <div style="color:var(--border2);font-size:20px;margin-top:2px">›</div>
       </div>`;
   });
 
@@ -4899,14 +4940,16 @@ function openQrWindow(url, title, desc) {
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>${title}</title>
     <style>*{margin:0;padding:0;box-sizing:border-box}body{background:#0B1120;color:#fff;font-family:-apple-system,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:28px;text-align:center}
+    .back{position:fixed;top:14px;left:14px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.14);border-radius:10px;padding:8px 14px;color:#fff;font-size:15px;font-weight:700;cursor:pointer;text-decoration:none}
     h2{font-size:18px;font-weight:800;margin-bottom:6px;color:#fff}
     p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.5;margin-bottom:22px}
     img{border-radius:16px;background:#fff;padding:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
-    a{display:block;margin-top:18px;font-size:11px;color:rgba(255,255,255,0.35);word-break:break-all}</style>
+    a.url{display:block;margin-top:18px;font-size:11px;color:rgba(255,255,255,0.35);word-break:break-all}</style>
     </head><body>
+    <button class="back" onclick="window.close()">‹ Close</button>
     <h2>${title}</h2><p>${desc}</p>
     <img src="${qr}" width="240" height="240" alt="QR Code">
-    <a href="${url}">${url}</a>
+    <a class="url" href="${url}">${url}</a>
     </body></html>`);
   w.document.close();
 }
