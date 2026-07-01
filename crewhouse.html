@@ -70,7 +70,7 @@ let view = 'list';  // 'list' | 'add'
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
     .map(d => ({id:d.id, ...d.data()}))
-    .filter(i => (i.store||'').toLowerCase() === 'crew house');
+    .filter(i => i.store === 'Crew House');
   render();
 });
 
