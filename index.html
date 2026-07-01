@@ -2219,8 +2219,7 @@ function openFuelGauge(key) {
   function fillArc(pct){
     if(pct<=0) return '';
     const [fx,fy]=pctToXY(pct,R);
-    const large=pct>0.5?1:0;
-    return `<path id="fuelFill" d="M${tx0},${ty0} A${R},${R} 0 ${large},1 ${fx},${fy}" stroke="url(#fuelGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>`;
+    return `<path id="fuelFill" d="M${tx0},${ty0} A${R},${R} 0 0,1 ${fx},${fy}" stroke="url(#fuelGrad)" stroke-width="16" fill="none" stroke-linecap="round"/>`;
   }
 
   // Label positions
@@ -2324,11 +2323,10 @@ function _fuelAttachDrag(cx,cy,R,W,H){
     // Update fill arc
     const [tx0,ty0]=[cx+R*Math.cos(Math.PI), cy];
     const [fx,fy]=[dx,dy];
-    const large=stop.pct>0.5?1:0;
     const fillEl=document.getElementById('fuelFill');
     if(fillEl){
       if(stop.pct<=0){fillEl.setAttribute('d','');}
-      else{fillEl.setAttribute('d',`M${tx0},${ty0} A${R},${R} 0 ${large},1 ${fx},${fy}`);}
+      else{fillEl.setAttribute('d',`M${tx0},${ty0} A${R},${R} 0 0,1 ${fx},${fy}`);}
     }
     // Update readout
     const r=document.getElementById('fuelReadout');
