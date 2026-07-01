@@ -669,8 +669,8 @@ body::before{
 <script>
 (function(){
   const day=new Date().getDay();
-  const planes={2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png'};
-  const names={2:'Metroliner',4:'Navajo'};
+  const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
+  const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
   if(planes[day]){
     document.getElementById('spPlane').innerHTML=
       `<img src="${planes[day]}" alt="${names[day]}" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(200,168,75,0.5))">`;
@@ -1299,8 +1299,8 @@ async function renderHome(el) {
       border-bottom:1px solid var(--border);
     ">
       ${(()=>{
-        const planes={2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png'};
-        const names={2:'Metroliner',4:'Navajo'};
+        const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
+        const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
         if(planes[TODAY]) return `
           <div style="margin-bottom:8px;animation:bob 2.5s ease-in-out infinite;display:inline-flex">
             <img src="${planes[TODAY]}" alt="${names[TODAY]}" style="width:120px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 20px rgba(200,168,75,0.4))">
