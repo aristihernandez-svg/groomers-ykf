@@ -62,6 +62,7 @@ textarea{resize:none;min-height:80px;font-size:14px;line-height:1.5}
   <button class="back-btn" onclick="goBack()">‹</button>
   <img src="cars/Skycare_logo-removebg-preview.png" style="height:22px;filter:brightness(0) invert(1)" alt="Skycare">
   <span class="bar-title" id="barTitle">Crew Car Update</span>
+  <button onclick="printAllQR()" id="printBtn" style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:8px 12px;color:var(--t2);font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;letter-spacing:0.3px">🖨 Print QRs</button>
 </div>
 <div id="app"></div>
 <div class="toast" id="toast"></div>
@@ -313,6 +314,38 @@ function openCarQR(key) {
     </div>`;
   ov.addEventListener('click', e=>{ if(e.target===ov) ov.remove(); });
   document.body.appendChild(ov);
+}
+
+// ── Print all QR codes ──
+function printAllQR() {
+  const baseUrl = `${location.origin}${location.pathname}`;
+  const rows = CREW_CARS.map(car => {
+    const url = `${baseUrl}?car=${car.key}`;
+    const qr  = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(url)}&bgcolor=ffffff&color=000000&margin=8`;
+    return `<div class="card">
+      <img src="${qr}" width="140" height="140" alt="${car.name}">
+      <div class="car-name">${car.name}</div>
+      <div class="car-sub">${car.label}</div>
+    </div>`;
+  }).join('');
+  const win = window.open('','_blank','width=800,height=600');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Skycare — Crew Car QR Codes</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;padding:20px}
+    h1{font-size:14px;font-weight:700;color:#333;margin-bottom:16px;text-align:center;letter-spacing:0.5px;text-transform:uppercase}
+    .grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+    .card{border:1.5px solid #ddd;border-radius:10px;padding:10px 10px 8px;text-align:center;width:160px;page-break-inside:avoid}
+    .card img{display:block;margin:0 auto 6px;border-radius:4px}
+    .car-name{font-size:11px;font-weight:800;color:#111;line-height:1.2}
+    .car-sub{font-size:9px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px}
+    @media print{body{padding:8px}h1{margin-bottom:10px}.grid{gap:8px}.card{width:150px}}
+  </style></head><body>
+  <h1>Skycare YKF — Crew Car QR Codes</h1>
+  <div class="grid">${rows}</div>
+  <script>window.onload=()=>{const imgs=document.querySelectorAll('img');let loaded=0;imgs.forEach(i=>{i.onload=()=>{loaded++;if(loaded===imgs.length)setTimeout(()=>window.print(),300)}});}<\/script>
+  </body></html>`);
+  win.document.close();
 }
 
 // ── Navigation ──
