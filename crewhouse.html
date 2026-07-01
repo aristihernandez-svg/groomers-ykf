@@ -144,7 +144,7 @@ function itemHtml(item, checked) {
     <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
     <div style="flex:1;min-width:0">
       <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
-      ${item.notes?`<div class="item-notes">${item.notes}</div>`:''}
+      ${item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ?`<div class="item-notes">${item.notes}</div>`:''}
     </div>
   </div>`;
 }
