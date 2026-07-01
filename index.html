@@ -2791,7 +2791,10 @@ function renderProcDetail(el, key) {
       <div class="dmg-hdr">📸 Damage Reports</div>
       <div class="dmg-body"><div class="dmg-list">
         ${dmg.map((d,di)=>`<div class="dmg-item">
-          <div>${d.text}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${d.tailNumber?`<span style="background:rgba(232,64,64,0.15);color:var(--red);border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;letter-spacing:0.5px">${d.tailNumber}</span>`:''}
+            <span>${d.text}</span>
+          </div>
           <div style="font-size:11px;color:#888;margin-top:2px">${d.date}</div>
           ${d.photo?`<img class="dmg-item-photo" src="${d.photo}" onclick="viewPhoto('${d.photo}')">`:''}
           <div style="display:flex;gap:6px;margin-top:8px">
@@ -3046,10 +3049,11 @@ function toggleShop(idx) {
   api({action:'toggleShop',item:S.shopping[idx].item});
   fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
   renderShopping(document.getElementById('content'));
-  if(S.shopping[idx].checked && S.buyerOut) {
-    toast('🔔 Added to list — buyer is out and will see this!');
+  if(S.shopping[idx].checked) {
+    broadcastNotif('🛒 Shopping', `${S.shopping[idx].item} needs restocking`, 'shopping');
+    toast(S.buyerOut ? '🔔 Added to list — buyer is out and will see this!' : '🔴 Needs restocking');
   } else {
-    toast(S.shopping[idx].checked?'🔴 Needs restocking':'✅ In Stock');
+    toast('✅ In Stock');
   }
 }
 
@@ -3156,8 +3160,14 @@ function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(doc
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
 function openDmgReport(key) {
   S.photoCtx='dmg'; S.pendingDmgPhoto=null; S.dmgKeyCtx=key; // Set BEFORE modal opens
+  const tailOpts = FLEET_TAILS.map(t=>`<option value="${t}">${t}</option>`).join('');
   openModal('📸 Damage Report',
-    `<label>Description</label>
+    `<label>Tail Number (optional)</label>
+     <select id="dmgTail" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;margin-bottom:10px">
+       <option value="">— None / N/A —</option>
+       ${tailOpts}
+     </select>
+     <label>Description</label>
      <textarea id="dmgText" placeholder="Describe the damage..." oninput="saveDmgDraft()"></textarea>
      <label>Photo (optional)</label>
      <button type="button" id="dmgPhotoBtn" onclick="triggerPhoto('dmg')"
@@ -3170,12 +3180,13 @@ function openDmgReport(key) {
       try {
         const text=document.getElementById('dmgText').value.trim();
         const photo = S.pendingDmgPhoto || '';
+        const tailNumber = document.getElementById('dmgTail')?.value || '';
         if(!text && !photo){toast('Add a description or photo first');return;}
         S.pendingDmgPhoto = null; S.dmgKeyCtx=null; // clear after use
         localStorage.removeItem('gykf_dmg_draft');
         if(!S.dmgReports[key]) S.dmgReports[key]=[];
         const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
-        const report = {text:text||'(no description)',photo,date};
+        const report = {text:text||'(no description)',photo,date,tailNumber};
         S.dmgReports[key].push(report); // optimistic local save — works offline too
         saveDmg(); closeModal();
         render();
@@ -3186,9 +3197,13 @@ function openDmgReport(key) {
         if(db) {
           db.collection('damageReports').add({
             procKey:key, text:report.text, photo:report.photo, date:report.date,
+            tailNumber: report.tailNumber || '',
             ts: firebase.firestore.FieldValue.serverTimestamp(),
             expireAt: ttlTimestamp(120)
           }).catch(e => console.log('Damage report Firestore sync failed (offline?):', e));
+          const procTitle = S.procs[key]?.title || key;
+          const tailPart = report.tailNumber ? ` · ${report.tailNumber}` : '';
+          broadcastNotif('⚠️ Damage Report', `${procTitle}${tailPart}: ${report.text.slice(0,60)}`, 'damage');
         }
       } catch(e) {
         console.error('Damage report save error:', e);
@@ -3637,6 +3652,16 @@ function showEOD() {
     msg+=`📝 *Carry-over notes:*\n${todayNotes.map(n=>`  • ${n.text}${n.area?' ('+n.area+')':''}`).join('\n')}\n\n`;
   }
 
+  // Damage reports filed today
+  const allDmg = Object.entries(S.dmgReports).flatMap(([k,reps])=>reps.map(r=>({...r,procKey:k})));
+  if(allDmg.length>0) {
+    msg+=`📸 *Damage Reports (${allDmg.length}):*\n${allDmg.map(d=>{
+      const tail=d.tailNumber?`[${d.tailNumber}] `:'';
+      const proc=S.procs[d.procKey]?.title||d.procKey;
+      return `  ⚠️ ${tail}${proc}: ${d.text.slice(0,60)}`;
+    }).join('\n')}\n\n`;
+  }
+
   msg+=`${'─'.repeat(30)}\n_Sent from ✈ Skycare — YKF Grooming Team_`;
   S.pendingHandoffAudio = null;
   openModal('📋 End of Day Summary',
@@ -3663,6 +3688,7 @@ function showEOD() {
             resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
             expireAt: ttlTimestamp(120)
           });
+          broadcastNotif('📋 Handoff Note', noteText.slice(0, 80) || '(voice memo)', 'handoff');
           saveMsg = 'Handoff note saved for next shift';
         } catch(e) {
           console.log('Handoff note save failed:', e);
@@ -4198,7 +4224,7 @@ function setupLiveSync() {
       const byProc = {}; const idsByProc = {};
       snap.forEach(doc => {
         const d = doc.data();
-        (byProc[d.procKey] ||= []).push({text:d.text, photo:d.photo||'', date:d.date});
+        (byProc[d.procKey] ||= []).push({text:d.text, photo:d.photo||'', date:d.date, tailNumber:d.tailNumber||''});
         (idsByProc[d.procKey] ||= []).push(doc.id);
       });
       S.dmgReports = byProc;
@@ -4261,9 +4287,38 @@ function setupLiveSync() {
       if(S.tab==='home') renderHome(document.getElementById('content'));
       else if(S.tab==='today') renderToday(document.getElementById('content'));
     }, e => console.log('handoffNotes listener error:', e));
+
+    // Broadcast notifications — fired by any device writing to this collection
+    db.collection('notifications').orderBy('ts','desc').limit(1).onSnapshot(snap => {
+      if (snap.empty) return;
+      const doc = snap.docs[0];
+      const data = doc.data();
+      if (!data.ts) return; // not yet server-stamped
+      const docMs = data.ts.toMillis ? data.ts.toMillis() : 0;
+      if (docMs <= _notifSessionStart) return; // skip notifications from before this session
+      const title = data.title || '✈ Skycare';
+      const body = data.body || '';
+      if (Notification.permission === 'granted') {
+        new Notification(title, { body, icon: './icon-192.png', tag: data.tag || 'skycare', renotify: true });
+      } else {
+        toast(`🔔 ${title}${body ? ' — ' + body : ''}`);
+      }
+    }, e => console.log('notifications listener error:', e));
   } catch(e) {
     console.log('setupLiveSync error:', e);
   }
+}
+
+// ── BROADCAST NOTIFICATIONS ─────────────────────────────────────────
+// Write an event to Firestore; every open device picks it up via onSnapshot
+// and shows a native Notification (or a toast if permission not granted).
+const _notifSessionStart = Date.now();
+function broadcastNotif(title, body, tag) {
+  if (!db) return;
+  db.collection('notifications').add({
+    title, body, tag: tag || 'skycare',
+    ts: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.log('broadcastNotif failed (offline?):', e));
 }
 
 function markHandoffComplete(id) {
@@ -4347,6 +4402,13 @@ async function requestNotificationPermission() {
     if (token) {
       localStorage.setItem('fcm_token', token);
       console.log('FCM token:', token);
+      // Store in Firestore so other devices can discover this token for broadcasts
+      if (db) {
+        db.collection('fcmTokens').doc(token).set({
+          ts: firebase.firestore.FieldValue.serverTimestamp(),
+          ua: navigator.userAgent.slice(0, 80)
+        }, { merge: true }).catch(e => console.log('FCM token store failed:', e));
+      }
     }
 
     // Schedule local notifications as backup
