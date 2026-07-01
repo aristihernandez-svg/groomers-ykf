@@ -764,6 +764,11 @@ const CREW_CARS = [
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
+// Per-car oil specifications — add more cars as info becomes available
+const CAR_OIL_INFO = {
+  elantra: {oil:'5W-20', capacity:'4L'},
+};
+
 // ── STATE ──────────────────────────────────────────────────────────
 const S = {
   tab:'home', dayView:TODAY, inDay:false,
@@ -1945,12 +1950,14 @@ function renderCart(el, items) {
       </div>`;
       sitems.forEach(item=>{
         const ri=items.indexOf(item);
+        const cqty = item.qty||1;
         html+=`<div class="srow" style="background:var(--glass);border-left:3px solid ${col}" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
           <div class="scb" style="background:${col};border-color:${col};color:#fff">✓</div>
           <div class="sinfo">
             <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
           </div>
+          ${cqty>1?`<span style="background:${col};color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;flex-shrink:0">×${cqty}</span>`:''}
         </div>`;
       });
     });
@@ -2042,55 +2049,39 @@ function openOilServiceModal(key) {
        <div>${d.oilChange ? fmtDate(d.oilChange) + (daysSince(d.oilChange)!=null ? ' · '+daysSince(d.oilChange)+' days ago' : '') : 'No record'}</div>
        ${d.nextServiceKm?`<div style="margin-top:4px">Next service: <b>${Number(d.nextServiceKm).toLocaleString()} km</b></div>`:''}
      </div>
-     <label>Log today as oil change date?</label>
-     <select id="mOLogToday">
-       <option value="yes">Yes — log today</option>
-       <option value="no">No — just update KM info</option>
-     </select>
      <label>Next service (KM)</label>
-     <input type="number" id="mOKM" placeholder="e.g. 125000" value="${d.nextServiceKm||''}">
-     <label>Warn me at (KM)</label>
-     <input type="number" id="mOWKM" placeholder="e.g. 120000" value="${d.warnAtKm||''}">`,
+     <input type="number" id="mOKM" placeholder="e.g. 125000" value="${d.nextServiceKm||''}">`,
     async() => {
-      const logToday = document.getElementById('mOLogToday').value === 'yes';
       const km = document.getElementById('mOKM').value.trim();
-      const wkm = document.getElementById('mOWKM').value.trim();
       if(km) d.nextServiceKm = km;
-      if(wkm) d.warnAtKm = wkm;
-      if(logToday) {
-        const today = new Date().toISOString().split('T')[0];
-        const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
-        d.oilChange = today;
-        d.log.push({type:'oil',value:'Oil changed',date:today,logged});
-      }
+      const today = new Date().toISOString().split('T')[0];
+      const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+      d.oilChange = today;
+      d.log.push({type:'oil',value:'Oil changed',date:today,logged});
       saveCrewCarData();
       renderCarDetail(document.getElementById('content'), key);
-      toast(logToday ? '🛢 Oil service logged' : '🛢 KM info updated');
+      toast('🛢 Oil service logged');
     });
 }
 
 function openOilInfoPopup(key) {
-  const d = carData(key);
-  const nextKm = d.nextServiceKm ? Number(d.nextServiceKm).toLocaleString()+' km' : '—';
-  const warnKm = d.warnAtKm ? Number(d.warnAtKm).toLocaleString()+' km' : '—';
-  openModal('🛢 Service Info',
-    `<div style="display:flex;flex-direction:column;gap:10px">
-       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
-         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Last oil change</div>
-         <div style="font-size:16px;font-weight:700;color:var(--t1)">${d.oilChange?fmtDate(d.oilChange):'No record'}</div>
-         ${d.oilChange&&daysSince(d.oilChange)!=null?`<div style="font-size:12px;color:var(--t3);margin-top:2px">${daysSince(d.oilChange)} days ago</div>`:''}
-       </div>
-       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
-         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Next service</div>
-         <div style="font-size:16px;font-weight:700;color:var(--t1)">${nextKm}</div>
-       </div>
-       <div style="background:var(--glass2);border-radius:12px;padding:12px;font-size:13px">
-         <div style="color:var(--t3);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Warn at</div>
-         <div style="font-size:16px;font-weight:700;color:#E8A000">${warnKm}</div>
-       </div>
-     </div>`,
-    null);
-  document.getElementById('mSave').style.display='none';
+  const info = CAR_OIL_INFO[key];
+  const existing = document.getElementById('_oilPill');
+  if(existing) { existing.remove(); return; }
+  const pill = document.createElement('div');
+  pill.id = '_oilPill';
+  pill.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:20px;padding:20px 32px;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.6)';
+  pill.innerHTML = info
+    ? `<div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px">Oil Spec</div>
+       <div style="font-size:28px;font-weight:800;color:var(--t1)">${info.oil}</div>
+       <div style="font-size:20px;color:var(--t2);margin-top:6px">${info.capacity}</div>
+       <div style="font-size:11px;color:var(--t3);margin-top:14px">Tap anywhere to close</div>`
+    : `<div style="font-size:14px;color:var(--t2)">No oil spec on file for this car</div>
+       <div style="font-size:11px;color:var(--t3);margin-top:10px">Tap anywhere to close</div>`;
+  document.body.appendChild(pill);
+  const close = () => { pill.remove(); document.removeEventListener('touchstart', close, true); document.removeEventListener('click', close, true); };
+  setTimeout(() => { document.addEventListener('touchstart', close, {once:true, capture:true}); document.addEventListener('click', close, {once:true, capture:true}); }, 100);
+  setTimeout(() => { if(pill.parentNode) pill.remove(); }, 6000);
 }
 
 function openRegInsuranceModal(key, type) {
@@ -2297,7 +2288,7 @@ function renderCarDetail(el, key) {
 
     <!-- Registration & Insurance -->
     <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
-      <div onclick="openRegInsuranceModal('${key}','reg')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+      <div onclick="openCarCalendar('${key}','reg')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
         <span style="font-size:22px">📄</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Registration</div>
@@ -2305,7 +2296,7 @@ function renderCarDetail(el, key) {
         </div>
         <span style="color:var(--border2);font-size:18px">›</span>
       </div>
-      <div onclick="openRegInsuranceModal('${key}','insurance')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
+      <div onclick="openCarCalendar('${key}','insurance')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
         <span style="font-size:22px">🛡</span>
         <div style="flex:1;min-width:0">
           <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Insurance</div>
@@ -2493,7 +2484,7 @@ function _saveFuelAndClose(){
 }
 
 function openCarCalendar(key, type){
-  const label=type==='oil'?'🛢 Oil Change':'🧹 Washed';
+  const label=type==='oil'?'🛢 Oil Change':type==='wash'?'🧹 Washed':type==='reg'?'📄 Registration Expiry':type==='insurance'?'🛡 Insurance Expiry':'Calendar';
   const today=new Date().toISOString().split('T')[0];
   // Build a full month calendar
   const now=new Date();
@@ -2564,6 +2555,16 @@ window._calNav=function(dir,key,type){
 window._calPick=function(key,type,iso){
   const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
   const d=carData(key);
+  if(type==='reg'){
+    d.regExpiry=iso; saveCrewCarData(); closeModal();
+    renderCarDetail(document.getElementById('content'),key);
+    toast(`📄 Registration expiry set — ${iso}`); return;
+  }
+  if(type==='insurance'){
+    d.insuranceExpiry=iso; saveCrewCarData(); closeModal();
+    renderCarDetail(document.getElementById('content'),key);
+    toast(`🛡 Insurance expiry set — ${iso}`); return;
+  }
   const value=type==='oil'?'Oil changed':'Washed';
   d.log.push({type,value,date:iso,logged});
   if(type==='oil') d.oilChange=iso;
@@ -3789,8 +3790,7 @@ function openAddShopItem() {
     `<label>Item name</label>
      <input id="mSI" placeholder="Item...">
      <label>Location / Cabinet</label>
-     <input id="mSC" list="mSCList" placeholder="Select or type a location...">
-     <datalist id="mSCList">${existingLocs.map(l=>`<option value="${l}">`).join('')}</datalist>
+     <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${l}</option>`).join('')}</select>
      <label>Store</label>
      <select id="mSS">${[...Object.keys(STORE_COLORS),'Crew House'].map(s=>`<option value="${s}">${s}</option>`).join('')}</select>`,
     async()=>{
