@@ -842,6 +842,10 @@ window.addEventListener('load', async () => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
         seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
+        // Remove legacy procedures that were deleted from the app
+        ['arrival','departure'].forEach(key=>{
+          db.collection('procedures').doc(key).delete().catch(()=>{});
+        });
         loadPastAudits();
       })
       .catch(e => console.log('Boot fetch error:', e));
@@ -1365,16 +1369,6 @@ async function renderHome(el) {
       </div>
     </div>
 
-    <!-- QR Code -->
-    <div style="padding:0 14px 16px">
-      <div style="font-size:11px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📱 Share App</div>
-      <div style="background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center">
-        <canvas id="qrCanvas" width="160" height="160" style="border-radius:8px;background:#fff;padding:6px"></canvas>
-        <div style="font-size:10px;color:var(--t3);margin-top:8px;font-family:monospace">aristihernandez-svg.github.io/groomers-ykf</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:4px">Scan to open · Add to Home Screen to install</div>
-      </div>
-    </div>
-
     <!-- Style switcher -->
     <div style="padding:0 14px 24px">
       <div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Style</div>
@@ -1390,6 +1384,14 @@ async function renderHome(el) {
       <div style="font-size:11px;color:var(--t3);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">Admin</div>
       <button onclick="importFromSheets()" style="width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--glass);border:1px solid var(--border);color:var(--t2);font-size:13px;font-weight:500;cursor:pointer">🔄 Import bulk edits from Sheets</button>
       <div style="font-size:11px;color:var(--t3);margin-top:8px;text-align:center">Shopping items and contacts only — for after a bulk-edit session in the spreadsheet</div>
+    </div>
+
+    <!-- QR Code -->
+    <div style="padding:0 14px 32px;text-align:center">
+      <div style="font-size:11px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">📱 Share App</div>
+      <canvas id="qrCanvas" width="160" height="160" style="border-radius:8px;background:#fff;padding:6px"></canvas>
+      <div style="font-size:10px;color:var(--t3);margin-top:8px;font-family:monospace">aristihernandez-svg.github.io/groomers-ykf</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">Scan to open · Add to Home Screen to install</div>
     </div>
   `;
 
