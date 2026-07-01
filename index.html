@@ -2257,8 +2257,6 @@ function renderCrewCarsList(el) {
         const rank={'var(--red)':0,'#E8A000':1,'var(--green)':2};
         return (rank[c]??2)<(rank[worst]??2)?c:worst;
       },'var(--green)');
-    const ds=daysSince(d.washed);
-    const sub=d.washed?`Last washed ${ds===0?'today':ds===1?'yesterday':ds+' days ago'}`:'No records yet';
     const auditCD=carAuditData(car.key);
     const todayIso=new Date().toISOString().split('T')[0];
     const regExp=d.regExpiry&&d.regExpiry<todayIso;
@@ -2273,7 +2271,12 @@ function renderCrewCarsList(el) {
         </div>
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</div>
-          <div style="font-size:12px;color:var(--t3);margin-top:2px">${car.label} · ${sub}</div>
+          <div style="margin-top:5px;display:flex;align-items:center;gap:7px">
+            <div style="flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden">
+              <div style="height:100%;width:${Math.round((d.fuel||0)*100)}%;background:${(d.fuel||0)<0.25?'var(--red)':(d.fuel||0)<0.5?'#E8A000':'var(--green)'};border-radius:3px;transition:width 0.4s"></div>
+            </div>
+            <span style="font-size:11px;font-weight:700;color:var(--t3);flex-shrink:0">${Math.round((d.fuel||0)*100)}%</span>
+          </div>
         </div>
         <div class="car-status-dot" style="background:${worstColor}"></div>
         <div style="color:var(--border2);font-size:20px">›</div>
