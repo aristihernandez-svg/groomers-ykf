@@ -1516,9 +1516,6 @@ function renderToday(el) {
   let html=renderHandoffNotesHtml();
   html+=renderDayNoteWidget(todayIso, true);
   html+=`
-    <div class="reset-day-bar">
-      <button class="reset-day-btn" onclick="resetDay()">🔄 Reset today's tasks</button>
-    </div>
     <div class="prog-wrap">
       <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
