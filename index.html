@@ -5382,7 +5382,12 @@ async function requestNotificationPermission() {
         sub: JSON.parse(JSON.stringify(sub)),
         ts: firebase.firestore.FieldValue.serverTimestamp(),
         ua: navigator.userAgent.slice(0, 80)
-      }, { merge: true }).catch(e => console.log('Push sub store failed:', e));
+      }, { merge: true }).then(() => {
+        console.log('Push sub saved to Firestore ✓');
+      }).catch(e => {
+        console.error('Push sub Firestore FAILED:', e);
+        toast('⚠️ Sub saved locally but Firestore failed: ' + e.code);
+      });
     }
 
     console.log('Push subscription saved:', subId);
