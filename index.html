@@ -1358,10 +1358,6 @@ async function renderHome(el) {
   document.getElementById('eodFab').classList.remove('show');
   document.getElementById('fab').style.display = 'none';
 
-  // Auto-upgrade legacy standard themes to premium
-  if(S.theme === 'standard-night') { S.theme = 'premium';     setTheme('premium'); }
-  if(S.theme === 'standard-day')   { S.theme = 'premium-day'; setTheme('premium-day'); }
-
   // Clear any previous slideshow timer
   if(_heroSlideTimer) { clearInterval(_heroSlideTimer); _heroSlideTimer = null; }
 
@@ -1392,7 +1388,7 @@ async function renderHome(el) {
       @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
       .tile-anim{animation:slideIn 0.3s ease both}
       .hero-wrap{position:relative;width:100%;height:260px;overflow:hidden;background:#060d1a}
-      .hero-img{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.2s ease}
+      .hero-img{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 0.6s ease}
       .hero-img.active{opacity:1}
       .hero-img.kb{animation:kenBurns 6s ease-out forwards}
       @keyframes kenBurns{from{transform:scale(1)}to{transform:scale(1.07)}}
@@ -1433,7 +1429,7 @@ async function renderHome(el) {
     next.classList.add('active');
     void next.offsetWidth; // force reflow for KB restart
     next.classList.add('kb');
-  }, 5000);
+  }, 2000);
 }
 
 // ── TODAY ──────────────────────────────────────────────────────────
