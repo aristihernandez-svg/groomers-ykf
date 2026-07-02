@@ -2,9 +2,12 @@ name: Crew Car Alerts
 
 on:
   # 11:00 AM Eastern (EDT=UTC-4: 15:00 UTC, EST=UTC-5: 16:00 UTC)
+  # 4:00 PM Eastern  (EDT=UTC-4: 20:00 UTC, EST=UTC-5: 21:00 UTC)
   schedule:
-    - cron: '0 15 * * *'   # EDT (summer)
-    - cron: '0 16 * * *'   # EST (winter)
+    - cron: '0 15 * * *'   # EDT 11:00 AM
+    - cron: '0 16 * * *'   # EST 11:00 AM
+    - cron: '0 20 * * *'   # EDT  4:00 PM
+    - cron: '0 21 * * *'   # EST  4:00 PM
   workflow_dispatch:        # manual trigger for testing
 
 jobs:
