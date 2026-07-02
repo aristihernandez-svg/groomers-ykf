@@ -1,0 +1,32 @@
+name: Crew Car Alerts
+
+on:
+  # 11:00 AM Eastern (EDT=UTC-4: 15:00 UTC, EST=UTC-5: 16:00 UTC)
+  schedule:
+    - cron: '0 15 * * *'   # EDT (summer)
+    - cron: '0 16 * * *'   # EST (winter)
+  workflow_dispatch:        # manual trigger for testing
+
+jobs:
+  send-alerts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: notif/package.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: notif
+
+      - name: Send crew car alerts
+        run: node car-alerts.js
+        working-directory: notif
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VAPID_PUBLIC_KEY: "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU"
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
