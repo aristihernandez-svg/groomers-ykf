@@ -19,7 +19,7 @@ const COFFEE_TIMES = [
   { hour: 9,  minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 11, minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 15, minute: 40, message: '☕ Hurry... gotta make coffee!' },
-  { hour: 22, minute: 25, message: '🧪 Test — notifications are working!' },
+  { hour: 22, minute: 28, message: '🧪 Test — notifications are working!' },
 ];
 
 async function main() {
