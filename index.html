@@ -5367,8 +5367,9 @@ async function requestNotificationPermission() {
       return false;
     }
 
-    // Get FCM token
-    const token = await fbMessaging.getToken({ vapidKey: VAPID_KEY });
+    // Get FCM token — pass our sw.js registration so FCM doesn't look for firebase-messaging-sw.js
+    const swReg = await navigator.serviceWorker.ready;
+    const token = await fbMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
     if (token) {
       localStorage.setItem('fcm_token', token);
       console.log('FCM token:', token);
