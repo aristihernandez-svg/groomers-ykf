@@ -1,23 +1,27 @@
 // Skycare YKF — Coffee notification sender
-// Run by GitHub Actions at scheduled times; reads FCM tokens from Firestore and sends push.
+// Run by GitHub Actions at scheduled times; reads push subscriptions from Firestore and sends via Web Push.
 
-const admin = require('firebase-admin');
+const admin   = require('firebase-admin');
+const webpush = require('web-push');
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
 
-const db        = admin.firestore();
-const messaging = admin.messaging();
+const db = admin.firestore();
+
+webpush.setVapidDetails(
+  'mailto:aristihernandez@gmail.com',
+  process.env.VAPID_PUBLIC_KEY,
+  process.env.VAPID_PRIVATE_KEY
+);
 
 const COFFEE_TIMES = [
   { hour: 9,  minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 11, minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 15, minute: 40, message: '☕ Hurry... gotta make coffee!' },
-  { hour: 22, minute: 5,  message: '🧪 Test notification — it works!' },
 ];
 
 async function main() {
-  // Determine current time in Eastern (handles EDT/EST automatically)
   const now     = new Date();
   const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
   const h = eastern.getHours();
@@ -31,62 +35,49 @@ async function main() {
 
   console.log(`Coffee time! Sending for ${h}:${String(match.minute).padStart(2,'0')} Eastern`);
 
-  // Read all stored FCM tokens
-  const snap   = await db.collection('fcmTokens').get();
-  const tokens = snap.docs.map(d => d.id).filter(Boolean);
+  const snap  = await db.collection('pushSubscriptions').get();
+  const docs  = snap.docs.map(d => ({ id: d.id, sub: d.data().sub })).filter(d => d.sub);
 
-  if (!tokens.length) {
-    console.log('No FCM tokens in Firestore — no one has enabled notifications yet');
+  if (!docs.length) {
+    console.log('No push subscriptions in Firestore — no one has enabled notifications yet');
     process.exit(0);
   }
 
-  console.log(`Sending to ${tokens.length} device(s)`);
+  console.log(`Sending to ${docs.length} device(s)`);
 
-  const results = await Promise.allSettled(tokens.map(token =>
-    messaging.send({
-      token,
-      notification: {
-        title: '✈ Skycare',
-        body:  match.message,
-      },
-      webpush: {
-        notification: {
-          icon:      'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
-          badge:     'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
-          tag:       `coffee-${h}`,
-          renotify:  true,
-          vibrate:   [200, 100, 200],
-        },
-        fcmOptions: {
-          link: 'https://aristihernandez-svg.github.io/groomers-ykf/',
-        },
-      },
-    })
-  ));
+  const payload = JSON.stringify({
+    title: '✈ Skycare',
+    body:  match.message,
+    icon:  'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
+    badge: 'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
+    tag:   `coffee-${h}`,
+    url:   'https://aristihernandez-svg.github.io/groomers-ykf/',
+  });
+
+  const results = await Promise.allSettled(
+    docs.map(d => webpush.sendNotification(d.sub, payload))
+  );
 
   const ok   = results.filter(r => r.status === 'fulfilled').length;
   const fail = results.filter(r => r.status === 'rejected').length;
   console.log(`Done — ${ok} sent, ${fail} failed`);
 
-  // Remove stale/invalid tokens automatically
-  const staleTokens = [];
+  // Remove expired/invalid subscriptions
+  const stale = [];
   results.forEach((r, i) => {
     if (r.status === 'rejected') {
-      const code = r.reason?.errorInfo?.code || r.reason?.code || '';
-      if (code.includes('registration-token-not-registered') || code.includes('invalid-registration-token')) {
-        staleTokens.push(tokens[i]);
-      } else {
-        console.error(`Token ${i} failed:`, r.reason?.message || r.reason);
-      }
+      const status = r.reason?.statusCode;
+      console.error(`Device ${i} failed (${status}):`, r.reason?.body || r.reason?.message);
+      if (status === 404 || status === 410) stale.push(docs[i].id);
     }
   });
 
-  if (staleTokens.length) {
-    console.log(`Removing ${staleTokens.length} stale token(s) from Firestore`);
+  if (stale.length) {
+    console.log(`Removing ${stale.length} expired subscription(s)`);
     const batch = db.batch();
-    staleTokens.forEach(t => batch.delete(db.collection('fcmTokens').doc(t)));
+    stale.forEach(id => batch.delete(db.collection('pushSubscriptions').doc(id)));
     await batch.commit();
   }
 }
 
-main().catch(e => { console.error('Fatal error:', e); process.exit(1); });
+main().catch(e => { console.error('Fatal:', e); process.exit(1); });

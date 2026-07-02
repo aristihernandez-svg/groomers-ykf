@@ -4737,7 +4737,7 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "384366195372",
   appId: "1:384366195372:web:35d38ffbc947188d4a6509"
 };
-const VAPID_KEY = "BPd-CNO2dcZWfhOKPKuKm8n3ey95dhq6Gb2q13QyzixSb5BA9cuEm6ZvZYm9st7eUK6lGFdHHYvGqlvGJDwlcrA";
+const VAPID_PUBLIC_KEY = "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU";
 
 // Coffee notification times: 9:40, 11:40, 15:40
 const COFFEE_TIMES = [
@@ -4747,12 +4747,16 @@ const COFFEE_TIMES = [
   { hour: 20, minute: 0,  message: "🔐 Leave the CC and the phone on charge!" },
 ];
 
-let fbMessaging = null;
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
 
 async function initFirebase() {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    fbMessaging = firebase.messaging();
     console.log('Firebase initialized');
   } catch(e) {
     console.log('Firebase init error:', e);
@@ -5357,49 +5361,38 @@ function fsSetBoredDone(task, done) {
 
 async function requestNotificationPermission() {
   try {
-    // Init Firebase if not done
-    if (!fbMessaging) await initFirebase();
-
-    // Request browser permission
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       toast('Notifications blocked — enable in browser settings');
       return false;
     }
 
-    // Get FCM token — pass our sw.js registration so FCM doesn't look for firebase-messaging-sw.js
+    // Subscribe via native Web Push (works on iOS 16.4+ without APNs key)
     const swReg = await navigator.serviceWorker.ready;
-    const token = await fbMessaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: swReg });
-    if (token) {
-      localStorage.setItem('fcm_token', token);
-      console.log('FCM token:', token);
-      // Store in Firestore so other devices can discover this token for broadcasts
-      if (db) {
-        db.collection('fcmTokens').doc(token).set({
-          ts: firebase.firestore.FieldValue.serverTimestamp(),
-          ua: navigator.userAgent.slice(0, 80)
-        }, { merge: true }).catch(e => console.log('FCM token store failed:', e));
-      }
+    const sub = await swReg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+
+    // Store subscription in Firestore keyed by endpoint hash
+    const subId = btoa(sub.endpoint).replace(/[^a-zA-Z0-9]/g,'').slice(-40);
+    localStorage.setItem('push_sub_id', subId);
+    if (db) {
+      db.collection('pushSubscriptions').doc(subId).set({
+        sub: JSON.parse(JSON.stringify(sub)),
+        ts: firebase.firestore.FieldValue.serverTimestamp(),
+        ua: navigator.userAgent.slice(0, 80)
+      }, { merge: true }).catch(e => console.log('Push sub store failed:', e));
     }
 
-    // Schedule local notifications as backup
-    scheduleLocalNotifications();
-
+    console.log('Push subscription saved:', subId);
     toast('✅ Notifications enabled!');
     localStorage.setItem('notifications_enabled', '1');
     updateNotifBtn();
     return true;
   } catch(e) {
     console.error('Notification setup error:', e);
-    // Fall back to local notifications only
-    if (Notification.permission === 'granted') {
-      scheduleLocalNotifications();
-      toast('✅ Local notifications enabled');
-      localStorage.setItem('notifications_enabled', '1');
-      updateNotifBtn();
-      return true;
-    }
-    toast('Could not enable notifications');
+    toast('Could not enable notifications: ' + e.message);
     return false;
   }
 }
@@ -5443,12 +5436,26 @@ function scheduleLocalNotifications() {
   localStorage.setItem('notif_ids', JSON.stringify(ids));
 }
 
-function disableNotifications() {
+async function disableNotifications() {
   const existingIds = JSON.parse(localStorage.getItem('notif_ids') || '[]');
   existingIds.forEach(id => clearTimeout(id));
+
+  // Unsubscribe from push
+  try {
+    const swReg = await navigator.serviceWorker.ready;
+    const sub = await swReg.pushManager.getSubscription();
+    if (sub) await sub.unsubscribe();
+  } catch(e) {}
+
+  // Remove from Firestore
+  const subId = localStorage.getItem('push_sub_id');
+  if (subId && db) {
+    db.collection('pushSubscriptions').doc(subId).delete().catch(()=>{});
+  }
+
   localStorage.removeItem('notif_ids');
   localStorage.removeItem('notifications_enabled');
-  localStorage.removeItem('fcm_token');
+  localStorage.removeItem('push_sub_id');
   toast('🔕 Notifications disabled');
   updateNotifBtn();
 }
@@ -5470,16 +5477,8 @@ function toggleNotifications() {
   }
 }
 
-// Auto-reschedule on app open if enabled
 window.addEventListener('load', () => {
-  setTimeout(() => {
-    if (localStorage.getItem('notifications_enabled') === '1') {
-      if (!fbMessaging) initFirebase();
-      scheduleLocalNotifications();
-      console.log('Notifications rescheduled on app open');
-    }
-    updateNotifBtn();
-  }, 2000);
+  setTimeout(() => updateNotifBtn(), 2000);
 });
 
 // Handle incoming FCM messages when app is open
