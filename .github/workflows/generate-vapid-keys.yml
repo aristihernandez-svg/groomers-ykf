@@ -1,0 +1,29 @@
+name: Generate VAPID Keys (run once)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Generate VAPID keys
+        run: |
+          npm install web-push --silent
+          node -e "
+            const wp = require('web-push');
+            const keys = wp.generateVAPIDKeys();
+            console.log('');
+            console.log('=== COPY THESE VALUES ===');
+            console.log('');
+            console.log('PUBLIC KEY (goes in index.html):');
+            console.log(keys.publicKey);
+            console.log('');
+            console.log('PRIVATE KEY (add as GitHub secret VAPID_PRIVATE_KEY):');
+            console.log(keys.privateKey);
+            console.log('');
+            console.log('=========================');
+          "
