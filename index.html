@@ -4796,12 +4796,16 @@ function setupSwipeTwoWay(el, onLeft, onRight) {
 
   el.addEventListener('touchend', ()=>{
     if(!active) return; active=false;
-    const inner = el.querySelector('.srow,.bitem');
+    const inner = el.querySelector('.srow,.bitem,.trow');
     if(inner) inner.style.transform = '';
-    if(currentX > 50) {
+    const isOpen = el.classList.contains('open-left') || el.classList.contains('open-right');
+    if(isOpen && Math.abs(currentX) < 20) {
+      // tap on open row — close it
+      el.classList.remove('open-left','open-right');
+    } else if(currentX > 70) {
       el.classList.add('open-left');
       el.classList.remove('open-right');
-    } else if(currentX < -50) {
+    } else if(currentX < -70) {
       el.classList.add('open-right');
       el.classList.remove('open-left');
     } else {
