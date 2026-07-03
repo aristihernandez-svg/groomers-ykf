@@ -813,6 +813,7 @@ const STORE_COLORS = {
   'Zehrs':'#C0392B','Costco':'#005DAA','A1 Cash & Carry':'#D4860A',
   'Home Depot':'#E8500A','Canadian Tire':'#C0181E',
   'Monarch Oil':'#1A6B8A','Crew House':'#2E7D32','Supplier':'#444',
+  'DW Auto':'#37474F','Princess Auto':'#B71C1C','Aircraft Spruce':'#1565C0',
 };
 function getAllStores() {
   const fromItems = S.shopping.map(i=>i.store).filter(Boolean);
@@ -823,12 +824,8 @@ function saveCustomStores() {
     .catch(e=>console.log('saveCustomStores failed:', e));
 }
 function loadCustomStores() {
-  S.customStores = [];
-  if(!db) return;
-  db.collection('appConfig').doc('stores').onSnapshot(snap => {
-    const data = snap.data();
-    S.customStores = (data && Array.isArray(data.custom)) ? data.custom : [];
-  }, e => console.log('customStores listener error:', e));
+  // Seed from localStorage immediately; setupLiveSync wires the Firestore listener
+  try { S.customStores = JSON.parse(localStorage.getItem('gykf_custom_stores') || '[]'); } catch(e) { S.customStores = []; }
 }
 function storeSelectHtml(selectedStore='') {
   const stores = getAllStores();
@@ -4536,7 +4533,16 @@ function deleteBoredItem(id) {
   toast('Task deleted');
 }
 
-function saveNotes() { localStorage.setItem('gykf_notes',JSON.stringify(S.notes)); }
+function saveNotes() {
+  localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
+  if(!db) return;
+  const fsNotes = {};
+  Object.entries(S.notes).forEach(([tab, list]) => {
+    fsNotes[fsKey(tab)] = list.map(n => ({text:n.text||'', area:n.area||'', date:n.date||'', done:!!n.done}));
+  });
+  db.collection('teamData').doc('notes').set(fsNotes)
+    .catch(e => console.log('saveNotes Firestore failed:', e));
+}
 
 function saveShoppingState() {
   // Save checked state of all items keyed by item name
@@ -4557,10 +4563,14 @@ function restoreShoppingState() {
     });
   } catch(e) {}
 }
-function saveTripNotes(val) { S.tripNotes=val; localStorage.setItem('gykf_trip',val); }
+function saveTripNotes(val) {
+  S.tripNotes=val; localStorage.setItem('gykf_trip',val);
+  if(db) db.collection('teamData').doc('trip').set({notes:val}).catch(e=>console.log('saveTripNotes failed:',e));
+}
 function clearTrip() {
   if(!confirm('Clear trip notes?')) return;
   S.tripNotes=''; localStorage.removeItem('gykf_trip');
+  if(db) db.collection('teamData').doc('trip').set({notes:''}).catch(()=>{});
   renderShopping(document.getElementById('content'));
   toast('Trip notes cleared');
 }
@@ -4977,6 +4987,32 @@ function setupLiveSync() {
     }, e => console.log('dayNotes listener error:', e));
 
     // Broadcast notifications — fired by any device writing to this collection
+    // Custom stores — live so adding a store on one phone appears everywhere
+    db.collection('appConfig').doc('stores').onSnapshot(snap => {
+      const data = snap.data();
+      S.customStores = (data && Array.isArray(data.custom)) ? data.custom : [];
+      localStorage.setItem('gykf_custom_stores', JSON.stringify(S.customStores));
+    }, e => console.log('customStores listener error:', e));
+
+    // Carry-over notes — live so groomers see each other's notes immediately
+    db.collection('teamData').doc('notes').onSnapshot(snap => {
+      if(!snap.exists) return;
+      const data = snap.data();
+      Object.entries(data).forEach(([key, list]) => {
+        if(Array.isArray(list)) S.notes[key] = list;
+      });
+      localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
+      if(S.tab==='today' || S.tab==='week') render();
+    }, e => console.log('teamNotes listener error:', e));
+
+    // Trip notes — live so whoever is shopping sees the latest plan
+    db.collection('teamData').doc('trip').onSnapshot(snap => {
+      if(!snap.exists) return;
+      const val = snap.data()?.notes || '';
+      S.tripNotes = val; localStorage.setItem('gykf_trip', val);
+      if(S.tab==='shopping') renderShopping(document.getElementById('content'));
+    }, e => console.log('tripNotes listener error:', e));
+
     db.collection('notifications').orderBy('ts','desc').limit(1).onSnapshot(snap => {
       if (snap.empty) return;
       const doc = snap.docs[0];
