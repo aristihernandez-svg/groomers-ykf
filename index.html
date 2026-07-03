@@ -931,22 +931,22 @@ window.addEventListener('load', async () => {
   } catch(e) {
     console.log('Boot setup error:', e);
   }
-  setTimeout(() => {
-    try {
-      // Hide splash and show app immediately
-      clearSplash();
-      setupDraggableNav();
-      // Start on home screen
-      S.tab = 'home';
-      document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
-      document.getElementById('nb-home')?.classList.add('on');
-      // Render home immediately with cached/fallback data
-      render();
-    } catch(e) {
-      console.log('Boot render error:', e);
-      clearSplash();
-    }
-    // Then fetch fresh data in background — never blocks the UI from showing
+  try {
+    // Hide splash and show app immediately — no delay, cached data is ready
+    clearSplash();
+    setupDraggableNav();
+    // Start on home screen
+    S.tab = 'home';
+    document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
+    document.getElementById('nb-home')?.classList.add('on');
+    // Render home immediately with cached/fallback data
+    render();
+  } catch(e) {
+    console.log('Boot render error:', e);
+    clearSplash();
+  }
+  {
+    // Fetch fresh data in background — never blocks the UI from showing
     Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
@@ -964,7 +964,7 @@ window.addEventListener('load', async () => {
         loadPastAudits();
       })
       .catch(e => console.log('Boot fetch error:', e));
-  }, 1800);
+  }
 });
 
 // ── NAV ────────────────────────────────────────────────────────────
