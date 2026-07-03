@@ -814,6 +814,26 @@ const STORE_COLORS = {
   'Home Depot':'#E8500A','Canadian Tire':'#C0181E',
   'Monarch Oil':'#1A6B8A','Crew House':'#2E7D32','Supplier':'#444',
 };
+function getAllStores() {
+  const fromItems = S.shopping.map(i=>i.store).filter(Boolean);
+  return [...new Set([...Object.keys(STORE_COLORS), ...S.customStores, ...fromItems])].sort();
+}
+function saveCustomStores() {
+  localStorage.setItem('gykf_custom_stores', JSON.stringify(S.customStores));
+}
+function loadCustomStores() {
+  try { S.customStores = JSON.parse(localStorage.getItem('gykf_custom_stores') || '[]'); } catch(e) { S.customStores = []; }
+}
+function storeSelectHtml(selectedStore='') {
+  const stores = getAllStores();
+  return `${stores.map(s=>`<option value="${s}" ${s===selectedStore?'selected':''}>${s}</option>`).join('')}
+          <option value="__new__">➕ Add a store...</option>`;
+}
+function onStoreChange(sel) {
+  const wrap = document.getElementById('mSSNewWrap');
+  if(sel.value==='__new__') { wrap.style.display=''; document.getElementById('mSSNew').focus(); }
+  else wrap.style.display='none';
+}
 const PROC_VIDEOS = {
   o2:'',westwind:'',metro:'', // paste YouTube URLs here
 };
@@ -843,7 +863,7 @@ const S = {
   renderV: 0,
   pendingDmgPhoto: null, dmgKeyCtx: null,
   contactSearch: '', // stores damage photo from camera
-  tasks:{}, notes:{}, shopping:[], contacts:[], bored:[],
+  tasks:{}, notes:{}, shopping:[], contacts:[], bored:[], customStores:[],
   procs:{}, shopFilter:'all', shopLocFilter:'all',
   shopSearch:'', shopView:'list', // 'list' or 'cart'
   mCtx:null, photoCtx:null,
@@ -900,7 +920,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
     updateThemeToggleBtn();
-    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits();
+    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
@@ -3976,11 +3996,17 @@ function openAddShopItem() {
      <label>Location / Cabinet</label>
      <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${l}</option>`).join('')}</select>
      <label>Store</label>
-     <select id="mSS">${[...Object.keys(STORE_COLORS),'Crew House'].map(s=>`<option value="${s}">${s}</option>`).join('')}</select>`,
+     <select id="mSS" onchange="onStoreChange(this)">${storeSelectHtml()}</select>
+     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>`,
     async()=>{
       const item=document.getElementById('mSI').value.trim();
       const cabinet=document.getElementById('mSC').value.trim();
-      const store=document.getElementById('mSS').value;
+      let store=document.getElementById('mSS').value;
+      if(store==='__new__') {
+        store=document.getElementById('mSSNew').value.trim();
+        if(!store) return;
+        if(!S.customStores.includes(store)) { S.customStores.push(store); saveCustomStores(); }
+      }
       if(!item) return;
       const id=fsDocId(item+'__'+store);
       S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:''});
@@ -4433,11 +4459,17 @@ function editShopItem(idx) {
      <label>Location / Cabinet</label>
      <input id="eSC" value="${item.cabinet||''}">
      <label>Store</label>
-     <select id="eSS">${Object.keys(STORE_COLORS).map(s=>`<option value="${s}" ${s===item.store?'selected':''}>${s}</option>`).join('')}</select>`,
+     <select id="eSS" onchange="onStoreChange(this)">${storeSelectHtml(item.store)}</select>
+     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>`,
     async ()=>{
       const newItem=document.getElementById('eSI').value.trim();
       const newCab=document.getElementById('eSC').value.trim();
-      const newStore=document.getElementById('eSS').value;
+      let newStore=document.getElementById('eSS').value;
+      if(newStore==='__new__') {
+        newStore=document.getElementById('mSSNew').value.trim();
+        if(!newStore) return;
+        if(!S.customStores.includes(newStore)) { S.customStores.push(newStore); saveCustomStores(); }
+      }
       if(!newItem) return;
       const oldId = item.id || fsDocId(item.item+'__'+item.store);
       const newId = fsDocId(newItem+'__'+newStore);
