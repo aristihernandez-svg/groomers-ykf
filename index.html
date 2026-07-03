@@ -3541,7 +3541,7 @@ function toggleShop(idx) {
   S.shopping[idx].status=S.shopping[idx].checked?'To Buy':'In Stock';
   haptic('medium');
   saveShoppingState();
-  api({action:'toggleShop',item:S.shopping[idx].item});
+  // api({action:'toggleShop'}) removed — Firestore is the source of truth
   _lastShopWrite = Date.now();
   fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
   renderShopping(document.getElementById('content'));
@@ -3593,7 +3593,7 @@ function resetShop() {
   if(!confirm(`Reset ${n} items to In Stock?`)) return;
   S.shopping.forEach(i=>{i.checked=false;i.status='In Stock';});
   saveShoppingState();
-  api({action:'resetShop'});
+  // api({action:'resetShop'}) removed — Firestore handles sync
   // Sync to Firestore so all phones see the reset instantly
   if(db) {
     const clearState = {};
