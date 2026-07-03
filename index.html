@@ -4465,7 +4465,7 @@ async function fetchDayRaw(tabName) {
   rows.forEach(row => {
     const v = cols.map((_,i) => { const c=row.c?.[i]; return c?String(c.v??c.f??'').trim():''; });
     const colA=v[0]||'', colB=v[1]||'', colC=v[2]||'';
-    if(!colA && !colB) return;
+    if(!colA && !colB) { console.log('[skip]', JSON.stringify(row.c?.slice(0,5))); return; }
     const isNum = !isNaN(parseInt(colA)) && parseInt(colA) > 0;
     if(!isNum) console.log('[rawrow]', JSON.stringify({colA, colB, colC}));
     if(!isNum && !colB && colA && colA !== colA.toLowerCase() && colA.length > 2 && !colA.includes('SPECIAL')) {
