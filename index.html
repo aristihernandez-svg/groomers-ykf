@@ -819,10 +819,16 @@ function getAllStores() {
   return [...new Set([...Object.keys(STORE_COLORS), ...S.customStores, ...fromItems])].sort();
 }
 function saveCustomStores() {
-  localStorage.setItem('gykf_custom_stores', JSON.stringify(S.customStores));
+  if(db) db.collection('appConfig').doc('stores').set({custom: S.customStores})
+    .catch(e=>console.log('saveCustomStores failed:', e));
 }
 function loadCustomStores() {
-  try { S.customStores = JSON.parse(localStorage.getItem('gykf_custom_stores') || '[]'); } catch(e) { S.customStores = []; }
+  S.customStores = [];
+  if(!db) return;
+  db.collection('appConfig').doc('stores').onSnapshot(snap => {
+    const data = snap.data();
+    S.customStores = (data && Array.isArray(data.custom)) ? data.custom : [];
+  }, e => console.log('customStores listener error:', e));
 }
 function storeSelectHtml(selectedStore='') {
   const stores = getAllStores();
