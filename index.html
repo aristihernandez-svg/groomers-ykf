@@ -1106,6 +1106,9 @@ const TAB_GIDS = {
 };
 
 async function fetchDay(tabName) {
+  // Preserve current done states so the re-render after fetch doesn't flash unchecked
+  const prevDone = {};
+  (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; });
   try {
     const gid = TAB_GIDS[tabName];
     const url = gid
@@ -1119,8 +1122,7 @@ async function fetchDay(tabName) {
     rows.forEach(row=>{
       const v=cols.map((_,i)=>{const c=row.c?.[i];return c?String(c.v??c.f??'').trim():'';});
       const colA=v[0]||'', colB=v[1]||'', colC=v[2]||'', colD=v[3]||'';
-      if(!colA && !colB) return; // fully empty row
-      // Section header: col A empty, col B has text, no number in col A
+      if(!colA && !colB) return;
       const isNum = !isNaN(parseInt(colA)) && parseInt(colA)>0;
       if(!isNum && colB && colB!==colB.toLowerCase() && colB.length>2 && !colB.includes('SPECIAL') && !colB.includes('📝') && !colB.includes('Note')) {
         area=colB.toUpperCase(); return;
@@ -1129,7 +1131,9 @@ async function fetchDay(tabName) {
       if(colB==='Task'||colA==='#') return;
       if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,freq:colC,area,done:false});
     });
-    S.tasks[tabName]=tasks;
+    S.tasks[tabName] = tasks;
+    // Re-apply done states so tasks don't flash unchecked after fetch
+    S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
   } catch(e){ S.tasks[tabName]=S.tasks[tabName]||fallback(); }
   // Cache tasks locally so they survive page refresh
   try {
