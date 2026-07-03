@@ -3509,6 +3509,7 @@ function toggleBoredById(id) {
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
 let _lastSelfWrite = 0; // suppress listener re-render for own writes
 let _lastShopWrite = 0; // suppress shopping listener re-render for own writes
+let _cachedShopState = null; // Firestore shopState cache — bridges catalog/state listener race
 let _shopSearchTimer = null; // debounce timer for shopping search
 function toggleT(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
@@ -3553,6 +3554,7 @@ function toggleShop(idx) {
       if(i<0) return;
       S.shopping[i].checked=true; S.shopping[i].status='To Buy';
       saveShoppingState();
+      _lastShopWrite = Date.now();
       fsSetShopState(S.shopping[i].item,true,'To Buy');
       renderShopping(document.getElementById('content'));
     });
@@ -3595,6 +3597,7 @@ function resetShop() {
   if(db) {
     const clearState = {};
     S.shopping.forEach(i=>{ clearState[fsKey(i.item)]={checked:false,status:'In Stock'}; });
+    _lastShopWrite = Date.now();
     db.collection('shopState').doc('state').set(clearState)
       .catch(e=>console.log('resetShop Firestore sync failed:', e));
   }
@@ -3971,6 +3974,7 @@ function openAddShopItem() {
       if(!item) return;
       const id=fsDocId(item+'__'+store);
       S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:''});
+      _lastShopWrite = Date.now();
       fsSetShopState(item,true,'To Buy'); // it's a new item, default to "to buy"
       closeModal(); renderShopping(document.getElementById('content')); toast('Item added ✓');
       if(db) {
@@ -4754,6 +4758,7 @@ function setupLiveSync() {
     // Shopping checked/to-buy state.
     db.collection('shopState').doc('state').onSnapshot(snap => {
       const data = snap.data(); if(!data) return;
+      _cachedShopState = data; // always cache so catalog listener can use it
       if(Date.now() - _lastShopWrite < 1500) return; // suppress echo of own write
       S.shopping.forEach(i => {
         const v=data[fsKey(i.item)];
@@ -4843,8 +4848,14 @@ function setupLiveSync() {
         return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'',
           checked: prior?.checked||false, status: prior?.status||'In Stock', source: prior?.source||''};
       });
-      // Do NOT call restoreShoppingState() here — shopState listener is the source of truth for checked state.
-      // prevChecked already preserves current state before the rebuild above.
+      // Apply cached Firestore shopState if available — handles the race where
+      // shopState listener fires before shoppingCatalog on page load.
+      if(_cachedShopState) {
+        S.shopping.forEach(i => {
+          const v=_cachedShopState[fsKey(i.item)];
+          if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; i.source=v.source||''; }
+        });
+      }
       if(S.tab==='shopping') renderShopping(document.getElementById('content'));
     }, e => console.log('shoppingCatalog listener error:', e));
 
