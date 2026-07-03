@@ -4541,7 +4541,8 @@ function saveNotes() {
   Object.entries(S.notes).forEach(([tab, list]) => {
     fsNotes[fsKey(tab)] = list.map(n => ({text:n.text||'', area:n.area||'', date:n.date||'', done:!!n.done}));
   });
-  db.collection('teamData').doc('notes').set(fsNotes)
+  // merge:true so one device never wipes another device's notes for other days
+  db.collection('teamData').doc('notes').set(fsNotes, {merge:true})
     .catch(e => console.log('saveNotes Firestore failed:', e));
 }
 
@@ -5006,7 +5007,9 @@ function setupLiveSync() {
       if(!snap.exists) return;
       const data = snap.data();
       Object.entries(data).forEach(([key, list]) => {
-        if(Array.isArray(list)) S.notes[key] = list;
+        // Only apply Firestore data if it has content — never let a stale empty
+        // array in Firestore wipe notes that are already in local state/localStorage
+        if(Array.isArray(list) && list.length > 0) S.notes[key] = list;
       });
       localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
       if(S.tab==='today' || S.tab==='week') render();
