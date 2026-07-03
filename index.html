@@ -1702,7 +1702,7 @@ function renderFlightLog(tabName) {
       <div style="padding:7px 14px 4px;font-size:10px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase">✈ Flight Log</div>
       ${section('arr','Arrivals','🛬','#1A7A40')}
       ${section('dep','Departures','🛫','#1A4A8A')}
-      ${section('grm','Groomed','🧹','#8B4A00')}
+      ${section('grm','Cleaned','🧹','#8B4A00')}
     </div>`;
 }
 
@@ -4150,7 +4150,7 @@ function showEOD() {
   const flLines=[
     ...(flog.arr||[]).map(t=>`  🛬 Arrival ${t}`),
     ...(flog.dep||[]).map(t=>`  🛫 Departure ${t}`),
-    ...(flog.grm||[]).map(t=>`  ✂️ Groomed ${t}`),
+    ...(flog.grm||[]).map(t=>`  🧹 Cleaned ${t}`),
   ];
   if(flLines.length) msg+=`✈ *Flight Activity:*\n${flLines.join('\n')}\n\n`;
 
