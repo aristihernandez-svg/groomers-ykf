@@ -923,7 +923,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
     updateThemeToggleBtn();
-    buildNav(); restoreNavOrder(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
+    buildNav(); restoreNavOrder(); loadTaskCache(); loadDayNotes(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
@@ -4502,6 +4502,9 @@ function clearTrip() {
   renderShopping(document.getElementById('content'));
   toast('Trip notes cleared');
 }
+function loadDayNotes() {
+  try { S.dayNotes = JSON.parse(localStorage.getItem('gykf_dayNotes')||'{}'); } catch(e) { S.dayNotes = {}; }
+}
 function loadTaskCache() {
   try {
     const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
@@ -4914,6 +4917,7 @@ function setupLiveSync() {
       // Remove deleted docs
       const liveIds = new Set(snap.docs.map(d=>d.id));
       Object.keys(S.dayNotes).forEach(k=>{ if(!liveIds.has(k)) delete S.dayNotes[k]; });
+      try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
       const el = document.getElementById('content');
       if(S.tab==='today') renderToday(el);
       else if(S.tab==='week' && S.inDay) renderDayDetail(el);
@@ -5238,6 +5242,8 @@ function scheduleSaveDayNote(isoDate) {
   const text = ta.value;
   if(!S.dayNotes[isoDate]) S.dayNotes[isoDate] = {};
   S.dayNotes[isoDate].text = text;
+  // Save to localStorage immediately so closing the app never loses the note
+  try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
   clearTimeout(window._dayNoteTimer[isoDate]);
   window._dayNoteTimer[isoDate] = setTimeout(()=>{
     fsSaveDayNote(isoDate);
@@ -5247,10 +5253,12 @@ function scheduleSaveDayNote(isoDate) {
 function completeDayNote(isoDate) {
   delete S.dayNotes[isoDate];
   delete window._dayNoteOpen[isoDate];
+  try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
   if(db) db.collection('dayNotes').doc(isoDate).delete().catch(()=>{});
   const el = document.getElementById('content');
   if(S.tab==='today') renderToday(el);
   else if(S.tab==='week' && S.inDay) renderDayDetail(el);
+  else if(S.tab==='week') renderWeek(el);
 }
 
 function fsSaveDayNote(isoDate) {
