@@ -1523,7 +1523,7 @@ function renderToday(el) {
   html+=renderDayNoteWidget(todayIso, true);
   html+=`
     <div class="prog-wrap">
-      <div class="prog-row"><span>${DAY_NAMES[TODAY]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
+      <div class="prog-row"><span>${DAY_NAMES[_today]}</span><span>${done}/${tasks.length} — ${pct}%</span></div>
       <div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div>
     </div>`;
   html+=renderFlightLog(tabName);
@@ -4271,17 +4271,179 @@ function showMigrationManager() {
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:360px">
       <div style="font-size:18px;font-weight:700;color:var(--t1);margin-bottom:4px">⚙️ Migration Manager</div>
       <div style="font-size:12px;color:var(--t3);margin-bottom:20px">Skycare ${APP_VERSION}</div>
+
       <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px">
         <div style="font-size:12px;color:var(--t3);margin-bottom:4px">Current task source</div>
         <div style="font-size:15px;font-weight:700;color:${src==='firestore'?'var(--green)':'var(--gold)'}">${src==='firestore'?'🟢 Firestore':'📋 Google Sheets'}</div>
       </div>
-      <div id="migMgrStatus" style="font-size:12px;color:var(--t2);min-height:18px;margin-bottom:16px;text-align:center"></div>
+
+      <div id="migMgrStatus" style="font-size:12px;color:var(--t2);min-height:18px;margin-bottom:16px;text-align:center;line-height:1.5"></div>
+
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        <button onclick="showEscapeHatch();document.getElementById('migManagerOverlay')?.remove()" style="background:var(--red-dim);border:1px solid var(--red);border-radius:10px;padding:13px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;text-align:left">🔄 Re-import from Sheets<br><span style="font-size:11px;font-weight:400;opacity:0.8">Overwrites app edits with Sheets data</span></button>
+        ${src === 'sheets' ? `
+        <button id="migStartBtn" onclick="confirmMigration()" style="background:var(--gold-dim);border:1px solid var(--border-gold);border-radius:10px;padding:13px;color:var(--gold2);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+          🚀 Migrate tasks to Firestore
+          <br><span style="font-size:11px;font-weight:400;opacity:0.8">One-time import — team stays on Sheets until complete</span>
+        </button>` : ''}
+        <button onclick="showEscapeHatch();document.getElementById('migManagerOverlay')?.remove()" style="background:var(--red-dim);border:1px solid var(--red);border-radius:10px;padding:13px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+          🔄 Re-import from Sheets
+          <br><span style="font-size:11px;font-weight:400;opacity:0.8">Overwrites app edits with Sheets data</span>
+        </button>
       </div>
       <button onclick="document.getElementById('migManagerOverlay').remove()" style="width:100%;background:var(--glass2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--t2);font-size:14px;cursor:pointer">Close</button>
     </div>`;
   document.body.appendChild(overlay);
+}
+
+function setMigStatus(msg, color='var(--t2)') {
+  const el = document.getElementById('migMgrStatus');
+  if(el) { el.innerHTML = msg; el.style.color = color; }
+}
+
+function confirmMigration() {
+  const overlay = document.createElement('div');
+  overlay.id = 'migConfirmOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);z-index:6000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border-gold);border-radius:16px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+      <div style="font-size:24px;margin-bottom:10px">🚀</div>
+      <div style="font-size:17px;font-weight:700;color:var(--t1);margin-bottom:10px">Migrate tasks to Firestore?</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.5">
+        This will import all 7 days from Google Sheets into Firestore.<br>
+        The team will switch to Firestore automatically once complete.
+      </div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:20px">Do this off-shift. Takes ~30 seconds.</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="document.getElementById('migConfirmOverlay').remove()" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
+        <button onclick="document.getElementById('migConfirmOverlay').remove();runMigration()" style="background:var(--gold);border:none;border-radius:8px;padding:11px 24px;color:#000;font-size:14px;font-weight:700;cursor:pointer">Start Migration</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
+// Raw Sheets fetch for a single day — returns task array without touching S.tasks
+async function fetchDayRaw(tabName) {
+  const gid = TAB_GIDS[tabName];
+  const url = gid
+    ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(tabName)}`;
+  const text = await (await fetch(url)).text();
+  const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+  const rows = json.table?.rows || [];
+  const cols = json.table?.cols || [];
+  const tasks = []; let area = '';
+  rows.forEach(row => {
+    const v = cols.map((_,i) => { const c=row.c?.[i]; return c?String(c.v??c.f??'').trim():''; });
+    const colA=v[0]||'', colB=v[1]||'';
+    if(!colA && !colB) return;
+    const isNum = !isNaN(parseInt(colA)) && parseInt(colA) > 0;
+    if(!isNum && colB && colB !== colB.toLowerCase() && colB.length > 2 && !colB.includes('SPECIAL') && !colB.includes('📝') && !colB.includes('Note')) {
+      area = colB.toUpperCase(); return;
+    }
+    if(colB.toUpperCase().includes('SPECIAL NOTES') || colB.includes('📝')) return;
+    if(colB === 'Task' || colA === '#') return;
+    if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) {
+      tasks.push({ task: colB, area: area.toUpperCase(), done: false });
+    }
+  });
+  return tasks;
+}
+
+async function runMigration() {
+  if(!db) { setMigStatus('⚠️ Firestore not connected', 'var(--red)'); return; }
+
+  // Disable migrate button during run
+  const btn = document.getElementById('migStartBtn');
+  if(btn) btn.disabled = true;
+
+  // ── Step 1: Check for concurrent import lock ─────────────────────
+  setMigStatus('Checking for active imports...');
+  try {
+    const lockSnap = await db.collection('appConfig').doc('importing').get();
+    if(lockSnap.exists && lockSnap.data()?.active === true) {
+      setMigStatus('⚠️ Another device is already importing. Try again in a minute.', 'var(--red)');
+      if(btn) btn.disabled = false;
+      return;
+    }
+  } catch(e) {
+    setMigStatus('⚠️ Could not check lock — check connection', 'var(--red)');
+    if(btn) btn.disabled = false;
+    return;
+  }
+
+  // ── Step 2: Acquire lock ─────────────────────────────────────────
+  await db.collection('appConfig').doc('importing').set({ active: true, startedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+  // ── Step 3: Preview fetch all 7 days and validate ─────────────────
+  setMigStatus('📋 Fetching all 7 days from Sheets...');
+  const preview = {};
+  for(const day of DAYS) {
+    setMigStatus(`📋 Fetching ${day}...`);
+    try {
+      const tasks = await fetchDayRaw(day);
+      if(tasks.length < 3) {
+        setMigStatus(`⚠️ ${day} only returned ${tasks.length} tasks — looks wrong. Aborting.`, 'var(--red)');
+        await db.collection('appConfig').doc('importing').set({ active: false });
+        if(btn) btn.disabled = false;
+        return;
+      }
+      preview[day] = tasks;
+    } catch(e) {
+      setMigStatus(`⚠️ Failed to fetch ${day} — check connection. Aborting.`, 'var(--red)');
+      await db.collection('appConfig').doc('importing').set({ active: false });
+      if(btn) btn.disabled = false;
+      return;
+    }
+  }
+
+  // Show preview summary before writing anything
+  const summary = DAYS.map(d => `${d.split(' ').pop()}: ${preview[d].length}`).join(' · ');
+  setMigStatus(`✅ Preview OK — ${summary}<br>Writing to Firestore...`, 'var(--green)');
+  await new Promise(r => setTimeout(r, 800)); // let user see the summary
+
+  // ── Step 4: Write sequentially, one day at a time ─────────────────
+  const migratedAt = firebase.firestore.FieldValue.serverTimestamp();
+  for(const day of DAYS) {
+    setMigStatus(`💾 Writing ${day}... (${DAYS.indexOf(day)+1}/7)`);
+    try {
+      await db.collection('tasks').doc(day).set({
+        tasks: preview[day],
+        migrated: true,
+        migratedAt,
+      });
+    } catch(e) {
+      setMigStatus(`⚠️ Failed writing ${day} — stopping. Source stays on Sheets.`, 'var(--red)');
+      await db.collection('appConfig').doc('importing').set({ active: false });
+      if(btn) btn.disabled = false;
+      return;
+    }
+  }
+
+  // ── Step 5: Atomic cutover ────────────────────────────────────────
+  setMigStatus('🔄 Switching task source to Firestore...');
+  try {
+    await db.collection('appConfig').doc('tasksSource').set({ source: 'firestore' });
+    S.tasksSource = 'firestore';
+    // Load migrated tasks into memory
+    DAYS.forEach(day => { S.tasks[day] = preview[day]; });
+    // Wipe stale Sheets cache from localStorage
+    localStorage.removeItem('gykf_tasks');
+    await db.collection('appConfig').doc('importing').set({ active: false });
+  } catch(e) {
+    setMigStatus('⚠️ Cutover failed — tasks written but source not flipped. Try escape hatch.', 'var(--red)');
+    await db.collection('appConfig').doc('importing').set({ active: false }).catch(()=>{});
+    if(btn) btn.disabled = false;
+    return;
+  }
+
+  setMigStatus('🟢 Migration complete! All 7 days now on Firestore.', 'var(--green)');
+  haptic('medium');
+  // Refresh the manager UI to reflect new source
+  setTimeout(() => {
+    document.getElementById('migManagerOverlay')?.remove();
+    showMigrationManager();
+    render();
+  }, 2000);
 }
 
 // ── END OF DAY ─────────────────────────────────────────────────────
