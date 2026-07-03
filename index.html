@@ -4008,7 +4008,7 @@ function openAddShopItem() {
       if(store==='__new__') {
         store=document.getElementById('mSSNew').value.trim();
         if(!store) return;
-        if(!S.customStores.includes(store)) { S.customStores.push(store); saveCustomStores(); }
+        if(!S.customStores.includes(store) && !STORE_COLORS[store]) { S.customStores.push(store); saveCustomStores(); }
       }
       if(!item) return;
       const id=fsDocId(item+'__'+store);
