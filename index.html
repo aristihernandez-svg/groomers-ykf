@@ -604,8 +604,9 @@ body::before{
 .eod-fab.show{display:flex}
 
 /* TOAST */
-.toast{position:fixed;bottom:calc(76px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);color:var(--t1);border:1px solid var(--border2);padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:400;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-weight:500}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:calc(76px + var(--safe-b));left:50%;transform:translateX(-50%) translateY(10px);background:var(--bg3);color:var(--t1);border:1px solid var(--border2);padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:400;box-shadow:0 8px 24px rgba(0,0,0,0.3);font-weight:500;display:flex;align-items:center;gap:10px}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast-undo-btn{padding:8px 18px;border-radius:20px;border:2px solid rgba(255,255,255,0.8);background:rgba(255,255,255,0.15);color:#fff;font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.5px;min-height:44px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 
 /* ── SWIPE ACTIONS ── */
 .swipe-wrap{position:relative;overflow:hidden;touch-action:pan-y}
@@ -4331,18 +4332,36 @@ function showFab(fn) {
   f.style.display='flex'; f.onclick=fn;
 }
 function fabClick() {} // overridden by showFab
+let _undoFn=null;
+let _undoActive=false;
 function toast(msg) {
+  if(_undoActive) return; // never overwrite an active undo toast
   const t=document.getElementById('toast');
   t.innerHTML=`<span>${msg}</span>`; t.classList.add('show');
   clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2200);
 }
-let _undoFn=null;
 function toastUndo(msg, fn) {
-  _undoFn=fn;
+  _undoFn=fn; _undoActive=true;
   const t=document.getElementById('toast');
-  t.innerHTML=`<span>${msg}</span><span onclick="_undoFn&&_undoFn();_undoFn=null;document.getElementById('toast').classList.remove('show')" style="margin-left:12px;font-weight:800;text-decoration:underline;cursor:pointer;color:#fff">Undo</span>`;
+  t.style.whiteSpace='nowrap';
+  t.innerHTML=`<span style="flex:1">${msg}</span><button class="toast-undo-btn" id="undoBtn">UNDO</button>`;
   t.classList.add('show');
-  clearTimeout(t._t); t._t=setTimeout(()=>{t.classList.remove('show');_undoFn=null;},4000);
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>{t.classList.remove('show');_undoFn=null;_undoActive=false;},5000);
+  // bind after paint — touchend for instant iOS response, click as fallback
+  requestAnimationFrame(()=>{
+    const btn=document.getElementById('undoBtn');
+    if(!btn) return;
+    const doUndo=e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(!_undoFn) return;
+      const f=_undoFn; _undoFn=null; _undoActive=false;
+      clearTimeout(t._t); t.classList.remove('show');
+      f();
+    };
+    btn.addEventListener('touchend', doUndo, {passive:false});
+    btn.addEventListener('click', doUndo);
+  });
 }
 // ── SWIPE HANDLER (two-direction) ────────────────────────────
 function setupSwipeTwoWay(el, onLeft, onRight) {
