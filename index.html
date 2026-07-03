@@ -3537,28 +3537,23 @@ function deleteNote(tabName,idx) {
   S.notes[tabName].splice(idx,1); saveNotes(); render();
 }
 function toggleShop(idx) {
-  S.shopping[idx].checked=!S.shopping[idx].checked;
-  S.shopping[idx].status=S.shopping[idx].checked?'To Buy':'In Stock';
+  const item = S.shopping[idx];
+  // Unchecking (removing from cart) — ask first so no undo complexity needed
+  if(item.checked) {
+    if(!confirm(`Mark "${item.item}" as In Stock?\n\nTap Cancel to keep it in your cart.`)) return;
+  }
+  item.checked = !item.checked;
+  item.status = item.checked ? 'To Buy' : 'In Stock';
   haptic('medium');
   saveShoppingState();
-  // api({action:'toggleShop'}) removed — Firestore is the source of truth
   _lastShopWrite = Date.now();
-  fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
+  fsSetShopState(item.item, item.checked, item.status);
   renderShopping(document.getElementById('content'));
-  if(S.shopping[idx].checked) {
-    broadcastNotif('🛒 Shopping', `${S.shopping[idx].item} needs restocking`, 'shopping');
+  if(item.checked) {
+    broadcastNotif('🛒 Shopping', `${item.item} needs restocking`, 'shopping');
     toast(S.buyerOut ? '🔔 Added to list — buyer is out and will see this!' : '🔴 Needs restocking');
   } else {
-    const itemName=S.shopping[idx].item;
-    toastUndo('✅ Marked as in stock',()=>{
-      const i=S.shopping.findIndex(s=>s.item===itemName);
-      if(i<0) return;
-      S.shopping[i].checked=true; S.shopping[i].status='To Buy';
-      saveShoppingState();
-      _lastShopWrite = Date.now();
-      fsSetShopState(S.shopping[i].item,true,'To Buy');
-      renderShopping(document.getElementById('content'));
-    });
+    toast('✅ Marked as In Stock');
   }
 }
 
