@@ -866,7 +866,7 @@ const S = {
   renderV: 0,
   pendingDmgPhoto: null, dmgKeyCtx: null,
   contactSearch: '', // stores damage photo from camera
-  tasks:{}, notes:{}, shopping:[], contacts:[], bored:[], customStores:[],
+  tasks:{}, shopping:[], contacts:[], bored:[], customStores:[],
   procs:{}, shopFilter:'all', shopLocFilter:'all',
   shopSearch:'', shopView:'list', // 'list' or 'cart'
   mCtx:null, photoCtx:null,
@@ -923,7 +923,7 @@ window.addEventListener('load', async () => {
 
     document.getElementById('barDay').textContent = DAY_NAMES[TODAY];
     updateThemeToggleBtn();
-    buildNav(); restoreNavOrder(); loadNotes(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
+    buildNav(); restoreNavOrder(); loadTaskCache(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
     setupPhotoInput();
@@ -1462,7 +1462,7 @@ function renderToday(el) {
   setBarLogo();
   document.getElementById('eodFab').classList.add('show');
   showFab(()=>openAddTask(DAYS[TODAY]));
-  const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
+  const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
   const todayIso = weekIsoDate(TODAY);
@@ -1475,7 +1475,6 @@ function renderToday(el) {
     </div>`;
   html+=renderFlightLog(tabName);
   html+=renderGroups(tasks,tabName);
-  html+=renderNotes(notes,tabName);
   html+='<div style="height:90px"></div>';
   el.innerHTML=html;
   el.querySelectorAll('.trow-wrap').forEach(w=>{
@@ -1515,31 +1514,6 @@ function renderGroups(tasks, tabName) {
   return html;
 }
 
-function renderNotes(notes, tabName) {
-  let html=`<div class="notes-wrap">
-    <div class="notes-hdr">📝 Special Notes & Carry-over Tasks
-      <button onclick="openAddNote('${tabName}')">+ Add</button>
-    </div>`;
-  if(!notes.length) {
-    html+=`<div class="nrow"><div class="ninfo">
-      <div class="ntxt" style="color:var(--t3);font-style:italic">No notes — tap + Add</div>
-    </div></div>`;
-  } else {
-    notes.forEach((n,i)=>{
-      html+=`<div class="nrow ${n.done?'done':''}" onclick="toggleNote('${tabName}',${i})">
-        <div class="ncb ${n.done?'on':''}">${n.done?'✓':''}</div>
-        <div class="ninfo">
-          <div class="ntxt">${n.text}</div>
-          <div class="nmeta">${n.area?n.area+' · ':''}${n.date||''}</div>
-          ${n.photo?`<img class="nphoto" src="${n.photo}" onclick="event.stopPropagation();viewPhoto('${n.photo}')">`:''}
-        </div>
-        <div class="ndel" onclick="event.stopPropagation();deleteNote('${tabName}',${i})">✕</div>
-      </div>`;
-    });
-  }
-  return html+'</div>';
-}
-
 // ── WEEK ───────────────────────────────────────────────────────────
 function renderWeek(el) {
   setBarLogo();
@@ -1549,6 +1523,8 @@ function renderWeek(el) {
     const tasks=S.tasks[day]||[], done=tasks.filter(t=>t.done).length;
     const isToday=i===TODAY;
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
+    const dayIso = weekIsoDate(i);
+    const hasDayNote = !!(S.dayNotes[dayIso]?.text?.trim());
     html+=`<div onclick="showDay(${i})" style="
       background:${isToday?'var(--gold-glow)':'var(--glass)'};
       backdrop-filter:blur(10px);
@@ -1565,8 +1541,9 @@ function renderWeek(el) {
         font-size:14px;font-weight:700;color:#fff;flex-shrink:0;
       ">${DAY_NAMES[i].substring(0,2).toUpperCase()}</div>
       <div style="flex:1;min-width:0">
-        <div style="font-size:14px;font-weight:600;color:${isToday?'var(--gold2)':'var(--text)'};margin-bottom:4px">
+        <div style="font-size:14px;font-weight:600;color:${isToday?'var(--gold2)':'var(--text)'};margin-bottom:4px;display:flex;align-items:center;gap:6px">
           ${DAY_NAMES[i]}${isToday?' — Today':''}
+          ${hasDayNote?`<span style="font-size:10px;background:#F39C12;color:#fff;border-radius:10px;padding:1px 7px;font-weight:700">📌 note</span>`:''}
         </div>
         ${tasks.length?`
         <div style="background:var(--border);border-radius:2px;height:3px;overflow:hidden;margin-bottom:4px">
@@ -1728,7 +1705,7 @@ function renderFlightLog(tabName) {
 
 function renderDayDetail(el) {
   const idx=S.dayView, tabName=DAYS[idx];
-  const tasks=S.tasks[tabName]||[], notes=S.notes[tabName]||[];
+  const tasks=S.tasks[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
   setBarLogo();
@@ -1745,7 +1722,6 @@ function renderDayDetail(el) {
   html+=renderDayNoteWidget(weekIsoDate(idx));
   html+=renderFlightLog(tabName);
   html+=renderGroupsDay(tasks,tabName);
-  html+=renderNotes(notes,tabName);
   html+='<div style="height:90px"></div>';
   el.innerHTML=html;
   el.querySelectorAll('.trow-wrap').forEach(w=>{
@@ -3552,14 +3528,6 @@ function toggleTDay(tabName,idx) {
   renderDayDetail(document.getElementById('content'));
   toast(S.tasks[tabName][idx].done?'✓ Done':'Unchecked');
 }
-function toggleNote(tabName,idx) {
-  S.notes[tabName][idx].done=!S.notes[tabName][idx].done;
-  haptic(); saveNotes(); render();
-}
-function deleteNote(tabName,idx) {
-  if(!confirm('Delete this note?')) return;
-  S.notes[tabName].splice(idx,1); saveNotes(); render();
-}
 function toggleShop(idx) {
   const item = S.shopping[idx];
   // Unchecking from cart view only — confirm via styled modal
@@ -3964,30 +3932,6 @@ function openAddTask(tabName,area='') {
     });
 }
 
-function openAddNote(tabName) {
-  S.pendingPhoto=null;
-  openModal('Add Note / Carry-over Task',
-    `<label>Note or task</label>
-     <input id="mNText" placeholder="Task or note...">
-     <label>Area (optional)</label>
-     <input id="mNArea" placeholder="e.g. MX Hangar, Aircraft...">
-     <button type="button" id="notePhotoBtn" onclick="triggerPhoto('note')"
-       style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
-              background:var(--bg3);font-size:14px;cursor:pointer;color:var(--accent);margin-bottom:10px">
-       📷 Attach photo (optional)
-     </button>`,
-    ()=>{
-      const text=document.getElementById('mNText').value.trim();
-      if(!text) return;
-      const area=document.getElementById('mNArea').value.trim();
-      if(!S.notes[tabName]) S.notes[tabName]=[];
-      const date=new Date().toLocaleDateString('en-CA',{month:'short',day:'numeric'});
-      S.notes[tabName].push({text,area,date,done:false,photo:S.pendingPhoto||''});
-      api({action:'addNote',tabName,text,area});
-      saveNotes(); closeModal(); render(); toast('Note added ✓');
-    });
-}
-
 // Deterministic Firestore doc id from arbitrary text — lets repeated
 // add/import calls upsert the same item instead of creating duplicates.
 function fsDocId(text) { return fsKey(text).slice(0,400) || ('id'+Date.now()); }
@@ -4234,12 +4178,6 @@ function showEOD() {
   const toBuyItems=S.shopping.filter(i=>i.checked);
   if(toBuyItems.length>0) {
     msg+=`🛒 *Shopping needed (${toBuyItems.length} items):*\n${toBuyItems.map(i=>`  • ${i.item} — ${i.store}`).join('\n')}\n\n`;
-  }
-
-  // Carry-over notes
-  const todayNotes=(S.notes[DAYS[TODAY]]||[]).filter(n=>!n.done);
-  if(todayNotes.length>0) {
-    msg+=`📝 *Carry-over notes:*\n${todayNotes.map(n=>`  • ${n.text}${n.area?' ('+n.area+')':''}`).join('\n')}\n\n`;
   }
 
   // Damage reports filed today
@@ -4534,18 +4472,6 @@ function deleteBoredItem(id) {
   toast('Task deleted');
 }
 
-function saveNotes() {
-  localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
-  if(!db) return;
-  const fsNotes = {};
-  Object.entries(S.notes).forEach(([tab, list]) => {
-    fsNotes[fsKey(tab)] = list.map(n => ({text:n.text||'', area:n.area||'', date:n.date||'', done:!!n.done}));
-  });
-  // merge:true so one device never wipes another device's notes for other days
-  db.collection('teamData').doc('notes').set(fsNotes, {merge:true})
-    .catch(e => console.log('saveNotes Firestore failed:', e));
-}
-
 function saveShoppingState() {
   // Save checked state of all items keyed by item name
   const state = {};
@@ -4576,7 +4502,6 @@ function clearTrip() {
   renderShopping(document.getElementById('content'));
   toast('Trip notes cleared');
 }
-function loadNotes() { try{S.notes=JSON.parse(localStorage.getItem('gykf_notes')||'{}');}catch(e){S.notes={};} }
 function loadTaskCache() {
   try {
     const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
@@ -4992,6 +4917,7 @@ function setupLiveSync() {
       const el = document.getElementById('content');
       if(S.tab==='today') renderToday(el);
       else if(S.tab==='week' && S.inDay) renderDayDetail(el);
+      else if(S.tab==='week') renderWeek(el);
     }, e => console.log('dayNotes listener error:', e));
 
     // Broadcast notifications — fired by any device writing to this collection
@@ -5001,19 +4927,6 @@ function setupLiveSync() {
       S.customStores = (data && Array.isArray(data.custom)) ? data.custom : [];
       localStorage.setItem('gykf_custom_stores', JSON.stringify(S.customStores));
     }, e => console.log('customStores listener error:', e));
-
-    // Carry-over notes — live so groomers see each other's notes immediately
-    db.collection('teamData').doc('notes').onSnapshot(snap => {
-      if(!snap.exists) return;
-      const data = snap.data();
-      Object.entries(data).forEach(([key, list]) => {
-        // Only apply Firestore data if it has content — never let a stale empty
-        // array in Firestore wipe notes that are already in local state/localStorage
-        if(Array.isArray(list) && list.length > 0) S.notes[key] = list;
-      });
-      localStorage.setItem('gykf_notes', JSON.stringify(S.notes));
-      if(S.tab==='today' || S.tab==='week') render();
-    }, e => console.log('teamNotes listener error:', e));
 
     // Trip notes — live so whoever is shopping sees the latest plan
     db.collection('teamData').doc('trip').onSnapshot(snap => {
