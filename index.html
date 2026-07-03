@@ -1049,6 +1049,7 @@ function handleSwipeBack() {
   if(S.auditsView) { S.auditsView=false; render(); return true; }
   if(S.procView !== null) { S.procView=null; render(); return true; }
   if(S.inDay) { backWeek(); return true; }
+  if(S.shopView === 'cart') { S.shopView='list'; renderShopping(document.getElementById('content')); return true; }
   return false;
 }
 
