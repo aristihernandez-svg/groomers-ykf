@@ -4410,11 +4410,10 @@ function showMigrationManager() {
       <div id="migMgrStatus" style="font-size:12px;color:var(--t2);min-height:18px;margin-bottom:16px;text-align:center;line-height:1.5"></div>
 
       <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
-        ${src === 'sheets' ? `
         <button id="migStartBtn" onclick="confirmMigration()" style="background:var(--gold-dim);border:1px solid var(--border-gold);border-radius:10px;padding:13px;color:var(--gold2);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
-          🚀 Migrate tasks to Firestore
-          <br><span style="font-size:11px;font-weight:400;opacity:0.8">One-time import — team stays on Sheets until complete</span>
-        </button>` : ''}
+          ${src === 'sheets' ? '🚀 Migrate tasks to Firestore' : '🔄 Re-import from Sheets → Firestore'}
+          <br><span style="font-size:11px;font-weight:400;opacity:0.8">${src === 'sheets' ? 'One-time import — team stays on Sheets until complete' : 'Overwrites Firestore task content with latest Sheets data'}</span>
+        </button>
         <button onclick="showEscapeHatch();document.getElementById('migManagerOverlay')?.remove()" style="background:var(--red-dim);border:1px solid var(--red);border-radius:10px;padding:13px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
           🔄 Re-import from Sheets
           <br><span style="font-size:11px;font-weight:400;opacity:0.8">Overwrites app edits with Sheets data</span>
