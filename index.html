@@ -1624,6 +1624,7 @@ function taskRowHtml(t, gi, tabName, toggleFn) {
 function renderGroups(tasks, tabName) {
   const areas={};
   tasks.forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
+  console.log('[debug] renderGroups areas:', Object.keys(areas), 'sample task:', tasks[0]);
   let html='';
   const areaOrder=['AIRCRAFT',"CR GROOMERS' CORNER",'CR OFFICE','MX HANGAR','MISC','CHARTER','CLOSURE'];
   const orderedAreas=[...areaOrder.filter(a=>areas[a]),...Object.keys(areas).filter(a=>!areaOrder.includes(a)&&areas[a])];
