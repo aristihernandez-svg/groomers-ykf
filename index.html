@@ -398,7 +398,6 @@ body::before{
 .trow:active{background:var(--glass2)}
 .trow.done{background:var(--done-bg)}
 .trow.done .ttxt{text-decoration:line-through;color:var(--done-text)}
-.trow.done .tfreq{color:var(--t4)}
 .trow.closure{background:rgba(232,64,64,0.04);border-left:2px solid rgba(232,64,64,0.2)}
 .trow.closure.done{background:var(--done-bg)}
 
@@ -417,7 +416,6 @@ body::before{
 }
 .tinfo{flex:1;min-width:0}
 .ttxt{font-size:14px;color:var(--t1);line-height:1.3;font-weight:600}
-.tfreq{font-size:11px;color:var(--t3);margin-top:2px}
 
 /* ADD ROW */
 .add-row{display:flex;align-items:center;gap:10px;padding:10px 16px;background:transparent;border-bottom:1px solid var(--border);cursor:pointer;opacity:0.4;transition:opacity 0.15s}
@@ -1176,7 +1174,7 @@ async function fetchDay(tabName) {
       }
       if(colB.toUpperCase().includes('SPECIAL NOTES')||colB.includes('📝')) return;
       if(colB==='Task'||colA==='#') return;
-      if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,freq:colC,area,done:false});
+      if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,area,done:false});
     });
     S.tasks[tabName] = tasks;
     // Re-apply done states so tasks don't flash unchecked after fetch
@@ -1558,7 +1556,6 @@ function renderGroups(tasks, tabName) {
             <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
             <div class="tinfo">
               <div class="ttxt">${t.task}</div>
-              ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
             </div>
           </div>
         </div>`;
@@ -1805,7 +1802,6 @@ function renderGroupsDay(tasks, tabName) {
             <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
             <div class="tinfo">
               <div class="ttxt">${t.task}</div>
-              ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
             </div>
           </div>
         </div>`;
@@ -3971,19 +3967,16 @@ function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
      <input id="mTask" placeholder="Task...">
-     <label>Frequency / Note</label>
-     <input id="mFreq" placeholder="Daily, Weekly, As needed...">
      <label>Area</label>
      <select id="mArea">${Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===area?'selected':''}>${a}</option>`).join('')}</select>`,
     async()=>{
       const task=document.getElementById('mTask').value.trim();
-      const freq=document.getElementById('mFreq').value.trim();
       const areaVal=document.getElementById('mArea').value;
       if(!task) return;
       if(!S.tasks[tabName]) S.tasks[tabName]=[];
-      S.tasks[tabName].push({task,freq,area:areaVal,done:false});
+      S.tasks[tabName].push({task,area:areaVal,done:false});
       closeModal(); renderToday(document.getElementById('content')); toast('Task added ✓');
-      api({action:'addTask',tabName,task,freq,area:areaVal}).catch(()=>{});
+      api({action:'addTask',tabName,task,area:areaVal}).catch(()=>{});
     });
 }
 
@@ -4707,12 +4700,12 @@ function saveDmg() {
 function loadDmg() { try{S.dmgReports=JSON.parse(localStorage.getItem('gykf_dmg')||'{}');}catch(e){S.dmgReports={};} }
 function fallback() {
   return [
-    {task:"Check O₂ beds & refill if needed",freq:"Daily",area:"AIRCRAFT",done:false},
-    {task:"Clean groomer corner's floor",freq:"Daily",area:"CR GROOMERS' CORNER",done:false},
-    {task:"Sweep hangar",freq:"Daily",area:"MX HANGAR",done:false},
-    {task:"Bathrooms",freq:"Daily",area:"MX HANGAR",done:false},
-    {task:"Connect groomer's phone",freq:"Daily",area:"CLOSURE",done:false},
-    {task:"Put back Credit Card",freq:"Daily",area:"CLOSURE",done:false},
+    {task:"Check O₂ beds & refill if needed",area:"AIRCRAFT",done:false},
+    {task:"Clean groomer corner's floor",area:"CR GROOMERS' CORNER",done:false},
+    {task:"Sweep hangar",area:"MX HANGAR",done:false},
+    {task:"Bathrooms",area:"MX HANGAR",done:false},
+    {task:"Connect groomer's phone",area:"CLOSURE",done:false},
+    {task:"Put back Credit Card",area:"CLOSURE",done:false},
   ];
 }
 if('serviceWorker' in navigator) {
