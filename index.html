@@ -952,6 +952,14 @@ window.addEventListener('load', async () => {
       console.log('Boot render error:', e);
       clearSplash();
     }
+    // Read tasksSource flag first so fetchDay routes correctly on first open after migration
+    const _bootTasksSource = db
+      ? db.collection('appConfig').doc('tasksSource').get()
+          .then(snap => { if(snap.exists && snap.data()?.source) S.tasksSource = snap.data().source; })
+          .catch(() => {})
+      : Promise.resolve();
+
+    _bootTasksSource.then(() =>
     Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
@@ -971,7 +979,8 @@ window.addEventListener('load', async () => {
         ).catch(()=>{});
         loadPastAudits();
       })
-      .catch(e => console.log('Boot fetch error:', e));
+      .catch(e => console.log('Boot fetch error:', e))
+    ); // closes _bootTasksSource.then
   }, 1800);
 });
 
@@ -1156,6 +1165,30 @@ async function fetchDay(tabName) {
   // Preserve current done states so the re-render after fetch doesn't flash unchecked
   const prevDone = {};
   (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; });
+
+  // ── Firestore path ───────────────────────────────────────────────
+  if(S.tasksSource === 'firestore' && db) {
+    try {
+      const snap = await db.collection('tasks').doc(tabName).get();
+      if(snap.exists && snap.data().migrated === true) {
+        S.tasks[tabName] = (snap.data().tasks || []).map(t => ({...t, done: false}));
+        // Re-apply done states
+        S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+        // Apply any cached taskState that arrived before content loaded
+        if(_cachedTaskState) {
+          const today = new Date().toDateString();
+          if(!_cachedTaskState._date || _cachedTaskState._date === today) {
+            S.tasks[tabName].forEach(t => { const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+          }
+        }
+        _cacheTasksLocal(tabName);
+        return;
+      }
+    } catch(e) { console.log('fetchDay Firestore error:', e); }
+    // Fall through to Sheets if doc missing or not migrated
+  }
+
+  // ── Sheets path (default) ────────────────────────────────────────
   try {
     const gid = TAB_GIDS[tabName];
     const url = gid
@@ -1179,10 +1212,12 @@ async function fetchDay(tabName) {
       if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,freq:colC,area,done:false});
     });
     S.tasks[tabName] = tasks;
-    // Re-apply done states so tasks don't flash unchecked after fetch
     S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
   } catch(e){ S.tasks[tabName]=S.tasks[tabName]||fallback(); }
-  // Cache tasks locally so they survive page refresh
+  _cacheTasksLocal(tabName);
+}
+
+function _cacheTasksLocal(tabName) {
   try {
     const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
     cached[tabName] = S.tasks[tabName];
@@ -1358,16 +1393,13 @@ function loadBoredFallback() {
 
 async function syncAll() {
   toast('Syncing...');
-  // Tasks and the bored board's content still come from Sheets, so refresh
-  // those. Shopping/contacts/procedures are now live via Firestore listeners
-  // and refresh themselves automatically — re-fetching them from Sheets here
-  // would briefly overwrite live data, so they're intentionally skipped.
   await Promise.all([
-    fetchDay(DAYS[getToday()]),
+    // When on Firestore, task content is live via onSnapshot — no manual fetch needed.
+    // When on Sheets, fetch the current day (and viewed day) fresh from the sheet.
+    S.tasksSource === 'firestore' ? Promise.resolve() : fetchDay(DAYS[getToday()]),
     fetchBored()
   ]);
-  // If viewing a specific day, refresh that too
-  if(S.inDay) await fetchDay(DAYS[S.dayView]);
+  if(S.inDay && S.tasksSource !== 'firestore') await fetchDay(DAYS[S.dayView]);
   render();
   toast('✅ Synced');
 }
@@ -3566,6 +3598,7 @@ function toggleBoredById(id) {
 let _lastSelfWrite = 0; // suppress listener re-render for own writes
 let _lastShopWrite = 0; // suppress shopping listener re-render for own writes
 let _cachedShopState = null; // Firestore shopState cache — bridges catalog/state listener race
+let _cachedTaskState = null; // bridges taskState listener firing before task content loads
 let _shopSearchTimer = null; // debounce timer for shopping search
 function toggleT(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
@@ -5069,8 +5102,36 @@ function setupLiveSync() {
   try {
     // Today's task done-state, shared live across every groomer's phone.
     const tabName = DAYS[getToday()];
+
+    // When source is Firestore, attach a live listener on today's task content
+    // so edits made by a manager on another device appear instantly.
+    if(S.tasksSource === 'firestore') {
+      db.collection('tasks').doc(tabName).onSnapshot(snap => {
+        if(!snap.exists || !snap.data().migrated) return;
+        const incoming = (snap.data().tasks || []).map(t => ({...t, done: false}));
+        // Preserve current done states across the content refresh
+        const prevDone = {};
+        (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; });
+        S.tasks[tabName] = incoming;
+        S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+        // Also apply cached taskState (handles race where state arrived before content)
+        if(_cachedTaskState) {
+          const today = new Date().toDateString();
+          if(!_cachedTaskState._date || _cachedTaskState._date === today) {
+            S.tasks[tabName].forEach(t => { const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+          }
+        }
+        _cacheTasksLocal(tabName);
+        const el = document.getElementById('content');
+        if(S.tab==='today') renderToday(el);
+        else if(S.tab==='week' && S.inDay && S.dayView===getToday()) renderDayDetail(el);
+      }, e => console.log('tasks content listener error:', e));
+    }
+
     db.collection('taskState').doc(tabName).onSnapshot(snap => {
-      const data = snap.data(); if(!data || !S.tasks[tabName]) return;
+      const data = snap.data();
+      _cachedTaskState = data; // always cache so task content listener can use it
+      if(!data || !S.tasks[tabName]) return;
       // Ignore states written on a different calendar day (weekly cycle fix —
       // last Monday's done-flags must not re-appear this Monday).
       const today = new Date().toDateString();
