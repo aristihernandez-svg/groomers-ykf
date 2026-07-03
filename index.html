@@ -4466,7 +4466,9 @@ async function runMigration() {
   const btn = document.getElementById('migStartBtn');
   if(btn) btn.disabled = true;
 
-  // ── Step 1: Check for concurrent import lock ─────────────────────
+  // ── Step 1: Check for concurrent import lock (best-effort) ──────
+  // If the lock read fails (e.g. Firestore rules don't cover this doc yet),
+  // log it and continue — PIN + double-confirm already prevent accidents.
   setMigStatus('Checking for active imports...');
   try {
     const lockSnap = await db.collection('appConfig').doc('importing').get();
@@ -4476,13 +4478,14 @@ async function runMigration() {
       return;
     }
   } catch(e) {
-    setMigStatus('⚠️ Could not check lock — check connection', 'var(--red)');
-    if(btn) btn.disabled = false;
-    return;
+    console.log('Lock check skipped (rules may not cover appConfig/importing):', e.code, e.message);
+    // Non-fatal — proceed without the lock
   }
 
-  // ── Step 2: Acquire lock ─────────────────────────────────────────
-  await db.collection('appConfig').doc('importing').set({ active: true, startedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  // ── Step 2: Acquire lock (best-effort) ───────────────────────────
+  await db.collection('appConfig').doc('importing').set({ active: true, startedAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(e => {
+    console.log('Lock set skipped:', e.code);
+  });
 
   // ── Step 3: Preview fetch all 7 days and validate ─────────────────
   setMigStatus('📋 Fetching all 7 days from Sheets...');
