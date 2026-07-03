@@ -4502,8 +4502,8 @@ async function runMigration() {
       }
       preview[day] = tasks;
     } catch(e) {
-      setMigStatus(`⚠️ Failed to fetch ${day} — check connection. Aborting.`, 'var(--red)');
-      await db.collection('appConfig').doc('importing').set({ active: false });
+      setMigStatus(`⚠️ Failed to fetch ${day}: ${e.message||e}`, 'var(--red)');
+      await db.collection('appConfig').doc('importing').set({ active: false }).catch(()=>{});
       if(btn) btn.disabled = false;
       return;
     }
