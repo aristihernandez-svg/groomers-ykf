@@ -3538,10 +3538,21 @@ function deleteNote(tabName,idx) {
 }
 function toggleShop(idx) {
   const item = S.shopping[idx];
-  // Unchecking (removing from cart) — ask first so no undo complexity needed
+  // Unchecking (removing from cart) — confirm via styled modal
   if(item.checked) {
-    if(!confirm(`Mark "${item.item}" as In Stock?\n\nTap Cancel to keep it in your cart.`)) return;
+    const itemName=item.item;
+    document.getElementById('mTitle').textContent='Mark as In Stock?';
+    document.getElementById('mFields').innerHTML=`<p style="text-align:center;font-size:16px;color:var(--t1);margin:8px 0 4px;line-height:1.5"><strong>${itemName}</strong><br><span style="font-size:13px;color:var(--t2)">This will remove it from your cart.</span></p>`;
+    document.getElementById('mSave').textContent='Mark In Stock';
+    document.getElementById('mSave').style.display='';
+    S.mCtx=()=>{ closeModal(); _doToggleShop(idx); };
+    document.getElementById('overlay').classList.add('open');
+    return;
   }
+  _doToggleShop(idx);
+}
+function _doToggleShop(idx) {
+  const item = S.shopping[idx];
   item.checked = !item.checked;
   item.status = item.checked ? 'To Buy' : 'In Stock';
   haptic('medium');
@@ -3903,7 +3914,7 @@ function openModal(title,fields,onSave) {
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.querySelector('#mFields input,#mFields textarea')?.focus(),100);
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; document.getElementById('mSave').textContent='Save'; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
 function openAddTask(tabName,area='') {
