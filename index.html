@@ -926,6 +926,7 @@ window.addEventListener('load', async () => {
     buildNav(); restoreNavOrder(); loadTaskCache(); loadDayNotes(); loadProcs(); loadDmg(); loadCrewCarData(); loadCarAudits(); loadCustomStores();
     try { recoverDmgDraft(); } catch(e) { console.log('recoverDmgDraft error:', e); }
     setupPullToRefresh();
+    setupSwipeBack();
     setupPhotoInput();
     initFirestore(); // best-effort; app works locally even if this fails
   } catch(e) {
@@ -1039,6 +1040,36 @@ function render() {
 
 // ── DARK MODE ──────────────────────────────────────────────────────
 
+
+// ── SWIPE BACK (left-edge → right) ────────────────────────────────
+function handleSwipeBack() {
+  if(S.pastAuditView !== null) { S.pastAuditView=null; S.crewCarsView='list'; render(); return true; }
+  if(S.crewCarsView && S.crewCarsView !== 'list') { backToCarList(); return true; }
+  if(S.crewCarsView === 'list') { backToProcs(); return true; }
+  if(S.auditsView) { S.auditsView=false; render(); return true; }
+  if(S.procView !== null) { S.procView=null; render(); return true; }
+  if(S.inDay) { backWeek(); return true; }
+  return false;
+}
+
+function setupSwipeBack() {
+  let startX=0, startY=0, tracking=false;
+  document.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    // Only track touches starting within 28px of the left edge
+    if(t.clientX > 28) { tracking=false; return; }
+    startX=t.clientX; startY=t.clientY; tracking=true;
+  }, {passive:true});
+  document.addEventListener('touchend', e => {
+    if(!tracking) return;
+    tracking=false;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - startX;
+    const dy = Math.abs(t.clientY - startY);
+    // Must swipe right at least 72px and be more horizontal than vertical
+    if(dx > 72 && dy < dx * 0.8) { haptic('light'); handleSwipeBack(); }
+  }, {passive:true});
+}
 
 // ── PULL TO REFRESH ────────────────────────────────────────────────
 function setupPullToRefresh() {
