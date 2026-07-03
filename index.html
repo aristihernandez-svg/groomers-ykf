@@ -769,8 +769,8 @@ body::before{
   <div class="modal" id="modal" onclick="event.stopPropagation()">
     <h3 id="mTitle">Add</h3>
     <div id="mFields"></div>
-    <div class="mbtn-row">
-      <button class="mbtn cancel" onclick="closeModal()">Cancel</button>
+    <div class="mbtn-row" id="mBtnRow">
+      <button class="mbtn cancel" id="mCancel" onclick="closeModal()">Cancel</button>
       <button class="mbtn save" id="mSave" onclick="mSubmit()">Save</button>
     </div>
   </div>
@@ -3548,6 +3548,7 @@ function toggleShop(idx) {
         <button onclick="closeModal();_doToggleShop(${idx})" style="width:64px;height:64px;border-radius:50%;border:none;background:rgba(46,160,80,0.12);color:#2ea050;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✓</button>
       </div>`;
     document.getElementById('mSave').style.display='none';
+    document.getElementById('mBtnRow').style.display='none';
     document.getElementById('overlay').classList.add('open');
     return;
   }
@@ -3916,7 +3917,7 @@ function openModal(title,fields,onSave) {
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.querySelector('#mFields input,#mFields textarea')?.focus(),100);
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; document.getElementById('mSave').textContent='Save'; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; document.getElementById('mSave').textContent='Save'; document.getElementById('mSave').style.display=''; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
 function openAddTask(tabName,area='') {
