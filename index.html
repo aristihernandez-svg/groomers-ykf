@@ -634,16 +634,19 @@ body::before{
   transform:translateX(0);
 }
 .swipe-wrap .srow,
-.swipe-wrap .bitem{
+.swipe-wrap .bitem,
+.swipe-wrap .trow{
   position:relative;z-index:1;
   transition:transform 0.2s ease;
   background:var(--glass);
 }
 .swipe-wrap.open-left .srow,
-.swipe-wrap.open-left .bitem{transform:translateX(90px)}
+.swipe-wrap.open-left .bitem,
+.swipe-wrap.open-left .trow{transform:translateX(90px)}
 .swipe-wrap.open-left .swipe-action-left{transform:translateX(0)}
 .swipe-wrap.open-right .srow,
-.swipe-wrap.open-right .bitem{transform:translateX(-90px)}
+.swipe-wrap.open-right .bitem,
+.swipe-wrap.open-right .trow{transform:translateX(-90px)}
 .swipe-wrap.open-right .swipe-action-right{transform:translateX(0)}
 
 /* ── DRAGGABLE NAV ── */
@@ -1564,10 +1567,41 @@ function renderToday(el) {
   html+=renderGroups(tasks,tabName);
   html+='<div style="height:90px"></div>';
   el.innerHTML=html;
-  el.querySelectorAll('.trow-wrap').forEach(w=>{
-    const idx=parseInt(w.dataset.idx);
-    setupSwipe(w,()=>deleteTask(tabName,idx));
-  });
+  if(S.tasksSource==='firestore') {
+    el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
+      const i=parseInt(w.dataset.idx);
+      setupSwipeTwoWay(w,()=>openEditTask(tabName,i),()=>confirmDeleteTask(tabName,i));
+    });
+  } else {
+    el.querySelectorAll('.trow-wrap').forEach(w=>{
+      const i=parseInt(w.dataset.idx);
+      setupSwipe(w,()=>deleteTask(tabName,i));
+    });
+  }
+}
+
+function taskRowHtml(t, gi, tabName, toggleFn) {
+  const fs = S.tasksSource === 'firestore';
+  const inner = `
+    <div class="trow ${t.done?'done':''} ${t.area==='CLOSURE'?'closure':''}"
+         onclick="${toggleFn}('${tabName}',${gi})">
+      <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
+      <div class="tinfo">
+        <div class="ttxt">${t.task}</div>
+        ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
+      </div>
+    </div>`;
+  if(fs) return `
+    <div class="swipe-wrap" data-idx="${gi}">
+      <div class="swipe-action-left">✏️ Edit</div>
+      ${inner}
+      <div class="swipe-action-right">🗑 Delete</div>
+    </div>`;
+  return `
+    <div class="trow-wrap" data-idx="${gi}">
+      <div class="trow-del-bg" style="display:none">🗑 Delete</div>
+      ${inner}
+    </div>`;
 }
 
 function renderGroups(tasks, tabName) {
@@ -1580,21 +1614,7 @@ function renderGroups(tasks, tabName) {
     const atasks=areas[area];
     const bg=AREA_COLORS[area]||'#4A4A4A';
     html+=`<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
-    atasks.forEach(t=>{
-      const gi=tasks.indexOf(t);
-      html+=`
-        <div class="trow-wrap" data-idx="${gi}">
-          <div class="trow-del-bg" style="display:none">🗑 Delete</div>
-          <div class="trow ${t.done?'done':''} ${area==='CLOSURE'?'closure':''}"
-               onclick="toggleT('${tabName}',${gi})">
-            <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
-            <div class="tinfo">
-              <div class="ttxt">${t.task}</div>
-              ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
-            </div>
-          </div>
-        </div>`;
-    });
+    atasks.forEach(t=>{ html+=taskRowHtml(t,tasks.indexOf(t),tabName,'toggleT'); });
     html+=`<div class="add-row" onclick="openAddTask('${tabName}','${area}')">
       <div class="add-circ">+</div><span>Add task to ${area}...</span></div>`;
   });
@@ -1811,10 +1831,17 @@ function renderDayDetail(el) {
   html+=renderGroupsDay(tasks,tabName);
   html+='<div style="height:90px"></div>';
   el.innerHTML=html;
-  el.querySelectorAll('.trow-wrap').forEach(w=>{
-    const idx2=parseInt(w.dataset.idx);
-    setupSwipe(w,()=>deleteTask(tabName,idx2));
-  });
+  if(S.tasksSource==='firestore') {
+    el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
+      const i=parseInt(w.dataset.idx);
+      setupSwipeTwoWay(w,()=>openEditTask(tabName,i),()=>confirmDeleteTask(tabName,i));
+    });
+  } else {
+    el.querySelectorAll('.trow-wrap').forEach(w=>{
+      const i=parseInt(w.dataset.idx);
+      setupSwipe(w,()=>deleteTask(tabName,i));
+    });
+  }
 }
 
 function renderGroupsDay(tasks, tabName) {
@@ -1827,26 +1854,13 @@ function renderGroupsDay(tasks, tabName) {
     const atasks=areas[area];
     const bg=AREA_COLORS[area]||'#4A4A4A';
     html+=`<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
-    atasks.forEach(t=>{
-      const gi=tasks.indexOf(t);
-      html+=`
-        <div class="trow-wrap" data-idx="${gi}">
-          <div class="trow-del-bg" style="display:none">🗑 Delete</div>
-          <div class="trow ${t.done?'done':''} ${area==='CLOSURE'?'closure':''}"
-               onclick="toggleTDay('${tabName}',${gi})">
-            <div class="tcb ${t.done?'on':''}">${t.done?'✓':''}</div>
-            <div class="tinfo">
-              <div class="ttxt">${t.task}</div>
-              ${t.freq?`<div class="tfreq">${t.freq}</div>`:''}
-            </div>
-          </div>
-        </div>`;
-    });
+    atasks.forEach(t=>{ html+=taskRowHtml(t,tasks.indexOf(t),tabName,'toggleTDay'); });
     html+=`<div class="add-row" onclick="openAddTask('${tabName}','${area}')">
       <div class="add-circ">+</div><span>Add task to ${area}...</span></div>`;
   });
   return html;
 }
+
 
 function backWeek() {
   S.inDay=false;
@@ -3711,11 +3725,67 @@ function toggleStep(key,idx) {
   render();
 }
 function resetProc(key) { S.procs[key].done=[]; render(); toast('Steps reset'); }
+function fsSaveTaskContent(tabName) {
+  if(!db) return;
+  const content = (S.tasks[tabName]||[]).map(({task,freq,area})=>({task,freq:freq||'',area,done:false}));
+  db.collection('tasks').doc(tabName).set({tasks:content,migrated:true},{merge:true})
+    .catch(e=>console.log('fsSaveTaskContent failed:',e));
+}
+
 function deleteTask(tabName,idx) {
   const t=S.tasks[tabName][idx];
   S.tasks[tabName].splice(idx,1);
-  api({action:'deleteTask',tabName,task:t.task});
+  if(S.tasksSource==='firestore') {
+    fsSaveTaskContent(tabName);
+    if(db) db.collection('taskEdits').add({
+      day:tabName, action:'delete', task:t.task, at:firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(()=>{});
+  } else {
+    api({action:'deleteTask',tabName,task:t.task});
+  }
   render(); toast('Task deleted');
+}
+
+function confirmDeleteTask(tabName,idx) {
+  const t=S.tasks[tabName]?.[idx]; if(!t) return;
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.innerHTML=`
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
+      <div style="font-size:22px;margin-bottom:8px">🗑</div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Delete task?</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}</div>
+      <div style="display:flex;gap:10px;justify-content:center">
+        <button onclick="this.closest('div[style]').remove()" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
+        <button onclick="this.closest('div[style]').remove();deleteTask('${tabName}',${idx})" style="background:var(--red);border:none;border-radius:8px;padding:11px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Delete</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+
+function openEditTask(tabName,idx) {
+  const t=S.tasks[tabName]?.[idx]; if(!t) return;
+  openModal('✏️ Edit Task',
+    `<label>Task description</label>
+     <input id="eTTask" value="${t.task.replace(/"/g,'&quot;')}">
+     <label>Frequency</label>
+     <input id="eTFreq" value="${(t.freq||'').replace(/"/g,'&quot;')}">
+     <label>Area</label>
+     <select id="eTArea">${Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===t.area?'selected':''}>${a}</option>`).join('')}</select>`,
+    ()=>{
+      const task=document.getElementById('eTTask').value.trim();
+      const freq=document.getElementById('eTFreq').value.trim();
+      const area=document.getElementById('eTArea').value;
+      if(!task) return;
+      S.tasks[tabName][idx]={...S.tasks[tabName][idx],task,freq,area};
+      fsSaveTaskContent(tabName);
+      if(db) db.collection('taskEdits').add({
+        day:tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(()=>{});
+      closeModal();
+      render();
+      toast('Task updated ✓');
+    });
 }
 function resetDay() {
   const tabName=DAYS[getToday()];
@@ -4701,7 +4771,7 @@ function toastUndo(msg, fn) {
 // ── SWIPE HANDLER (two-direction) ────────────────────────────
 function setupSwipeTwoWay(el, onLeft, onRight) {
   let startX=0, currentX=0, active=false;
-  const inner = el.querySelector('.srow,.bitem');
+  const inner = el.querySelector('.srow,.bitem,.trow');
   if(!inner) return;
 
   el.addEventListener('touchstart', e=>{
@@ -4717,7 +4787,7 @@ function setupSwipeTwoWay(el, onLeft, onRight) {
     currentX = e.touches[0].clientX - startX;
     if(Math.abs(currentX) > 8) e.preventDefault();
     // Live feedback while dragging
-    const inner = el.querySelector('.srow,.bitem');
+    const inner = el.querySelector('.srow,.bitem,.trow');
     if(inner) inner.style.transform = `translateX(${Math.max(-90,Math.min(90,currentX))}px)`;
   },{passive:false});
 
