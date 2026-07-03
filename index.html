@@ -792,7 +792,12 @@ const DAYS      = ['☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wedn
 const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const DAY_EMOJIS= ['☀','1️⃣','2️⃣','3️⃣','4️⃣','5️⃣','🗓'];
 const DAY_COLORS= ['#E65C00','#1A3A5C','#005DAA','#006400','#7B2D8B','#C0181E','#D4860A'];
-const TODAY     = new Date().getDay();
+// getToday() is a function (not a constant) so it always returns the current
+// weekday even if the app is open across midnight.
+function getToday() { return new Date().getDay(); }
+const TODAY = getToday(); // kept for init-time use (S.dayView, boot fetch)
+
+const APP_VERSION = 'v2.0';
 
 const FLEET_TAILS = ['IOC','IOJ','IOB','IOE','DAX','IAW','XAW','XDP'];
 const PROC_TAILS  = {
@@ -890,6 +895,7 @@ const S = {
   flightDropdown: null, // null | {tabName, type:'arr'|'dep'}
   auditsView: false,    // true = inside Audits hub
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
+  tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
 
 const NAV_ITEMS = [
@@ -1357,7 +1363,7 @@ async function syncAll() {
   // and refresh themselves automatically — re-fetching them from Sheets here
   // would briefly overwrite live data, so they're intentionally skipped.
   await Promise.all([
-    fetchDay(DAYS[TODAY]),
+    fetchDay(DAYS[getToday()]),
     fetchBored()
   ]);
   // If viewing a specific day, refresh that too
@@ -1487,6 +1493,9 @@ async function renderHome(el) {
             <div style="font-size:11px;font-weight:700;color:var(--t1);letter-spacing:0.8px;text-transform:uppercase">${t.label}</div>
           </div>`).join('')}
       </div>
+      <div style="text-align:center;padding:8px 0 4px">
+        <span id="appVerChip" style="font-size:10px;color:var(--t4);font-weight:600;letter-spacing:0.5px;cursor:default;user-select:none" ontouchstart="startVerPress()" ontouchend="cancelVerPress()" onmousedown="startVerPress()" onmouseup="cancelVerPress()" onmouseleave="cancelVerPress()">Skycare ${APP_VERSION} · Tasks: <span id="tasksSourceBadge">${S.tasksSource==='firestore'?'🟢 Firestore':'📋 Sheets'}</span></span>
+      </div>
     </div>`;
 
   // Cinematic slideshow
@@ -1506,11 +1515,12 @@ async function renderHome(el) {
 function renderToday(el) {
   setBarLogo();
   document.getElementById('eodFab').classList.add('show');
-  showFab(()=>openAddTask(DAYS[TODAY]));
-  const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[];
+  const _today=getToday();
+  showFab(()=>openAddTask(DAYS[_today]));
+  const tabName=DAYS[_today], tasks=S.tasks[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
-  const todayIso = weekIsoDate(TODAY);
+  const todayIso = weekIsoDate(_today);
   let html=renderHandoffNotesHtml();
   html+=renderDayNoteWidget(todayIso, true);
   html+=`
@@ -1566,7 +1576,7 @@ function renderWeek(el) {
   let html='<div class="week-list">';
   DAYS.forEach((day,i)=>{
     const tasks=S.tasks[day]||[], done=tasks.filter(t=>t.done).length;
-    const isToday=i===TODAY;
+    const isToday=i===getToday();
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
     const dayIso = weekIsoDate(i);
     const hasDayNote = !!(S.dayNotes[dayIso]?.text?.trim());
@@ -1613,7 +1623,7 @@ async function showDay(idx) {
   }
   loadFlightLog(tabName);
   // Pull latest flight log from Firestore for non-today days (today uses onSnapshot)
-  if(idx!==TODAY && db) {
+  if(idx!==getToday() && db) {
     db.collection('taskState').doc(tabName).get()
       .then(snap=>{ if(snap.exists){ flightLogFromFirestore(tabName,snap.data()); renderDayDetail(document.getElementById('content')); }})
       .catch(()=>{});
@@ -1758,7 +1768,7 @@ function renderDayDetail(el) {
   let html=`
     <div class="dbar" style="background:${DAY_COLORS[idx]};cursor:pointer" onclick="backWeek()">
       <span style="font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600">${DAY_NAMES[idx]}${idx===TODAY?' — Today':''}</span>
+      <span style="font-size:15px;font-weight:600">${DAY_NAMES[idx]}${idx===getToday()?' — Today':''}</span>
     </div>
     <div class="prog-wrap" style="top:44px">
       <div class="prog-row"><span>${done}/${tasks.length} tasks</span><span>${pct}%</span></div>
@@ -3675,7 +3685,7 @@ function deleteTask(tabName,idx) {
   render(); toast('Task deleted');
 }
 function resetDay() {
-  const tabName=DAYS[TODAY];
+  const tabName=DAYS[getToday()];
   if(!confirm('Reset all of today\'s tasks?')) return;
   S.tasks[tabName]?.forEach(t=>t.done=false);
   // Sync reset to Firestore so every phone sees it immediately
@@ -4173,9 +4183,117 @@ function openAddBored() {
     });
 }
 
+// ── MIGRATION MANAGER ──────────────────────────────────────────────
+let _verPressTimer = null;
+
+function startVerPress() {
+  _verPressTimer = setTimeout(() => { haptic('medium'); showMigrationPinPrompt(); }, 3000);
+}
+function cancelVerPress() { clearTimeout(_verPressTimer); _verPressTimer = null; }
+
+function showMigrationPinPrompt(onSuccess) {
+  const isEscape = !!onSuccess;
+  const title = isEscape ? '🔄 Re-import from Sheets' : '⚙️ Migration Manager';
+  const hint = isEscape
+    ? 'Enter PIN to re-import all tasks from Google Sheets'
+    : 'Enter PIN to open migration controls';
+  const overlay = document.createElement('div');
+  overlay.id = 'migPinOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
+      <div style="font-size:22px;margin-bottom:6px">${title}</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:20px">${hint}</div>
+      <input id="migPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+        style="width:100%;text-align:center;font-size:28px;letter-spacing:12px;padding:12px;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;color:var(--t1);margin-bottom:16px"
+        oninput="if(this.value.length===4)checkMigPin('${isEscape?'escape':'manager'}')">
+      <div id="migPinErr" style="font-size:12px;color:var(--red);min-height:18px;margin-bottom:12px"></div>
+      <button onclick="closeMigPin()" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:10px 24px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  setTimeout(() => document.getElementById('migPin')?.focus(), 100);
+  overlay._onSuccess = onSuccess;
+}
+
+function closeMigPin() { document.getElementById('migPinOverlay')?.remove(); }
+
+function checkMigPin(mode) {
+  const pin = document.getElementById('migPin')?.value;
+  if(pin !== '0000') {
+    document.getElementById('migPinErr').textContent = 'Incorrect PIN';
+    document.getElementById('migPin').value = '';
+    return;
+  }
+  const onSuccess = document.getElementById('migPinOverlay')?._onSuccess;
+  closeMigPin();
+  if(mode === 'escape') {
+    onSuccess?.();
+  } else {
+    showMigrationManager();
+  }
+}
+
+function showEscapeHatch() {
+  showMigrationPinPrompt(async () => {
+    // Double-confirm before wiping
+    const overlay = document.createElement('div');
+    overlay.id = 'escapeConfirmOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px';
+    overlay.innerHTML = `
+      <div style="background:var(--bg2);border:1px solid var(--border-gold);border-radius:16px;padding:28px 24px;width:100%;max-width:340px;text-align:center">
+        <div style="font-size:22px;margin-bottom:8px">⚠️ Re-import from Sheets?</div>
+        <div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.5">This will <strong style="color:var(--red)">overwrite all app-side task edits</strong> with the current Google Sheets data and reset the source back to Sheets.</div>
+        <div style="font-size:12px;color:var(--t3);margin-bottom:20px">This cannot be undone.</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button onclick="document.getElementById('escapeConfirmOverlay').remove()" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
+          <button onclick="runEscapeHatch()" style="background:var(--red);border:none;border-radius:8px;padding:11px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Re-import</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  });
+}
+
+async function runEscapeHatch() {
+  document.getElementById('escapeConfirmOverlay')?.remove();
+  toast('Re-importing from Sheets...');
+  if(db) {
+    await db.collection('appConfig').doc('tasksSource').set({source:'sheets'}).catch(()=>{});
+    S.tasksSource = 'sheets';
+  }
+  try {
+    await Promise.all(DAYS.map(day => fetchDay(day)));
+    toast('✅ Re-imported from Sheets');
+    render();
+  } catch(e) {
+    toast('⚠️ Import failed — check connection');
+  }
+}
+
+function showMigrationManager() {
+  const src = S.tasksSource;
+  const overlay = document.createElement('div');
+  overlay.id = 'migManagerOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px';
+  overlay.innerHTML = `
+    <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:360px">
+      <div style="font-size:18px;font-weight:700;color:var(--t1);margin-bottom:4px">⚙️ Migration Manager</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:20px">Skycare ${APP_VERSION}</div>
+      <div style="background:var(--bg3);border-radius:10px;padding:14px;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--t3);margin-bottom:4px">Current task source</div>
+        <div style="font-size:15px;font-weight:700;color:${src==='firestore'?'var(--green)':'var(--gold)'}">${src==='firestore'?'🟢 Firestore':'📋 Google Sheets'}</div>
+      </div>
+      <div id="migMgrStatus" style="font-size:12px;color:var(--t2);min-height:18px;margin-bottom:16px;text-align:center"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+        <button onclick="showEscapeHatch();document.getElementById('migManagerOverlay')?.remove()" style="background:var(--red-dim);border:1px solid var(--red);border-radius:10px;padding:13px;color:var(--red);font-size:14px;font-weight:600;cursor:pointer;text-align:left">🔄 Re-import from Sheets<br><span style="font-size:11px;font-weight:400;opacity:0.8">Overwrites app edits with Sheets data</span></button>
+      </div>
+      <button onclick="document.getElementById('migManagerOverlay').remove()" style="width:100%;background:var(--glass2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--t2);font-size:14px;cursor:pointer">Close</button>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+
 // ── END OF DAY ─────────────────────────────────────────────────────
 function showEOD() {
-  const tabName=DAYS[TODAY], tasks=S.tasks[tabName]||[];
+  const tabName=DAYS[getToday()], tasks=S.tasks[tabName]||[];
   const done=tasks.filter(t=>t.done);
   const missed=tasks.filter(t=>!t.done&&t.area!=='CLOSURE');
   const closure=tasks.filter(t=>t.area==='CLOSURE');
@@ -4257,7 +4375,7 @@ function showEOD() {
       if((noteText || audio) && db) {
         try {
           await db.collection('handoffNotes').add({
-            text:noteText, audio, day:DAY_NAMES[TODAY], date:dateStr,
+            text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
             resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
             expireAt: ttlTimestamp(120)
           });
@@ -4788,7 +4906,7 @@ function setupLiveSync() {
   if(!db) return;
   try {
     // Today's task done-state, shared live across every groomer's phone.
-    const tabName = DAYS[TODAY];
+    const tabName = DAYS[getToday()];
     db.collection('taskState').doc(tabName).onSnapshot(snap => {
       const data = snap.data(); if(!data || !S.tasks[tabName]) return;
       // Ignore states written on a different calendar day (weekly cycle fix —
@@ -4803,11 +4921,11 @@ function setupLiveSync() {
       // task being toggled when DOM rebuilds under the user's finger).
       if(!touchActive) {
         if(S.tab==='today') renderToday(document.getElementById('content'));
-        else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+        else if(S.tab==='week' && S.inDay && S.dayView===getToday()) renderDayDetail(document.getElementById('content'));
       } else {
         setTimeout(()=>{
           if(S.tab==='today') renderToday(document.getElementById('content'));
-          else if(S.tab==='week' && S.inDay && S.dayView===TODAY) renderDayDetail(document.getElementById('content'));
+          else if(S.tab==='week' && S.inDay && S.dayView===getToday()) renderDayDetail(document.getElementById('content'));
         }, 200);
       }
     }, e => console.log('taskState listener error:', e));
@@ -4970,6 +5088,12 @@ function setupLiveSync() {
     }, e => console.log('dayNotes listener error:', e));
 
     // Broadcast notifications — fired by any device writing to this collection
+    // Task source flag — 'sheets' or 'firestore', toggled by migration manager
+    db.collection('appConfig').doc('tasksSource').onSnapshot(snap => {
+      const data = snap.data();
+      if(data?.source) S.tasksSource = data.source;
+    }, e => console.log('tasksSource listener error:', e));
+
     // Custom stores — live so adding a store on one phone appears everywhere
     db.collection('appConfig').doc('stores').onSnapshot(snap => {
       const data = snap.data();
@@ -5211,7 +5335,11 @@ function weekIsoDate(dayIdx) {
   const diff = dayIdx - now.getDay();
   const d = new Date(now);
   d.setDate(now.getDate() + diff);
-  return d.toISOString().split('T')[0];
+  // Use local year/month/day — toISOString() returns UTC which can be a day off at night
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
 }
 
 window._dayNoteOpen = {};
