@@ -3784,28 +3784,51 @@ function confirmDeleteTask(tabName,idx) {
   document.body.appendChild(ov);
 }
 
+const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground'];
+
+function locationSelect(selected='') {
+  const blank = `<option value="" ${!selected?'selected':''}>— Select location —</option>`;
+  return blank + Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===selected?'selected':''}>${a}</option>`).join('');
+}
+function freqSelect(selected='') {
+  const opts = FREQ_OPTIONS.map(f=>`<option value="${f}" ${f===selected?'selected':''}>${f}</option>`).join('');
+  return `<option value="">— Select frequency —</option>${opts}`;
+}
+
 function openEditTask(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
   openModal('✏️ Edit Task',
     `<label>Task description</label>
      <input id="eTTask" value="${t.task.replace(/"/g,'&quot;')}">
+     <label>Location</label>
+     <select id="eTArea">${locationSelect(t.area||'')}</select>
      <label>Frequency</label>
-     <input id="eTFreq" value="${(t.freq||'').replace(/"/g,'&quot;')}">
-     <label>Area</label>
-     <select id="eTArea">${Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===t.area?'selected':''}>${a}</option>`).join('')}</select>`,
-    ()=>{
+     <select id="eTFreq">${freqSelect(t.freq||'')}</select>
+     <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:4px">
+       <input type="checkbox" id="eTAllDays" style="width:18px;height:18px;accent-color:var(--blue)">
+       Apply to all days
+     </label>`,
+    async()=>{
       const task=document.getElementById('eTTask').value.trim();
-      const freq=document.getElementById('eTFreq').value.trim();
+      const freq=document.getElementById('eTFreq').value;
       const area=document.getElementById('eTArea').value;
+      const allDays=document.getElementById('eTAllDays').checked;
       if(!task) return;
-      S.tasks[tabName][idx]={...S.tasks[tabName][idx],task,freq,area};
-      fsSaveTaskContent(tabName);
+      if(allDays) {
+        for(const day of DAYS) {
+          if(!S.tasks[day]) continue;
+          const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===fsKey(t.task));
+          if(mi>=0) { S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area}; fsSaveTaskContent(day); }
+        }
+      } else {
+        S.tasks[tabName][idx]={...S.tasks[tabName][idx],task,freq,area};
+        fsSaveTaskContent(tabName);
+      }
       if(db) db.collection('taskEdits').add({
-        day:tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
+        day:allDays?'ALL':tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
       }).catch(()=>{});
-      closeModal();
-      render();
-      toast('Task updated ✓');
+      closeModal(); render();
+      toast(allDays?'Updated across all days ✓':'Task updated ✓');
     });
 }
 function resetDay() {
@@ -4095,19 +4118,19 @@ function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
      <input id="mTask" placeholder="Task...">
+     <label>Location</label>
+     <select id="mArea">${locationSelect(area)}</select>
      <label>Frequency</label>
-     <input id="mFreq" placeholder="Daily, Weekly, As needed...">
-     <label>Area</label>
-     <select id="mArea">${Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===area?'selected':''}>${a}</option>`).join('')}</select>`,
+     <select id="mFreq">${freqSelect()}</select>`,
     async()=>{
       const task=document.getElementById('mTask').value.trim();
-      const freq=document.getElementById('mFreq').value.trim();
+      const freq=document.getElementById('mFreq').value;
       const areaVal=document.getElementById('mArea').value;
       if(!task) return;
       if(!S.tasks[tabName]) S.tasks[tabName]=[];
       S.tasks[tabName].push({task,freq,area:areaVal,done:false});
+      fsSaveTaskContent(tabName);
       closeModal(); renderToday(document.getElementById('content')); toast('Task added ✓');
-      api({action:'addTask',tabName,task,freq,area:areaVal}).catch(()=>{});
     });
 }
 
