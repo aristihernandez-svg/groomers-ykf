@@ -1580,6 +1580,23 @@ function renderToday(el) {
   }
 }
 
+function areaHeaderHtml(area, atasks, bg) {
+  const done = atasks.filter(t=>t.done).length;
+  const total = atasks.length;
+  const icon = {
+    'AIRCRAFT':'✈️', "CR GROOMERS' CORNER":'🧹', 'CR OFFICE':'🖥',
+    'MX HANGAR':'🔧', 'MISC':'📦', 'CHARTER':'⭐', 'CLOSURE':'🔒'
+  }[area] || '📋';
+  return `
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border-bottom:1px solid var(--border);margin-top:2px">
+      <div style="width:36px;height:36px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${bg}">${area||'TASKS'}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:1px">${done}/${total} completed</div>
+      </div>
+    </div>`;
+}
+
 function taskRowHtml(t, gi, tabName, toggleFn) {
   const fs = S.tasksSource === 'firestore';
   const inner = `
@@ -1613,7 +1630,7 @@ function renderGroups(tasks, tabName) {
   orderedAreas.forEach(area=>{
     const atasks=areas[area];
     const bg=AREA_COLORS[area]||'#4A4A4A';
-    html+=`<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
+    html+=areaHeaderHtml(area,atasks,bg);
     atasks.forEach(t=>{ html+=taskRowHtml(t,tasks.indexOf(t),tabName,'toggleT'); });
     html+=`<div class="add-row" onclick="openAddTask('${tabName}','${area}')">
       <div class="add-circ">+</div><span>Add task to ${area}...</span></div>`;
@@ -1853,7 +1870,7 @@ function renderGroupsDay(tasks, tabName) {
   orderedAreas.forEach(area=>{
     const atasks=areas[area];
     const bg=AREA_COLORS[area]||'#4A4A4A';
-    html+=`<div class="sec" style="background:${bg}">${area||'TASKS'}</div>`;
+    html+=areaHeaderHtml(area,atasks,bg);
     atasks.forEach(t=>{ html+=taskRowHtml(t,tasks.indexOf(t),tabName,'toggleTDay'); });
     html+=`<div class="add-row" onclick="openAddTask('${tabName}','${area}')">
       <div class="add-circ">+</div><span>Add task to ${area}...</span></div>`;
