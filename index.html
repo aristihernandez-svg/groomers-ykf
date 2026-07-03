@@ -1139,6 +1139,7 @@ async function fetchDay(tabName) {
   try {
     const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
     cached[tabName] = S.tasks[tabName];
+    cached._date = new Date().toDateString();
     localStorage.setItem('gykf_tasks', JSON.stringify(cached));
   } catch(e) {}
 }
@@ -4582,9 +4583,15 @@ function loadNotes() { try{S.notes=JSON.parse(localStorage.getItem('gykf_notes')
 function loadTaskCache() {
   try {
     const cached = JSON.parse(localStorage.getItem('gykf_tasks')||'{}');
-    // Pre-populate S.tasks with cached data — fresh fetch will override
+    const today = new Date().toDateString();
+    const cacheDate = cached._date;
+    const sameDay = cacheDate === today;
     Object.keys(cached).forEach(tab => {
-      if(!S.tasks[tab]) S.tasks[tab] = cached[tab];
+      if(tab === '_date') return;
+      if(!S.tasks[tab]) {
+        // Only restore done states if the cache is from today; otherwise start fresh
+        S.tasks[tab] = (cached[tab]||[]).map(t => ({...t, done: sameDay ? !!t.done : false}));
+      }
     });
   } catch(e) {}
 }
