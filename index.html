@@ -1961,7 +1961,7 @@ function renderCart(el, items) {
         const ri=items.indexOf(item);
         const cqty = item.qty||1;
         const isCH = item.source === 'crewhouse';
-        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':'var(--glass)'};border-left:3px solid ${isCH?'var(--accent)':col}" onclick="toggleShop(${ri});renderShopping(document.getElementById('content'))">
+        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':'var(--glass)'};border-left:3px solid ${isCH?'var(--accent)':col}" onclick="toggleShop(${ri})">
           <div class="scb" style="background:${isCH?'var(--accent)':col};border-color:${isCH?'var(--accent)':col};color:#fff">✓</div>
           <div class="sinfo">
             <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:var(--accent);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}</div>
@@ -3508,6 +3508,8 @@ function toggleBoredById(id) {
 
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
 let _lastSelfWrite = 0; // suppress listener re-render for own writes
+let _lastShopWrite = 0; // suppress shopping listener re-render for own writes
+let _shopSearchTimer = null; // debounce timer for shopping search
 function toggleT(tabName,idx) {
   S.tasks[tabName][idx].done=!S.tasks[tabName][idx].done;
   haptic(); api({action:'toggleTask',tabName,task:S.tasks[tabName][idx].task});
@@ -3538,6 +3540,7 @@ function toggleShop(idx) {
   haptic('medium');
   saveShoppingState();
   api({action:'toggleShop',item:S.shopping[idx].item});
+  _lastShopWrite = Date.now();
   fsSetShopState(S.shopping[idx].item, S.shopping[idx].checked, S.shopping[idx].status);
   renderShopping(document.getElementById('content'));
   if(S.shopping[idx].checked) {
@@ -3662,7 +3665,7 @@ function setSLFByIndex(i){
   S.shopLocFilter = i < locs.length ? locs[i] : 'all';
   renderShopping(document.getElementById('content'));
 }
-function setSSearch(q){S.shopSearch=q;renderShopping(document.getElementById('content'));}
+function setSSearch(q){S.shopSearch=q;clearTimeout(_shopSearchTimer);_shopSearchTimer=setTimeout(()=>renderShopping(document.getElementById('content')),150);}
 function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(document.getElementById('content'));}
 
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
@@ -3919,8 +3922,8 @@ function openAddTask(tabName,area='') {
       if(!task) return;
       if(!S.tasks[tabName]) S.tasks[tabName]=[];
       S.tasks[tabName].push({task,freq,area:areaVal,done:false});
-      await api({action:'addTask',tabName,task,freq,area:areaVal});
-      closeModal(); render(); toast('Task added ✓');
+      closeModal(); renderToday(document.getElementById('content')); toast('Task added ✓');
+      api({action:'addTask',tabName,task,freq,area:areaVal}).catch(()=>{});
     });
 }
 
@@ -4751,6 +4754,7 @@ function setupLiveSync() {
     // Shopping checked/to-buy state.
     db.collection('shopState').doc('state').onSnapshot(snap => {
       const data = snap.data(); if(!data) return;
+      if(Date.now() - _lastShopWrite < 1500) return; // suppress echo of own write
       S.shopping.forEach(i => {
         const v=data[fsKey(i.item)];
         if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; i.source=v.source||''; }
@@ -4839,7 +4843,8 @@ function setupLiveSync() {
         return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'',
           checked: prior?.checked||false, status: prior?.status||'In Stock', source: prior?.source||''};
       });
-      restoreShoppingState();
+      // Do NOT call restoreShoppingState() here — shopState listener is the source of truth for checked state.
+      // prevChecked already preserves current state before the rebuild above.
       if(S.tab==='shopping') renderShopping(document.getElementById('content'));
     }, e => console.log('shoppingCatalog listener error:', e));
 
