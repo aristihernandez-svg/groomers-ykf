@@ -1591,7 +1591,7 @@ function areaHeaderHtml(area, atasks, bg) {
     'MX HANGAR':'🔧', 'MISC':'📦', 'CHARTER':'⭐', 'CLOSURE':'🔒'
   }[area] || '📋';
   return `
-    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--card);border-bottom:1px solid var(--border);margin-top:2px">
+    <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;background:var(--bg3);border-bottom:1px solid var(--border);margin-top:2px">
       <div style="width:36px;height:36px;border-radius:10px;background:${bg};display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${icon}</div>
       <div style="flex:1">
         <div style="font-size:12px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${bg}">${area||'TASKS'}</div>
@@ -1627,6 +1627,7 @@ function taskRowHtml(t, gi, tabName, toggleFn) {
 function renderGroups(tasks, tabName) {
   const areas={};
   tasks.forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
+  console.log('[debug] areas:', Object.keys(areas), 'sample:', tasks[0]);
   let html='';
   const areaOrder=['AIRCRAFT',"CR GROOMERS' CORNER",'CR OFFICE','MX HANGAR','MISC','CHARTER','CLOSURE'];
   const orderedAreas=[...areaOrder.filter(a=>areas[a]),...Object.keys(areas).filter(a=>!areaOrder.includes(a)&&areas[a])];
