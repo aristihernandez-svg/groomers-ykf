@@ -4419,10 +4419,32 @@ function showMigrationManager() {
           🔄 Re-import from Sheets
           <br><span style="font-size:11px;font-weight:400;opacity:0.8">Overwrites app edits with Sheets data</span>
         </button>
+        <button onclick="debugFetchRaw()" style="background:var(--glass2);border:1px solid var(--border);border-radius:10px;padding:13px;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+          🔍 Debug: print Friday raw rows
+          <br><span style="font-size:11px;font-weight:400;opacity:0.8">Check console after tapping</span>
+        </button>
       </div>
       <button onclick="document.getElementById('migManagerOverlay').remove()" style="width:100%;background:var(--glass2);border:1px solid var(--border);border-radius:10px;padding:12px;color:var(--t2);font-size:14px;cursor:pointer">Close</button>
     </div>`;
   document.body.appendChild(overlay);
+}
+
+async function debugFetchRaw() {
+  setMigStatus('Fetching Friday raw...');
+  const gid = TAB_GIDS['Friday'];
+  const url = gid
+    ? `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${gid}`
+    : `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Friday`;
+  const text = await (await fetch(url)).text();
+  const json = JSON.parse(text.match(/setResponse\(([\s\S]*)\)/)[1]);
+  const rows = json.table?.rows || [];
+  const cols = json.table?.cols || [];
+  console.log('[debug cols]', cols.map(c=>c.label||c.id));
+  rows.slice(0,30).forEach((row,i) => {
+    const v = cols.map((_,ci) => { const c=row.c?.[ci]; return c?(c.v??c.f??'∅'):'∅'; });
+    console.log(`[row${i}]`, JSON.stringify(v.slice(0,5)));
+  });
+  setMigStatus('Done — check console', 'var(--green)');
 }
 
 function setMigStatus(msg, color='var(--t2)') {
