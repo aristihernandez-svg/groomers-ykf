@@ -947,6 +947,9 @@ window.addEventListener('load', async () => {
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
+        // Flush any dayNotes that were saved to localStorage but never made it to Firestore
+        // (e.g. app was closed within the 800ms debounce window after typing)
+        Object.keys(S.dayNotes).forEach(isoDate => fsSaveDayNote(isoDate));
         seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
         // Remove legacy procedures that were deleted from the app
         ['arrival','departure','crewcars'].forEach(key=>{
