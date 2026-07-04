@@ -2308,13 +2308,14 @@ function carStatusColor(dateStr) {
   if(days<=28) return '#E8A000';
   return 'var(--red)';
 }
+function parseLocalDate(s) { const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
 function daysSince(dateStr) {
   if(!dateStr) return null;
-  return Math.floor((Date.now()-new Date(dateStr).getTime())/86400000);
+  return Math.floor((Date.now()-parseLocalDate(dateStr).getTime())/86400000);
 }
 function fmtDate(dateStr) {
   if(!dateStr) return '—';
-  return new Date(dateStr).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
+  return parseLocalDate(dateStr).toLocaleDateString('en-CA',{month:'short',day:'numeric',year:'numeric'});
 }
 
 // ── CREW CARS NAVIGATION ──────────────────────────────────────
