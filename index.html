@@ -2252,7 +2252,7 @@ function openOilServiceModal(key) {
       if(ckm) d.currentKm = ckm;
       const km = document.getElementById('mOKM').value.trim();
       if(km) d.nextServiceKm = km;
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toLocaleDateString('en-CA');
       const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
       d.oilChange = today;
       d.log.push({type:'oil',value:'Oil changed',date:today,logged});
@@ -2286,7 +2286,7 @@ function openRegInsuranceModal(key, type) {
   const d = carData(key);
   const label = type==='reg' ? '📄 Registration' : '🛡 Insurance';
   const field = type==='reg' ? 'regExpiry' : 'insuranceExpiry';
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-CA');
   openModal(label+' Expiry',
     `<label>Expiry date</label>
      <input type="date" id="mREDate" value="${d[field]||today}">`,
@@ -2373,7 +2373,7 @@ function renderCrewCarsList(el) {
     </div>`;
 
   // ── Car list ── sort alerts to top ──
-  const todayIso=new Date().toISOString().split('T')[0];
+  const todayIso=new Date().toLocaleDateString('en-CA');
   const sortedCars=[...CREW_CARS].sort((a,b)=>{
     const da=carData(a.key), db2=carData(b.key);
     const ckA=parseInt(da.currentKm)||0, nsA=parseInt(da.nextServiceKm)||0;
@@ -2732,7 +2732,7 @@ function _saveFuelAndClose(){
   if(!_fuelGaugeKey||!_fuelGaugeValue){closeModal();return;}
   const key=_fuelGaugeKey, value=_fuelGaugeValue;
   _fuelGaugeKey=null; _fuelGaugeValue=null;
-  const today=new Date().toISOString().split('T')[0];
+  const today=new Date().toLocaleDateString('en-CA');
   const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
   const d=carData(key);
   d.log.push({type:'fuel',value,date:today,logged});
@@ -2745,7 +2745,7 @@ function _saveFuelAndClose(){
 
 function openCarCalendar(key, type){
   const label=type==='oil'?'🛢 Oil Change':type==='wash'?'🧹 Washed':type==='reg'?'📄 Registration Expiry':type==='insurance'?'🛡 Insurance Expiry':'Calendar';
-  const today=new Date().toISOString().split('T')[0];
+  const today=new Date().toLocaleDateString('en-CA');
   // Build a full month calendar
   const now=new Date();
   let _calYear=now.getFullYear(), _calMonth=now.getMonth();
