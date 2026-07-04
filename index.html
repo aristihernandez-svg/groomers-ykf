@@ -3823,15 +3823,23 @@ function openEditTask(tabName,idx) {
       const area=document.getElementById('eTArea').value;
       const allDays=document.getElementById('eTAllDays').checked;
       if(!task) return;
-      if(allDays) {
-        for(const day of DAYS) {
-          if(!S.tasks[day]) continue;
-          const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===fsKey(t.task));
-          if(mi>=0) { S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area}; fsSaveTaskContent(day); }
+      const oldKey=fsKey(t.task), newKey=fsKey(task);
+      const nameChanged=oldKey!==newKey;
+      const daysToUpdate=allDays?DAYS:[tabName];
+      for(const day of daysToUpdate) {
+        if(!S.tasks[day]) continue;
+        const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===oldKey);
+        if(mi<0) continue;
+        const wasHidden=S.tasks[day][mi].hidden;
+        S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area,hidden:wasHidden};
+        fsSaveTaskContent(day);
+        // If name changed and task was hidden, migrate hidden key in taskState
+        if(nameChanged && wasHidden && db) {
+          const patch={_date:new Date().toDateString()};
+          patch[oldKey+'_hidden']=firebase.firestore.FieldValue.delete();
+          patch[newKey+'_hidden']=true;
+          db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
         }
-      } else {
-        S.tasks[tabName][idx]={...S.tasks[tabName][idx],task,freq,area};
-        fsSaveTaskContent(tabName);
       }
       if(db) db.collection('taskEdits').add({
         day:allDays?'ALL':tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
