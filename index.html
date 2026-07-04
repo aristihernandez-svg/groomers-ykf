@@ -1165,9 +1165,9 @@ const TAB_GIDS = {
 };
 
 async function fetchDay(tabName) {
-  // Preserve current done states so the re-render after fetch doesn't flash unchecked
-  const prevDone = {};
-  (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; });
+  // Preserve current done and hidden states so re-render after fetch doesn't lose them
+  const prevDone = {}, prevHidden = {};
+  (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
 
   // ── Firestore path ───────────────────────────────────────────────
   if(S.tasksSource === 'firestore' && db) {
@@ -1175,13 +1175,19 @@ async function fetchDay(tabName) {
       const snap = await db.collection('tasks').doc(tabName).get();
       if(snap.exists && snap.data().migrated === true) {
         S.tasks[tabName] = (snap.data().tasks || []).map(t => ({...t, done: false}));
-        // Re-apply done states
-        S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+        // Re-apply done and hidden states
+        S.tasks[tabName].forEach(t => {
+          if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
+          if(prevHidden[fsKey(t.task)]) t.hidden = true;
+        });
         // Apply any cached taskState that arrived before content loaded
         if(_cachedTaskState) {
           const today = new Date().toDateString();
           if(!_cachedTaskState._date || _cachedTaskState._date === today) {
-            S.tasks[tabName].forEach(t => { const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+            S.tasks[tabName].forEach(t => {
+              const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v;
+              const h=_cachedTaskState[fsKey(t.task)+'_hidden']; if(h===true) t.hidden=true;
+            });
           }
         }
         _cacheTasksLocal(tabName);
@@ -3798,17 +3804,31 @@ function confirmDeleteTask(tabName,idx) {
   ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
   ov.innerHTML=`
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
-      <div style="font-size:22px;margin-bottom:8px">👁</div>
-      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Hide for today?</div>
-      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}<br><span style="font-size:11px;opacity:0.6">It will come back tomorrow.</span></div>
-      <div style="display:flex;gap:10px;justify-content:center">
-        <button id="hideCancelBtn" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
-        <button id="hideConfirmBtn" style="background:var(--red);border:none;border-radius:8px;padding:11px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Hide today</button>
+      <div style="font-size:22px;margin-bottom:8px">🗑</div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Remove task?</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button id="hideConfirmBtn" style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:12px 20px;color:var(--t1);font-size:14px;font-weight:600;cursor:pointer">👁 Hide for today</button>
+        <button id="deletePermBtn" style="background:var(--red);border:none;border-radius:10px;padding:12px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">🗑 Delete for good</button>
+        <button id="hideCancelBtn" style="background:none;border:none;color:var(--t3);font-size:13px;cursor:pointer;padding:6px">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
   document.getElementById('hideCancelBtn').onclick=()=>ov.remove();
   document.getElementById('hideConfirmBtn').onclick=()=>{ ov.remove(); hideTaskToday(tabName,idx); };
+  document.getElementById('deletePermBtn').onclick=()=>{ ov.remove(); deleteTaskPermanent(tabName,idx); };
+}
+
+function deleteTaskPermanent(tabName,idx) {
+  const t=S.tasks[tabName]?.[idx]; if(!t) return;
+  S.tasks[tabName].splice(idx,1);
+  fsSaveTaskContent(tabName);
+  // Clean up hidden flag from taskState
+  if(db) {
+    const patch={}; patch[fsKey(t.task)+'_hidden']=firebase.firestore.FieldValue.delete();
+    db.collection('taskState').doc(tabName).set(patch,{merge:true}).catch(()=>{});
+  }
+  render(); toast('🗑 Task deleted');
 }
 
 const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground'];
@@ -5388,16 +5408,22 @@ function setupLiveSync() {
       db.collection('tasks').doc(tabName).onSnapshot(snap => {
         if(!snap.exists || !snap.data().migrated) return;
         const incoming = (snap.data().tasks || []).map(t => ({...t, done: false}));
-        // Preserve current done states across the content refresh
-        const prevDone = {};
-        (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; });
+        // Preserve current done AND hidden states across the content refresh
+        const prevDone = {}, prevHidden = {};
+        (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
         S.tasks[tabName] = incoming;
-        S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+        S.tasks[tabName].forEach(t => {
+          if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
+          if(prevHidden[fsKey(t.task)]) t.hidden = true;
+        });
         // Also apply cached taskState (handles race where state arrived before content)
         if(_cachedTaskState) {
           const today = new Date().toDateString();
           if(!_cachedTaskState._date || _cachedTaskState._date === today) {
-            S.tasks[tabName].forEach(t => { const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+            S.tasks[tabName].forEach(t => {
+              const v=_cachedTaskState[fsKey(t.task)]; if(v!==undefined) t.done=v;
+              const h=_cachedTaskState[fsKey(t.task)+'_hidden']; if(h===true) t.hidden=true;
+            });
           }
         }
         _cacheTasksLocal(tabName);
