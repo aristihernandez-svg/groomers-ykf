@@ -4193,7 +4193,7 @@ function openAddShopItem() {
      <select id="mSS" onchange="onStoreChange(this)">${storeSelectHtml()}</select>
      <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
      <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional — paste to auto-fill name)</span></label>
-     <input id="mSU" type="url" placeholder="https://..." oninput="autoFetchTitle('mSU','mSI')">`,
+     <input id="mSU" type="url" placeholder="https://..." oninput="autoFetchTitle('mSU','mSI')" onpaste="setTimeout(()=>autoFetchTitle('mSU','mSI'),100)" onchange="autoFetchTitle('mSU','mSI')">`,
     async()=>{
       const item=document.getElementById('mSI').value.trim();
       const cabinet=document.getElementById('mSC').value.trim();
@@ -4956,7 +4956,7 @@ function editShopItem(idx) {
      <select id="eSS" onchange="onStoreChange(this)">${storeSelectHtml(item.store)}</select>
      <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
      <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional)</span></label>
-     <input id="eSU" type="url" placeholder="https://..." value="${(item.url||'').replace(/"/g,'&quot;')}">`,
+     <input id="eSU" type="url" placeholder="https://..." value="${(item.url||'').replace(/"/g,'&quot;')}" oninput="autoFetchTitle('eSU','eSI')" onpaste="setTimeout(()=>autoFetchTitle('eSU','eSI'),100)" onchange="autoFetchTitle('eSU','eSI')">`,
     async ()=>{
       const newItem=document.getElementById('eSI').value.trim();
       const newCab=document.getElementById('eSC').value.trim();
