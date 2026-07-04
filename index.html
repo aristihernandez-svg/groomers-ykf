@@ -852,12 +852,12 @@ const PROC_VIDEOS = {
 };
 
 const CREW_CARS = [
-  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png'},
-  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png'},
-  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png'},
-  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala-removebg-preview.png'},
-  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck-removebg-preview.png'},
-  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck-removebg-preview.png'},
+  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png',  plate:''},
+  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png', plate:'DANF 068'},
+  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png',   plate:'DCYZ 952'},
+  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala-removebg-preview.png',  plate:'DDET 939'},
+  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck-removebg-preview.png', plate:'CB 70643'},
+  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck-removebg-preview.png', plate:'BP 61870'},
   {key:'kubota',  name:'Kubota',           fuel:'diesel',   color:'#C85F10', color2:'#F07A30', label:'UTV · Diesel', img:'cars/kubota-removebg-preview.png'},
   {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan',      img:'cars/civic-removebg-preview.png'},
 ];
@@ -2427,6 +2427,7 @@ function renderCrewCarsList(el) {
           <!-- Name + icons -->
           <div style="display:flex;align-items:center;gap:5px">
             <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
+            ${car.plate?`<span style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
             <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
             <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
           </div>
@@ -2497,7 +2498,10 @@ function renderCarDetail(el, key) {
       <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.1) 60%)"></div>
       <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px">
         <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.4)">${car.name}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px">${car.label} · ${car.fuel==='diesel'?'Diesel':'Gasoline'}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+          <span style="font-size:12px;color:rgba(255,255,255,0.85)">${car.label} · ${car.fuel==='diesel'?'Diesel':'Gasoline'}</span>
+          ${car.plate?`<span style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;background:#f5e642;border-radius:4px;padding:2px 7px;border:1.5px solid rgba(0,0,0,0.25)">${car.plate}</span>`:''}
+        </div>
       </div>
     </div>
 
