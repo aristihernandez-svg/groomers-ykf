@@ -802,7 +802,7 @@ const TODAY = getToday(); // kept for init-time use (S.dayView, boot fetch)
 
 const APP_VERSION = 'v2.0';
 
-const FLEET_TAILS = ['IOC','IOJ','IOB','IOE','DAX','IAW','XAW','XDP'];
+const FLEET_TAILS = ['IOA','IOB','IOC','IOE','IOH','IOJ','DAX','IAW','XAW','XDP'];
 const PROC_TAILS  = {
   metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
   westwind: ['IAW','XAW','XDP'],
@@ -1719,12 +1719,12 @@ function loadFlightLog(tabName) {
     const cached=JSON.parse(localStorage.getItem(flightLogKey(tabName))||'null');
     const today=new Date().toDateString();
     if(cached && cached.date===today) {
-      // Guarantee all three arrays exist even if cached before grm was added
-      cached.arr=cached.arr||[]; cached.dep=cached.dep||[]; cached.grm=cached.grm||[];
+      // Guarantee all arrays exist even if cached before o2 was added
+      cached.arr=cached.arr||[]; cached.dep=cached.dep||[]; cached.grm=cached.grm||[]; cached.o2=cached.o2||[];
       S.flightLog[tabName]=cached; return;
     }
   } catch(e){}
-  S.flightLog[tabName]={arr:[],dep:[],grm:[],date:new Date().toDateString()};
+  S.flightLog[tabName]={arr:[],dep:[],grm:[],o2:[],date:new Date().toDateString()};
 }
 
 function saveFlightLog(tabName) {
@@ -1733,17 +1733,18 @@ function saveFlightLog(tabName) {
   try { localStorage.setItem(flightLogKey(tabName),JSON.stringify(log)); } catch(e){}
   if(!db) return;
   db.collection('taskState').doc(tabName).set(
-    {_arr:log.arr, _dep:log.dep, _grm:log.grm||[], _flDate:log.date}, {merge:true}
+    {_arr:log.arr, _dep:log.dep, _grm:log.grm||[], _o2:log.o2||[], _flDate:log.date}, {merge:true}
   ).catch(e=>console.log('saveFlightLog failed:',e));
 }
 
 function flightLogFromFirestore(tabName, data) {
   const today=new Date().toDateString();
   if(data._flDate && data._flDate!==today) return;
-  if(!S.flightLog[tabName]) S.flightLog[tabName]={arr:[],dep:[],date:today};
+  if(!S.flightLog[tabName]) S.flightLog[tabName]={arr:[],dep:[],grm:[],o2:[],date:today};
   if(data._arr) S.flightLog[tabName].arr=[...new Set(data._arr)];
   if(data._dep) S.flightLog[tabName].dep=[...new Set(data._dep)];
   if(data._grm) S.flightLog[tabName].grm=[...new Set(data._grm)];
+  if(data._o2)  S.flightLog[tabName].o2 =[...new Set(data._o2)];
 }
 
 function addTail(tabName, type, tail) {
@@ -1834,6 +1835,7 @@ function renderFlightLog(tabName) {
       ${section('arr','Arrivals','🛬','#1A7A40')}
       ${section('dep','Departures','🛫','#1A4A8A')}
       ${section('grm','Cleaned','🧹','#8B4A00')}
+      ${section('o2','O2 Check & Fill-up','🫁','#6A1A8A')}
     </div>`;
 }
 
@@ -4797,6 +4799,7 @@ function showEOD() {
     ...(flog.arr||[]).map(t=>`  🛬 Arrival ${t}`),
     ...(flog.dep||[]).map(t=>`  🛫 Departure ${t}`),
     ...(flog.grm||[]).map(t=>`  🧹 Cleaned ${t}`),
+    ...(flog.o2||[]).map(t=>`  🫁 O2 Check & Fill-up ${t}`),
   ];
   if(flLines.length) msg+=`✈ *Flight Activity:*\n${flLines.join('\n')}\n\n`;
 
