@@ -1,7 +1,7 @@
 // Groomers YKF — Service Worker v3
 // Strategy: network-first, wipe all old caches on activate
 
-const CACHE = 'groomers-v46';
+const CACHE = 'groomers-v47';
 
 self.addEventListener('install', () => self.skipWaiting());
 

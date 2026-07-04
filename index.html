@@ -4169,16 +4169,33 @@ function openAddTask(tabName,area='') {
 // add/import calls upsert the same item instead of creating duplicates.
 function fsDocId(text) { return fsKey(text).slice(0,400) || ('id'+Date.now()); }
 
+function nameFromUrlSlug(url) {
+  try {
+    const path = new URL(url).pathname;
+    const parts = path.split('/').filter(Boolean);
+    // find the most descriptive segment (longest, contains letters and hyphens)
+    const slug = parts.slice().reverse().find(p => p.length > 4 && /[a-z]/.test(p) && !p.match(/^\d+[pP]?$/)) || parts[parts.length-1] || '';
+    // strip product codes at end (e.g. "8008398888P"), strip file extensions
+    const clean = slug.replace(/\.[^.]+$/, '').replace(/-?\d{6,}[a-z]?$/i, '').replace(/-/g, ' ').trim();
+    return clean ? clean.replace(/\b\w/g, c => c.toUpperCase()) : '';
+  } catch(_) { return ''; }
+}
+
 async function autoFetchTitle(urlInputId, nameInputId) {
   const urlEl = document.getElementById(urlInputId);
   const nameEl = document.getElementById(nameInputId);
   if (!urlEl || !nameEl) return;
   const url = urlEl.value.trim();
   if (!url.startsWith('http') || nameEl.value.trim()) return;
+  // First: instant fallback from URL slug
+  const slugName = nameFromUrlSlug(url);
+  if (slugName) nameEl.value = slugName;
+  // Then: try Worker for better og:title (overwrites slug if successful)
   try {
     const res = await fetch(`https://skycare-worker.skycare.workers.dev?url=${encodeURIComponent(url)}`);
     const data = await res.json();
-    if (data.name && !nameEl.value.trim()) nameEl.value = data.name;
+    const blocked = ['access denied','403','forbidden','robot','blocked'].some(w => (data.name||'').toLowerCase().includes(w));
+    if (data.name && !blocked) nameEl.value = data.name;
   } catch(_) {}
 }
 
