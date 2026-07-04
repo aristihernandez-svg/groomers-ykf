@@ -4170,13 +4170,34 @@ function findSimilarTasks(input, tabName) {
   return best;
 }
 
+function findAllSimilarTasks(input) {
+  if(input.length < 3) return [];
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(' ').filter(Boolean).sort().join(' ');
+  const normInput = normalize(input);
+  const allTasks = Object.values(S.tasks||{}).flat().map(t=>t.task).filter(Boolean);
+  const unique = [...new Set(allTasks)];
+  const results = [];
+  for(const t of unique) {
+    if(t.toLowerCase() === input.toLowerCase()) continue;
+    const dist = fuzzyDistance(input, t);
+    const maxLen = Math.max(input.length, t.length);
+    const similarity = 1 - dist/maxLen;
+    if(similarity >= 0.75) results.push({task:t, similarity});
+  }
+  return results.sort((a,b)=>b.similarity-a.similarity).slice(0,4);
+}
+
 function checkTaskDuplicate(tabName) {
   const input = (document.getElementById('mTask')?.value||'').trim();
   const warn = document.getElementById('mTaskWarn');
   if(!warn) return;
-  const match = findSimilarTasks(input, tabName);
-  if(match && match.toLowerCase() !== input.toLowerCase()) {
-    warn.innerHTML = `⚠️ Similar task exists: <em>"${match}"</em> — you can still add if it's different.`;
+  const matches = findAllSimilarTasks(input);
+  if(matches.length) {
+    warn.innerHTML = `<div style="font-size:11px;color:var(--t2);margin-bottom:5px;font-weight:600">Similar tasks — tap to use:</div>`
+      + matches.map(m=>`<div onclick="document.getElementById('mTask').value='${m.task.replace(/'/g,"\\'")}';checkTaskDuplicate('${tabName}')"
+        style="padding:7px 10px;background:rgba(255,255,255,0.08);border-radius:7px;margin-bottom:4px;cursor:pointer;font-size:13px;color:var(--t1);border:1px solid var(--border2)">
+        ${m.task}
+      </div>`).join('');
     warn.style.display = 'block';
   } else {
     warn.style.display = 'none';
