@@ -4169,6 +4169,19 @@ function openAddTask(tabName,area='') {
 // add/import calls upsert the same item instead of creating duplicates.
 function fsDocId(text) { return fsKey(text).slice(0,400) || ('id'+Date.now()); }
 
+async function autoFetchTitle(urlInputId, nameInputId) {
+  const urlEl = document.getElementById(urlInputId);
+  const nameEl = document.getElementById(nameInputId);
+  if (!urlEl || !nameEl) return;
+  const url = urlEl.value.trim();
+  if (!url.startsWith('http') || nameEl.value.trim()) return;
+  try {
+    const res = await fetch(`https://skycare-worker.skycare.workers.dev?url=${encodeURIComponent(url)}`);
+    const data = await res.json();
+    if (data.name && !nameEl.value.trim()) nameEl.value = data.name;
+  } catch(_) {}
+}
+
 function openAddShopItem() {
   const existingLocs = [...new Set(S.shopping.map(i=>i.cabinet).filter(Boolean))].sort();
   openModal('Add Shopping Item',
@@ -4179,8 +4192,8 @@ function openAddShopItem() {
      <label>Store</label>
      <select id="mSS" onchange="onStoreChange(this)">${storeSelectHtml()}</select>
      <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
-     <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional)</span></label>
-     <input id="mSU" type="url" placeholder="https://...">`,
+     <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional — paste to auto-fill name)</span></label>
+     <input id="mSU" type="url" placeholder="https://..." oninput="autoFetchTitle('mSU','mSI')">`,
     async()=>{
       const item=document.getElementById('mSI').value.trim();
       const cabinet=document.getElementById('mSC').value.trim();
