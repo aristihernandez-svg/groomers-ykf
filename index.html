@@ -967,6 +967,7 @@ window.addEventListener('load', async () => {
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
+        cleanupOneOffTasks(); // delete any One-off tasks that weren't cleaned up at midnight
         // Flush any dayNotes that were saved to localStorage but never made it to Firestore
         // (e.g. app was closed within the 800ms debounce window after typing)
         Object.keys(S.dayNotes).forEach(isoDate => fsSaveDayNote(isoDate));
@@ -3772,6 +3773,27 @@ function toggleStep(key,idx) {
   render();
 }
 function resetProc(key) { S.procs[key].done=[]; render(); toast('Steps reset'); }
+async function cleanupOneOffTasks() {
+  if(!db || S.tasksSource !== 'firestore') return;
+  const today = new Date().toDateString();
+  try {
+    const snap = await db.collection('appConfig').doc('oneOffCleaned').get();
+    if(snap.exists && snap.data()?.date === today) return; // already ran today
+  } catch(_) {}
+  for(const day of DAYS) {
+    try {
+      const docSnap = await db.collection('tasks').doc(day).get();
+      if(!docSnap.exists || !docSnap.data().migrated) continue;
+      const all = docSnap.data().tasks || [];
+      const filtered = all.filter(t => t.freq !== 'One-off');
+      if(filtered.length === all.length) continue; // nothing to remove
+      await db.collection('tasks').doc(day).set({tasks: filtered, migrated: true});
+      if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => t.freq !== 'One-off');
+    } catch(_) {}
+  }
+  db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(()=>{});
+}
+
 function fsSaveTaskContent(tabName) {
   if(!db) return;
   const content = (S.tasks[tabName]||[]).map(({task,freq,area})=>({task,freq:freq||'',area,done:false}));
@@ -3842,7 +3864,7 @@ function deleteTaskPermanent(tabName,idx) {
   render(); toast(`🗑 Deleted from ${affected.length} day${affected.length!==1?'s':''}`);
 }
 
-const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground'];
+const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground','One-off'];
 
 function locationSelect(selected='') {
   const blank = `<option value="" ${!selected?'selected':''}>— Select location —</option>`;
