@@ -1696,7 +1696,7 @@ async function showDay(idx) {
   S.dayView=idx; S.inDay=true;
   S.flightDropdown=null;
   const tabName=DAYS[idx];
-  if(!S.tasks[tabName]) {
+  if(!S.tasks[tabName] || S.tasksSource==='firestore') {
     document.getElementById('content').innerHTML=`<div class="spin-wrap"><div class="spinner"></div><div class="spin-lbl">Loading ${DAY_NAMES[idx]}...</div></div>`;
     await fetchDay(tabName);
   }
@@ -3823,14 +3823,23 @@ function confirmDeleteTask(tabName,idx) {
 
 function deleteTaskPermanent(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
-  S.tasks[tabName].splice(idx,1);
-  fsSaveTaskContent(tabName);
-  // Clean up hidden flag from taskState
-  if(db) {
-    const patch={}; patch[fsKey(t.task)+'_hidden']=firebase.firestore.FieldValue.delete();
-    db.collection('taskState').doc(tabName).set(patch,{merge:true}).catch(()=>{});
-  }
-  render(); toast('🗑 Task deleted');
+  const taskName=t.task;
+  // Remove from every day that has this task
+  const affected=[];
+  DAYS.forEach(day=>{
+    if(!S.tasks[day]) return;
+    const i=S.tasks[day].findIndex(x=>x.task===taskName);
+    if(i>=0){ S.tasks[day].splice(i,1); affected.push(day); }
+  });
+  affected.forEach(day=>{
+    fsSaveTaskContent(day);
+    // Clean up hidden flag from taskState for each day
+    if(db){
+      const patch={}; patch[fsKey(taskName)+'_hidden']=firebase.firestore.FieldValue.delete();
+      db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
+    }
+  });
+  render(); toast(`🗑 Deleted from ${affected.length} day${affected.length!==1?'s':''}`);
 }
 
 const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground'];
