@@ -5521,6 +5521,10 @@ function setupLiveSync() {
       const liveIds = new Set(snap.docs.map(d=>d.id));
       Object.keys(S.dayNotes).forEach(k=>{ if(!liveIds.has(k)) delete S.dayNotes[k]; });
       try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
+      // Don't re-render if a note is currently open and being typed into — prevents textarea from closing
+      if(window._dayNoteSaving > 0) return;
+      const anyOpen = Object.values(window._dayNoteOpen||{}).some(Boolean);
+      if(anyOpen) return;
       const el = document.getElementById('content');
       if(S.tab==='today') renderToday(el);
       else if(S.tab==='week' && S.inDay) renderDayDetail(el);
@@ -5855,12 +5859,12 @@ function scheduleSaveDayNote(isoDate) {
   const text = ta.value;
   if(!S.dayNotes[isoDate]) S.dayNotes[isoDate] = {};
   S.dayNotes[isoDate].text = text;
-  // Save to localStorage immediately so closing the app never loses the note
-  try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
+  // Defer localStorage write so it doesn't block keystrokes
   clearTimeout(window._dayNoteTimer[isoDate]);
   window._dayNoteTimer[isoDate] = setTimeout(()=>{
-    fsSaveDayNote(isoDate);
-  }, 800);
+    try { localStorage.setItem('gykf_dayNotes', JSON.stringify(S.dayNotes)); } catch(e) {}
+    fsSaveDayNote(isoDate, true);
+  }, 1000);
 }
 
 function completeDayNote(isoDate) {
@@ -5874,12 +5878,14 @@ function completeDayNote(isoDate) {
   else if(S.tab==='week') renderWeek(el);
 }
 
-function fsSaveDayNote(isoDate) {
+function fsSaveDayNote(isoDate, suppressRender) {
   if(!db) return;
   const note = S.dayNotes[isoDate];
   if(!note || !note.text) return;
+  if(suppressRender) window._dayNoteSaving = (window._dayNoteSaving||0) + 1;
   db.collection('dayNotes').doc(isoDate).set({text: note.text})
-    .catch(e => console.log('fsSaveDayNote failed:', e));
+    .then(()=>{ if(suppressRender) window._dayNoteSaving = Math.max(0,(window._dayNoteSaving||1)-1); })
+    .catch(e => { console.log('fsSaveDayNote failed:', e); if(suppressRender) window._dayNoteSaving = Math.max(0,(window._dayNoteSaving||1)-1); });
 }
 
 // Sticky-note banner for unresolved handoff notes — shown on Home and Today.
