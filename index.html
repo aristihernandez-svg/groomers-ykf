@@ -2785,8 +2785,7 @@ window._calNav=function(dir,key,type){
   if(s.mo>11){s.mo=0;s.yr++;}
   if(s.mo<0){s.mo=11;s.yr--;}
   // Rebuild calendar in place
-  const now=new Date();
-  const today=now.toISOString().split('T')[0];
+  const today=localDateISO();
   const first=new Date(s.yr,s.mo,1).getDay();
   const days=new Date(s.yr,s.mo+1,0).getDate();
   const monthName=new Date(s.yr,s.mo,1).toLocaleString('en-CA',{month:'long',year:'numeric'});
