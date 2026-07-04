@@ -2101,7 +2101,7 @@ function renderCart(el, items) {
         html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':'var(--glass)'};border-left:3px solid ${isCH?'var(--accent)':col}" onclick="toggleShop(${ri})">
           <div class="scb" style="background:${isCH?'var(--accent)':col};border-color:${isCH?'var(--accent)':col};color:#fff">✓</div>
           <div class="sinfo">
-            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:var(--accent);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}</div>
+            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:var(--accent);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
             ${item.notes && String(item.notes)!=='false' && item.notes.trim() ? `<div style="font-size:11px;color:var(--t3);margin-top:2px;font-style:italic">${item.notes}</div>` : ''}
           </div>
