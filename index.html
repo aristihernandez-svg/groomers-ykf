@@ -1894,9 +1894,6 @@ function renderShopping(el) {
   setBarLogo();
   showFab(openAddShopItem);
   const scrollTop = el ? el.scrollTop : 0;
-  // Save horizontal scroll of filter bars too
-  const bar1Scroll = document.querySelector('.shop-bar')?.scrollLeft || 0;
-  const bar2Scroll = document.querySelector('.shop-bar2')?.scrollLeft || 0;
   const items=S.shopping;
   const normStore = s => /mx\s*han[gh]?[ae]r/i.test(s) ? 'MX Hangar' : s;
   const stores=[...new Set(items.map(i=>i.store).filter(Boolean).map(normStore))];
@@ -1944,30 +1941,47 @@ function renderShopping(el) {
       <button onclick="setBuyerOut(false)" style="margin-top:10px;padding:7px 14px;border-radius:20px;border:none;background:#2a2200;color:#FFF4C2;font-size:12px;font-weight:600;cursor:pointer">✅ Back from shopping</button>
     </div>` : '';
 
+  const cartCount = items.filter(i=>i.checked).length;
+  const storeActive = S.shopFilter!=='all';
+  const locActive = S.shopLocFilter!=='all';
+  const storeCol = storeActive ? (STORE_COLORS[S.shopFilter]||'var(--accent)') : '';
   let html=`<div class="shop-filters">
     ${buyerBanner}
-    <div style="padding:8px 14px 4px;display:flex;justify-content:flex-end">
+    <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center">
       <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crewhouse.html','Crew House Shopping','Scan to add items to the shopping list from the crew house.')"
-        style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 Crew House QR</button>
+        style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
+        <span style="font-size:16px">🔗</span> Crew House QR
+      </button>
+      <div onclick="setSV()" style="position:relative;background:${cartCount>0?'var(--green-dim)':'var(--glass2)'};border:1.5px solid ${cartCount>0?'var(--green)':'var(--border2)'};border-radius:50px;width:58px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
+        <span style="font-size:26px;line-height:1">🛒</span>
+        ${cartCount>0?`<div style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;background:var(--red);border-radius:50%;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)">${cartCount}</div>`:''}
+      </div>
     </div>
-    <div class="shop-bar">
-      <button class="chip" onclick="setSF('all')"
-        style="background:${S.shopFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
-      <button class="chip" onclick="setSV()"
-        style="background:${S.shopView==='cart'?'var(--green)':'var(--glass)'};color:${S.shopView==='cart'?'#fff':'var(--t2)'};border-color:${S.shopView==='cart'?'var(--green)':'var(--border2)'}">🛒 Cart</button>
-      ${stores.map(s=>{const a=S.shopFilter===s;const col=STORE_COLORS[s]||'var(--accent)';return `<button class="chip" data-sf="${s.replace(/"/g,'&quot;')}" onclick="setSF(this.dataset.sf)" style="background:${a?col:'var(--glass)'};color:${a?'#fff':'var(--t2)'};border-color:${a?col:'var(--border2)'}">${s}</button>`;}).join('')}
-    </div>
-    <div class="shop-bar2">
-      <span class="chip-label">📍</span>
-      <button class="chip" onclick="setSLF('all')"
-        style="background:${S.shopLocFilter==='all'?'var(--accent)':'var(--glass)'};color:${S.shopLocFilter==='all'?'var(--bg)':'var(--t2)'};border-color:${S.shopLocFilter==='all'?'var(--accent)':'var(--border2)'}">All</button>
-      ${locs.map(l=>{const a=S.shopLocFilter===l;return `<button class="chip" data-slf="${l.replace(/"/g,'&quot;')}" onclick="setSLF(this.dataset.slf)" style="background:${a?'var(--accent)':'var(--glass)'};color:${a?'var(--bg)':'var(--t2)'};border-color:${a?'var(--accent)':'var(--border2)'}">${l}</button>`;}).join('')}
+    <div style="padding:0 14px 6px;display:flex;gap:8px">
+      <div style="flex:1;position:relative">
+        <select onchange="setSF(this.value)" style="width:100%;background:${storeActive?'color-mix(in srgb,'+storeCol+' 15%,var(--glass2))':'var(--glass2)'};border:1px solid ${storeActive?storeCol:'var(--border2)'};border-radius:8px;padding:9px 32px 9px 10px;color:${storeActive?'var(--t1)':'var(--t2)'};font-size:13px;font-weight:${storeActive?'600':'400'};appearance:none;cursor:pointer;outline:none">
+          <option value="all" ${!storeActive?'selected':''}>🏪 Store</option>
+          ${stores.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${S.shopFilter===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+        ${storeActive
+          ? `<span onclick="setSF('all');event.stopPropagation()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t2);cursor:pointer;padding:4px">✕</span>`
+          : `<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none">▾</span>`}
+      </div>
+      <div style="flex:1;position:relative">
+        <select onchange="setSLF(this.value)" style="width:100%;background:${locActive?'var(--glass2)':'var(--glass2)'};border:1px solid ${locActive?'var(--accent)':'var(--border2)'};border-radius:8px;padding:9px 32px 9px 10px;color:${locActive?'var(--t1)':'var(--t2)'};font-size:13px;font-weight:${locActive?'600':'400'};appearance:none;cursor:pointer;outline:none">
+          <option value="all" ${!locActive?'selected':''}>📍 Location</option>
+          ${locs.map(l=>`<option value="${l.replace(/"/g,'&quot;')}" ${S.shopLocFilter===l?'selected':''}>${l}</option>`).join('')}
+        </select>
+        ${locActive
+          ? `<span onclick="setSLF('all');event.stopPropagation()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t2);cursor:pointer;padding:4px">✕</span>`
+          : `<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none">▾</span>`}
+      </div>
     </div>
     <div class="search-wrap">
       <div class="search-inner">
         <span class="s-icon">🔍</span>
-        <input class="search-inp" type="search" placeholder="Search items, stores, locations..."
-               value="${q}" oninput="setSSearch(this.value)" id="shopSrch">
+        <input class="search-inp" type="text" placeholder="Search items, stores, locations..."
+               value="${q}" oninput="S.shopSearch=this.value;renderShopping(document.getElementById('content'))" id="shopSrch">
         ${q?`<span class="s-clear" onclick="setSSearch('')">✕</span>`:''}
       </div>
     </div>
@@ -3889,7 +3903,7 @@ function setSLFByIndex(i){
   S.shopLocFilter = i < locs.length ? locs[i] : 'all';
   renderShopping(document.getElementById('content'));
 }
-function setSSearch(q){S.shopSearch=q;clearTimeout(_shopSearchTimer);_shopSearchTimer=setTimeout(()=>renderShopping(document.getElementById('content')),150);}
+function setSSearch(q){S.shopSearch=q;renderShopping(document.getElementById('content'));}
 function setSV(){S.shopView=S.shopView==='cart'?'list':'cart';renderShopping(document.getElementById('content'));}
 
 // ── DAMAGE REPORT ──────────────────────────────────────────────────
