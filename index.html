@@ -4145,10 +4145,49 @@ function openModal(title,fields,onSave) {
 function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; document.getElementById('mSave').textContent='Save'; document.getElementById('mSave').style.display=''; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
+function fuzzyDistance(a, b) {
+  const normalize = s => s.toLowerCase().replace(/[^a-z0-9 ]/g,'').split(' ').filter(Boolean).sort().join(' ');
+  a = normalize(a); b = normalize(b);
+  if(a === b) return 0;
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1},(_,i)=>Array.from({length:n+1},(_,j)=>i||j));
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function findSimilarTasks(input, tabName) {
+  if(input.length < 3) return null;
+  const allTasks = Object.values(S.tasks||{}).flat().map(t=>t.task).filter(Boolean);
+  const unique = [...new Set(allTasks)];
+  let best = null, bestScore = Infinity;
+  for(const t of unique) {
+    const dist = fuzzyDistance(input, t);
+    const maxLen = Math.max(input.length, t.length);
+    const similarity = 1 - dist/maxLen;
+    if(similarity >= 0.75 && dist < bestScore) { best = t; bestScore = dist; }
+  }
+  return best;
+}
+
+function checkTaskDuplicate(tabName) {
+  const input = (document.getElementById('mTask')?.value||'').trim();
+  const warn = document.getElementById('mTaskWarn');
+  if(!warn) return;
+  const match = findSimilarTasks(input, tabName);
+  if(match && match.toLowerCase() !== input.toLowerCase()) {
+    warn.innerHTML = `⚠️ Similar task exists: <em>"${match}"</em> — you can still add if it's different.`;
+    warn.style.display = 'block';
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
 function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
-     <input id="mTask" placeholder="Task...">
+     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate('${tabName}')">
+     <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location</label>
      <select id="mArea">${locationSelect(area)}</select>
      <label>Frequency</label>
