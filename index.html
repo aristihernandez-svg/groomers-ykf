@@ -4640,11 +4640,12 @@ async function runMigration() {
 // ── END OF DAY ─────────────────────────────────────────────────────
 function showEOD() {
   const tabName=DAYS[getToday()], tasks=S.tasks[tabName]||[];
-  const done=tasks.filter(t=>t.done);
-  const missed=tasks.filter(t=>!t.done&&t.area!=='CLOSURE');
-  const closure=tasks.filter(t=>t.area==='CLOSURE');
+  const visible=tasks.filter(t=>!t.hidden);
+  const done=visible.filter(t=>t.done);
+  const missed=visible.filter(t=>!t.done&&t.area!=='CLOSURE');
+  const closure=visible.filter(t=>t.area==='CLOSURE');
   const clDone=closure.filter(t=>t.done);
-  const pct=tasks.length?Math.round(done.length/tasks.length*100):0;
+  const pct=visible.length?Math.round(done.length/visible.length*100):0;
   const now=new Date();
   const dateStr=now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
   const timeStr=now.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
