@@ -2005,7 +2005,7 @@ function renderShopping(el) {
         <div class="srow ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
           <div class="scb ${item.checked?'on':''}">${item.checked?'✓':''}</div>
           <div class="sinfo">
-            <div class="sname">${item.item}</div>
+            <div class="sname">${item.item}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
             <div class="smeta">
               <span style="font-weight:600;color:var(--t1)"><span class="sdot" style="background:${dot}"></span>${item.store}</span>
               <span style="color:var(--t2)">${item.cabinet}</span>
@@ -4178,7 +4178,9 @@ function openAddShopItem() {
      <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${l}</option>`).join('')}</select>
      <label>Store</label>
      <select id="mSS" onchange="onStoreChange(this)">${storeSelectHtml()}</select>
-     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>`,
+     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
+     <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional)</span></label>
+     <input id="mSU" type="url" placeholder="https://...">`,
     async()=>{
       const item=document.getElementById('mSI').value.trim();
       const cabinet=document.getElementById('mSC').value.trim();
@@ -4189,13 +4191,14 @@ function openAddShopItem() {
         if(!S.customStores.includes(store)) { S.customStores.push(store); saveCustomStores(); }
       }
       if(!item) return;
+      const url=document.getElementById('mSU').value.trim();
       const id=fsDocId(item+'__'+store);
-      S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:''});
+      S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:'',url});
       _lastShopWrite = Date.now();
       fsSetShopState(item,true,'To Buy'); // it's a new item, default to "to buy"
       closeModal(); renderShopping(document.getElementById('content')); toast('Item added ✓');
       if(db) {
-        db.collection('shoppingCatalog').doc(id).set({item,cabinet,store,notes:''})
+        db.collection('shoppingCatalog').doc(id).set({item,cabinet,store,notes:'',url})
           .catch(e => { console.log('Add shopping item Firestore write failed:', e); toast('⚠️ Saved locally — will retry sync when online'); });
       }
     });
@@ -4938,7 +4941,9 @@ function editShopItem(idx) {
      <input id="eSC" value="${item.cabinet||''}">
      <label>Store</label>
      <select id="eSS" onchange="onStoreChange(this)">${storeSelectHtml(item.store)}</select>
-     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>`,
+     <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
+     <label>Product URL <span style="font-weight:400;color:var(--t2)">(optional)</span></label>
+     <input id="eSU" type="url" placeholder="https://..." value="${(item.url||'').replace(/"/g,'&quot;')}">`,
     async ()=>{
       const newItem=document.getElementById('eSI').value.trim();
       const newCab=document.getElementById('eSC').value.trim();
@@ -4949,16 +4954,17 @@ function editShopItem(idx) {
         if(!S.customStores.includes(newStore)) { S.customStores.push(newStore); saveCustomStores(); }
       }
       if(!newItem) return;
+      const newUrl=document.getElementById('eSU').value.trim();
       const oldId = item.id || fsDocId(item.item+'__'+item.store);
       const newId = fsDocId(newItem+'__'+newStore);
-      S.shopping[idx] = {...item, id:newId, item:newItem, cabinet:newCab, store:newStore};
+      S.shopping[idx] = {...item, id:newId, item:newItem, cabinet:newCab, store:newStore, url:newUrl};
       saveShoppingState();
       closeModal();
       renderShopping(document.getElementById('content'));
       toast('Item updated ✓');
       if(db) {
         if(newId !== oldId) db.collection('shoppingCatalog').doc(oldId).delete().catch(()=>{});
-        db.collection('shoppingCatalog').doc(newId).set({item:newItem, cabinet:newCab, store:newStore, notes:item.notes||''})
+        db.collection('shoppingCatalog').doc(newId).set({item:newItem, cabinet:newCab, store:newStore, notes:item.notes||'', url:newUrl})
           .catch(e => console.log('Edit shopping item Firestore write failed:', e));
       }
     });
@@ -5424,7 +5430,7 @@ function setupLiveSync() {
       S.shopping = snap.docs.map(d=>{
         const v=d.data();
         const prior = prevChecked[v.item];
-        return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'',
+        return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'', url:v.url||'',
           checked: prior?.checked||false, status: prior?.status||'In Stock', source: prior?.source||''};
       });
       // Apply cached Firestore shopState if available — handles the race where
