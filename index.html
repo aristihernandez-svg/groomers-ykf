@@ -1626,7 +1626,7 @@ function taskRowHtml(t, gi, tabName, toggleFn) {
 
 function renderGroups(tasks, tabName) {
   const areas={};
-  tasks.forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
+  tasks.filter(t=>!t.hidden).forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
   console.log('[debug] areas:', Object.keys(areas), 'sample:', tasks[0]);
   let html='';
   const areaOrder=['AIRCRAFT',"CR GROOMERS' CORNER",'CR OFFICE','MX HANGAR','MISC','CHARTER','CLOSURE'];
@@ -1867,7 +1867,7 @@ function renderDayDetail(el) {
 
 function renderGroupsDay(tasks, tabName) {
   const areas={};
-  tasks.forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
+  tasks.filter(t=>!t.hidden).forEach(t=>{ (areas[t.area]=areas[t.area]||[]).push(t); });
   let html='';
   const areaOrder=['AIRCRAFT',"CR GROOMERS' CORNER",'CR OFFICE','MX HANGAR','MISC','CHARTER','CLOSURE'];
   const orderedAreas=[...areaOrder.filter(a=>areas[a]),...Object.keys(areas).filter(a=>!areaOrder.includes(a)&&areas[a])];
@@ -3753,35 +3753,44 @@ function fsSaveTaskContent(tabName) {
     .catch(e=>console.log('fsSaveTaskContent failed:',e));
 }
 
-function deleteTask(tabName,idx) {
-  const t=S.tasks[tabName][idx];
-  S.tasks[tabName].splice(idx,1);
-  if(S.tasksSource==='firestore') {
-    fsSaveTaskContent(tabName);
-    if(db) db.collection('taskEdits').add({
-      day:tabName, action:'delete', task:t.task, at:firebase.firestore.FieldValue.serverTimestamp()
-    }).catch(()=>{});
-  } else {
-    api({action:'deleteTask',tabName,task:t.task});
+function hideTaskToday(tabName,idx) {
+  const t=S.tasks[tabName]?.[idx]; if(!t) return;
+  t.hidden=true;
+  // Persist hidden state into taskState (same doc that tracks done/undone — resets at midnight)
+  if(db) {
+    const today=new Date().toDateString();
+    const patch={_date:today}; patch[fsKey(t.task)+'_hidden']=true;
+    db.collection('taskState').doc(tabName).set(patch,{merge:true}).catch(()=>{});
   }
-  render(); toast('Task deleted');
+  try {
+    const ls=JSON.parse(localStorage.getItem('gykf_taskstate')||'{}');
+    ls[tabName]=ls[tabName]||{};
+    ls[tabName][fsKey(t.task)+'_hidden']=true;
+    ls[tabName]._date=new Date().toDateString();
+    localStorage.setItem('gykf_taskstate',JSON.stringify(ls));
+  } catch(_) {}
+  render(); toast('Hidden for today');
 }
 
 function confirmDeleteTask(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
   const ov=document.createElement('div');
+  ov.id='hideConfirmOv';
   ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:5000;display:flex;align-items:center;justify-content:center;padding:24px';
+  ov.onclick=e=>{ if(e.target===ov) ov.remove(); };
   ov.innerHTML=`
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
-      <div style="font-size:22px;margin-bottom:8px">🗑</div>
-      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Delete task?</div>
-      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}</div>
+      <div style="font-size:22px;margin-bottom:8px">👁</div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Hide for today?</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}<br><span style="font-size:11px;opacity:0.6">It will come back tomorrow.</span></div>
       <div style="display:flex;gap:10px;justify-content:center">
-        <button onclick="this.closest('div[style]').remove()" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
-        <button onclick="this.closest('div[style]').remove();deleteTask('${tabName}',${idx})" style="background:var(--red);border:none;border-radius:8px;padding:11px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Delete</button>
+        <button id="hideCancelBtn" style="background:var(--glass2);border:1px solid var(--border);border-radius:8px;padding:11px 20px;color:var(--t2);font-size:14px;cursor:pointer">Cancel</button>
+        <button id="hideConfirmBtn" style="background:var(--red);border:none;border-radius:8px;padding:11px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Hide today</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
+  document.getElementById('hideCancelBtn').onclick=()=>ov.remove();
+  document.getElementById('hideConfirmBtn').onclick=()=>{ ov.remove(); hideTaskToday(tabName,idx); };
 }
 
 const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground'];
@@ -5282,7 +5291,10 @@ function setupLiveSync() {
       // last Monday's done-flags must not re-appear this Monday).
       const today = new Date().toDateString();
       if(data._date && data._date !== today) return;
-      S.tasks[tabName].forEach(t => { const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v; });
+      S.tasks[tabName].forEach(t => {
+        const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v;
+        const h=data[fsKey(t.task)+'_hidden']; t.hidden=h===true;
+      });
       flightLogFromFirestore(tabName, data);
       // Skip re-render if this snapshot is echoing our own write (< 600ms ago)
       if(Date.now() - _lastSelfWrite < 600) return;
