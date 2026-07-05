@@ -6,123 +6,48 @@
 <title>Skycare — MX Parts & Supplies</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{
-  --bg:#0B1120;--bg2:#111827;--bg3:#1a2235;
-  --glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);
-  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);
-  --t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;
-  --accent:#4A90D9;--green:#27AE60;--red:#E74C3C;--orange:#E67E22;
-  --radius:16px;--radius-sm:10px
-}
+:root{--bg:#0B1120;--bg2:#111827;--bg3:#1a2235;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;--accent:#4A90D9;--green:#27AE60;--red:#E74C3C;--radius:16px;--radius-sm:10px}
 body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:100px}
-
-/* ── Top bar ── */
 .bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
 .bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
-
-/* ── List ── */
-.item-row{display:flex;align-items:flex-start;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.item-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
 .item-row:active{background:var(--glass)}
-.item-name{font-size:15px;font-weight:600;color:var(--t1);word-break:break-word}
-.item-name.done-text{text-decoration:line-through;color:var(--t3)}
-.item-sub{font-size:12px;color:var(--t3);margin-top:3px;word-break:break-all}
-.cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all 0.15s;margin-top:1px}
-.cb.on{background:var(--green);border-color:var(--green);color:#fff}
-.del-btn{background:none;border:none;color:var(--t3);font-size:20px;padding:0 4px;cursor:pointer;flex-shrink:0;line-height:1;margin-top:0}
-.del-btn:active{color:var(--red)}
-
-/* ── Section headers ── */
-.section-header{padding:10px 16px 4px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
-
-/* ── Empty state ── */
-.empty{text-align:center;padding:80px 24px;color:var(--t3)}
-.empty-icon{font-size:52px;margin-bottom:14px}
-
-/* ── FAB ── */
-.fab{position:fixed;bottom:28px;right:20px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2176AE);border:none;color:#fff;font-size:28px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:100}
-
-/* ── Modal overlay ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;align-items:flex-end;justify-content:center}
-.overlay.open{display:flex}
-.sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px 16px 36px;animation:slideUp 0.25s ease}
-@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
-.sheet-title{font-size:17px;font-weight:800;color:var(--t1);margin-bottom:16px;display:flex;align-items:center;gap:8px}
-
-/* ── Form elements ── */
+.item-row.tobuy .item-name{color:var(--accent)}
+.cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all 0.15s}
+.cb.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.item-name{font-size:15px;font-weight:600;color:var(--t1)}
+.item-notes{font-size:12px;color:var(--t3);margin-top:2px}
+.badge{display:inline-block;background:rgba(74,144,217,0.2);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px}
+.empty{text-align:center;padding:60px 24px;color:var(--t3)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+.fab{position:fixed;bottom:28px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2176AE);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#27AE60;color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast.show{opacity:1}
+.form-wrap{padding:16px}
 label{display:block;font-size:12px;color:var(--t2);font-weight:600;margin-bottom:5px;margin-top:14px}
 label:first-of-type{margin-top:0}
 input,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none}
 input:focus,textarea:focus{border-color:var(--accent)}
 textarea{resize:none;min-height:60px;font-size:14px}
-.url-wrap{position:relative}
-.url-spinner{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:14px;display:none}
-.save-btn{display:block;width:100%;margin-top:18px;padding:14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),#2176AE);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
+.save-btn{display:block;width:100%;margin-top:16px;padding:14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),#2176AE);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
 .save-btn:active{opacity:0.8}
-.save-btn:disabled{opacity:0.5;cursor:default}
 .cancel-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
-
-/* ── Toast ── */
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);pointer-events:none}
-.toast.show{opacity:1}
-
-/* ── Delete confirm ── */
-.del-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:300;align-items:center;justify-content:center;padding:24px}
-.del-overlay.open{display:flex}
-.del-card{background:var(--bg2);border-radius:var(--radius);padding:22px;width:100%;max-width:320px}
-.del-card h3{font-size:16px;font-weight:800;margin-bottom:6px}
-.del-card p{font-size:13px;color:var(--t2);margin-bottom:18px;line-height:1.5}
-.del-actions{display:flex;flex-direction:column;gap:10px}
-.del-confirm-btn{padding:13px;border-radius:var(--radius-sm);border:none;background:var(--red);color:#fff;font-size:15px;font-weight:700;cursor:pointer}
-.del-cancel-btn{padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
+.section-header{padding:10px 16px 4px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.fetching{font-size:11px;color:var(--t3);margin-top:4px;min-height:16px}
 </style>
 </head>
 <body>
 
 <div class="bar">
-  <button onclick="goBack()" style="background:none;border:none;color:var(--accent);font-size:26px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0">‹</button>
+  <button onclick="goBack()" style="background:none;border:none;color:#4A90D9;font-size:24px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0">‹</button>
   <img src="cars/Skycare_logo-removebg-preview.png" style="height:22px;filter:brightness(0) invert(1)" alt="Skycare">
   <span class="bar-title">MX Parts &amp; Supplies</span>
-  <span id="pendingBadge" style="background:var(--orange);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;display:none"></span>
+  <span id="cartCount" style="background:var(--accent);color:#fff;border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700;display:none"></span>
 </div>
 
 <div id="app"></div>
-<button class="fab" onclick="openAddModal()" title="Add item">+</button>
+<button class="fab" onclick="showAddForm()" title="Add item">+</button>
 <div class="toast" id="toast"></div>
-
-<!-- Add modal -->
-<div class="overlay" id="addOverlay" onclick="onOverlayClick(event)">
-  <div class="sheet" id="addSheet">
-    <div class="sheet-title">🔧 Add Part / Supply</div>
-
-    <label>Product URL <span style="font-weight:400;color:var(--t3)">(paste to auto-fill name)</span></label>
-    <div class="url-wrap">
-      <input id="mUrl" type="url" placeholder="https://…" autocomplete="off" autocorrect="off" spellcheck="false"
-        oninput="onUrlInput()" onpaste="setTimeout(onUrlInput,120)" onchange="onUrlInput()">
-      <span class="url-spinner" id="urlSpinner">⏳</span>
-    </div>
-
-    <label>Item name *</label>
-    <input id="mName" placeholder="e.g. Oil filter, brake pads…" autocorrect="off">
-
-    <label>Notes <span style="font-weight:400;color:var(--t3)">(optional — qty, part #, specs…)</span></label>
-    <textarea id="mNotes" placeholder="e.g. 2x, part# 12345, 5W-30…"></textarea>
-
-    <button class="save-btn" id="saveBtn" onclick="saveItem()">➕ Add to List</button>
-    <button class="cancel-btn" onclick="closeAddModal()">Cancel</button>
-  </div>
-</div>
-
-<!-- Delete confirm -->
-<div class="del-overlay" id="delOverlay">
-  <div class="del-card">
-    <h3>Remove item?</h3>
-    <p id="delMsg"></p>
-    <div class="del-actions">
-      <button class="del-confirm-btn" onclick="confirmDelete()">🗑 Remove</button>
-      <button class="del-cancel-btn" onclick="closeDelOverlay()">Cancel</button>
-    </div>
-  </div>
-</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -137,213 +62,218 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-let items = [];        // [{id, item, url, notes, done, addedAt}]
-let pendingDelete = null; // id of item awaiting delete confirmation
+let catalog = [];
+let shopState = {};
+let view = 'list';
 
-// ── Live listener ─────────────────────────────────────────────────────────────
-// Store in shoppingCatalog with cabinet:'Mechanics' — same collection the main
-// app already has write permission for, so no Firestore rules change needed.
 db.collection('shoppingCatalog').onSnapshot(snap => {
-  items = snap.docs
-    .map(d => ({id: d.id, ...d.data()}))
+  catalog = snap.docs
+    .map(d => ({id:d.id, ...d.data()}))
     .filter(i => i.cabinet === 'Mechanics');
-  items.sort((a,b) => (a.addedAt||0) - (b.addedAt||0));
   render();
 });
 
-// ── Render ────────────────────────────────────────────────────────────────────
+db.collection('shopState').doc('state').onSnapshot(snap => {
+  if(snap.exists) shopState = snap.data() || {};
+  render();
+});
+
+function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
 function render() {
-  const pending = items.filter(i => !i.done);
-  const done    = items.filter(i => i.done);
+  if(view === 'add') { renderAdd(); return; }
+  renderList();
+}
 
-  const badge = document.getElementById('pendingBadge');
-  if(pending.length) { badge.textContent = pending.length + ' pending'; badge.style.display = ''; }
-  else badge.style.display = 'none';
+function renderList() {
+  const toBuyCount = catalog.filter(i => shopState[fsKey(i.item)]?.checked).length;
+  const cc = document.getElementById('cartCount');
+  if(toBuyCount > 0) { cc.textContent = toBuyCount+' to buy'; cc.style.display=''; }
+  else cc.style.display='none';
 
-  if(!items.length) {
-    document.getElementById('app').innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">🔧</div>
-        <p style="font-size:15px;font-weight:600;color:var(--t2)">No parts or supplies yet</p>
-        <p style="font-size:13px;margin-top:6px">Tap <b>+</b> to add something needed</p>
-      </div>`;
+  if(!catalog.length) {
+    document.getElementById('app').innerHTML = `<div class="empty">
+      <div class="empty-icon">🔧</div>
+      <p style="font-size:15px;font-weight:600;color:var(--t2)">No MX items yet</p>
+      <p style="font-size:13px;margin-top:6px">Tap + to add a part or supply</p>
+    </div>`;
     return;
   }
 
+  const toBuy = catalog.filter(i => shopState[fsKey(i.item)]?.checked);
+  const rest  = catalog.filter(i => !shopState[fsKey(i.item)]?.checked);
+
   let html = '';
-  if(pending.length) {
-    html += `<div class="section-header">🔩 Needed (${pending.length})</div>`;
-    pending.forEach(i => { html += itemHtml(i); });
+  if(toBuy.length) {
+    html += `<div class="section-header">🛒 To Order (${toBuy.length})</div>`;
+    toBuy.forEach(i => html += itemHtml(i, true));
   }
-  if(done.length) {
-    html += `<div class="section-header">✅ Done / Ordered (${done.length})</div>`;
-    done.forEach(i => { html += itemHtml(i); });
+  if(rest.length) {
+    html += `<div class="section-header">🔧 MX Items</div>`;
+    rest.forEach(i => html += itemHtml(i, false));
   }
-  html += `<div style="padding:14px 16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to mark as done · tap 🗑 to remove</div>`;
+  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to add it to the order list ·<br>Tap again to remove it</div>`;
 
   document.getElementById('app').innerHTML = html;
 }
 
-function itemHtml(item) {
-  const safeId   = item.id.replace(/"/g, '&quot;');
-  const safeName = (item.item||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-  const notes    = (item.notes||'').trim();
-  const hasUrl   = item.url && item.url.startsWith('http');
-  const domain   = hasUrl ? (() => { try { return new URL(item.url).hostname.replace('www.',''); } catch(_){return '';} })() : '';
-
-  return `<div class="item-row" data-id="${safeId}" onclick="toggleDone('${safeId}')">
-    <div class="cb ${item.done?'on':''}">${item.done?'✓':''}</div>
+function itemHtml(item, checked) {
+  const key = fsKey(item.item);
+  const safeKey  = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const qty = shopState[key]?.qty || 1;
+  const notes = item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ? item.notes : '';
+  return `<div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
+    <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
     <div style="flex:1;min-width:0">
-      <div class="item-name ${item.done?'done-text':''}">${escHtml(item.item||'')}</div>
-      ${notes ? `<div class="item-sub">${escHtml(notes)}</div>` : ''}
-      ${domain ? `<div class="item-sub" style="color:var(--accent);margin-top:2px">🔗 ${escHtml(domain)}</div>` : ''}
+      <div class="item-name">${item.item}${checked?'<span class="badge">To Order</span>':''}</div>
+      ${notes?`<div class="item-notes">${notes}</div>`:''}
     </div>
-    <button class="del-btn" data-id="${safeId}" data-name="${safeName}" onclick="event.stopPropagation();askDelete(this.dataset.id,this.dataset.name)" title="Remove">🗑</button>
+    ${checked ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(74,144,217,0.4);border-radius:20px;overflow:hidden">
+      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,-1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">−</button>
+      <span style="min-width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)">${qty}</span>
+      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">+</button>
+    </div>` : ''}
   </div>`;
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-// ── Toggle done ───────────────────────────────────────────────────────────────
-function toggleDone(id) {
-  const item = items.find(i => i.id === id);
-  if(!item) return;
-  const newDone = !item.done;
-  item.done = newDone;
+function toggleItem(key, name) {
+  const cur = shopState[key] || {};
+  const nowChecked = !cur.checked;
+  const newStatus = nowChecked ? 'To Buy' : 'In Stock';
+  const newQty = cur.qty || 1;
+  const newSource = nowChecked ? 'mechanics' : '';
+  shopState[key] = {checked: nowChecked, status: newStatus, qty: newQty, source: newSource};
   render();
-  db.collection('shoppingCatalog').doc(id).update({done: newDone})
-    .then(() => toast(newDone ? '✅ Marked done' : '🔩 Back to needed'))
-    .catch(() => { item.done = !newDone; render(); toast('❌ Could not sync'); });
+  db.collection('shopState').doc('state').set(
+    {[key]: {checked: nowChecked, status: newStatus, qty: newQty, source: newSource}},
+    {merge: true}
+  ).then(() => {
+    toast(nowChecked ? `🛒 Added to order list` : `✅ Removed from order list`);
+  }).catch(e => {
+    console.error('[mechanics] Firestore write FAILED:', e);
+    toast('❌ Could not sync — check connection');
+  });
 }
 
-// ── Delete flow ───────────────────────────────────────────────────────────────
-function askDelete(id, name) {
-  pendingDelete = id;
-  document.getElementById('delMsg').textContent = `"${name}" will be removed from the list.`;
-  document.getElementById('delOverlay').classList.add('open');
-}
-
-function closeDelOverlay() {
-  pendingDelete = null;
-  document.getElementById('delOverlay').classList.remove('open');
-}
-
-function confirmDelete() {
-  if(!pendingDelete) return;
-  const id = pendingDelete;
-  closeDelOverlay();
-  items = items.filter(i => i.id !== id);
+function changeQty(key, delta) {
+  const cur = shopState[key] || {};
+  const newQty = Math.max(1, (cur.qty || 1) + delta);
+  shopState[key] = {...cur, qty: newQty};
   render();
-  db.collection('shoppingCatalog').doc(id).delete()
-    .then(() => toast('🗑 Removed'))
-    .catch(() => toast('❌ Could not delete'));
+  db.collection('shopState').doc('state').set(
+    {[key]: {...cur, qty: newQty}},
+    {merge: true}
+  ).catch(e => console.error('[mechanics] qty write FAILED:', e));
 }
 
-// ── Add modal ─────────────────────────────────────────────────────────────────
-function openAddModal() {
-  document.getElementById('mUrl').value   = '';
-  document.getElementById('mName').value  = '';
-  document.getElementById('mNotes').value = '';
-  document.getElementById('urlSpinner').style.display = 'none';
-  document.getElementById('addOverlay').classList.add('open');
-  setTimeout(() => document.getElementById('mUrl').focus(), 80);
+function showAddForm() {
+  view = 'add';
+  render();
 }
 
-function closeAddModal() {
-  document.getElementById('addOverlay').classList.remove('open');
+// ── URL-to-name helpers (same as main app) ───────────────────────────────────
+function nameFromUrlSlug(url) {
+  try {
+    const path = new URL(url).pathname;
+    const parts = path.split('/').filter(Boolean);
+    const slug = parts.slice().reverse().find(p => p.length > 4 && /[a-z]/.test(p) && !p.match(/^\d+[pP]?$/)) || parts[parts.length-1] || '';
+    const clean = slug.replace(/\.[^.]+$/, '').replace(/-?\d{6,}[a-z]?$/i, '').replace(/-/g, ' ').trim();
+    return clean ? clean.replace(/\b\w/g, c => c.toUpperCase()) : '';
+  } catch(_) { return ''; }
 }
 
-function onOverlayClick(e) {
-  if(e.target === document.getElementById('addOverlay')) closeAddModal();
-}
-
-// Auto-fetch: slug instantly, then Worker for og:title
 let _lastFetchUrl = '';
 async function onUrlInput() {
-  const urlEl  = document.getElementById('mUrl');
-  const nameEl = document.getElementById('mName');
-  const spinner = document.getElementById('urlSpinner');
+  const urlEl   = document.getElementById('inUrl');
+  const nameEl  = document.getElementById('inName');
+  const hint    = document.getElementById('fetchHint');
   const url = urlEl.value.trim();
-
   if(!url.startsWith('http')) return;
-  if(url === _lastFetchUrl) return; // already fetched this exact URL
+  if(url === _lastFetchUrl) return;
   _lastFetchUrl = url;
 
-  // Don't overwrite a name the user typed manually — only auto-fill when blank
+  // Instant slug fill while Worker runs
   if(!nameEl.value.trim()) {
     const slug = nameFromUrlSlug(url);
     if(slug) nameEl.value = slug;
   }
 
-  // Fetch og:title from Cloudflare Worker
-  spinner.style.display = '';
+  hint.textContent = '⏳ Fetching name…';
   try {
     const res  = await fetch(`https://skycare-worker.skycare.workers.dev?url=${encodeURIComponent(url)}`);
     const data = await res.json();
     const blocked = ['access denied','403','forbidden','robot','blocked','captcha']
       .some(w => (data.name||'').toLowerCase().includes(w));
-    // Only overwrite if name field is still blank OR still has the slug we put in
-    const curName = nameEl.value.trim();
     const slugAtFetch = nameFromUrlSlug(url);
+    const curName = nameEl.value.trim();
     if(data.name && !blocked && (!curName || curName === slugAtFetch)) {
       nameEl.value = data.name;
+      hint.textContent = '✓ Name filled from product page';
+    } else {
+      hint.textContent = '';
     }
-  } catch(_) {}
-  finally { spinner.style.display = 'none'; }
+  } catch(_) { hint.textContent = ''; }
 }
 
-function nameFromUrlSlug(url) {
-  try {
-    const path  = new URL(url).pathname;
-    const parts = path.split('/').filter(Boolean);
-    const slug  = parts.slice().reverse()
-      .find(p => p.length > 4 && /[a-z]/i.test(p) && !p.match(/^\d+[pP]?$/))
-      || parts[parts.length - 1] || '';
-    const clean = slug
-      .replace(/\.[^.]+$/, '')                 // strip extension
-      .replace(/-?\d{6,}[a-z]?$/i, '')         // strip long numeric suffix
-      .replace(/-/g, ' ').trim();
-    return clean ? clean.replace(/\b\w/g, c => c.toUpperCase()) : '';
-  } catch(_) { return ''; }
+function renderAdd() {
+  document.getElementById('app').innerHTML = `
+    <div class="form-wrap">
+      <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">Add Part / Supply</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Paste a product URL and the name will fill automatically.</div>
+      <label>Product URL</label>
+      <input type="url" id="inUrl" placeholder="https://…" autocomplete="off" autocorrect="off" spellcheck="false"
+        oninput="onUrlInput()" onpaste="setTimeout(onUrlInput,150)" onchange="onUrlInput()">
+      <div class="fetching" id="fetchHint"></div>
+      <label>Item name *</label>
+      <input type="text" id="inName" placeholder="e.g. Oil filter, spark plug…" autocorrect="off">
+      <button class="save-btn" onclick="saveItem()">➕ Add to MX List</button>
+      <button class="cancel-btn" onclick="cancelAdd()">Cancel</button>
+    </div>`;
+  _lastFetchUrl = '';
+  setTimeout(()=>document.getElementById('inUrl')?.focus(), 80);
 }
 
 async function saveItem() {
-  const name  = (document.getElementById('mName').value||'').trim();
-  const url   = (document.getElementById('mUrl').value||'').trim();
-  const notes = (document.getElementById('mNotes').value||'').trim();
+  const name = (document.getElementById('inName')?.value||'').trim();
+  const url  = (document.getElementById('inUrl')?.value||'').trim();
+  if(!name) { toast('⚠️ Please enter an item name'); return; }
 
-  if(!name) { toast('⚠️ Please enter an item name'); document.getElementById('mName').focus(); return; }
-
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true;
-
-  const id  = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,50) + '_' + Date.now();
-  const doc = { item: name, url: url||'', notes: notes||'', done: false, addedAt: Date.now(), cabinet: 'Mechanics' };
-
+  const id = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60) + '_' + Date.now();
   try {
-    await db.collection('shoppingCatalog').doc(id).set(doc);
-    closeAddModal();
-    toast('✅ Added to list!');
-  } catch(_) {
+    await db.collection('shoppingCatalog').doc(id).set({
+      item: name,
+      notes: '',
+      store: '',
+      url: url || '',
+      cabinet: 'Mechanics'
+    });
+    toast('✅ Added to MX list!');
+    view = 'list';
+    render();
+  } catch(e) {
+    console.error('[mechanics] save failed:', e);
     toast('❌ Could not save — check connection');
-  } finally {
-    btn.disabled = false;
   }
 }
 
-// ── Misc ──────────────────────────────────────────────────────────────────────
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+function cancelAdd() {
+  view = 'list';
+  render();
 }
 
 function goBack() {
-  try { window.close(); } catch(_) {}
-  history.back();
+  if(view !== 'list') { view = 'list'; render(); }
+  else { try{window.close();}catch(e){} history.back(); }
 }
+
+render();
 </script>
 </body>
 </html>
