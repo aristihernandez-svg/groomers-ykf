@@ -379,6 +379,13 @@ async function saveItem() {
     await db.collection('shopState').doc('state').set(
       {[key]:{checked:true, status:'To Buy', qty:1, source:'mechanics'}}, {merge:true}
     );
+    // Broadcast to all open devices (same pattern as crew car alerts)
+    db.collection('notifications').add({
+      title: '🔧 MX Parts Request',
+      body: `${name} added to the order list`,
+      tag: 'mx-parts',
+      ts: firebase.firestore.FieldValue.serverTimestamp()
+    }).catch(()=>{});
     toast('🛒 Added to order list!');
     view = 'list';
     render();

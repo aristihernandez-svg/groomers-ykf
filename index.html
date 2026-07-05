@@ -6190,6 +6190,7 @@ async function requestNotificationPermission() {
     toast('✅ Notifications enabled!');
     localStorage.setItem('notifications_enabled', '1');
     updateNotifBtn();
+    scheduleLocalNotifications();
     return true;
   } catch(e) {
     console.error('Notification setup error:', e);
@@ -6279,7 +6280,12 @@ function toggleNotifications() {
 }
 
 window.addEventListener('load', () => {
-  setTimeout(() => updateNotifBtn(), 2000);
+  setTimeout(() => {
+    updateNotifBtn();
+    if (localStorage.getItem('notifications_enabled') === '1') {
+      scheduleLocalNotifications();
+    }
+  }, 2000);
 });
 
 // Handle incoming FCM messages when app is open
