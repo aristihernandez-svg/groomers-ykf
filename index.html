@@ -1181,8 +1181,8 @@ async function fetchDay(tabName) {
           if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
           if(prevHidden[fsKey(t.task)]) t.hidden = true;
         });
-        // Apply any cached taskState that arrived before content loaded
-        if(_cachedTaskState) {
+        // Apply cached taskState only for today — never bleed today's done-flags onto other days
+        if(_cachedTaskState && tabName === DAYS[getToday()]) {
           const today = new Date().toDateString();
           if(!_cachedTaskState._date || _cachedTaskState._date === today) {
             S.tasks[tabName].forEach(t => {
@@ -6284,7 +6284,7 @@ window.addEventListener('load', () => {
 
 // Handle incoming FCM messages when app is open
 document.addEventListener('DOMContentLoaded', () => {
-  if (fbMessaging) {
+  if (typeof fbMessaging !== 'undefined' && fbMessaging) {
     fbMessaging.onMessage((payload) => {
       console.log('FCM message received:', payload);
       const { title, body } = payload.notification || {};
