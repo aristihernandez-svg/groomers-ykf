@@ -10,30 +10,40 @@
 body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:100px}
 .bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
 .bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
-.item-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
-.item-row:active{background:var(--glass)}
-.item-row.tobuy .item-name{color:var(--accent)}
-.cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all 0.15s}
+.item-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;cursor:pointer;transition:all 0.15s}
 .cb.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.item-name{font-size:15px;font-weight:600;color:var(--t1)}
-.item-notes{font-size:12px;color:var(--t3);margin-top:2px}
+.item-name{font-size:15px;font-weight:600;flex:1;min-width:0;word-break:break-word;cursor:pointer}
+.item-name.ordered{color:var(--accent)}
 .badge{display:inline-block;background:rgba(74,144,217,0.2);color:var(--accent);border-radius:20px;padding:2px 8px;font-size:11px;font-weight:700;margin-left:6px}
+.qty-row{display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(74,144,217,0.4);border-radius:20px;overflow:hidden}
+.qty-btn{background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:30px;height:30px;cursor:pointer;line-height:1}
+.qty-val{min-width:20px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)}
+.del-btn{background:none;border:none;color:var(--t3);font-size:18px;cursor:pointer;padding:4px;flex-shrink:0;line-height:1}
+.del-btn:active{color:var(--red)}
 .empty{text-align:center;padding:60px 24px;color:var(--t3)}
 .empty-icon{font-size:48px;margin-bottom:12px}
 .fab{position:fixed;bottom:28px;right:20px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#2176AE);border:none;color:#fff;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:100}
-.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#27AE60;color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4)}
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:12px 24px;border-radius:40px;font-size:14px;font-weight:700;z-index:999;opacity:0;transition:opacity 0.3s;white-space:nowrap;box-shadow:0 4px 20px rgba(0,0,0,0.4);pointer-events:none}
 .toast.show{opacity:1}
 .form-wrap{padding:16px}
 label{display:block;font-size:12px;color:var(--t2);font-weight:600;margin-bottom:5px;margin-top:14px}
 label:first-of-type{margin-top:0}
-input,textarea{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none}
-input:focus,textarea:focus{border-color:var(--accent)}
-textarea{resize:none;min-height:60px;font-size:14px}
+input{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none}
+input:focus{border-color:var(--accent)}
 .save-btn{display:block;width:100%;margin-top:16px;padding:14px;border-radius:var(--radius-sm);border:none;background:linear-gradient(135deg,var(--accent),#2176AE);color:#fff;font-size:15px;font-weight:800;cursor:pointer}
 .save-btn:active{opacity:0.8}
 .cancel-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
 .section-header{padding:10px 16px 4px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
 .fetching{font-size:11px;color:var(--t3);margin-top:4px;min-height:16px}
+/* confirm modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal-card{background:var(--bg2);border-radius:var(--radius);padding:22px;width:100%;max-width:320px}
+.modal-card h3{font-size:16px;font-weight:800;margin-bottom:8px}
+.modal-card p{font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.5}
+.modal-del-btn{display:block;width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--red);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.modal-cancel-btn{display:block;width:100%;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -49,6 +59,16 @@ textarea{resize:none;min-height:60px;font-size:14px}
 <button class="fab" onclick="showAddForm()" title="Add item">+</button>
 <div class="toast" id="toast"></div>
 
+<!-- Delete confirm modal -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal-card">
+    <h3>Remove item?</h3>
+    <p id="delModalMsg"></p>
+    <button class="modal-del-btn" onclick="confirmDelete()">🗑 Yes, remove it</button>
+    <button class="modal-cancel-btn" onclick="closeDelModal()">Cancel</button>
+  </div>
+</div>
+
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script>
@@ -62,9 +82,11 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-let catalog = [];
+let catalog   = [];
 let shopState = {};
-let view = 'list';
+let view      = 'list';
+let pendingDelId   = null;
+let pendingDelName = '';
 
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
@@ -78,7 +100,7 @@ db.collection('shopState').doc('state').onSnapshot(snap => {
   render();
 });
 
-function fsKey(text) { return String(text).replace(/[.\/]/g, '∙'); }
+function fsKey(text) { return String(text).replace(/[.\/]/g,'∙'); }
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -94,7 +116,7 @@ function render() {
 function renderList() {
   const toBuyCount = catalog.filter(i => shopState[fsKey(i.item)]?.checked).length;
   const cc = document.getElementById('cartCount');
-  if(toBuyCount > 0) { cc.textContent = toBuyCount+' to buy'; cc.style.display=''; }
+  if(toBuyCount > 0) { cc.textContent = toBuyCount+' to order'; cc.style.display=''; }
   else cc.style.display='none';
 
   if(!catalog.length) {
@@ -106,100 +128,117 @@ function renderList() {
     return;
   }
 
-  const toBuy = catalog.filter(i => shopState[fsKey(i.item)]?.checked);
-  const rest  = catalog.filter(i => !shopState[fsKey(i.item)]?.checked);
+  const toOrder = catalog.filter(i =>  shopState[fsKey(i.item)]?.checked);
+  const rest    = catalog.filter(i => !shopState[fsKey(i.item)]?.checked);
 
   let html = '';
-  if(toBuy.length) {
-    html += `<div class="section-header">🛒 To Order (${toBuy.length})</div>`;
-    toBuy.forEach(i => html += itemHtml(i, true));
+  if(toOrder.length) {
+    html += `<div class="section-header">🛒 To Order (${toOrder.length})</div>`;
+    toOrder.forEach(i => html += itemHtml(i, true));
   }
   if(rest.length) {
     html += `<div class="section-header">🔧 MX Items</div>`;
     rest.forEach(i => html += itemHtml(i, false));
   }
-  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to add it to the order list ·<br>Tap again to remove it</div>`;
+  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap the checkbox to add/remove from order list</div>`;
 
   document.getElementById('app').innerHTML = html;
 }
 
 function itemHtml(item, checked) {
-  const key = fsKey(item.item);
+  const key      = fsKey(item.item);
   const safeKey  = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  const safeId   = item.id.replace(/"/g,'&quot;');
   const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-  const qty = shopState[key]?.qty || 1;
-  const notes = item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ? item.notes : '';
-  return `<div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
-    <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
-    <div style="flex:1;min-width:0">
-      <div class="item-name">${item.item}${checked?'<span class="badge">To Order</span>':''}</div>
-      ${notes?`<div class="item-notes">${notes}</div>`:''}
+  const qty      = shopState[key]?.qty || 1;
+  return `<div class="item-row">
+    <div class="cb ${checked?'on':''}" onclick="toggleItem('${safeKey}','${safeName}')">${checked?'✓':''}</div>
+    <div class="item-name ${checked?'ordered':''}" onclick="toggleItem('${safeKey}','${safeName}')">
+      ${item.item}${checked?'<span class="badge">To Order</span>':''}
     </div>
-    ${checked ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(74,144,217,0.4);border-radius:20px;overflow:hidden">
-      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,-1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">−</button>
-      <span style="min-width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)">${qty}</span>
-      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">+</button>
-    </div>` : ''}
+    <div class="qty-row" onclick="event.stopPropagation()">
+      <button class="qty-btn" onclick="changeQty('${safeKey}',-1)">−</button>
+      <span class="qty-val">${qty}</span>
+      <button class="qty-btn" onclick="changeQty('${safeKey}',1)">+</button>
+    </div>
+    <button class="del-btn" onclick="event.stopPropagation();askDelete('${safeId}','${safeName}')" title="Remove">🗑</button>
   </div>`;
 }
 
 function toggleItem(key, name) {
-  const cur = shopState[key] || {};
+  const cur        = shopState[key] || {};
   const nowChecked = !cur.checked;
-  const newStatus = nowChecked ? 'To Buy' : 'In Stock';
-  const newQty = cur.qty || 1;
-  const newSource = nowChecked ? 'mechanics' : '';
-  shopState[key] = {checked: nowChecked, status: newStatus, qty: newQty, source: newSource};
+  const newQty     = cur.qty || 1;
+  shopState[key]   = {checked:nowChecked, status:nowChecked?'To Buy':'In Stock', qty:newQty, source:nowChecked?'mechanics':''};
   render();
   db.collection('shopState').doc('state').set(
-    {[key]: {checked: nowChecked, status: newStatus, qty: newQty, source: newSource}},
-    {merge: true}
-  ).then(() => {
-    toast(nowChecked ? `🛒 Added to order list` : `✅ Removed from order list`);
-  }).catch(e => {
-    console.error('[mechanics] Firestore write FAILED:', e);
-    toast('❌ Could not sync — check connection');
-  });
+    {[key]: shopState[key]}, {merge:true}
+  ).then(()=>toast(nowChecked?'🛒 Added to order list':'✅ Removed from order list'))
+   .catch(()=>toast('❌ Could not sync'));
 }
 
 function changeQty(key, delta) {
-  const cur = shopState[key] || {};
-  const newQty = Math.max(1, (cur.qty || 1) + delta);
-  shopState[key] = {...cur, qty: newQty};
+  const cur    = shopState[key] || {};
+  const newQty = Math.max(1,(cur.qty||1)+delta);
+  shopState[key] = {...cur, qty:newQty};
   render();
-  db.collection('shopState').doc('state').set(
-    {[key]: {...cur, qty: newQty}},
-    {merge: true}
-  ).catch(e => console.error('[mechanics] qty write FAILED:', e));
+  db.collection('shopState').doc('state').set({[key]:shopState[key]},{merge:true})
+    .catch(()=>{});
 }
 
-function showAddForm() {
-  view = 'add';
-  render();
+// ── Delete ────────────────────────────────────────────────────────────────────
+function askDelete(id, name) {
+  pendingDelId   = id;
+  pendingDelName = name;
+  document.getElementById('delModalMsg').textContent = `"${name}" will be removed from the MX list.`;
+  document.getElementById('delModal').classList.add('open');
 }
 
-// ── URL-to-name helpers (same as main app) ───────────────────────────────────
+function closeDelModal() {
+  pendingDelId = null;
+  document.getElementById('delModal').classList.remove('open');
+}
+
+function confirmDelete() {
+  if(!pendingDelId) return;
+  const id   = pendingDelId;
+  const name = pendingDelName;
+  closeDelModal();
+  catalog = catalog.filter(i => i.id !== id);
+  render();
+  db.collection('shoppingCatalog').doc(id).delete()
+    .then(()=>toast('🗑 Removed'))
+    .catch(()=>toast('❌ Could not delete'));
+  // Also clear shopState entry
+  const key = fsKey(name);
+  db.collection('shopState').doc('state').update({[key]: firebase.firestore.FieldValue.delete()}).catch(()=>{});
+}
+
+// ── Add form ──────────────────────────────────────────────────────────────────
+function showAddForm() { view = 'add'; render(); }
+function cancelAdd()   { view = 'list'; render(); }
+
 function nameFromUrlSlug(url) {
   try {
-    const path = new URL(url).pathname;
+    const path  = new URL(url).pathname;
     const parts = path.split('/').filter(Boolean);
-    const slug = parts.slice().reverse().find(p => p.length > 4 && /[a-z]/.test(p) && !p.match(/^\d+[pP]?$/)) || parts[parts.length-1] || '';
-    const clean = slug.replace(/\.[^.]+$/, '').replace(/-?\d{6,}[a-z]?$/i, '').replace(/-/g, ' ').trim();
-    return clean ? clean.replace(/\b\w/g, c => c.toUpperCase()) : '';
-  } catch(_) { return ''; }
+    const slug  = parts.slice().reverse().find(p=>p.length>4&&/[a-z]/.test(p)&&!p.match(/^\d+[pP]?$/)) || parts[parts.length-1]||'';
+    const clean = slug.replace(/\.[^.]+$/,'').replace(/-?\d{6,}[a-z]?$/i,'').replace(/-/g,' ').trim();
+    return clean ? clean.replace(/\b\w/g,c=>c.toUpperCase()) : '';
+  } catch(_){ return ''; }
 }
 
 let _lastFetchUrl = '';
 async function onUrlInput() {
-  const urlEl   = document.getElementById('inUrl');
-  const nameEl  = document.getElementById('inName');
-  const hint    = document.getElementById('fetchHint');
+  const urlEl  = document.getElementById('inUrl');
+  const nameEl = document.getElementById('inName');
+  const hint   = document.getElementById('fetchHint');
+  if(!urlEl||!nameEl||!hint) return;
   const url = urlEl.value.trim();
   if(!url.startsWith('http')) return;
   if(url === _lastFetchUrl) return;
   _lastFetchUrl = url;
 
-  // Instant slug fill while Worker runs
   if(!nameEl.value.trim()) {
     const slug = nameFromUrlSlug(url);
     if(slug) nameEl.value = slug;
@@ -210,23 +249,21 @@ async function onUrlInput() {
     const res  = await fetch(`https://skycare-worker.skycare.workers.dev?url=${encodeURIComponent(url)}`);
     const data = await res.json();
     const blocked = ['access denied','403','forbidden','robot','blocked','captcha']
-      .some(w => (data.name||'').toLowerCase().includes(w));
+      .some(w=>(data.name||'').toLowerCase().includes(w));
     const slugAtFetch = nameFromUrlSlug(url);
     const curName = nameEl.value.trim();
-    if(data.name && !blocked && (!curName || curName === slugAtFetch)) {
+    if(data.name && !blocked && (!curName || curName===slugAtFetch)) {
       nameEl.value = data.name;
       hint.textContent = '✓ Name filled from product page';
-    } else {
-      hint.textContent = '';
-    }
-  } catch(_) { hint.textContent = ''; }
+    } else { hint.textContent = ''; }
+  } catch(_){ hint.textContent=''; }
 }
 
 function renderAdd() {
   document.getElementById('app').innerHTML = `
     <div class="form-wrap">
       <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">Add Part / Supply</div>
-      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Paste a product URL and the name will fill automatically.</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">Paste a product URL and the name fills automatically.</div>
       <label>Product URL</label>
       <input type="url" id="inUrl" placeholder="https://…" autocomplete="off" autocorrect="off" spellcheck="false"
         oninput="onUrlInput()" onpaste="setTimeout(onUrlInput,150)" onchange="onUrlInput()">
@@ -243,23 +280,20 @@ function renderAdd() {
 async function saveItem() {
   const name = (document.getElementById('inName')?.value||'').trim();
   const url  = (document.getElementById('inUrl')?.value||'').trim();
-  if(!name) { toast('⚠️ Please enter an item name'); return; }
+  if(!name){ toast('⚠️ Please enter an item name'); return; }
 
-  const id = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60) + '_' + Date.now();
+  const id  = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60)+'_'+Date.now();
+  const key = fsKey(name);
+
   try {
+    // Save to catalog (store:'MX' keeps Firestore rules happy)
     await db.collection('shoppingCatalog').doc(id).set({
-      item: name,
-      notes: '',
-      store: '',
-      url: url || '',
-      cabinet: 'Mechanics'
+      item: name, notes:'', store:'MX', url:url||'', cabinet:'Mechanics'
     });
-    // Auto-mark as "To Order" so it lands in the order list immediately
-    const key = fsKey(name);
-    shopState[key] = {checked: true, status: 'To Buy', qty: 1, source: 'mechanics'};
+    // Immediately mark as To Order — no second tap needed
+    shopState[key] = {checked:true, status:'To Buy', qty:1, source:'mechanics'};
     await db.collection('shopState').doc('state').set(
-      {[key]: {checked: true, status: 'To Buy', qty: 1, source: 'mechanics'}},
-      {merge: true}
+      {[key]:{checked:true, status:'To Buy', qty:1, source:'mechanics'}}, {merge:true}
     );
     toast('🛒 Added to order list!');
     view = 'list';
@@ -270,14 +304,9 @@ async function saveItem() {
   }
 }
 
-function cancelAdd() {
-  view = 'list';
-  render();
-}
-
 function goBack() {
-  if(view !== 'list') { view = 'list'; render(); }
-  else { try{window.close();}catch(e){} history.back(); }
+  if(view !== 'list'){ view='list'; render(); }
+  else { try{window.close();}catch(_){} history.back(); }
 }
 
 render();
