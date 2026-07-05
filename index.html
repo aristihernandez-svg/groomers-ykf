@@ -968,6 +968,7 @@ window.addEventListener('load', async () => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
         cleanupOneOffTasks(); // delete any One-off tasks that weren't cleaned up at midnight
+        clearContaminatedTaskState(); // one-time: wipe done-states written to non-today days by pre-v68 bug
         // Flush any dayNotes that were saved to localStorage but never made it to Firestore
         // (e.g. app was closed within the 800ms debounce window after typing)
         Object.keys(S.dayNotes).forEach(isoDate => fsSaveDayNote(isoDate));
@@ -3779,6 +3780,32 @@ function toggleStep(key,idx) {
   render();
 }
 function resetProc(key) { S.procs[key].done=[]; render(); toast('Steps reset'); }
+async function clearContaminatedTaskState() {
+  if(!db) return;
+  const FLAG = 'taskstate_contamination_cleared_v69';
+  if(localStorage.getItem(FLAG)) return;
+  localStorage.setItem(FLAG, '1');
+  const todayName = DAYS[getToday()];
+  try {
+    const snap = await db.collection('taskState').get();
+    const batch = db.batch();
+    snap.docs.forEach(doc => {
+      if(doc.id === todayName) return; // never touch today
+      const data = doc.data() || {};
+      const updates = {};
+      Object.keys(data).forEach(k => {
+        if(k.endsWith('_done') || data[k] === true) updates[k] = false;
+      });
+      if(Object.keys(updates).length) batch.update(doc.ref, updates);
+    });
+    await batch.commit();
+    console.log('[v69] Contaminated taskState cleared for non-today days');
+  } catch(e) {
+    console.log('[v69] clearContaminatedTaskState failed (offline?):', e);
+    localStorage.removeItem(FLAG); // retry next boot
+  }
+}
+
 async function cleanupOneOffTasks() {
   if(!db || S.tasksSource !== 'firestore') return;
   const today = new Date().toDateString();
