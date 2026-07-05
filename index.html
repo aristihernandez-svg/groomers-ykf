@@ -756,6 +756,33 @@ body::before{
 })();
 </script>
 
+<!-- PIN gate — shown on first visit, never again once unlocked -->
+<div id="pinGate" style="display:none;position:fixed;inset:0;z-index:99999;background:#0B1120;align-items:center;justify-content:center;flex-direction:column;gap:20px">
+  <img src="cars/Skycare_logo-removebg-preview.png" style="height:48px;filter:brightness(0) invert(1);margin-bottom:8px" alt="Skycare">
+  <div style="font-size:18px;font-weight:700;color:#f0f4ff">Enter PIN to continue</div>
+  <div style="display:flex;gap:10px;margin:8px 0" id="pinDots">
+    <div style="width:14px;height:14px;border-radius:50%;border:2px solid #4A90D9;background:transparent" id="pd0"></div>
+    <div style="width:14px;height:14px;border-radius:50%;border:2px solid #4A90D9;background:transparent" id="pd1"></div>
+    <div style="width:14px;height:14px;border-radius:50%;border:2px solid #4A90D9;background:transparent" id="pd2"></div>
+    <div style="width:14px;height:14px;border-radius:50%;border:2px solid #4A90D9;background:transparent" id="pd3"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,72px);gap:12px">
+    <button onclick="pinKey('1')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">1</button>
+    <button onclick="pinKey('2')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">2</button>
+    <button onclick="pinKey('3')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">3</button>
+    <button onclick="pinKey('4')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">4</button>
+    <button onclick="pinKey('5')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">5</button>
+    <button onclick="pinKey('6')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">6</button>
+    <button onclick="pinKey('7')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">7</button>
+    <button onclick="pinKey('8')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">8</button>
+    <button onclick="pinKey('9')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">9</button>
+    <button onclick="pinKey('del')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#9aa5be;font-size:20px;cursor:pointer">⌫</button>
+    <button onclick="pinKey('0')" style="height:72px;border-radius:16px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#f0f4ff;font-size:24px;font-weight:600;cursor:pointer">0</button>
+    <div></div>
+  </div>
+  <div id="pinError" style="font-size:13px;color:#E74C3C;min-height:18px"></div>
+</div>
+
 <div id="app">
   <div class="bar">
     <span style="font-size:22px;cursor:pointer;color:var(--gold)" onclick="goTab('home')">✈</span>
@@ -924,7 +951,53 @@ function clearSplash() {
 }
 setTimeout(clearSplash, 6000);
 
+// ── PIN GATE ─────────────────────────────────────────────────────────────────
+const PIN_CORRECT = '0704';
+let _pinEntry = '';
+
+function pinKey(k) {
+  const err = document.getElementById('pinError');
+  if (k === 'del') {
+    _pinEntry = _pinEntry.slice(0, -1);
+  } else if (_pinEntry.length < 4) {
+    _pinEntry += k;
+  }
+  // Update dots
+  for (let i = 0; i < 4; i++) {
+    const dot = document.getElementById('pd' + i);
+    if (dot) dot.style.background = i < _pinEntry.length ? '#4A90D9' : 'transparent';
+  }
+  err.textContent = '';
+  if (_pinEntry.length === 4) {
+    if (_pinEntry === PIN_CORRECT) {
+      localStorage.setItem('app_pin_ok', '1');
+      document.getElementById('pinGate').style.display = 'none';
+      bootApp();
+    } else {
+      err.textContent = 'Incorrect PIN — try again';
+      _pinEntry = '';
+      for (let i = 0; i < 4; i++) {
+        const dot = document.getElementById('pd' + i);
+        if (dot) dot.style.background = 'transparent';
+      }
+    }
+  }
+}
+
+function showPinGate() {
+  const gate = document.getElementById('pinGate');
+  if (gate) { gate.style.display = 'flex'; }
+}
+
 window.addEventListener('load', async () => {
+  if (localStorage.getItem('app_pin_ok') !== '1') {
+    showPinGate();
+    return;
+  }
+  bootApp();
+});
+
+async function bootApp() {
   try {
     // Load saved theme
     const savedTheme = localStorage.getItem('gykf_theme') || 'premium';
@@ -987,7 +1060,7 @@ window.addEventListener('load', async () => {
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
   }, 1800);
-});
+}
 
 // ── NAV ────────────────────────────────────────────────────────────
 function buildNav() {
