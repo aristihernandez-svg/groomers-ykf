@@ -59,6 +59,16 @@ input:focus{border-color:var(--accent)}
 <button class="fab" onclick="showAddForm()" title="Add item">+</button>
 <div class="toast" id="toast"></div>
 
+<!-- Duplicates modal -->
+<div class="modal-overlay" id="dupeModal">
+  <div class="modal-card" style="max-width:380px;max-height:80vh;overflow-y:auto">
+    <h3>🔍 Duplicate Items</h3>
+    <p id="dupeModalSubtitle" style="font-size:13px;color:var(--t2);margin-bottom:16px;line-height:1.5"></p>
+    <div id="dupeModalBody"></div>
+    <button class="modal-cancel-btn" style="margin-top:14px" onclick="document.getElementById('dupeModal').classList.remove('open')">Done</button>
+  </div>
+</div>
+
 <!-- Delete confirm modal -->
 <div class="modal-overlay" id="delModal">
   <div class="modal-card">
@@ -140,7 +150,13 @@ function renderList() {
     html += `<div class="section-header">🔧 MX Items</div>`;
     rest.forEach(i => html += itemHtml(i, false));
   }
-  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap the checkbox to add/remove from order list</div>`;
+  const dupeCount = countDupes();
+  html += `<div style="padding:12px 16px;display:flex;justify-content:center">
+    <button onclick="checkDuplicates()" style="background:${dupeCount?'rgba(230,126,34,0.15)':'var(--glass2)'};border:1px solid ${dupeCount?'#E67E22':'var(--border2)'};border-radius:8px;padding:8px 16px;color:${dupeCount?'#E67E22':'var(--t3)'};font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px">
+      ${dupeCount?'⚠️':'🔍'} ${dupeCount?dupeCount+' duplicate'+(dupeCount>1?'s':'')+ ' found':'Check for duplicates'}
+    </button>
+  </div>`;
+  html += `<div style="padding:0 16px 16px;text-align:center;font-size:12px;color:var(--t3)">Tap the checkbox to add/remove from order list</div>`;
 
   document.getElementById('app').innerHTML = html;
 }
@@ -184,6 +200,74 @@ function changeQty(key, delta) {
   render();
   db.collection('shopState').doc('state').set({[key]:shopState[key]},{merge:true})
     .catch(()=>{});
+}
+
+// ── Duplicates ────────────────────────────────────────────────────────────────
+function countDupes() {
+  const seen = {};
+  catalog.forEach(i => { const k = i.item.trim().toLowerCase(); seen[k] = (seen[k]||0)+1; });
+  return Object.values(seen).filter(c => c > 1).length;
+}
+
+function checkDuplicates() {
+  const groups = {};
+  catalog.forEach(i => {
+    const k = i.item.trim().toLowerCase();
+    if(!groups[k]) groups[k] = [];
+    groups[k].push(i);
+  });
+  const dupes = Object.values(groups).filter(g => g.length > 1);
+
+  if(!dupes.length) {
+    toast('✅ No duplicates found!');
+    return;
+  }
+
+  document.getElementById('dupeModalSubtitle').textContent =
+    `Found ${dupes.length} duplicate group${dupes.length>1?'s':''}. Tap "Remove" to delete the extra copies — the first one in each group is kept.`;
+
+  let html = '';
+  dupes.forEach(group => {
+    html += `<div style="border:1px solid var(--border2);border-radius:10px;margin-bottom:12px;overflow:hidden">`;
+    html += `<div style="padding:8px 12px;background:var(--glass2);font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase">Group: ${group[0].item}</div>`;
+    group.forEach((item, idx) => {
+      const safeId   = item.id.replace(/"/g,'&quot;');
+      const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+      const isKeep   = idx === 0;
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--border)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600;color:${isKeep?'var(--green)':'var(--t1)'}">${item.item}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${isKeep?'✅ Keep':'Extra copy'}${item.url?` · <span style="color:var(--accent)">${(()=>{try{return new URL(item.url).hostname.replace('www.','')}catch(_){return''}})()}</span>`:''}</div>
+        </div>
+        ${isKeep
+          ? `<span style="font-size:12px;color:var(--green);font-weight:700;padding:4px 10px;border:1px solid var(--green);border-radius:20px">Keep</span>`
+          : `<button onclick="dupeDelete('${safeId}','${safeName}')" style="background:var(--red);border:none;color:#fff;font-size:12px;font-weight:700;padding:6px 12px;border-radius:20px;cursor:pointer">Remove</button>`
+        }
+      </div>`;
+    });
+    html += `</div>`;
+  });
+
+  document.getElementById('dupeModalBody').innerHTML = html;
+  document.getElementById('dupeModal').classList.add('open');
+}
+
+function dupeDelete(id, name) {
+  catalog = catalog.filter(i => i.id !== id);
+  db.collection('shoppingCatalog').doc(id).delete().catch(()=>{});
+  // clear shopState if no other copy remains
+  const stillExists = catalog.some(i => i.item.trim().toLowerCase() === name.trim().toLowerCase());
+  if(!stillExists) {
+    db.collection('shopState').doc('state').update({[fsKey(name)]: firebase.firestore.FieldValue.delete()}).catch(()=>{});
+  }
+  toast('🗑 Duplicate removed');
+  // Refresh the modal content
+  checkDuplicates();
+  // If no more dupes, close modal and re-render list
+  if(countDupes() === 0) {
+    document.getElementById('dupeModal').classList.remove('open');
+    render();
+  }
 }
 
 // ── Delete ────────────────────────────────────────────────────────────────────
