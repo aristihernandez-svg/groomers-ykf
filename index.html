@@ -4322,8 +4322,9 @@ function checkTaskDuplicate() {
   });
 
   if(bestScore >= 0.80 && bestTask) {
+    const safe = bestTask.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     warn.style.display = '';
-    warn.innerHTML = `⚠️ Similar task exists: <b>"${bestTask}"</b> — add anyway?`;
+    warn.innerHTML = `⚠️ Similar task exists: <b>"${safe}"</b> — add anyway?`;
   } else {
     warn.style.display = 'none';
   }
