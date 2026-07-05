@@ -4267,6 +4267,56 @@ function checkTaskDuplicate(tabName) {
   }
 }
 
+// ── Fuzzy duplicate detection for task names ──────────────────────────────────
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length:m+1}, (_,i) => [i, ...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
+    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]
+      : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function normalizeTask(s) {
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().split(/\s+/).sort().join(' ');
+}
+
+function taskSimilarity(a, b) {
+  const na = normalizeTask(a), nb = normalizeTask(b);
+  if(!na || !nb) return 0;
+  const dist = levenshtein(na, nb);
+  return 1 - dist / Math.max(na.length, nb.length);
+}
+
+function checkTaskDuplicate(tabName) {
+  const input = document.getElementById('mTask');
+  const warn  = document.getElementById('mTaskWarn');
+  if(!input || !warn) return;
+  const val = input.value.trim();
+  if(val.length < 4) { warn.style.display='none'; return; }
+
+  // Check across all days so we catch cross-day duplicates too
+  let best = null, bestScore = 0;
+  DAYS.forEach(day => {
+    (S.tasks[day]||[]).forEach(t => {
+      if(t.task.trim().toLowerCase() === val.toLowerCase()) { best = t.task; bestScore = 1; return; }
+      const score = taskSimilarity(val, t.task);
+      if(score > bestScore) { bestScore = score; best = t.task; }
+    });
+  });
+
+  if(bestScore >= 0.82 && best.trim().toLowerCase() !== val.trim().toLowerCase()) {
+    warn.style.display = '';
+    warn.innerHTML = `⚠️ Similar task exists: <b>"${best}"</b> — add anyway?`;
+  } else if(bestScore === 1) {
+    warn.style.display = '';
+    warn.innerHTML = `⚠️ This task already exists: <b>"${best}"</b>`;
+  } else {
+    warn.style.display = 'none';
+  }
+}
+
 function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
