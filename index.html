@@ -4302,19 +4302,36 @@ function checkTaskDuplicate() {
   const val = input.value.trim();
   if(val.length < 4) { warn.style.display='none'; return; }
 
-  // Gather all task names currently loaded across all days
+  // Deduplicated task list across all loaded days
+  const seen = new Set();
   const allTasks = [];
-  DAYS.forEach(day => (S.tasks[day]||[]).forEach(t => { if(t.task) allTasks.push(t.task); }));
+  DAYS.forEach(day => (S.tasks[day]||[]).forEach(t => {
+    if(t.task && !seen.has(t.task)) { seen.add(t.task); allTasks.push(t.task); }
+  }));
 
-  // Exact match first
+  const normVal = normalizeTask(val);
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  // 1. Exact match
   const exact = allTasks.find(t => t.trim().toLowerCase() === val.toLowerCase());
   if(exact) {
     warn.style.display = '';
-    warn.innerHTML = `⚠️ This task already exists: <b>"${exact}"</b>`;
+    warn.innerHTML = `⚠️ This task already exists: <b>"${esc(exact)}"</b>`;
     return;
   }
 
-  // Fuzzy match
+  // 2. Substring match — typed text is contained in an existing task name
+  //    (catches "clean" inside "Clean break room", "Clean aircraft", etc.)
+  const subMatches = [...new Set(allTasks.filter(t => normalizeTask(t).includes(normVal)))];
+  if(subMatches.length) {
+    const shown = subMatches.slice(0,2).map(t=>`<b>"${esc(t)}"</b>`).join(', ');
+    const extra = subMatches.length > 2 ? ` +${subMatches.length-2} more` : '';
+    warn.style.display = '';
+    warn.innerHTML = `⚠️ Existing tasks match: ${shown}${extra}`;
+    return;
+  }
+
+  // 3. Fuzzy match — Levenshtein for typos of a fully typed task name
   let bestTask = null, bestScore = 0;
   allTasks.forEach(t => {
     const score = taskSimilarity(val, t);
@@ -4322,9 +4339,8 @@ function checkTaskDuplicate() {
   });
 
   if(bestScore >= 0.80 && bestTask) {
-    const safe = bestTask.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     warn.style.display = '';
-    warn.innerHTML = `⚠️ Similar task exists: <b>"${safe}"</b> — add anyway?`;
+    warn.innerHTML = `⚠️ Similar task exists: <b>"${esc(bestTask)}"</b> — add anyway?`;
   } else {
     warn.style.display = 'none';
   }
