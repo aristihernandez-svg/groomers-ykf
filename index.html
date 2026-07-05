@@ -4302,12 +4302,9 @@ function checkTaskDuplicate() {
   const val = input.value.trim();
   if(val.length < 4) { warn.style.display='none'; return; }
 
-  // Deduplicated task list across all loaded days
-  const seen = new Set();
-  const allTasks = [];
-  DAYS.forEach(day => (S.tasks[day]||[]).forEach(t => {
-    if(t.task && !seen.has(t.task)) { seen.add(t.task); allTasks.push(t.task); }
-  }));
+  // Only check tasks for the day this modal was opened for
+  const tabName = input.dataset.tab;
+  const allTasks = [...new Set((S.tasks[tabName]||[]).map(t => t.task).filter(Boolean))];
 
   const normVal = normalizeTask(val);
   const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -4346,30 +4343,10 @@ function checkTaskDuplicate() {
   }
 }
 
-async function prefetchAllTaskDays() {
-  if(!db || S.tasksSource !== 'firestore') return;
-  const missing = DAYS.filter(day => !S.tasks[day]); // undefined = not yet loaded
-  if(!missing.length) return;
-  await Promise.all(missing.map(async day => {
-    try {
-      const snap = await db.collection('tasks').doc(day).get();
-      if(snap.exists && snap.data()?.migrated) {
-        // Only store task list — don't overwrite today's live-synced state
-        if(!S.tasks[day]) S.tasks[day] = (snap.data().tasks || []);
-      } else {
-        S.tasks[day] = [];
-      }
-    } catch(_) {
-      S.tasks[day] = []; // safe fallback so we don't re-fetch on next open
-    }
-  }));
-}
-
-async function openAddTask(tabName,area='') {
-  await prefetchAllTaskDays(); // ensure all 7 days are in S.tasks before checking duplicates
+function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
-     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()">
+     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()" data-tab="${tabName}">
      <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location</label>
      <select id="mArea">${locationSelect(area)}</select>
