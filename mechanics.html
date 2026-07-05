@@ -141,19 +141,15 @@ let items = [];        // [{id, item, url, notes, done, addedAt}]
 let pendingDelete = null; // id of item awaiting delete confirmation
 
 // ── Live listener ─────────────────────────────────────────────────────────────
-db.collection('mechanicsCatalog')
-  .orderBy('addedAt', 'asc')
-  .onSnapshot(snap => {
-    items = snap.docs.map(d => ({id: d.id, ...d.data()}));
-    render();
-  }, err => {
-    // If index not ready yet, fall back to unordered
-    db.collection('mechanicsCatalog').onSnapshot(snap => {
-      items = snap.docs.map(d => ({id: d.id, ...d.data()}));
-      items.sort((a,b) => (a.addedAt||0) - (b.addedAt||0));
-      render();
-    });
-  });
+// Store in shoppingCatalog with cabinet:'Mechanics' — same collection the main
+// app already has write permission for, so no Firestore rules change needed.
+db.collection('shoppingCatalog').onSnapshot(snap => {
+  items = snap.docs
+    .map(d => ({id: d.id, ...d.data()}))
+    .filter(i => i.cabinet === 'Mechanics');
+  items.sort((a,b) => (a.addedAt||0) - (b.addedAt||0));
+  render();
+});
 
 // ── Render ────────────────────────────────────────────────────────────────────
 function render() {
@@ -217,7 +213,7 @@ function toggleDone(id) {
   const newDone = !item.done;
   item.done = newDone;
   render();
-  db.collection('mechanicsCatalog').doc(id).update({done: newDone})
+  db.collection('shoppingCatalog').doc(id).update({done: newDone})
     .then(() => toast(newDone ? '✅ Marked done' : '🔩 Back to needed'))
     .catch(() => { item.done = !newDone; render(); toast('❌ Could not sync'); });
 }
@@ -240,7 +236,7 @@ function confirmDelete() {
   closeDelOverlay();
   items = items.filter(i => i.id !== id);
   render();
-  db.collection('mechanicsCatalog').doc(id).delete()
+  db.collection('shoppingCatalog').doc(id).delete()
     .then(() => toast('🗑 Removed'))
     .catch(() => toast('❌ Could not delete'));
 }
@@ -324,10 +320,10 @@ async function saveItem() {
   btn.disabled = true;
 
   const id  = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,50) + '_' + Date.now();
-  const doc = { item: name, url: url||'', notes: notes||'', done: false, addedAt: Date.now() };
+  const doc = { item: name, url: url||'', notes: notes||'', done: false, addedAt: Date.now(), cabinet: 'Mechanics' };
 
   try {
-    await db.collection('mechanicsCatalog').doc(id).set(doc);
+    await db.collection('shoppingCatalog').doc(id).set(doc);
     closeAddModal();
     toast('✅ Added to list!');
   } catch(_) {
