@@ -4269,49 +4269,61 @@ function checkTaskDuplicate(tabName) {
 
 // ── Fuzzy duplicate detection for task names ──────────────────────────────────
 function levenshtein(a, b) {
+  if(!a) return b.length;
+  if(!b) return a.length;
   const m = a.length, n = b.length;
-  const dp = Array.from({length:m+1}, (_,i) => [i, ...Array(n).fill(0)]);
-  for(let j=0;j<=n;j++) dp[0][j]=j;
-  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++)
-    dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1]
-      : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
-  return dp[m][n];
+  let prev = Array.from({length:n+1},(_,j)=>j);
+  for(let i=1;i<=m;i++){
+    const curr = [i];
+    for(let j=1;j<=n;j++)
+      curr[j] = a[i-1]===b[j-1] ? prev[j-1]
+        : 1 + Math.min(prev[j], curr[j-1], prev[j-1]);
+    prev = curr;
+  }
+  return prev[n];
 }
 
 function normalizeTask(s) {
-  return s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().split(/\s+/).sort().join(' ');
+  return s.toLowerCase().replace(/[^a-z0-9\s]/g,'').trim().split(/\s+/).filter(Boolean).sort().join(' ');
 }
 
 function taskSimilarity(a, b) {
   const na = normalizeTask(a), nb = normalizeTask(b);
   if(!na || !nb) return 0;
-  const dist = levenshtein(na, nb);
-  return 1 - dist / Math.max(na.length, nb.length);
+  const maxLen = Math.max(na.length, nb.length);
+  if(maxLen === 0) return 1;
+  return 1 - levenshtein(na, nb) / maxLen;
 }
 
-function checkTaskDuplicate(tabName) {
+function checkTaskDuplicate() {
   const input = document.getElementById('mTask');
   const warn  = document.getElementById('mTaskWarn');
   if(!input || !warn) return;
   const val = input.value.trim();
   if(val.length < 4) { warn.style.display='none'; return; }
 
-  // Check across all days so we catch cross-day duplicates too
-  let best = null, bestScore = 0;
-  DAYS.forEach(day => {
-    (S.tasks[day]||[]).forEach(t => {
-      if(t.task.trim().toLowerCase() === val.toLowerCase()) { best = t.task; bestScore = 1; return; }
-      const score = taskSimilarity(val, t.task);
-      if(score > bestScore) { bestScore = score; best = t.task; }
-    });
+  // Gather all task names currently loaded across all days
+  const allTasks = [];
+  DAYS.forEach(day => (S.tasks[day]||[]).forEach(t => { if(t.task) allTasks.push(t.task); }));
+
+  // Exact match first
+  const exact = allTasks.find(t => t.trim().toLowerCase() === val.toLowerCase());
+  if(exact) {
+    warn.style.display = '';
+    warn.innerHTML = `⚠️ This task already exists: <b>"${exact}"</b>`;
+    return;
+  }
+
+  // Fuzzy match
+  let bestTask = null, bestScore = 0;
+  allTasks.forEach(t => {
+    const score = taskSimilarity(val, t);
+    if(score > bestScore) { bestScore = score; bestTask = t; }
   });
 
-  if(bestScore >= 0.82 && best.trim().toLowerCase() !== val.trim().toLowerCase()) {
+  if(bestScore >= 0.80 && bestTask) {
     warn.style.display = '';
-    warn.innerHTML = `⚠️ Similar task exists: <b>"${best}"</b> — add anyway?`;
-  } else if(bestScore === 1) {
-    warn.style.display = '';
-    warn.innerHTML = `⚠️ This task already exists: <b>"${best}"</b>`;
+    warn.innerHTML = `⚠️ Similar task exists: <b>"${bestTask}"</b> — add anyway?`;
   } else {
     warn.style.display = 'none';
   }
@@ -4320,7 +4332,7 @@ function checkTaskDuplicate(tabName) {
 function openAddTask(tabName,area='') {
   openModal('Add Task',
     `<label>Task description</label>
-     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate('${tabName}')">
+     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()">
      <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location</label>
      <select id="mArea">${locationSelect(area)}</select>
