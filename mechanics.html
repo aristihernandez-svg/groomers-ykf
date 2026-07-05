@@ -383,7 +383,7 @@ async function saveItem() {
     db.collection('notifications').add({
       title: '🔧 MX Parts Request',
       body: `${name} added to the order list`,
-      tag: 'mx-parts',
+      tag: `mx-parts-${Date.now()}`,
       ts: firebase.firestore.FieldValue.serverTimestamp()
     }).catch(()=>{});
     toast('🛒 Added to order list!');
