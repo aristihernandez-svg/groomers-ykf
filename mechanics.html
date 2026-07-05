@@ -233,7 +233,7 @@ function renderAdd() {
       <div class="fetching" id="fetchHint"></div>
       <label>Item name *</label>
       <input type="text" id="inName" placeholder="e.g. Oil filter, spark plug…" autocorrect="off">
-      <button class="save-btn" onclick="saveItem()">➕ Add to MX List</button>
+      <button class="save-btn" onclick="saveItem()">🛒 Order it</button>
       <button class="cancel-btn" onclick="cancelAdd()">Cancel</button>
     </div>`;
   _lastFetchUrl = '';
@@ -254,7 +254,14 @@ async function saveItem() {
       url: url || '',
       cabinet: 'Mechanics'
     });
-    toast('✅ Added to MX list!');
+    // Auto-mark as "To Order" so it lands in the order list immediately
+    const key = fsKey(name);
+    shopState[key] = {checked: true, status: 'To Buy', qty: 1, source: 'mechanics'};
+    await db.collection('shopState').doc('state').set(
+      {[key]: {checked: true, status: 'To Buy', qty: 1, source: 'mechanics'}},
+      {merge: true}
+    );
+    toast('🛒 Added to order list!');
     view = 'list';
     render();
   } catch(e) {
