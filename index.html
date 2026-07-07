@@ -995,10 +995,10 @@ function planeIconTap() {
   goTab('home');
   _planeTaps++;
   clearTimeout(_planeTapTimer);
-  _planeTapTimer = setTimeout(() => { _planeTaps = 0; }, 1500);
+  _planeTapTimer = setTimeout(() => { _planeTaps = 0; }, 3000);
   if (_planeTaps >= 7) {
     _planeTaps = 0;
-    window.open('pilot.html', '_blank');
+    location.href = 'pilot.html';
   }
 }
 
