@@ -761,9 +761,102 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <tr><td>SPEC VIS (visual climb, SM)</td><td class="hi">1</td><td class="hi">1½</td><td class="hi">2</td><td class="hi">2</td></tr>
     </table>
 
-    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Climb/Descent Gradient Formula</strong>
-      Rate of Climb (FPM) = Gradient (ft/NM) × Ground Speed (kts) ÷ 60<br>
-      Example: 200 ft/NM at 120 kts = 200 × 120 ÷ 60 = <strong>400 FPM</strong></div></div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Climb Gradient Formula</strong>FPM = Gradient (ft/NM) × GS (kts) ÷ 60 · See the <a href="#cg-gradient" onclick="scrollToSection('cg-gradient');return false;" style="color:var(--accent)">Gradient Table →</a></div></div>
+  </div>
+
+  <!-- GRADIENT TABLE -->
+  <div class="section" id="cg-gradient">
+    <div class="section-header">
+      <div class="section-icon">📐</div>
+      <div><div class="section-title">Climb Gradient Table — FPM by GS</div><div class="section-ref">CAP GEN · Operating Minima · SID climb requirements</div></div>
+    </div>
+    <div class="summary">Use this table to convert a published climb gradient (ft/NM) to the required rate of climb (FPM) at your expected groundspeed. SIDs, departure procedures, and some approach missed approach segments publish required gradients. <strong>For the PA31-350 use GS 120–150 kts climb, 180–210 kts cruise.</strong></div>
+
+    <div class="alert note" style="margin-bottom:14px"><span class="alert-icon">📐</span><div class="alert-body"><strong>Formulas</strong>
+      FPM = ft/NM × GS ÷ 60 &nbsp;·&nbsp; ft/NM = FPM × 60 ÷ GS &nbsp;·&nbsp; % = ft/NM ÷ 6076.11548 × 100 &nbsp;·&nbsp; Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548))</div></div>
+
+    <!-- INTERACTIVE CALCULATOR -->
+    <div style="background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px">Live Calculator</div>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+        <div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:4px">Gradient (ft/NM)</div>
+          <select id="gradGrad" onchange="calcGrad()" style="background:var(--bg4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--t1);padding:8px 12px;font-size:13px;font-family:inherit;outline:none;cursor:pointer">
+            <option value="200">200</option><option value="220">220</option><option value="240">240</option>
+            <option value="260">260</option><option value="280">280</option><option value="300" selected>300</option>
+            <option value="320">320</option><option value="340">340</option><option value="360">360</option>
+            <option value="380">380</option><option value="400">400</option><option value="420">420</option>
+            <option value="440">440</option><option value="460">460</option><option value="480">480</option>
+            <option value="500">500</option><option value="520">520</option><option value="540">540</option>
+            <option value="560">560</option><option value="580">580</option><option value="600">600</option>
+            <option value="620">620</option><option value="640">640</option><option value="660">660</option>
+            <option value="680">680</option><option value="700">700</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:4px">Groundspeed (kts)</div>
+          <select id="gradGs" onchange="calcGrad()" style="background:var(--bg4);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:var(--t1);padding:8px 12px;font-size:13px;font-family:inherit;outline:none;cursor:pointer">
+            <option value="60">60</option><option value="90">90</option><option value="120" selected>120</option>
+            <option value="150">150</option><option value="180">180</option><option value="210">210</option>
+            <option value="240">240</option><option value="270">270</option><option value="300">300</option>
+            <option value="330">330</option>
+          </select>
+        </div>
+        <div style="background:var(--accent-glow);border:1px solid rgba(37,99,235,0.3);border-radius:10px;padding:10px 18px;min-width:140px">
+          <div style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Required ROC</div>
+          <div id="gradResult" style="font-size:26px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums">600 <span style="font-size:13px;font-weight:400;color:var(--t2)">FPM</span></div>
+        </div>
+        <div style="background:var(--bg4);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px">
+          <div style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Angle</div>
+          <div id="gradAngle" style="font-size:22px;font-weight:800;color:var(--t2);font-variant-numeric:tabular-nums">2.83°</div>
+        </div>
+        <div style="background:var(--bg4);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 16px">
+          <div style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px">Percent</div>
+          <div id="gradPct" style="font-size:22px;font-weight:800;color:var(--t2);font-variant-numeric:tabular-nums">4.94%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL TABLE -->
+    <div style="overflow-x:auto">
+    <table class="ref-table" style="min-width:700px">
+      <tr>
+        <th>Ft/NM</th><th>%</th>
+        <th>60 kt</th><th>90 kt</th><th>120 kt</th><th>150 kt</th><th>180 kt</th>
+        <th>210 kt</th><th>240 kt</th><th>270 kt</th><th>300 kt</th><th>330 kt</th>
+        <th>Angle°</th>
+      </tr>
+      <tr><td>200</td><td>3.29</td><td>200</td><td>300</td><td class="hi">400</td><td class="hi">500</td><td>600</td><td>700</td><td>800</td><td>900</td><td>1000</td><td>1100</td><td>1.89</td></tr>
+      <tr><td>220</td><td>3.62</td><td>220</td><td>330</td><td class="hi">440</td><td class="hi">550</td><td>660</td><td>770</td><td>880</td><td>990</td><td>1100</td><td>1210</td><td>2.07</td></tr>
+      <tr><td>240</td><td>3.95</td><td>240</td><td>360</td><td class="hi">480</td><td class="hi">600</td><td>720</td><td>840</td><td>960</td><td>1080</td><td>1200</td><td>1320</td><td>2.26</td></tr>
+      <tr><td>260</td><td>4.28</td><td>260</td><td>390</td><td class="hi">520</td><td class="hi">650</td><td>780</td><td>910</td><td>1040</td><td>1170</td><td>1300</td><td>1430</td><td>2.45</td></tr>
+      <tr><td>280</td><td>4.81</td><td>280</td><td>420</td><td class="hi">560</td><td class="hi">700</td><td>840</td><td>980</td><td>1120</td><td>1260</td><td>1400</td><td>1540</td><td>2.64</td></tr>
+      <tr><td>300</td><td>4.94</td><td>300</td><td>450</td><td class="hi">600</td><td class="hi">750</td><td>900</td><td>1050</td><td>1200</td><td>1350</td><td>1500</td><td>1650</td><td>2.83</td></tr>
+      <tr><td>320</td><td>5.27</td><td>320</td><td>480</td><td class="hi">640</td><td class="hi">800</td><td>960</td><td>1120</td><td>1280</td><td>1440</td><td>1600</td><td>1760</td><td>3.01</td></tr>
+      <tr><td>340</td><td>5.60</td><td>340</td><td>510</td><td class="hi">680</td><td class="hi">850</td><td>1020</td><td>1190</td><td>1360</td><td>1530</td><td>1700</td><td>1870</td><td>3.20</td></tr>
+      <tr><td>360</td><td>5.92</td><td>360</td><td>540</td><td class="hi">720</td><td class="hi">900</td><td>1080</td><td>1260</td><td>1440</td><td>1620</td><td>1800</td><td>1980</td><td>3.39</td></tr>
+      <tr><td>380</td><td>6.25</td><td>380</td><td>570</td><td class="hi">760</td><td class="hi">950</td><td>1140</td><td>1330</td><td>1520</td><td>1710</td><td>1900</td><td>2090</td><td>3.58</td></tr>
+      <tr><td>400</td><td>6.58</td><td>400</td><td>600</td><td class="hi">800</td><td class="hi">1000</td><td>1200</td><td>1400</td><td>1600</td><td>1800</td><td>2000</td><td>2200</td><td>3.77</td></tr>
+      <tr><td>420</td><td>6.91</td><td>420</td><td>630</td><td class="hi">840</td><td class="hi">1050</td><td>1260</td><td>1470</td><td>1680</td><td>1890</td><td>2100</td><td>2310</td><td>3.95</td></tr>
+      <tr><td>440</td><td>7.24</td><td>440</td><td>660</td><td class="hi">880</td><td class="hi">1100</td><td>1320</td><td>1540</td><td>1760</td><td>1980</td><td>2200</td><td>2420</td><td>4.14</td></tr>
+      <tr><td>460</td><td>7.57</td><td>460</td><td>690</td><td class="hi">920</td><td class="hi">1150</td><td>1380</td><td>1610</td><td>1840</td><td>2070</td><td>2300</td><td>2530</td><td>4.33</td></tr>
+      <tr><td>480</td><td>7.90</td><td>480</td><td>720</td><td class="hi">960</td><td class="hi">1200</td><td>1440</td><td>1680</td><td>1920</td><td>2160</td><td>2400</td><td>2640</td><td>4.52</td></tr>
+      <tr><td>500</td><td>8.23</td><td>500</td><td>750</td><td class="hi">1000</td><td class="hi">1250</td><td>1500</td><td>1750</td><td>2000</td><td>2250</td><td>2500</td><td>2750</td><td>4.70</td></tr>
+      <tr><td>520</td><td>8.56</td><td>520</td><td>780</td><td class="hi">1040</td><td class="hi">1300</td><td>1560</td><td>1820</td><td>2080</td><td>2340</td><td>2600</td><td>2860</td><td>4.89</td></tr>
+      <tr><td>540</td><td>8.89</td><td>540</td><td>810</td><td class="hi">1080</td><td class="hi">1350</td><td>1620</td><td>1890</td><td>2160</td><td>2430</td><td>2700</td><td>2970</td><td>5.08</td></tr>
+      <tr><td>560</td><td>9.22</td><td>560</td><td>840</td><td class="hi">1120</td><td class="hi">1400</td><td>1680</td><td>1960</td><td>2240</td><td>2520</td><td>2800</td><td>3080</td><td>5.27</td></tr>
+      <tr><td>580</td><td>9.55</td><td>580</td><td>870</td><td class="hi">1160</td><td class="hi">1450</td><td>1740</td><td>2030</td><td>2320</td><td>2610</td><td>2900</td><td>3190</td><td>5.45</td></tr>
+      <tr><td>600</td><td>9.87</td><td>600</td><td>900</td><td class="hi">1200</td><td class="hi">1500</td><td>1800</td><td>2100</td><td>2400</td><td>2700</td><td>3000</td><td>3300</td><td>5.64</td></tr>
+      <tr><td>620</td><td>10.20</td><td>620</td><td>930</td><td class="hi">1240</td><td class="hi">1550</td><td>1860</td><td>2170</td><td>2480</td><td>2790</td><td>3100</td><td>3410</td><td>5.83</td></tr>
+      <tr><td>640</td><td>10.53</td><td>640</td><td>960</td><td class="hi">1280</td><td class="hi">1600</td><td>1920</td><td>2240</td><td>2560</td><td>2880</td><td>3200</td><td>3520</td><td>6.02</td></tr>
+      <tr><td>660</td><td>10.86</td><td>660</td><td>990</td><td class="hi">1320</td><td class="hi">1650</td><td>1980</td><td>2310</td><td>2640</td><td>2970</td><td>3300</td><td>3630</td><td>6.20</td></tr>
+      <tr><td>680</td><td>11.19</td><td>680</td><td>1020</td><td class="hi">1360</td><td class="hi">1700</td><td>2040</td><td>2380</td><td>2720</td><td>3060</td><td>3400</td><td>3740</td><td>6.39</td></tr>
+      <tr><td>700</td><td>11.52</td><td>700</td><td>1050</td><td class="hi">1400</td><td class="hi">1750</td><td>2100</td><td>2450</td><td>2800</td><td>3150</td><td>3500</td><td>3850</td><td>6.57</td></tr>
+    </table>
+    </div>
+    <div style="font-size:11px;color:var(--t3);margin-top:6px">120 kt and 150 kt columns highlighted — typical PA31-350 climb groundspeed range.</div>
+
+    <div class="alert tip" style="margin-top:12px"><span class="alert-icon">💡</span><div class="alert-body"><strong>PA31-350 Practical Application</strong>At 120 kts GS climbing out of CYKF: a 200 ft/NM departure gradient requires <strong>400 FPM</strong>. If a SID requires 300 ft/NM, you need <strong>600 FPM</strong>. Your actual OEI ROC at gross weight (~380 FPM) may not meet a 300 ft/NM SID gradient — check before departure.</div></div>
   </div>
 
   <!-- APPROACH BAN -->
@@ -1322,6 +1415,7 @@ const DOCS = {
       { id:'cg-noise',       icon:'🔇', label:'Noise Abatement (NADP)' },
       { id:'cg-iap',         icon:'🧭', label:'IAP Chart Reading' },
       { id:'cg-minima-box',  icon:'📋', label:'Minima Box & Aircraft Categories' },
+      { id:'cg-gradient',    icon:'📐', label:'Climb Gradient Table' },
       { id:'cg-sid',         icon:'⬆️', label:'Standard Instrument Departures' },
       { id:'cg-star',        icon:'⬇️', label:'Standard Terminal Arrivals' },
     ]
@@ -1549,7 +1643,9 @@ Key CAP GEN knowledge you know cold:
 - Cold temperature corrections: true alt lower than indicated below ISA; apply when OAT ≤ 0°C; table values from 200 ft to 5,000 ft HAA at temps 0 to −50°C
 - Aircraft categories: Cat B = 91–120 kts. PA31 is Category B and a non-jet aircraft (affects SID/STAR eligibility)
 - Take-off premises: cross runway end at 35 ft, fly runway heading to 400 ft AAE, maintain 200 ft/NM climb gradient
-- Gradient conversions: FPM = (ft/NM × GS in kts) ÷ 60 · ft/NM = (FPM × 60) ÷ GS in kts · Example: 200 ft/NM at 120 kts = 400 FPM; 500 FPM at 120 kts = 250 ft/NM
+- Gradient conversions: FPM = (ft/NM × GS) ÷ 60 · ft/NM = (FPM × 60) ÷ GS · % = ft/NM ÷ 6076.11548 × 100 · Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548))
+- Gradient table (ft/NM → FPM at common groundspeeds): 200ft/NM: 90kt=300,120kt=400,150kt=500,180kt=600 · 240: 90=360,120=480,150=600,180=720 · 280: 90=420,120=560,150=700,180=840 · 300: 90=450,120=600,150=750,180=900 · 320: 90=480,120=640,150=800,180=960 · 360: 90=540,120=720,150=900,180=1080 · 400: 90=600,120=800,150=1000,180=1200 · 440: 90=660,120=880,150=1100,180=1320 · 480: 90=720,120=960,150=1200,180=1440 · 500: 90=750,120=1000,150=1250,180=1500 · 540: 90=810,120=1080,150=1350,180=1620 · 600: 90=900,120=1200,150=1500,180=1800 · 700: 90=1050,120=1400,150=1750,180=2100
+- PA31-350 OEI ROC ~380 FPM at 7,000 lbs SL ISA — cannot meet 300 ft/NM SID at 120 kts (needs 600 FPM); confirm OEI capability before accepting SID with gradient above 200 ft/NM
 - MSA: emergency use only (25 NM, 1,000 ft clearance); TAA replaces MSA on RNAV approaches
 - Mountainous regions: Areas 1&5 = 2,000 ft clearance; Areas 2,3,4 = 1,500 ft clearance within 5 NM
 - Holding speeds: ≤6,000 ft = 200 KIAS; 6,001–14,000 ft = 230 KIAS; above 14,000 ft = 265 KIAS
@@ -1741,6 +1837,18 @@ async function sendChat() {
   aiHistory.push({ role: 'assistant', content: fullText });
   aiStreaming = false;
   document.getElementById('aiSendBtn').disabled = false;
+}
+
+// ── GRADIENT CALCULATOR ───────────────────────────────────────────────────────
+function calcGrad() {
+  const grad = parseFloat(document.getElementById('gradGrad').value);
+  const gs   = parseFloat(document.getElementById('gradGs').value);
+  const fpm  = Math.round(grad * gs / 60);
+  const angle = (Math.atan(grad / 6076.11548) * 180 / Math.PI).toFixed(2);
+  const pct   = (grad / 6076.11548 * 100).toFixed(2);
+  document.getElementById('gradResult').innerHTML = fpm + ' <span style="font-size:13px;font-weight:400;color:var(--t2)">FPM</span>';
+  document.getElementById('gradAngle').textContent = angle + '°';
+  document.getElementById('gradPct').textContent = pct + '%';
 }
 
 // Show FAB on hub and inside documents; sync aiTopic
