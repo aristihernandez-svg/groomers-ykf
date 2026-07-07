@@ -1002,6 +1002,18 @@ function planeIconTap() {
   }
 }
 
+// ── Secret: tap "Study SOP and COM" sticky 3 times to open pilot dashboard ──
+let _sopTaps = 0, _sopTimer = null;
+function sopSecretTap(e) {
+  _sopTaps++;
+  clearTimeout(_sopTimer);
+  _sopTimer = setTimeout(() => { _sopTaps = 0; }, 2000);
+  if (_sopTaps >= 3) {
+    _sopTaps = 0;
+    location.href = 'pilot.html';
+  }
+}
+
 window.addEventListener('load', async () => {
   if (localStorage.getItem('app_pin_ok') !== '1') {
     showPinGate();
@@ -3707,7 +3719,7 @@ function renderBored(el) {
     const {bg, fold} = noteColors[i % noteColors.length];
     const rot = (i%2===0 ? -1 : 1) * (0.4 + (i%4)*0.25);
     html += `
-    <div data-id="${b.id}" onclick="toggleBoredById('${b.id}')"
+    <div data-id="${b.id}" onclick="${b.task==='Study SOP and COM'?'sopSecretTap(event)':'toggleBoredById(\''+b.id+'\')'}"
       style="
         position:relative;
         background-color:${bg};
