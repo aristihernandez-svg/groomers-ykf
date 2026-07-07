@@ -773,7 +773,8 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     <div class="summary">Use this table to convert a published climb gradient (ft/NM) to the required rate of climb (FPM) at your expected groundspeed. SIDs, departure procedures, and some approach missed approach segments publish required gradients. <strong>For the PA31-350 use GS 120–150 kts climb, 180–210 kts cruise.</strong></div>
 
     <div class="alert note" style="margin-bottom:14px"><span class="alert-icon">📐</span><div class="alert-body"><strong>Formulas</strong>
-      FPM = ft/NM × GS ÷ 60 &nbsp;·&nbsp; ft/NM = FPM × 60 ÷ GS &nbsp;·&nbsp; % = ft/NM ÷ 6076.11548 × 100 &nbsp;·&nbsp; Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548))</div></div>
+      FPM = ft/NM × GS ÷ 60 &nbsp;·&nbsp; ft/NM = FPM × 60 ÷ GS &nbsp;·&nbsp; % = ft/NM ÷ 6076.11548 × 100 &nbsp;·&nbsp; Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548))<br><br>
+      <strong>Quick cockpit sequence:</strong> ft/NM → % (÷ 6076 × 100) → Angle° (% × 0.57) &nbsp;·&nbsp; Example: 320 ft/NM → 5.27% → 5.27 × 0.57 = <strong>3.00°</strong> (exact: 3.01°)</div></div>
 
     <!-- INTERACTIVE CALCULATOR -->
     <div style="background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:16px;margin-bottom:16px">
@@ -1643,7 +1644,7 @@ Key CAP GEN knowledge you know cold:
 - Cold temperature corrections: true alt lower than indicated below ISA; apply when OAT ≤ 0°C; table values from 200 ft to 5,000 ft HAA at temps 0 to −50°C
 - Aircraft categories: Cat B = 91–120 kts. PA31 is Category B and a non-jet aircraft (affects SID/STAR eligibility)
 - Take-off premises: cross runway end at 35 ft, fly runway heading to 400 ft AAE, maintain 200 ft/NM climb gradient
-- Gradient conversions: FPM = (ft/NM × GS) ÷ 60 · ft/NM = (FPM × 60) ÷ GS · % = ft/NM ÷ 6076.11548 × 100 · Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548))
+- Gradient conversions: FPM = (ft/NM × GS) ÷ 60 · ft/NM = (FPM × 60) ÷ GS · % = ft/NM ÷ 6076.11548 × 100 · Angle° = DEGREES(ATAN(ft/NM ÷ 6076.11548)) · Quick cockpit shortcut: ft/NM → % → Angle° = % × 0.57 (accurate to 0.01°)
 - Gradient table (ft/NM → FPM at common groundspeeds): 200ft/NM: 90kt=300,120kt=400,150kt=500,180kt=600 · 240: 90=360,120=480,150=600,180=720 · 280: 90=420,120=560,150=700,180=840 · 300: 90=450,120=600,150=750,180=900 · 320: 90=480,120=640,150=800,180=960 · 360: 90=540,120=720,150=900,180=1080 · 400: 90=600,120=800,150=1000,180=1200 · 440: 90=660,120=880,150=1100,180=1320 · 480: 90=720,120=960,150=1200,180=1440 · 500: 90=750,120=1000,150=1250,180=1500 · 540: 90=810,120=1080,150=1350,180=1620 · 600: 90=900,120=1200,150=1500,180=1800 · 700: 90=1050,120=1400,150=1750,180=2100
 - PA31-350 OEI ROC ~380 FPM at 7,000 lbs SL ISA — cannot meet 300 ft/NM SID at 120 kts (needs 600 FPM); confirm OEI capability before accepting SID with gradient above 200 ft/NM
 - MSA: emergency use only (25 NM, 1,000 ft clearance); TAA replaces MSA on RNAV approaches
