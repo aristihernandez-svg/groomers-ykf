@@ -3855,7 +3855,7 @@ function toggleStep(key,idx) {
 function resetProc(key) { S.procs[key].done=[]; render(); toast('Steps reset'); }
 async function clearContaminatedTaskState() {
   if(!db) return;
-  const FLAG = 'taskstate_contamination_cleared_v69';
+  const FLAG = 'taskstate_contamination_cleared_v71';
   if(localStorage.getItem(FLAG)) return;
   localStorage.setItem(FLAG, '1');
   const todayName = DAYS[getToday()];
@@ -3864,17 +3864,12 @@ async function clearContaminatedTaskState() {
     const batch = db.batch();
     snap.docs.forEach(doc => {
       if(doc.id === todayName) return; // never touch today
-      const data = doc.data() || {};
-      const updates = {};
-      Object.keys(data).forEach(k => {
-        if(k.endsWith('_done') || data[k] === true) updates[k] = false;
-      });
-      if(Object.keys(updates).length) batch.update(doc.ref, updates);
+      batch.delete(doc.ref); // wipe entire doc — it'll rebuild fresh when that day is viewed
     });
     await batch.commit();
-    console.log('[v69] Contaminated taskState cleared for non-today days');
+    console.log('[v71] Contaminated taskState deleted for non-today days');
   } catch(e) {
-    console.log('[v69] clearContaminatedTaskState failed (offline?):', e);
+    console.log('[v71] clearContaminatedTaskState failed (offline?):', e);
     localStorage.removeItem(FLAG); // retry next boot
   }
 }
