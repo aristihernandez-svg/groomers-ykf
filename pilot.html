@@ -590,17 +590,396 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
      CAP GEN IFR VIEW (placeholder — content coming)
 ══════════════════════════════════════════════════════════════════ -->
 <div class="view" id="view-capgen">
+
   <div class="hero">
-    <div class="hero-label">Pilot Reference — Study Use Only</div>
+    <div class="hero-label">Canada Air Pilot — General Pages · Study Use Only</div>
     <div class="hero-title">CAP GEN — IFR Knowledge</div>
-    <div class="hero-sub">General IFR · Altimetry · Airways · Holds · Approaches · Regulations</div>
-    <div class="hero-warn">⚠️ Content being prepared. Upload the CAP GEN PDF to build this section.</div>
+    <div class="hero-sub">Definitions · Operating Minima · Approaches · SIDs · STARs · Cold Temp Corrections</div>
+    <div class="hero-tags">
+      <span class="hero-tag">Effective 19 MAR 2026</span>
+      <span class="hero-tag">NAV CANADA</span>
+      <span class="hero-tag">Transport Canada CARs 602</span>
+    </div>
+    <div class="hero-warn">⚠️ This document is for study reference only. Always use current official CAP publications for flight operations. NOTAMs and AIP Supplements may supersede published information.</div>
   </div>
-  <div style="text-align:center;padding:60px 24px;color:var(--t3)">
-    <div style="font-size:48px;margin-bottom:16px">🧭</div>
-    <div style="font-size:16px;font-weight:700;color:var(--t2);margin-bottom:8px">CAP GEN IFR — Coming Soon</div>
-    <div style="font-size:13px;line-height:1.6">Upload the CAP GEN PDF and this section will be built out<br>with the same layout as the Cheat Sheet.</div>
+
+  <div class="no-results" id="noResults"></div>
+
+  <!-- DEFINITIONS -->
+  <div class="section" id="cg-definitions">
+    <div class="section-header">
+      <div class="section-icon">📖</div>
+      <div><div class="section-title">Key Definitions</div><div class="section-ref">CAP GEN · Definitions pages 9–14</div></div>
+    </div>
+    <div class="summary">These are the core IFR terms you need to know cold. <strong>DA vs MDA is the most important distinction</strong> — DA is used on precision approaches (you initiate missed approach AT the DA), MDA is used on non-precision (you level off at MDA and look for visual reference before descending further).</div>
+
+    <table class="ref-table">
+      <tr><th>Term</th><th>Plain English</th></tr>
+      <tr><td>DA (Decision Altitude)</td><td>The altitude on a precision or APV approach at which you MUST initiate missed approach if required visual reference is not established. Referenced to MSL.</td></tr>
+      <tr><td>DH (Decision Height)</td><td>The height of the DA above the touchdown zone elevation (TDZE). Referenced to the runway.</td></tr>
+      <tr><td>MDA (Min Descent Altitude)</td><td>The lowest altitude on a non-precision approach you may descend to until you have the required visual reference. You level off here — you do NOT continue descending below MDA until the runway is in sight.</td></tr>
+      <tr><td>HAT (Height Above Touchdown)</td><td>The height of the DA or MDA above the TDZE. Charted for some straight-in minima.</td></tr>
+      <tr><td>HAA (Height Above Aerodrome)</td><td>The height of the MDA above aerodrome elevation. Charted for all circling minima.</td></tr>
+      <tr><td>HATh (Height Above Threshold)</td><td>Height of DA or MDA above the runway threshold elevation.</td></tr>
+      <tr><td>MSA (Min Sector Altitude)</td><td>Lowest altitude providing 1,000 ft clearance above all obstacles within a 25 NM sector of a navaid or waypoint. Emergency use only — not for normal ops.</td></tr>
+      <tr><td>MAP (Missed Approach Point)</td><td>The point at which a missed approach must be initiated if visual reference has not been established.</td></tr>
+      <tr><td>FAF (Final Approach Fix)</td><td>The fix where the final approach segment begins. Where you descend to MDA or follow the glidepath to DA.</td></tr>
+      <tr><td>RVR (Runway Visual Range)</td><td>Measured in hundreds of feet. The distance a pilot can see down the runway centreline. More precise than ground visibility — used for approach bans.</td></tr>
+      <tr><td>TORA</td><td>Take-Off Run Available — length of runway for the ground roll.</td></tr>
+      <tr><td>TODA</td><td>Take-Off Distance Available — TORA + any clearway beyond.</td></tr>
+      <tr><td>ASDA</td><td>Accelerate-Stop Distance Available — TORA + stopway. Used for rejected takeoff planning.</td></tr>
+      <tr><td>LDA</td><td>Landing Distance Available — runway length declared suitable for landing.</td></tr>
+      <tr><td>TCH (Threshold Crossing Height)</td><td>Height of the glide path above the runway threshold. Typically 50 ft for most ILS approaches.</td></tr>
+      <tr><td>TDZE (Touchdown Zone Elevation)</td><td>The highest elevation in the first 3,000 ft (or first ⅓) of the runway from the threshold.</td></tr>
+      <tr><td>ATF</td><td>Aerodrome Traffic Frequency Area — VHF frequency for common reporting. Not ATC.</td></tr>
+      <tr><td>MF</td><td>Mandatory Frequency Area — legally required to monitor and report on this frequency (CARs 602.97–602.103).</td></tr>
+      <tr><td>Step-Down Fix</td><td>A fix in a non-precision approach that allows additional descent once passed, by confirming obstacle clearance to that point.</td></tr>
+      <tr><td>Dead Reckoning Segment</td><td>A segment flown by heading, time, and speed when no fix is available. Heading shown intercepts the inbound track prior to the IF.</td></tr>
+    </table>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>PA31 is a Non-Jet Aircraft</strong>The CAP GEN explicitly lists PA31 as a "non jet aircraft" (turbo prop / piston). This affects which SID/STAR procedures you can fly — some are jet-only or non-jet-only.</div></div>
   </div>
+
+  <!-- MOUNTAINOUS REGIONS -->
+  <div class="section" id="cg-mountains">
+    <div class="section-header">
+      <div class="section-icon">⛰️</div>
+      <div><div class="section-title">Designated Mountainous Regions</div><div class="section-ref">CAP GEN · page 15</div></div>
+    </div>
+    <div class="summary">IFR flights in Designated Mountainous Regions outside published MEAs/MOCAs must maintain extra terrain clearance. The combination of extreme cold and mountain waves can cause your altimeter to over-read by up to 3,000 ft.</div>
+
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Areas 1 & 5 — Clearance</div><div class="data-value">2,000<span class="data-unit">ft</span></div><div class="data-sub">Above highest obstacle within 5 NM</div></div>
+      <div class="data-card"><div class="data-label">Areas 2, 3 & 4 — Clearance</div><div class="data-value">1,500<span class="data-unit">ft</span></div><div class="data-sub">Above highest obstacle within 5 NM</div></div>
+    </div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Designated Airways</strong>On Designated Airways you may use the published MEA/MOCA, except in winter when temperatures are much lower than ISA — add at least 1,000 ft to the published MEA/MOCA.</div></div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Altimeter Over-Reading</strong>Extremely low temperatures combined with Mountain Wave effect can cause altimeters to over-read by up to 3,000 ft. See TC AIM (Pressure Altimeter) for details.</div></div>
+  </div>
+
+  <!-- OPERATING MINIMA GENERAL -->
+  <div class="section" id="cg-opmin">
+    <div class="section-header">
+      <div class="section-icon">📊</div>
+      <div><div class="section-title">Operating Minima — General</div><div class="section-ref">CAP GEN · pages 16–18</div></div>
+    </div>
+    <div class="summary">CAR 602 governs: takeoffs by visibility only, approaches by RVR only, landings by published DH/MDA only. The <strong>aerodrome operating visibility</strong> determines what counts — the hierarchy differs at controlled vs uncontrolled aerodromes.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>At Controlled Aerodromes (active ATC tower) — Arrival & Departure Hierarchy</strong>
+      1. RVR for the runway in use<br>
+      2. Ground visibility (METAR)<br>
+      3. Tower visibility<br>
+      4. Pilot visibility<br>
+      <em>Note: Tower visibility is advisory only when ground visibility is reported.</em></div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>At Uncontrolled Aerodromes — Arrival Hierarchy</strong>
+      1. RVR for runway in use<br>
+      2. Ground visibility (METAR)<br>
+      3. Pilot visibility</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>At Uncontrolled Aerodromes — Departure</strong>
+      Lowest of: Ground visibility (METAR) · Any reported RVR · Pilot visibility</div></div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Low Visibility Procedures (LVP)</strong>Apply when RVR is below 2,600 ft (imminent). ATIS will broadcast: "LOW VISIBILITY PROCEDURES IN EFFECT" or "REDUCED VISIBILITY PROCEDURES IN EFFECT." Arrivals and departures below RVR 600 are not authorized.</div></div>
+
+    <table class="ref-table">
+      <tr><th>Pilot/Aircraft T/O Minima</th><th>Min RVR to Start Engines</th></tr>
+      <tr><td>RVR 1200 takeoff minima</td><td class="hi">RVR 1000</td></tr>
+      <tr><td>RVR 600 takeoff minima</td><td class="hi">RVR 600</td></tr>
+    </table>
+  </div>
+
+  <!-- TAKE-OFF MINIMA -->
+  <div class="section" id="cg-takeoff">
+    <div class="section-header">
+      <div class="section-icon">🛫</div>
+      <div><div class="section-title">Take-off Minima / Departure Procedures</div><div class="section-ref">CAP GEN · pages 19–21</div></div>
+    </div>
+    <div class="summary">IFR takeoffs are prohibited below the published minimum visibility. The published departure procedure assumes you cross the runway end at 35 ft, climb runway heading to 400 ft AAE before turning, and maintain at least 200 ft/NM climb gradient to minimum enroute altitude.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Take-off Visibility — Order of Precedence</strong>
+      1. Reported RVR for the runway (unless fluctuating or below minimum due to local phenomenon)<br>
+      2. Reported ground visibility (if RVR unavailable or fluctuating)<br>
+      3. Pilot-observed visibility (when neither above is available)</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Departure Premises (assumed for obstacle clearance)</strong>
+      • Cross at least 35 ft above the departure end of the runway<br>
+      • Climb runway heading to 400 ft AAE before turning<br>
+      • Maintain at least 200 ft/NM climb gradient throughout climb to minimum enroute altitude</div></div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>NOT ASSESSED Runways</strong>If a runway is marked "NOT ASSESSED," IFR departures have not been evaluated for obstacles. YOU are responsible for your own obstacle clearance. Minimum visibility: ½ SM (¼ SM for rotorcraft).</div></div>
+
+    <table class="ref-table">
+      <tr><th>Aircraft Category</th><th>A</th><th>B</th><th>C</th><th>D</th></tr>
+      <tr><td>SPEC VIS (visual climb, SM)</td><td class="hi">1</td><td class="hi">1½</td><td class="hi">2</td><td class="hi">2</td></tr>
+    </table>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Climb/Descent Gradient Formula</strong>
+      Rate of Climb (FPM) = Gradient (ft/NM) × Ground Speed (kts) ÷ 60<br>
+      Example: 200 ft/NM at 120 kts = 200 × 120 ÷ 60 = <strong>400 FPM</strong></div></div>
+  </div>
+
+  <!-- APPROACH BAN -->
+  <div class="section" id="cg-appban">
+    <div class="section-header">
+      <div class="section-icon">🚫</div>
+      <div><div class="section-title">Approach Ban</div><div class="section-ref">CAP GEN · pages 23–27 · CARs 602.129, 602.130, 700.10, 700.11</div></div>
+    </div>
+    <div class="summary">The approach ban prohibits continuing past the FAF inbound (or equivalent) if RVR/visibility is below specified minima. <strong>Key principle</strong>: if you've already passed the FAF when a below-minima report is received, you may continue. RVR takes precedence over all other visibility reports.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>General Aviation — Non-Precision / APV / CAT I</strong>An approach is authorized whenever ANY of these apply:<br>
+      • Lowest reported RVR at or above minima<br>
+      • RVR is fluctuating above and below minimum<br>
+      • Ground visibility reported at least ¼ SM<br>
+      • RVR unavailable or not reported<br>
+      • ATS notified it's a training flight with planned missed approach</div></div>
+
+    <table class="ref-table">
+      <tr><th>RVR Sensors</th><th>Aeroplanes</th><th>Helicopters</th></tr>
+      <tr><td>RVR "A" Only</td><td class="hi">1200</td><td class="hi">1200</td></tr>
+      <tr><td>RVR "A" and "B"</td><td class="hi">1200 / 600</td><td class="hi">1200 / 0</td></tr>
+      <tr><td>RVR "B" Only</td><td class="hi">1200</td><td class="hi">1200</td></tr>
+    </table>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>RVR Sensor Locations</strong>RVR "A" = adjacent to runway threshold · RVR "B" = runway mid-point · RVR "C" = runway end</div></div>
+
+    <table class="ref-table">
+      <tr><th>CAT III (Aeroplanes)</th><th>CAT IIIA</th><th>CAT IIIB</th><th>CAT IIIC</th></tr>
+      <tr><td>RVR A + B + C</td><td class="hi">600/600/600</td><td>Not Auth</td><td>Not Auth</td></tr>
+    </table>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>HIAL Inoperative</strong>When High Intensity Approach Lighting (HIAL) is inoperative, approach minima must be increased.<br>
+      • If DH is 200–249 ft with ½ SM: increase to DH 250 ft / 1 SM<br>
+      • If DH/HAT ≥ 250 ft: add ¼ SM to advisory visibility (see table in CAP)</div></div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Low Visibility Procedures in Effect</strong>No pilot shall commence a non-precision, APV, CAT I or CAT II approach to an airport where LVP are in effect. LVP are associated with CAT III operations (RVR less than 1,200 ft).</div></div>
+  </div>
+
+  <!-- LANDING MINIMA -->
+  <div class="section" id="cg-landing">
+    <div class="section-header">
+      <div class="section-icon">🛬</div>
+      <div><div class="section-title">Landing Minima</div><div class="section-ref">CAP GEN · pages 29–30 · CARs 602</div></div>
+    </div>
+    <div class="summary">Landings are governed by published DH/MDA. <strong>Published advisory visibilities are not limiting</strong> — they indicate what visibility should give you the required visual reference. The approach ban is what's legally limiting, not the landing visibility.</div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Critical Rule</strong>You must not continue descent below DH or below MDA until the required visual reference is established AND maintained. If you lose visual reference below MDA, you must initiate a missed approach. Missed approaches beyond the MAP may not be assured obstacle clearance.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Required Visual References — at least ONE of:</strong>
+      Runway or markings · Runway threshold or markings · Touchdown zone or markings · Approach lights · Approach slope indicator · Runway identification lights (RILS) · Threshold and runway end lights · Touchdown zone lights (TDZL) · Parallel runway edge lights · Runway centreline lights</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Altimeter Setting</strong>Must be set before commencing an instrument approach. Altimeter settings are considered current up to 90 minutes from time of observation.<br>
+      Caution: If older than 60 minutes or pressure falling rapidly — add correction: 0.01" Hg = 10 ft correction.</div></div>
+  </div>
+
+  <!-- ALTERNATE MINIMA -->
+  <div class="section" id="cg-alternate">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <div><div class="section-title">Alternate Aerodrome Minima</div><div class="section-ref">CAP GEN · pages 31–33 · CARs 605.18(j)</div></div>
+    </div>
+    <div class="summary">When filing an alternate, the weather forecast at the alternate must meet these minima at your estimated time of arrival (ETA). TAF is required — aerodromes with only Advisory forecast or GFA have looser criteria but must still meet minimums.</div>
+
+    <table class="ref-table">
+      <tr><th>Facilities at Alternate</th><th>Required Weather</th></tr>
+      <tr><td>Two or more usable precision approaches (separate runways)</td><td class="hi">400-1 or 200-½ above lowest usable HAT (whichever greater)</td></tr>
+      <tr><td>One usable precision approach</td><td class="hi">600-2 (standard) or 300-1 above lowest HAT (whichever greater)</td></tr>
+      <tr><td>Non-precision approach only</td><td class="hi">800-2 (standard) or 300-1 above lowest HAT/HAA (whichever greater)</td></tr>
+      <tr><td>No IFR approach available</td><td>Forecast not below 500 ft above a minimum IFR altitude that permits VFR approach and landing</td></tr>
+      <tr><td>Helicopter (where IAP available)</td><td>Ceiling 200 ft above approach minima + visibility at least 1 SM but never less than approach minimum</td></tr>
+    </table>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Standard Alternate Minima — also authorized when applicable</strong><br>
+      600-2 → also: 700-1½ or 800-1<br>
+      800-2 → also: 900-1½ or 1000-1</div></div>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Ceiling Rounding Rule</strong>Ceiling values are in 100 ft increments. Up to 20 ft above → use the lower 100 ft. Above 20 ft → use the next higher 100 ft.<br>
+      Example: HAA 620 ft = ceiling value 600 ft · HAA 621 ft = ceiling value 700 ft</div></div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>TEMPO / BECMG / PROB in TAF</strong>
+      • BECMG improving: applicable from END of BECMG period — must not be below alternate minima<br>
+      • BECMG deteriorating: applicable from START of BECMG period — must not be below alternate minima<br>
+      • TEMPO: must not be below alternate minima<br>
+      • PROB: must not be below appropriate landing minima</div></div>
+  </div>
+
+  <!-- COLD TEMPERATURE CORRECTIONS -->
+  <div class="section" id="cg-coldtemp">
+    <div class="section-header">
+      <div class="section-icon">🌡️</div>
+      <div><div class="section-title">Cold Temperature Altitude Corrections</div><div class="section-ref">CAP GEN · pages 36–37</div></div>
+    </div>
+    <div class="summary">Pressure altimeters are calibrated for ISA conditions. In cold temperatures, <strong>true altitude is LOWER than indicated altitude</strong> — you are actually lower than your altimeter shows. You must add a correction to published minimum IFR altitudes when temperature is 0°C or colder (or +10°C when MDA/DA is 1,000 ft HAA or higher).</div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Critical Rule</strong>True altitude is lower than indicated when temperature is below ISA. In cold weather, you need MORE indicated altitude to achieve the same true altitude obstacle clearance. Add the correction to published minimums.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>When to Apply</strong>
+      • Below 0°C surface temperature — apply for all published minimum IFR altitudes<br>
+      • At +10°C — apply when MDAs/DAs are 1,000 ft HAA or higher<br>
+      • IFR assigned altitudes: do NOT self-correct (ATC vectoring altitudes are already corrected)<br>
+      • When correcting a mandatory altitude: advise ATC of the corrected altitude before crossing the waypoint</div></div>
+
+    <table class="ref-table">
+      <tr><th>Aerodrome Temp °C</th><th>Height 200 ft</th><th>500 ft</th><th>1,000 ft</th><th>2,000 ft</th><th>3,000 ft</th><th>5,000 ft</th></tr>
+      <tr><td>0°C</td><td>20</td><td>30</td><td>60</td><td>120</td><td>170</td><td>290</td></tr>
+      <tr><td>−10°C</td><td>20</td><td>50</td><td>100</td><td>200</td><td>290</td><td>490</td></tr>
+      <tr><td>−20°C</td><td>30</td><td>70</td><td>140</td><td>280</td><td>430</td><td>710</td></tr>
+      <tr><td>−30°C</td><td>40</td><td>100</td><td>190</td><td>380</td><td>570</td><td>950</td></tr>
+      <tr><td>−40°C</td><td>50</td><td>120</td><td>240</td><td>480</td><td>720</td><td>1210</td></tr>
+      <tr><td>−50°C</td><td>60</td><td>150</td><td>300</td><td>600</td><td>890</td><td>1500</td></tr>
+    </table>
+    <div class="summary" style="margin-top:8px">Values above are added to published minimum IFR altitudes. Use the aerodrome temperature from the nearest reporting station. Corrections rounded up to next 10 ft increment.</div>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Quick Example</strong>MDA of 2,840 ft, aerodrome elevation 2,262 ft, temperature −50°C → HAA is 578 ft → correction ~173 ft → fly the approach at 3,020 ft indicated instead of 2,840 ft.</div></div>
+  </div>
+
+  <!-- NOISE ABATEMENT -->
+  <div class="section" id="cg-noise">
+    <div class="section-header">
+      <div class="section-icon">🔇</div>
+      <div><div class="section-title">Noise Abatement Procedures (NADP)</div><div class="section-ref">CAP GEN · pages 34–35</div></div>
+    </div>
+    <div class="summary">Two NADP profiles exist. <strong>NADP1</strong> reduces noise close to the departure end. <strong>NADP2</strong> reduces noise in areas more distant from the runway. Both must still meet required minimum climb gradients specified in the SID.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>NADP 1 — Close-in Noise Reduction</strong>
+      • Climb to at least 800 ft AAE at takeoff power, T/O flaps, V2 + 10 kt<br>
+      • At or above 800 ft: reduce power/thrust, maintain V2 + 10–20 kt, keep T/O flaps<br>
+      • At 3,000 ft AAE: positive rate, accelerate to enroute climb speed, retract flaps on schedule<br>
+      <em>Notify ATC clearance delivery if using NADP1</em></div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>NADP 2 — Distant Noise Reduction</strong>
+      • Climb to at least 800 ft AAE at takeoff power, T/O flaps, V2 + 10 kt<br>
+      • At or above 800 ft: positive rate, accelerate toward VZF, retract flaps on schedule, reduce power within acceleration segment<br>
+      • Continue climb to 3,000 ft at ≥ VZF<br>
+      • At 3,000 ft: transition to normal enroute climb speed</div></div>
+  </div>
+
+  <!-- IAP CHART READING -->
+  <div class="section" id="cg-iap">
+    <div class="section-header">
+      <div class="section-icon">🧭</div>
+      <div><div class="section-title">IAP Chart Reading</div><div class="section-ref">CAP GEN · pages 45–73</div></div>
+    </div>
+    <div class="summary">Every IAP chart has the same standard structure: Marginalia (identification) → Communication → Approach Summary → Plan View → Profile View → Minima Box. Learn this layout and you can read any approach plate.</div>
+
+    <table class="ref-table">
+      <tr><th>Chart Section</th><th>What's in it</th></tr>
+      <tr><td>Marginalia</td><td>Procedure name, aerodrome ID, ARP coordinates, magnetic variation, effective date, chart number</td></tr>
+      <tr><td>Communication</td><td>ATIS → Arrival (CTR/ARR) → Tower → Ground — in order of use on arrival</td></tr>
+      <tr><td>Approach Summary</td><td>Safe Alt 100 NM, nav type + frequency, final approach course, FAF altitude (or GP check), LDA</td></tr>
+      <tr><td>Plan View</td><td>Overhead view of the procedure — scaled. Shows MSA, fixes, tracks, distances, holds, obstacles</td></tr>
+      <tr><td>Profile View</td><td>Side view showing altitude at each fix, glide path, MDA/DA indication, missed approach track</td></tr>
+      <tr><td>Minima Box</td><td>DA/MDA + height + advisory visibility for each aircraft category (A/B/C/D)</td></tr>
+      <tr><td>CDA / Rate of Descent</td><td>Constant Descent Angle table — distances and altitudes for a stabilized non-precision approach</td></tr>
+    </table>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Procedure Identification — Naming Convention</strong>
+      First part = nav type: NDB / VOR / LOC / ILS / RNAV (GNSS) / RNAV (RNP)<br>
+      Then runway: e.g. ILS RWY 14 · RNAV (GNSS) RWY 03<br>
+      Duplicate procedures at same runway use Z/Y/X suffix: e.g. RNAV (GNSS) Z RWY 26<br>
+      Circling-only: uses alpha A/B/C suffix: e.g. RNAV (GNSS) A</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>MSA Quadrants</strong>Four quadrants (NE/SE/SW/NW) around the navaid or waypoint, each with a minimum safe altitude. Radius is 25 NM unless otherwise specified. Not for normal ops — emergency use only.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>TAA (Terminal Arrival Areas)</strong>Used on RNAV approaches instead of MSA. Three areas: Straight-in (semicircle, 30 NM arc), Left Base, Right Base. "NoPT" label means no procedure turn required when arriving from that sector.</div></div>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Standard Segment Airspeeds (Category B — PA31)</strong>
+      Feeder / Initial / Intermediate: 180 KIAS<br>
+      Final: 120 KIAS<br>
+      Missed Approach: 150 KIAS</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Maximum Holding Airspeeds</strong>
+      At or below 6,000 ft ASL: 200 KIAS<br>
+      6,001–14,000 ft ASL: 230 KIAS<br>
+      Above 14,000 ft ASL: 265 KIAS<br>
+      Shuttle climbs (all altitudes): 310 KIAS</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>CDA — Constant Descent Angle</strong>A technique for flying a non-precision final as a continuous descent (like an ILS) rather than step-down. The CDA table in the minima box gives you the required altitude at each NM from the MAP, and the feet/min rate at various ground speeds. Use it for stabilized approaches.</div></div>
+  </div>
+
+  <!-- MINIMA BOX & CATEGORIES -->
+  <div class="section" id="cg-minima-box">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div><div class="section-title">Minima Box & Aircraft Categories</div><div class="section-ref">CAP GEN · pages 71–73</div></div>
+    </div>
+    <div class="summary">The minima box shows the minimum altitude (MDA or DA), height (HAT/HAA/DH), and advisory visibility for each aircraft category. <strong>You are certified in one category only</strong> — you cannot use a lower category's minima even if you fly slower. PA31 is Category B.</div>
+
+    <table class="ref-table">
+      <tr><th>Category</th><th>Speed Range</th><th>Notes</th></tr>
+      <tr><td class="hi">A (COPTER)</td><td>Up to 90 kt</td><td>Includes all rotorcraft</td></tr>
+      <tr><td class="hi">B</td><td>91–120 kt</td><td>PA31 Chieftain is Cat B</td></tr>
+      <tr><td>C</td><td>121–140 kt</td><td></td></tr>
+      <tr><td>D</td><td>141–165 kt</td><td></td></tr>
+      <tr><td>E</td><td>Above 165 kt</td><td>Not charted for civil approaches</td></tr>
+    </table>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Category Cannot Go Down</strong>A Cat B aircraft cannot use Cat A minima. If a faster approach speed bumps you into a higher category, you must use that higher category's minima.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Circling Radii — Expanded (2020 and later)</strong>Look for the expanded circling symbol on the minima line. Radius varies by category and MDA altitude. For Cat B at 1,000 ft MSL or below: 1.7 NM. At 1,001–3,000 ft: 1.8 NM. At 3,001–5,000 ft: 1.8 NM.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Temperature Limits on LNAV/VNAV</strong>When a temperature limit is shown (e.g. min −20°C, max +54°C), the LNAV/VNAV minima are not authorized for uncompensated Baro VNAV systems outside that range. Below the minimum temperature, use LNAV minima instead.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Reading the Minima Box</strong>
+      ILS: DA (MSL) / DH (above TDZE) / Advisory Vis<br>
+      LOC / NDB / LNAV: MDA (MSL) / HAT or HATh / Advisory Vis<br>
+      Circling: MDA (MSL) / HAA (above aerodrome elevation) / Advisory Vis<br>
+      Advisory visibility in SM — also shown as RVR when ≤ 1 SM and RVR sensor exists</div></div>
+  </div>
+
+  <!-- SID -->
+  <div class="section" id="cg-sid">
+    <div class="section-header">
+      <div class="section-icon">⬆️</div>
+      <div><div class="section-title">Standard Instrument Departures (SID)</div><div class="section-ref">CAP GEN · pages 83–95</div></div>
+    </div>
+    <div class="summary">SIDs are published departure routes that provide obstacle clearance and transition from the airport to the enroute structure. They assume you follow the departure premises (35 ft crossing, 400 ft AAE before turning, 200 ft/NM gradient). Specific runways may require higher climb gradients.</div>
+
+    <table class="ref-table">
+      <tr><th>SID Type</th><th>Description</th></tr>
+      <tr><td>SID (VECTOR)</td><td>ATC provides radar vectors to intercept the route</td></tr>
+      <tr><td>SID (PILOT NAV)</td><td>You navigate the procedure yourself using NAVAIDs</td></tr>
+      <tr><td>SID (RNAV)</td><td>PBN SID — requires GNSS or approved RNAV equipment</td></tr>
+      <tr><td>DEPARTURE PROCEDURE (RNAV)</td><td>PBN departure, not a SID but similar</td></tr>
+    </table>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>SID Naming</strong>
+      Plain language: DEDKI ONE DEP<br>
+      Coded: (DEDKI1.)<br>
+      Validity number (1–9) changes when the procedure track changes significantly.<br>
+      Enroute transition: MIVOK TRANSITION (DEDKI1.MIVOK)</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Communication Failure on SID</strong>Each SID includes specific communication failure instructions. Typically: select transponder 7600, proceed direct on course beyond a specified distance, hold last assigned altitude for a period, then climb to flight planned altitude.</div></div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Non-Jet Restriction</strong>Some SIDs are restricted to "Non jet acft only" (like the PA31). Others are "Jet acft only" or "Turbo prop acft only." Always check the operational notes on the SID chart.</div></div>
+  </div>
+
+  <!-- STAR -->
+  <div class="section" id="cg-star">
+    <div class="section-header">
+      <div class="section-icon">⬇️</div>
+      <div><div class="section-title">Standard Terminal Arrivals (STAR)</div><div class="section-ref">CAP GEN · pages 96–105</div></div>
+    </div>
+    <div class="summary">STARs are published arrival routes that transition you from the enroute structure to the terminal environment near the destination airport. They end at an initial approach fix (IAF) or at a point where ATC will issue vectors for the approach.</div>
+
+    <table class="ref-table">
+      <tr><th>STAR Type</th><th>Description</th></tr>
+      <tr><td>STAR</td><td>Conventional STAR — uses VOR, NDB, or intersections</td></tr>
+      <tr><td>STAR (RNAV)</td><td>PBN STAR — requires GNSS or approved RNAV</td></tr>
+    </table>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>STAR Naming</strong>
+      Plain language: UDNOX TWO ARR<br>
+      Coded: (RAGID.UDNOX2) — first point of the common section + coded name<br>
+      Enroute transition: TORNI TRANSITION (TORNI.UDNOX1)</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Communication String on STAR Chart</strong>ATIS → Arrival System (CTR/ARR) → Tower. Same as the first 3 of the arrival string used on IAP charts.</div></div>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>MEA vs MOCA on STARs</strong>When MEA and MOCA values differ, both are charted. The MOCA is denoted with an asterisk (*). MEA provides both obstacle clearance and navaid signal coverage. MOCA provides only obstacle clearance — navaid reception may be degraded.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>PBN Requirements Box</strong>RNAV STARs show a PBN requirements box specifying the navigation specification (RNAV 1 or RNP 1), sensor limitations, and functional requirements. See TC Advisory Circulars 700-019 (RNAV 1) and 700-025 (RNP 1).</div></div>
+  </div>
+
 </div>
 
 </div><!-- /main -->
@@ -634,7 +1013,21 @@ const DOCS = {
   },
   capgen: {
     title: 'CAP GEN — IFR',
-    toc: []
+    toc: [
+      { id:'cg-definitions', icon:'📖', label:'Key Definitions' },
+      { id:'cg-mountains',   icon:'⛰️', label:'Mountainous Regions' },
+      { id:'cg-opmin',       icon:'📊', label:'Operating Minima — General' },
+      { id:'cg-takeoff',     icon:'🛫', label:'Take-off Minima' },
+      { id:'cg-appban',      icon:'🚫', label:'Approach Ban' },
+      { id:'cg-landing',     icon:'🛬', label:'Landing Minima' },
+      { id:'cg-alternate',   icon:'🔄', label:'Alternate Minima' },
+      { id:'cg-coldtemp',    icon:'🌡️', label:'Cold Temperature Corrections' },
+      { id:'cg-noise',       icon:'🔇', label:'Noise Abatement (NADP)' },
+      { id:'cg-iap',         icon:'🧭', label:'IAP Chart Reading' },
+      { id:'cg-minima-box',  icon:'📋', label:'Minima Box & Aircraft Categories' },
+      { id:'cg-sid',         icon:'⬆️', label:'Standard Instrument Departures' },
+      { id:'cg-star',        icon:'⬇️', label:'Standard Terminal Arrivals' },
+    ]
   }
 };
 
