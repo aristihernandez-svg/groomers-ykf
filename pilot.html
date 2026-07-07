@@ -272,25 +272,28 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-arrow">→</div>
     </div>
 
-    <div class="hub-tile locked">
+    <div class="hub-tile locked" onclick="openLockedDoc('sop')" style="cursor:pointer;opacity:0.75">
       <div class="hub-tile-icon">📖</div>
-      <div class="hub-tile-tag coming">COMING SOON</div>
+      <div class="hub-tile-tag coming">ASK AI</div>
       <div class="hub-tile-title">SOP</div>
-      <div class="hub-tile-desc">Standard Operating Procedures — normal and non-normal checklists for line operations.</div>
+      <div class="hub-tile-desc">Standard Operating Procedures — normal and non-normal checklists for line operations. Ask the AI tutor.</div>
+      <div class="hub-tile-arrow">🧠</div>
     </div>
 
-    <div class="hub-tile locked">
+    <div class="hub-tile locked" onclick="openLockedDoc('afm')" style="cursor:pointer;opacity:0.75">
       <div class="hub-tile-icon">📗</div>
-      <div class="hub-tile-tag coming">COMING SOON</div>
+      <div class="hub-tile-tag coming">ASK AI</div>
       <div class="hub-tile-title">AFM</div>
-      <div class="hub-tile-desc">Airplane Flight Manual reference — limitations, performance charts, and emergency procedures.</div>
+      <div class="hub-tile-desc">Airplane Flight Manual reference — limitations, performance charts, and emergency procedures. Ask the AI tutor.</div>
+      <div class="hub-tile-arrow">🧠</div>
     </div>
 
-    <div class="hub-tile locked">
+    <div class="hub-tile locked" onclick="openLockedDoc('com')" style="cursor:pointer;opacity:0.75">
       <div class="hub-tile-icon">📡</div>
-      <div class="hub-tile-tag coming">COMING SOON</div>
+      <div class="hub-tile-tag coming">ASK AI</div>
       <div class="hub-tile-title">COM</div>
-      <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight.</div>
+      <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight. Ask the AI tutor.</div>
+      <div class="hub-tile-arrow">🧠</div>
     </div>
   </div>
 
@@ -1238,13 +1241,40 @@ const DOC_SUGGESTIONS = {
     'Explain DA vs MDA like I\'m flying my first IFR approach',
     'Give me a cold temperature correction scenario at −30°C',
   ],
-  default: [
-    'What document should I start studying first?',
-    'Give me a quick aviation trivia question',
-  ]
+  sop: [
+    'Walk me through the PA31 engine start SOP step by step',
+    'What are the before takeoff checks I should never skip?',
+    'Give me an engine failure after takeoff scenario — what do I do?',
+    'Quiz me on the PA31 abnormal procedures',
+  ],
+  afm: [
+    'What are the PA31-350 performance limitations I must know cold?',
+    'Give me a density altitude scenario affecting takeoff performance',
+    'Walk me through the emergency gear extension procedure',
+    'Quiz me on PA31 engine-out climb performance',
+  ],
+  com: [
+    'Give me a full IFR departure clearance — read it back with me',
+    'Walk me through a missed approach call to ATC',
+    'Quiz me on ATIS and how to read it back correctly',
+    'Simulate an ATC exchange for an ILS approach into CYYZ',
+  ],
+  hub: [
+    'Where should I start studying — systems or IFR?',
+    'Give me a mixed scenario: engine failure on an IFR departure',
+    'Quiz me on anything PA31 or IFR — your choice',
+    'What are the top 5 things a new PA31 pilot gets wrong?',
+  ],
 };
 
 const DOC_SYSTEM = {
+  hub: `You are a senior aviation mentor helping a commercial pilot study for line operations on the PA31-350 Chieftain in Canada. You have deep knowledge of the aircraft systems, Transport Canada IFR regulations, SOPs, the AFM, and ATC communications. The student is on the study hub and may ask about any topic. Give engaging, scenario-based answers. Be concise but thorough. If the topic spans multiple documents, connect them naturally.`,
+
+  sop: `You are an experienced PA31-350 line captain and training captain helping a new first officer study Standard Operating Procedures for the Chieftain. You know normal checklists, abnormal procedures, and emergency drills cold. Focus on the WHY behind each SOP item — that's what examiners and real emergencies test. Give realistic scenarios, call out common mistakes, and quiz the student. Keep answers practical and cockpit-ready. Note: the official SOP document hasn't been uploaded yet, so base your answers on standard PA31 operating practices and Canadian commercial operations norms.`,
+
+  afm: `You are a PA31-350 type rating instructor with deep knowledge of the Airplane Flight Manual. You know limitations, performance charts, weight and balance, and emergency procedures. Help the student understand how to use the AFM, interpret performance tables, and apply limitations in real scenarios. Give density altitude examples, OEI climb gradient calculations, and emergency procedure walkthroughs. Note: the AFM document hasn't been uploaded yet — base answers on standard PA31-350 AFM data and BLR modification specs.`,
+
+  com: `You are an IFR communications instructor specialising in Canadian ATC phraseology and NAV CANADA procedures. You can simulate full ATC exchanges, quiz the student on readbacks, walk through departure clearances, approach clearances, missed approach calls, and emergency declarations. Use realistic Canadian airports (CYKF, CYYZ, CYOW, CYYC) and real-world phraseology. Correct mistakes gently but precisely — readback errors on the line have consequences. Note: the COM document hasn't been uploaded yet — base answers on Transport Canada AIM and NAV CANADA standard phraseology.`,
   cheatsheet: `You are an experienced aviation instructor and mentor specialising in the Piper PA31-350 Chieftain — a turbocharged twin-engine piston aircraft modified with the BLR winglet kit. Your student is a commercial pilot studying for line operations at a regional carrier flying the Chieftain.
 
 Key aircraft data you know cold:
@@ -1280,12 +1310,25 @@ Key CAP GEN knowledge you know cold:
 Your role: Be a rigorous but approachable IFR mentor. Give realistic Canadian IFR scenarios (weather, alternates, approach bans, cold temps). Quiz the student. Explain Transport Canada regulations in plain language. Reference specific runways and airports when giving examples (CYKF, CYYZ, CYOW, CYYC are good examples). Keep answers focused and practical. Use correct aviation terminology. If asked about something outside CAP GEN scope, say so clearly.`
 };
 
+let aiTopic = 'hub';
+
 function getSystemPrompt() {
-  return DOC_SYSTEM[currentDoc] || `You are a knowledgeable aviation mentor helping a commercial pilot study for IFR operations in Canada on the PA31-350 Chieftain. Be helpful, accurate, and scenario-based.`;
+  return DOC_SYSTEM[aiTopic] || DOC_SYSTEM.hub;
 }
 
 function getSuggestions() {
-  return DOC_SUGGESTIONS[currentDoc] || DOC_SUGGESTIONS.default;
+  return DOC_SUGGESTIONS[aiTopic] || DOC_SUGGESTIONS.hub;
+}
+
+function openLockedDoc(topic) {
+  aiTopic = topic;
+  const names = { sop: 'SOP', afm: 'AFM', com: 'COM — ATC Phraseology' };
+  document.getElementById('aiPanelName').textContent = (names[topic] || topic.toUpperCase()) + ' — AI Tutor';
+  clearChat();
+  const fab = document.getElementById('aiFab');
+  fab.style.display = 'none';
+  document.getElementById('aiPanel').classList.add('open');
+  setTimeout(() => document.getElementById('aiInput').focus(), 300);
 }
 
 function toggleChat() {
@@ -1448,14 +1491,14 @@ async function sendChat() {
   document.getElementById('aiSendBtn').disabled = false;
 }
 
-// Show/hide FAB based on whether we're inside a document
+// Show FAB on hub and inside documents; sync aiTopic
 function updateAiFab() {
-  document.getElementById('aiFab').style.display = currentDoc ? 'flex' : 'none';
-  if (!currentDoc) document.getElementById('aiPanel').classList.remove('open');
-  if (currentDoc) {
-    const name = DOCS[currentDoc]?.title || 'Aviation Mentor';
-    document.getElementById('aiPanelName').textContent = name + ' — AI Tutor';
-  }
+  aiTopic = currentDoc || 'hub';
+  const panel = document.getElementById('aiPanel');
+  const fab = document.getElementById('aiFab');
+  if (!panel.classList.contains('open')) fab.style.display = 'flex';
+  const name = currentDoc ? (DOCS[currentDoc]?.title || 'Aviation Mentor') : 'Aviation Mentor';
+  document.getElementById('aiPanelName').textContent = name + ' — AI Tutor';
 }
 </script>
 </body>
