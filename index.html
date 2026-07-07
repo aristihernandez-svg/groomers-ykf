@@ -785,7 +785,7 @@ body::before{
 
 <div id="app">
   <div class="bar">
-    <span style="font-size:22px;cursor:pointer;color:var(--gold)" onclick="goTab('home')">✈</span>
+    <span style="font-size:22px;cursor:pointer;color:var(--gold)" id="planeIcon" onclick="planeIconTap()">✈</span>
     <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer"><img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare"></span>
     <span class="bar-pill" id="barDay"></span>
     <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable coffee notifications" style="font-size:20px">🔕</button>
@@ -987,6 +987,19 @@ function pinKey(k) {
 function showPinGate() {
   const gate = document.getElementById('pinGate');
   if (gate) { gate.style.display = 'flex'; }
+}
+
+// ── Secret: tap ✈ 7 times rapidly to open pilot dashboard ──
+let _planeTaps = 0, _planeTapTimer = null;
+function planeIconTap() {
+  goTab('home');
+  _planeTaps++;
+  clearTimeout(_planeTapTimer);
+  _planeTapTimer = setTimeout(() => { _planeTaps = 0; }, 1500);
+  if (_planeTaps >= 7) {
+    _planeTaps = 0;
+    window.open('pilot.html', '_blank');
+  }
 }
 
 window.addEventListener('load', async () => {

@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>PA31-350 Chieftain — Pilot Reference</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#08111f;--bg2:#0d1b30;--bg3:#112240;--bg4:#162d4a;
+  --accent:#2563eb;--accent2:#1d4ed8;--accent-glow:rgba(37,99,235,0.15);
+  --t1:#e2e8f0;--t2:#94a3b8;--t3:#4a6080;
+  --red:#ef4444;--amber:#f59e0b;--green:#22c55e;--blue:#3b82f6;
+  --warn-bg:rgba(239,68,68,0.1);--caution-bg:rgba(245,158,11,0.1);--note-bg:rgba(37,99,235,0.1);
+  --sidebar:260px;--radius:12px;
+}
+body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden}
+
+/* ── TOP BAR ── */
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;height:56px;background:var(--bg2);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:12px;padding:0 16px}
+.topbar-logo{font-size:13px;font-weight:800;color:var(--accent);letter-spacing:1px;text-transform:uppercase;white-space:nowrap}
+.topbar-title{font-size:14px;font-weight:700;color:var(--t1);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.search-wrap{position:relative;flex:1;max-width:320px}
+.search-wrap input{width:100%;background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:8px 12px 8px 34px;color:var(--t1);font-size:13px;font-family:inherit;outline:none;transition:border 0.2s}
+.search-wrap input:focus{border-color:var(--accent)}
+.search-wrap input::placeholder{color:var(--t3)}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--t3);font-size:14px;pointer-events:none}
+.menu-btn{background:none;border:none;color:var(--t2);font-size:22px;cursor:pointer;padding:4px;flex-shrink:0;display:none}
+.back-btn{background:none;border:none;color:var(--accent);font-size:22px;cursor:pointer;padding:0 4px;flex-shrink:0;line-height:1}
+.disclaimer-badge{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0}
+
+/* ── LAYOUT ── */
+.layout{display:flex;padding-top:56px;min-height:100vh}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);flex-shrink:0;position:fixed;top:56px;bottom:0;left:0;background:var(--bg2);border-right:1px solid rgba(255,255,255,0.07);overflow-y:auto;z-index:50;transition:transform 0.3s}
+.sidebar::-webkit-scrollbar{width:4px}
+.sidebar::-webkit-scrollbar-track{background:transparent}
+.sidebar::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+.sidebar-header{padding:16px 16px 8px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase}
+.toc-item{display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;transition:background 0.15s;border-left:3px solid transparent;text-decoration:none}
+.toc-item:hover{background:var(--bg3)}
+.toc-item.active{background:var(--accent-glow);border-left-color:var(--accent)}
+.toc-item .toc-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.toc-item .toc-label{font-size:13px;font-weight:500;color:var(--t2);line-height:1.3}
+.toc-item.active .toc-label{color:var(--t1);font-weight:600}
+.sidebar-divider{height:1px;background:rgba(255,255,255,0.06);margin:8px 16px}
+
+/* ── MAIN CONTENT ── */
+.main{margin-left:var(--sidebar);flex:1;padding:24px;max-width:900px}
+
+/* ── HERO ── */
+.hero{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid rgba(37,99,235,0.2);border-radius:16px;padding:28px;margin-bottom:28px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;background:radial-gradient(circle,rgba(37,99,235,0.12),transparent 70%)}
+.hero-label{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px}
+.hero-title{font-size:26px;font-weight:800;color:var(--t1);margin-bottom:4px}
+.hero-sub{font-size:14px;color:var(--t2);margin-bottom:16px}
+.hero-tags{display:flex;flex-wrap:wrap;gap:8px}
+.hero-tag{background:var(--bg4);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:4px 12px;font-size:12px;font-weight:600;color:var(--t2)}
+.hero-warn{margin-top:16px;background:var(--caution-bg);border:1px solid rgba(245,158,11,0.25);border-radius:10px;padding:12px 14px;font-size:12px;color:var(--amber);line-height:1.5}
+
+/* ── SECTIONS ── */
+.section{margin-bottom:28px;scroll-margin-top:76px}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,0.07)}
+.section-icon{width:38px;height:38px;border-radius:10px;background:var(--accent-glow);border:1px solid rgba(37,99,235,0.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.section-title{font-size:18px;font-weight:800;color:var(--t1)}
+.section-ref{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ── SUMMARY CARD ── */
+.summary{background:var(--accent-glow);border:1px solid rgba(37,99,235,0.2);border-radius:12px;padding:14px 16px;margin-bottom:14px;font-size:13px;color:var(--t2);line-height:1.65}
+.summary strong{color:var(--t1)}
+
+/* ── DATA GRID ── */
+.data-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:14px}
+.data-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px}
+.data-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.data-value{font-size:18px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums}
+.data-unit{font-size:12px;color:var(--t2);margin-left:3px;font-weight:400}
+.data-sub{font-size:11px;color:var(--t3);margin-top:2px}
+
+/* ── TABLE ── */
+.ref-table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:14px}
+.ref-table th{background:var(--bg3);color:var(--t3);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:8px 12px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.08)}
+.ref-table td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--t1)}
+.ref-table tr:last-child td{border-bottom:none}
+.ref-table tr:hover td{background:rgba(255,255,255,0.02)}
+.ref-table td:first-child{color:var(--t2);font-weight:600}
+.ref-table td .hi{color:var(--accent);font-weight:700}
+
+/* ── ALERTS ── */
+.alert{border-radius:10px;padding:12px 14px;margin-bottom:10px;font-size:12px;line-height:1.6;display:flex;gap:10px}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-body strong{display:block;font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.alert.warn{background:var(--warn-bg);border:1px solid rgba(239,68,68,0.25);color:#fca5a5}
+.alert.warn strong{color:var(--red)}
+.alert.caution{background:var(--caution-bg);border:1px solid rgba(245,158,11,0.25);color:#fcd34d}
+.alert.caution strong{color:var(--amber)}
+.alert.note{background:var(--note-bg);border:1px solid rgba(37,99,235,0.25);color:#93c5fd}
+.alert.note strong{color:var(--blue)}
+.alert.tip{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);color:#86efac}
+.alert.tip strong{color:var(--green)}
+
+/* ── LIST ── */
+.ref-list{list-style:none;margin-bottom:14px}
+.ref-list li{padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;color:var(--t2);display:flex;gap:8px;align-items:flex-start;line-height:1.5}
+.ref-list li::before{content:'›';color:var(--accent);flex-shrink:0;font-weight:700;margin-top:1px}
+.ref-list li:last-child{border-bottom:none}
+.ref-list li strong{color:var(--t1)}
+
+/* ── PILL ── */
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.pill{background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;color:var(--t2)}
+.pill.red{background:var(--warn-bg);border-color:rgba(239,68,68,0.3);color:#fca5a5}
+.pill.amber{background:var(--caution-bg);border-color:rgba(245,158,11,0.3);color:#fcd34d}
+.pill.blue{background:var(--note-bg);border-color:rgba(37,99,235,0.3);color:#93c5fd}
+.pill.green{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2);color:#86efac}
+
+/* ── SOURCE BUTTON ── */
+.source-btn{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:7px 12px;font-size:12px;font-weight:600;color:var(--t2);cursor:pointer;text-decoration:none;transition:all 0.15s;margin-top:6px}
+.source-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-glow)}
+
+/* ── NO RESULTS ── */
+.no-results{display:none;text-align:center;padding:60px 24px;color:var(--t3)}
+
+/* ── OVERLAY (mobile sidebar) ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:40}
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .menu-btn{display:block}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .overlay.open{display:block}
+  .main{margin-left:0;padding:16px}
+  .topbar-title{display:none}
+  .disclaimer-badge{display:none}
+  .data-grid{grid-template-columns:repeat(2,1fr)}
+  .hero-title{font-size:20px}
+  .search-wrap{max-width:none}
+}
+
+/* ── HIGHLIGHT ── */
+.hl{background:rgba(37,99,235,0.3);border-radius:3px;padding:0 2px}
+.section.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+  <button class="back-btn" onclick="history.back()">‹</button>
+  <span class="topbar-logo">✈ Skycare</span>
+  <span class="topbar-title">PA31-350 Chieftain</span>
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input type="search" id="searchInput" placeholder="Search systems, speeds, limits…" oninput="doSearch(this.value)">
+  </div>
+  <span class="disclaimer-badge">STUDY REF ONLY</span>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-header">Table of Contents</div>
+  <a class="toc-item active" href="#vspeeds" onclick="scrollTo('vspeeds')"><span class="toc-icon">⚡</span><span class="toc-label">V-Speeds & Airspeed Limits</span></a>
+  <a class="toc-item" href="#fuel" onclick="scrollTo('fuel')"><span class="toc-icon">⛽</span><span class="toc-label">Fuel System</span></a>
+  <a class="toc-item" href="#oil" onclick="scrollTo('oil')"><span class="toc-icon">🛢</span><span class="toc-label">Oil System</span></a>
+  <a class="toc-item" href="#weight" onclick="scrollTo('weight')"><span class="toc-icon">⚖️</span><span class="toc-label">Weight Limitations</span></a>
+  <a class="toc-item" href="#powerplant" onclick="scrollTo('powerplant')"><span class="toc-icon">🔥</span><span class="toc-label">Powerplant & Power Settings</span></a>
+  <a class="toc-item" href="#blr" onclick="scrollTo('blr')"><span class="toc-icon">🔬</span><span class="toc-label">BLR Modification</span></a>
+  <a class="toc-item" href="#engines" onclick="scrollTo('engines')"><span class="toc-icon">⚙️</span><span class="toc-label">Engines & Accessories</span></a>
+  <a class="toc-item" href="#props" onclick="scrollTo('props')"><span class="toc-icon">🌀</span><span class="toc-label">Propellers</span></a>
+  <div class="sidebar-divider"></div>
+  <a class="toc-item" href="#flaps" onclick="scrollTo('flaps')"><span class="toc-icon">🛫</span><span class="toc-label">Flaps (Duke & Calco)</span></a>
+  <a class="toc-item" href="#gear" onclick="scrollTo('gear')"><span class="toc-icon">🛞</span><span class="toc-label">Landing Gear</span></a>
+  <a class="toc-item" href="#brakes" onclick="scrollTo('brakes')"><span class="toc-icon">🔴</span><span class="toc-label">Brake System</span></a>
+  <a class="toc-item" href="#hydraulic" onclick="scrollTo('hydraulic')"><span class="toc-icon">💧</span><span class="toc-label">Hydraulic System</span></a>
+  <div class="sidebar-divider"></div>
+  <a class="toc-item" href="#electrical" onclick="scrollTo('electrical')"><span class="toc-icon">⚡</span><span class="toc-label">Electrical System</span></a>
+  <a class="toc-item" href="#pneumatic" onclick="scrollTo('pneumatic')"><span class="toc-icon">💨</span><span class="toc-label">Pneumatic System</span></a>
+  <a class="toc-item" href="#deice" onclick="scrollTo('deice')"><span class="toc-icon">❄️</span><span class="toc-label">De-Icing & Anti-Ice</span></a>
+  <a class="toc-item" href="#heat" onclick="scrollTo('heat')"><span class="toc-icon">🌡️</span><span class="toc-label">Heating & Ventilation</span></a>
+  <div class="sidebar-divider"></div>
+  <a class="toc-item" href="#instruments" onclick="scrollTo('instruments')"><span class="toc-icon">🧭</span><span class="toc-label">Instruments & Annunciator</span></a>
+  <a class="toc-item" href="#preflight" onclick="scrollTo('preflight')"><span class="toc-icon">📋</span><span class="toc-label">Flight Prep & Loading</span></a>
+</div>
+
+<!-- MAIN -->
+<div class="layout">
+<div class="main" id="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-label">Pilot Reference — Study Use Only</div>
+    <div class="hero-title">PA31-350 Chieftain</div>
+    <div class="hero-sub">BLR Modified · Limitations · Systems · Practical Tips</div>
+    <div class="hero-tags">
+      <span class="hero-tag">LTIO(R)/TIO(L)-540-J2B/J2BD</span>
+      <span class="hero-tag">3-Blade Constant Speed Props</span>
+      <span class="hero-tag">28V DC Electrical</span>
+      <span class="hero-tag">Turbocharged Twin</span>
+    </div>
+    <div class="hero-warn">⚠️ This document does not replace the AFM. Always confirm limitations with the AFM, flight supplements, and placards in the airplane. Limitations may differ between aircraft.</div>
+  </div>
+
+  <div class="no-results" id="noResults">🔍 No sections match your search.</div>
+
+  <!-- V-SPEEDS -->
+  <div class="section" id="vspeeds">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><div class="section-title">V-Speeds & Airspeed Limits</div><div class="section-ref">Cheat Sheet · Airspeed Limit section</div></div>
+    </div>
+    <div class="summary">These are the critical speed limits for the PA31-350. <strong>Never exceed Vne</strong> under any circumstances. Vfe limits depend on your aircraft's flap system (Duke or Calco). Always cross-check with the placard in your specific airplane.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Vne — Never Exceed</div><div class="data-value">236<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vno — Max Structural Cruise</div><div class="data-value">185<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Va — Maneuvering</div><div class="data-value">159<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vmca — Min Control Air</div><div class="data-value">72<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vyse — Best Rate SE</div><div class="data-value">107<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vxse — Best Angle SE</div><div class="data-value">104<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vsse — Safe Single Engine</div><div class="data-value">92<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vy — Best Rate Climb</div><div class="data-value">101<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Vx — Best Angle Climb</div><div class="data-value">84<span class="data-unit">kts</span></div></div>
+      <div class="data-card"><div class="data-label">Wiper Max Speed</div><div class="data-value">127<span class="data-unit">kts</span></div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Speed</th><th>Duke (kts)</th><th>Calco (kts)</th><th>Condition</th></tr>
+      <tr><td>Vfe</td><td class="hi">153</td><td class="hi">162</td><td>Flaps 15°–25°</td></tr>
+      <tr><td>Vfe</td><td class="hi">130</td><td class="hi">130</td><td>Flaps 40°</td></tr>
+      <tr><td>Vle</td><td class="hi">128</td><td class="hi">153</td><td>Gear Extend</td></tr>
+      <tr><td>Vlo Retract</td><td class="hi">128</td><td class="hi">153</td><td>Gear Retract</td></tr>
+      <tr><td>Vlo Emrg</td><td class="hi">128</td><td class="hi">153</td><td>Emergency Extend</td></tr>
+      <tr><td>Vr Normal</td><td colspan="2" style="color:var(--accent);font-weight:700">85</td><td>0° flap</td></tr>
+      <tr><td>Vr Soft/Short</td><td colspan="2" style="color:var(--accent);font-weight:700">76</td><td>15° flap</td></tr>
+      <tr><td>Boot Inflation Max</td><td colspan="2" style="color:var(--accent);font-weight:700">213</td><td>CAS max for de-ice boots</td></tr>
+    </table>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Practical Tip</strong>In extreme turbulence, reduce power to reach Va (159 kts) — the design maneuvering speed. This protects the airframe from overstress.</div></div>
+  </div>
+
+  <!-- FUEL -->
+  <div class="section" id="fuel">
+    <div class="section-header">
+      <div class="section-icon">⛽</div>
+      <div><div class="section-title">Fuel System</div><div class="section-ref">Cheat Sheet · Fuel Limit & Fuel System sections</div></div>
+    </div>
+    <div class="summary">The Chieftain runs on AvGas. It has main inboard tanks, outboard tanks, and optional nacelle (Nayak) tanks. <strong>Always depart on mains</strong>. Keep fuel balanced within 200 lbs. The nacelle tanks take ~55 minutes to transfer fully. Rule of thumb: 1 L/min/engine at cruise.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Total (w/o Nac)</div><div class="data-value">192<span class="data-unit">gal</span></div><div class="data-sub">Usable: 182 gal</div></div>
+      <div class="data-card"><div class="data-label">Total (w/ Nac)</div><div class="data-value">246<span class="data-unit">gal</span></div><div class="data-sub">Usable: 236 gal</div></div>
+      <div class="data-card"><div class="data-label">Fuel Pressure</div><div class="data-value">34–55<span class="data-unit">PSI</span></div></div>
+      <div class="data-card"><div class="data-label">Nac Tank Transfer</div><div class="data-value">~55<span class="data-unit">min</span></div><div class="data-sub">Full nacelle tanks</div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Tank</th><th>Total (gal)</th><th>Usable (gal)</th></tr>
+      <tr><td>Outboard (each wing)</td><td>40</td><td>38</td></tr>
+      <tr><td>Nacelle (each)</td><td>27</td><td>27</td></tr>
+      <tr><td>Inboard (each wing)</td><td>56</td><td>53</td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Fuel Path</strong>Fuel cells → Selector valve → Fuel filter → Low fuel boost pump → Emergency fuel pump → Firewall shutoff valve → Engine-driven fuel pump → Injectors → Cylinders.</div></div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Warning</strong>If the L or R low boost warning light illuminates with fuel showing in the inboard tank → flapper door malfunction → immediately switch to outboard tank or crossfeed to avoid fuel flow interruption.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Fuel Management Rules</strong>• Mains for T/O and landing always<br>• Fuel must be balanced within 200 lbs prior to departure<br>• Do not transfer nacelle fuel until mains are at 50% or less<br>• Do not use outboard tanks during climbs or descents<br>• No prolonged slips/skids (30+ sec) when on outboard or with inboards below ¼<br>• Crossfeed is NOT for normal ops</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Note</strong>Cannot dispatch with inop engine-driven fuel pump or inop emergency fuel pump. Low boost pump warning illuminates if fuel boost pressure drops below 3 PSI.</div></div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Rule of Thumb</strong>1 L/min/engine at cruise. For more accuracy, do the math from your fuel flow gauge.</div></div>
+  </div>
+
+  <!-- OIL -->
+  <div class="section" id="oil">
+    <div class="section-header">
+      <div class="section-icon">🛢</div>
+      <div><div class="section-title">Oil System</div><div class="section-ref">Cheat Sheet · Oil Capacity section</div></div>
+    </div>
+    <div class="summary">Each engine holds 12 quarts max. You need at least 10 quarts per engine to dispatch. Oil does three things: lubricates, cools, and cleans the engine. <strong>Watch the dipstick carefully</strong> — the same dipstick is used for both engines with different markings on each side.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Capacity (each engine)</div><div class="data-value">12<span class="data-unit">qt</span></div></div>
+      <div class="data-card"><div class="data-label">Min for Dispatch (SOP)</div><div class="data-value">10<span class="data-unit">qt</span></div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Parameter</th><th>Range</th></tr>
+      <tr><td>Oil Pressure</td><td class="hi">25 – 60 – 90 – 100 PSI</td></tr>
+      <tr><td>Oil Temperature</td><td class="hi">50 – 120 – 245 °F</td></tr>
+    </table>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Dipstick Warning</strong>Oil dipsticks are interchangeable between RH and LH engines. On the same dipstick you'll find both right and left indications — make sure you're reading the correct side for each engine.</div></div>
+  </div>
+
+  <!-- WEIGHT -->
+  <div class="section" id="weight">
+    <div class="section-header">
+      <div class="section-icon">⚖️</div>
+      <div><div class="section-title">Weight Limitations</div><div class="section-ref">Cheat Sheet · Weight Limitation section</div></div>
+    </div>
+    <div class="summary">The BLR modification increases the max landing weight significantly. Nacelle compartments are fiberglass — never exceed the floor loading. Keep R & L lockers within 100 lbs of each other.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Max Ramp Weight</div><div class="data-value">7,448<span class="data-unit">lbs</span></div></div>
+      <div class="data-card"><div class="data-label">Max T/O Weight</div><div class="data-value">7,368<span class="data-unit">lbs</span></div></div>
+      <div class="data-card"><div class="data-label">Max L/D (w/ BLR)</div><div class="data-value">7,368<span class="data-unit">lbs</span></div></div>
+      <div class="data-card"><div class="data-label">Max L/D (w/o BLR)</div><div class="data-value">7,000<span class="data-unit">lbs</span></div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Compartment</th><th>Max Weight</th><th>Max Floor Loading</th></tr>
+      <tr><td>Forward / Nose</td><td>200 lbs</td><td>100 lbs/sq ft</td></tr>
+      <tr><td>Aft</td><td>200 lbs</td><td>100 lbs/sq ft</td></tr>
+      <tr><td>Nacelle (each)</td><td>150 lbs</td><td>10 lbs/sq ft</td></tr>
+      <tr><td>Nacelle (if Nac tanks full)</td><td>50 lbs each</td><td>10 lbs/sq ft</td></tr>
+    </table>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Warning — Nacelle Compartments</strong>Nacelle compartments are made of fiberglass. DO NOT exceed 10 lbs/sq ft floor loading. DO NOT exceed 100 lbs difference between R & L lockers.</div></div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Loading Strategy</strong>Light load → weight aft · Medium load → center the weight · Full load → concentrate forward as much as possible · Small dense pieces go in the nose and wing lockers.</div></div>
+  </div>
+
+  <!-- POWERPLANT -->
+  <div class="section" id="powerplant">
+    <div class="section-header">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title">Powerplant & Power Settings</div><div class="section-ref">Cheat Sheet · Power Plant Limitation & Power Setting sections</div></div>
+    </div>
+    <div class="summary">Both engines are turbocharged, counter-rotating, fuel-injected Lycomings. <strong>No critical engine</strong> on the Chieftain. The density controller maintains full rated power to critical altitude (49 inHg / 350 HP). Make all throttle and prop changes slowly and smoothly.</div>
+    <table class="ref-table">
+      <tr><th>Phase</th><th>MP (inHg)</th><th>RPM</th><th>Mixture</th><th>Max HP</th><th>Max CHT</th></tr>
+      <tr><td>Takeoff</td><td class="hi">49</td><td class="hi">2,575</td><td>Rich</td><td>350 HP</td><td>500°F</td></tr>
+      <tr><td>Max Continuous</td><td class="hi">40</td><td class="hi">2,400</td><td>Rich</td><td>315 HP</td><td>475°F</td></tr>
+      <tr><td>Climb</td><td class="hi">38</td><td class="hi">2,400</td><td>Rich</td><td>—</td><td>—</td></tr>
+      <tr><td>Cruise</td><td class="hi">28</td><td class="hi">2,200</td><td>Rich of Peak ~−50°C EGT</td><td>—</td><td>—</td></tr>
+    </table>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Max EGT</div><div class="data-value">1,650<span class="data-unit">°F</span></div></div>
+      <div class="data-card"><div class="data-label">External Power (GPU)</div><div class="data-value">28<span class="data-unit">VDC</span></div><div class="data-sub">Master OFF before connecting</div></div>
+    </div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Cruise Power Technique</strong>Set ~26–27 MP at 2,200 RPM → power will settle around 28 MP → lean to Rich of Peak (~−50° EGT) → adjust as needed. Always synchronize props — unsynchronized props make the cabin very noisy.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Turbocharger Failure</strong>If the compressor fails, the engine reverts to normally aspirated: ~75% of rated power (262 HP) available at sea level.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Max MP by Altitude</strong>T/O power: 49 inHg up to 15,000 ft, then −0.6/1,000 ft increase, then −2.2 to 24,000 ft.<br>Continuous: 40 inHg up to 18,700 ft, then −1.7/1,000 ft increase to 24,000 ft.</div></div>
+  </div>
+
+  <!-- BLR -->
+  <div class="section" id="blr">
+    <div class="section-header">
+      <div class="section-icon">🔬</div>
+      <div><div class="section-title">BLR Modification</div><div class="section-ref">Cheat Sheet · BLR Kit section</div></div>
+    </div>
+    <div class="summary">BLR (Boundary Layer Research) is a performance modification that improves stall characteristics and increases allowable weights. <strong>The vortex generators must be checked on every preflight</strong> — if fewer than 84 are in place, you fall back to original AFM limits.</div>
+    <div class="pill-row">
+      <span class="pill blue">4 Engine Nacelle Strakes</span>
+      <span class="pill blue">88 Vortex Generators</span>
+      <span class="pill blue">MLG Modification</span>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Benefits</strong>• Reduced stall speed (Vs) and minimum control speed (Vmca)<br>• Increased T/O and landing weight limits</div></div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Vortex Generator Check</strong>If fewer than 84 of the 88 vortex generators are in place, the aircraft must be operated under original AFM limitations — not the improved BLR limits.</div></div>
+  </div>
+
+  <!-- ENGINES & ACCESSORIES -->
+  <div class="section" id="engines">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div><div class="section-title">Engines & Accessories</div><div class="section-ref">Cheat Sheet · Engines and Accessories section</div></div>
+    </div>
+    <div class="summary">Left engine rotates clockwise (CW), right engine counter-clockwise (CCW) — viewed from the pilot seat. Because of this counter-rotation, there is <strong>no critical engine</strong> on the Chieftain. Each engine drives multiple systems including alternators, hydraulic pumps, and pneumatic pumps.</div>
+    <ul class="ref-list">
+      <li><strong>L (CW) / R (CCW)</strong> — viewed from pilot seat. No critical engine.</li>
+      <li><strong>Geared starter</strong> with starter ring gear</li>
+      <li><strong>Single driven dual magnetos</strong> (some aircraft: 2 magnetos per side)</li>
+      <li><strong>28V / 70A alternator</strong> per engine</li>
+      <li><strong>Shielded ignition</strong> system</li>
+      <li><strong>Turbochargers</strong> — density controller maintains full rated power to critical altitude</li>
+      <li><strong>Differential pressure controller</strong> — automatically adjusts MP during climb/descent, eliminating the need for pilot throttle adjustment</li>
+      <li><strong>Hydraulic pumps, oil filters, oil coolers, pneumatic pressure pumps</strong></li>
+    </ul>
+  </div>
+
+  <!-- PROPELLERS -->
+  <div class="section" id="props">
+    <div class="section-header">
+      <div class="section-icon">🌀</div>
+      <div><div class="section-title">Propellers</div><div class="section-ref">Cheat Sheet · Propellers section</div></div>
+    </div>
+    <div class="summary">3-blade constant-speed, controllable pitch, full feathering props. High pitch (feathered) is driven by nitrogen/air pressure + springs. Low pitch (higher RPM) is driven by governor-regulated oil pressure. <strong>Feathering requires above 1,000 RPM</strong> and depends on engine oil pressure.</div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Critical — Engine Oil Loss</strong>The propeller will move toward feather as soon as engine oil is lost. Feather it above 1,000 RPM.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>RPM Overspeed</strong>Do NOT shut down the engine if the prop cannot be feathered during an overspeed. A windmilling prop in low pitch creates extreme drag. Do not secure the engine if the propeller cannot be feathered.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Rule</strong>Make all throttle and prop changes slowly and smoothly.</div></div>
+  </div>
+
+  <!-- FLAPS -->
+  <div class="section" id="flaps">
+    <div class="section-header">
+      <div class="section-icon">🛫</div>
+      <div><div class="section-title">Flaps — Duke & Calco Systems</div><div class="section-ref">Cheat Sheet · Flaps section</div></div>
+    </div>
+    <div class="summary">The Chieftain can have one of two flap systems: Duke or Calco. Both have asymmetry protection but work differently. <strong>Confirm which system your specific aircraft has</strong>. Both allow 0–40° deflection. Never use the autopilot with flaps beyond 15°.</div>
+    <div class="pill-row">
+      <span class="pill">Duke: 0–40° with time delay relay</span>
+      <span class="pill">Calco: 0–40° in 2° increments with 5° asymmetry limit</span>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Duke System</strong>If flaps don't extend together within ~1 second (~9° of asymmetry), the time delay relay shuts off the motor and the selector becomes inoperative. Only way to reset: cycle the master switch. Do not reset until landed and issue resolved.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Calco System</strong>Electronically monitored. Will shut down if R & L rheostats differ by more than 5°. Flap Fault Test switch tests the system integrity (not just the bulb). Light ON = system OK · No light = fault.</div></div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Asymmetric Flap Flight (Both Systems)</strong>Max asymmetry (0° vs 25°) requires ~85% aileron deflection to hold wings level. Minimize bank angles. Plan a higher, wider pattern. Final approach: 100 kts, 500–800 fpm descent. Do not use autopilot with flaps &gt;15°.</div></div>
+  </div>
+
+  <!-- GEAR -->
+  <div class="section" id="gear">
+    <div class="section-header">
+      <div class="section-icon">🛞</div>
+      <div><div class="section-title">Landing Gear</div><div class="section-ref">Cheat Sheet · Landing Gear section</div></div>
+    </div>
+    <div class="summary">Hydraulically actuated gear with air-oil oleo struts. Normal cycle takes 6 seconds. Green lights = down and locked. Red light = in transition or inboard door open. No light at all = up and locked. The unsafe horn sounds when MP is below 12 and gear isn't down and locked.</div>
+    <div class="pill-row">
+      <span class="pill green">Green = Down & Locked (one per gear)</span>
+      <span class="pill red">Red = In Transition / Door Open</span>
+      <span class="pill">No Light = Up & Locked</span>
+    </div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Gear Horn Conditions</strong>Sounds when: MP &lt; 12 inHg AND gear not down/locked, OR gear selector is up/neutral with aircraft on ground and master ON.</div></div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Towing</strong>Never tow without removing the tow pin. Avoid sharp turns — causes excessive tire wear. Total turning arc is 40° (20° each direction).</div></div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Practical Tip</strong>When the gear reaches its desired position, hydraulic force pushes the selector back to center/neutral automatically. Selector at neutral = cycle complete. A missing light is likely a burnt bulb — but always use gear position lights as primary indication.</div></div>
+  </div>
+
+  <!-- BRAKES -->
+  <div class="section" id="brakes">
+    <div class="section-header">
+      <div class="section-icon">🔴</div>
+      <div><div class="section-title">Brake System</div><div class="section-ref">Cheat Sheet · Brake System section</div></div>
+    </div>
+    <div class="summary">Hydraulically actuated by individual master cylinders on the left rudder pedals (optional on right). The brake system has its own separate hydraulic reservoir — independent from the main hydraulic system.</div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Parking Brake</strong>Braking may NOT occur if the parking brake handle is pulled before applying the brake pedals. Always press the pedals first, then set the parking brake.</div></div>
+  </div>
+
+  <!-- HYDRAULIC -->
+  <div class="section" id="hydraulic">
+    <div class="section-header">
+      <div class="section-icon">💧</div>
+      <div><div class="section-title">Hydraulic System</div><div class="section-ref">Cheat Sheet · Hydraulic System section</div></div>
+    </div>
+    <div class="summary">Two engine-driven hydraulic pumps supply pressure for gear operation. A central power pack controls the system. There's also an emergency hand pump for use in case of electrical failure — it opens the gear doors and allows gear extension.</div>
+    <ul class="ref-list">
+      <li><strong>2 engine-driven hydraulic pumps</strong> — primary gear operation source</li>
+      <li><strong>Power pack</strong> — central control unit</li>
+      <li><strong>Emergency hand pump</strong> — use if electrical failure; opens doors and lowers gear</li>
+      <li><strong>Actuating cylinders, filters</strong></li>
+    </ul>
+  </div>
+
+  <!-- ELECTRICAL -->
+  <div class="section" id="electrical">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><div class="section-title">Electrical System</div><div class="section-ref">Cheat Sheet · Electrical System section</div></div>
+    </div>
+    <div class="summary">28V DC system with two independent 70A alternators, each with its own voltage regulator. The battery is 24V / 20A. External power must be connected with master OFF. Watch the ammeter — needle left of center means battery is discharging.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">System Voltage</div><div class="data-value">28<span class="data-unit">VDC</span></div></div>
+      <div class="data-card"><div class="data-label">Alternators (×2)</div><div class="data-value">70<span class="data-unit">amp</span></div><div class="data-sub">28V each, independent</div></div>
+      <div class="data-card"><div class="data-label">Battery</div><div class="data-value">24V<span class="data-unit"> / 20A</span></div></div>
+      <div class="data-card"><div class="data-label">Max Starter Crank</div><div class="data-value">30<span class="data-unit">sec</span></div><div class="data-sub">Then 2 min rest</div></div>
+      <div class="data-card"><div class="data-label">Ext. Power Max</div><div class="data-value">30<span class="data-unit">VDC</span></div><div class="data-sub">SOP max (28V nominal)</div></div>
+    </div>
+    <div class="pill-row">
+      <span class="pill green">Ammeter right of center → Battery charging</span>
+      <span class="pill red">Ammeter left of center → Battery discharging</span>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Ammeter / Press-to-Test</strong>Use the press-to-test button on either side of the ammeter to check individual alternator output during single-engine operation.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Heavy Rain</strong>Reduce electrical load on the right alternator to 40A or less to prevent belt slippage.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Weak Battery</strong>Do not depart until charging current drops below 20A. Need at least 3 volts to excite the alternators.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Taxi / Landing Lights</strong>Wired through the nose gear down micro switch — will shut off automatically during gear retraction if not manually turned off. Will re-illuminate when gear is extended again.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Circuit Breakers</strong>Allow 2–5 minutes for a popped breaker to cool before resetting.</div></div>
+  </div>
+
+  <!-- PNEUMATIC -->
+  <div class="section" id="pneumatic">
+    <div class="section-header">
+      <div class="section-icon">💨</div>
+      <div><div class="section-title">Pneumatic System</div><div class="section-ref">Cheat Sheet · Pneumatic System section</div></div>
+    </div>
+    <div class="summary">Two engine-driven pneumatic pumps supply suction for the gyro instruments (attitude and heading indicator) and power the wing/tail de-icing boots. Normal suction is 5.5 ± 0.4 inHg at 2,200 RPM. The turn & slip indicator is electric — serves as standby if pneumatic fails.</div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Normal Suction</div><div class="data-value">5.5<span class="data-unit">inHg</span></div><div class="data-sub">± 0.4 @ 2,200 RPM</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Instrument Backup</strong>Attitude and heading indicators are pneumatic (primary). Turn & slip indicator is electric — use it as standby if the pneumatic system fails.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>De-ice System Active</strong>When the de-icing system is activated, the co-pilot's gyros are not available.</div></div>
+  </div>
+
+  <!-- DE-ICING -->
+  <div class="section" id="deice">
+    <div class="section-header">
+      <div class="section-icon">❄️</div>
+      <div><div class="section-title">De-Icing & Anti-Ice Systems</div><div class="section-ref">Cheat Sheet · Wings and empennage deicing section</div></div>
+    </div>
+    <div class="summary">The Chieftain has boots on wings and tail, heated pitot tubes (dual), an electrically heated windshield (captain's side only), and electric prop de-ice strips. Boots inflate for 6 or 12 seconds per cycle. The blue indicator light confirms inflation at 18 PSI. Do not use boots below −20°C.</div>
+    <ul class="ref-list">
+      <li><strong>Heated pitot tubes</strong> — dual</li>
+      <li><strong>Heated windshield</strong> — captain's side only (electric)</li>
+      <li><strong>De-ice boots</strong> — wings and H/V stabilizer leading edges</li>
+      <li><strong>Electric prop de-ice strips</strong> — timer-controlled, 30 sec per segment</li>
+      <li><strong>Wing ice light</strong> — left wing only</li>
+    </ul>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Boot Limitations</strong>Max speed for boot inflation: 213 kts CAS. Do not use or test boots below −20°C — rubber can crack and ice won't adhere at that temperature anyway. Suction keeps boots flat (streamlined) when system is OFF.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Prop De-Ice Timer Sequence</strong>Segments cycle every 30 sec: Outboard RE → Inboard RE → Outboard LE → Inboard LE. Ammeter should read 8–12A when switch is ON.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Ground Operations</strong>Do not run pitot heat for extended periods on the ground. Do not run heated windshield on ground for extended periods unless ice is present (risk of overheating).</div></div>
+  </div>
+
+  <!-- HEAT -->
+  <div class="section" id="heat">
+    <div class="section-header">
+      <div class="section-icon">🌡️</div>
+      <div><div class="section-title">Heating & Ventilation</div><div class="section-ref">Cheat Sheet · Heat, Ventilating and Defrosting section</div></div>
+    </div>
+    <div class="summary">Standard config has a Janitrol combustion heater in the right nose section for cabin heat and windshield defrost. It draws fuel from the R/H inboard tank at ~2 gal/hour. Optional configurations include a left-side airborne heater, an aft Janitrol, and exhaust muff heaters. All Skycare Navajos have at least the L/H engine muff system.</div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Heater Air Inlet</strong>The heater air inlet valve must be fully open before and during heater operation. If partially closed, the heater will overheat and shut down.</div></div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Shutdown Procedure (Ground Only)</strong>Turn to FAN position for 3 minutes to cool the heater before switching to OFF. In flight this is not required.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Stall Warning</strong>Warning activates 4–10 kts before actual stall. On some aircraft, the stall detector vane is heated when the Left Pitot heat is ON — but only in flight.</div></div>
+  </div>
+
+  <!-- INSTRUMENTS -->
+  <div class="section" id="instruments">
+    <div class="section-header">
+      <div class="section-icon">🧭</div>
+      <div><div class="section-title">Instruments & Annunciator Panel</div><div class="section-ref">Cheat Sheet · Instrument Panel & Annunciator Panel sections</div></div>
+    </div>
+    <div class="summary">Standard AI and HI are pneumatically driven. The turn & slip indicator is electric (standby backup). The annunciator panel press-to-test requires 3 seconds to illuminate all lights — the low fuel flow warning stays on 10 seconds longer than the others.</div>
+    <div class="pill-row">
+      <span class="pill blue">Attitude Indicator — Pneumatic</span>
+      <span class="pill blue">Heading Indicator — Pneumatic</span>
+      <span class="pill green">Turn & Slip — Electric (standby)</span>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Annunciator Press-to-Test</strong>Hold 3 seconds to light all annunciators. The low fuel flow warning light will remain on for 10 seconds after the others extinguish — this is normal.</div></div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Anti-Static Wicks</strong>Installed on trailing edges of wing panels and tail surfaces. Clears surface static electricity that could disrupt LF/ADF/VHF reception.</div></div>
+  </div>
+
+  <!-- PREFLIGHT -->
+  <div class="section" id="preflight">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div><div class="section-title">Flight Preparation & Loading</div><div class="section-ref">Cheat Sheet · Flight Preparation & Loading sections</div></div>
+    </div>
+    <div class="summary">Check the last 5 pages of the logbook for snags. If something was just fixed — focus on that item during your run-up. Load strategically based on passenger/cargo weight distribution. Cowl fasteners are critical — a missing or loose fastener can cause cowl separation in flight.</div>
+    <ul class="ref-list">
+      <li>Check logbook for snags, deferred items, time remaining — <strong>read last 5 flight pages</strong></li>
+      <li>Walk-around and run-up — focus on recently fixed items</li>
+      <li>Take water, commissary, and lunches</li>
+      <li>Check all 4 nose bowl screws present and secure</li>
+      <li>Check 6 side cowling fasteners (3 per side) — look for red-on-red stripe alignment and locking pin extended</li>
+    </ul>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Cowl Fasteners — Critical</strong>Failure to ensure nose bowl and cowl fasteners are present and secure may result in in-flight cowl separation and loss of aircraft control.</div></div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Loading Strategy</strong>Light load → weight aft · Medium → center · Full load → concentrate weight forward · Small dense items in nose and wing lockers.</div></div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ── SIDEBAR ──────────────────────────────────────────────────────────────────
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+// ── TOC SCROLL ───────────────────────────────────────────────────────────────
+function scrollTo(id) {
+  closeSidebar();
+  setTimeout(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 50);
+  document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.toc-item[href="#${id}"]`)?.classList.add('active');
+  return false;
+}
+
+// ── SEARCH ───────────────────────────────────────────────────────────────────
+function doSearch(query) {
+  const q = query.trim().toLowerCase();
+  const sections = document.querySelectorAll('.section');
+  let anyVisible = false;
+  sections.forEach(sec => {
+    if (!q) { sec.classList.remove('hidden'); anyVisible = true; return; }
+    const text = sec.textContent.toLowerCase();
+    if (text.includes(q)) { sec.classList.remove('hidden'); anyVisible = true; }
+    else { sec.classList.add('hidden'); }
+  });
+  document.getElementById('noResults').style.display = anyVisible ? 'none' : 'block';
+}
+
+// ── ACTIVE SECTION ON SCROLL ─────────────────────────────────────────────────
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const id = entry.target.id;
+      document.querySelectorAll('.toc-item').forEach(t => t.classList.remove('active'));
+      document.querySelector(`.toc-item[href="#${id}"]`)?.classList.add('active');
+    }
+  });
+}, { rootMargin: '-56px 0px -70% 0px' });
+
+document.querySelectorAll('.section').forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
