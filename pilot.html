@@ -171,6 +171,51 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 /* ── VIEW SWITCHING ── */
 .view{display:none}
 .view.active{display:block}
+
+/* ── AI CHAT ── */
+.ai-fab{position:fixed;bottom:24px;right:20px;z-index:200;width:52px;height:52px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 20px rgba(37,99,235,0.5);transition:transform 0.2s,box-shadow 0.2s}
+.ai-fab:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(37,99,235,0.65)}
+.ai-fab .ai-fab-badge{position:absolute;top:-2px;right:-2px;background:var(--green);border-radius:50%;width:12px;height:12px;border:2px solid var(--bg)}
+.ai-panel{position:fixed;bottom:0;right:0;z-index:199;width:380px;max-width:100vw;height:520px;max-height:calc(100vh - 72px);background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-bottom:none;border-radius:16px 16px 0 0;display:flex;flex-direction:column;box-shadow:0 -8px 40px rgba(0,0,0,0.6);transform:translateY(100%);transition:transform 0.3s cubic-bezier(0.4,0,0.2,1)}
+.ai-panel.open{transform:translateY(0)}
+.ai-panel-header{padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;gap:10px;flex-shrink:0}
+.ai-panel-avatar{width:32px;height:32px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ai-panel-info{flex:1}
+.ai-panel-name{font-size:13px;font-weight:700;color:var(--t1)}
+.ai-panel-status{font-size:11px;color:var(--green);display:flex;align-items:center;gap:4px}
+.ai-panel-status::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.ai-panel-close{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer;padding:0 4px;line-height:1}
+.ai-panel-close:hover{color:var(--t1)}
+.ai-msgs{flex:1;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.ai-msgs::-webkit-scrollbar{width:3px}
+.ai-msgs::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+.ai-msg{display:flex;flex-direction:column;max-width:88%}
+.ai-msg.user{align-self:flex-end;align-items:flex-end}
+.ai-msg.ai{align-self:flex-start;align-items:flex-start}
+.ai-msg-bubble{padding:10px 13px;border-radius:14px;font-size:13px;line-height:1.6;word-break:break-word}
+.ai-msg.user .ai-msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.ai-msg.ai .ai-msg-bubble{background:var(--bg3);color:var(--t1);border-bottom-left-radius:4px;border:1px solid rgba(255,255,255,0.07)}
+.ai-msg.ai .ai-msg-bubble strong{color:var(--t1);font-weight:700}
+.ai-msg.ai .ai-msg-bubble em{color:var(--t2)}
+.ai-cursor{display:inline-block;width:2px;height:14px;background:var(--accent);border-radius:1px;margin-left:2px;animation:blink 0.7s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.ai-suggestions{padding:0 14px 10px;display:flex;flex-direction:column;gap:6px}
+.ai-sug-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
+.ai-sug-btn{background:var(--bg3);border:1px solid rgba(255,255,255,0.09);border-radius:10px;padding:8px 12px;font-size:12px;color:var(--t2);cursor:pointer;text-align:left;transition:all 0.15s;font-family:inherit}
+.ai-sug-btn:hover{border-color:var(--accent);color:var(--t1);background:var(--accent-glow)}
+.ai-input-wrap{padding:10px 12px;border-top:1px solid rgba(255,255,255,0.07);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+.ai-input{flex:1;background:var(--bg3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:9px 12px;color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;max-height:100px;min-height:36px;transition:border 0.2s}
+.ai-input:focus{border-color:var(--accent)}
+.ai-input::placeholder{color:var(--t3)}
+.ai-send{background:var(--accent);border:none;border-radius:10px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:16px;flex-shrink:0;transition:background 0.15s}
+.ai-send:hover{background:var(--accent2)}
+.ai-send:disabled{background:var(--bg4);cursor:default}
+.ai-clear{background:none;border:none;color:var(--t3);font-size:11px;cursor:pointer;padding:2px 6px;border-radius:6px;transition:color 0.15s}
+.ai-clear:hover{color:var(--t1)}
+@media(max-width:768px){
+  .ai-panel{width:100%;border-radius:16px 16px 0 0}
+  .ai-fab{bottom:20px;right:16px}
+}
 </style>
 </head>
 <body>
@@ -985,6 +1030,30 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 </div><!-- /main -->
 </div><!-- /layout -->
 
+<!-- ── AI CHAT FAB + PANEL ── -->
+<button class="ai-fab" id="aiFab" onclick="toggleChat()" title="Ask your AI tutor" style="display:none">
+  🧠<span class="ai-fab-badge"></span>
+</button>
+
+<div class="ai-panel" id="aiPanel">
+  <div class="ai-panel-header">
+    <div class="ai-panel-avatar">✈</div>
+    <div class="ai-panel-info">
+      <div class="ai-panel-name" id="aiPanelName">Aviation Mentor</div>
+      <div class="ai-panel-status">Ready to help</div>
+    </div>
+    <button class="ai-clear" id="aiClearBtn" onclick="clearChat()">Clear</button>
+    <button class="ai-panel-close" onclick="toggleChat()">×</button>
+  </div>
+  <div class="ai-msgs" id="aiMsgs"></div>
+  <div class="ai-suggestions" id="aiSuggestions"></div>
+  <div class="ai-input-wrap">
+    <textarea class="ai-input" id="aiInput" placeholder="Ask a question or request a scenario…" rows="1"
+      onkeydown="aiKeyDown(event)" oninput="autoResize(this)"></textarea>
+    <button class="ai-send" id="aiSendBtn" onclick="sendChat()">↑</button>
+  </div>
+</div>
+
 <script>
 // ── DOC CONFIGS ──────────────────────────────────────────────────────────────
 const DOCS = {
@@ -1046,6 +1115,7 @@ function showHub() {
   currentDoc = null;
   closeSidebar();
   window.scrollTo(0, 0);
+  updateAiFab();
 }
 
 function openDoc(docId) {
@@ -1078,6 +1148,7 @@ function openDoc(docId) {
   }
 
   window.scrollTo(0, 0);
+  updateAiFab();
 }
 
 function buildSidebar(doc) {
@@ -1141,13 +1212,252 @@ const observer = new IntersectionObserver(entries => {
 }, { rootMargin: '-56px 0px -70% 0px' });
 
 // ── MOBILE SIDEBAR CSS FIX ───────────────────────────────────────────────────
-// On mobile, sidebar margin is 0 when sidebar is hidden
 function updateMainMargin() {
   if (!currentDoc || window.innerWidth <= 768) {
     document.getElementById('main').style.marginLeft = currentDoc && window.innerWidth > 768 ? 'var(--sidebar)' : '0';
   }
 }
 window.addEventListener('resize', updateMainMargin);
+
+// ── AI CHAT ──────────────────────────────────────────────────────────────────
+const AI_KEY = () => localStorage.getItem('skycare_ai_key') || '';
+const AI_MODEL = 'claude-haiku-4-5-20251001';
+let aiHistory = [];
+let aiStreaming = false;
+
+const DOC_SUGGESTIONS = {
+  cheatsheet: [
+    'Give me a scenario where engine failure at Vmca is critical',
+    'Quiz me on V-speeds — ask me 3 questions',
+    'Explain the nacelle fuel transfer rules and why they matter',
+    'What happens if the low boost pump light illuminates with fuel showing?',
+  ],
+  capgen: [
+    'Give me a CAT I approach ban scenario — walk me through the decision',
+    'Quiz me on alternate minima with a real example',
+    'Explain DA vs MDA like I\'m flying my first IFR approach',
+    'Give me a cold temperature correction scenario at −30°C',
+  ],
+  default: [
+    'What document should I start studying first?',
+    'Give me a quick aviation trivia question',
+  ]
+};
+
+const DOC_SYSTEM = {
+  cheatsheet: `You are an experienced aviation instructor and mentor specialising in the Piper PA31-350 Chieftain — a turbocharged twin-engine piston aircraft modified with the BLR winglet kit. Your student is a commercial pilot studying for line operations at a regional carrier flying the Chieftain.
+
+Key aircraft data you know cold:
+- Engines: LTIO(R)/TIO(L)-540-J2B/J2BD, turbocharged, 350 HP each
+- V-speeds: Vne 236 kts, Vno 185 kts, Va 159 kts, Vmca 72 kts, Vyse 107 kts, Vxse 104 kts, Vsse 92 kts, Vy 101 kts, Vx 84 kts
+- Vfe: Duke flap system 153/130 kts, Calco 162/130 kts; Vle/Vlo: Duke 128, Calco 153 kts
+- Vr: 85 kts (0° flap), 76 kts (15° flap)
+- Fuel: 192 gal total (182 usable) without nacelles, 246 gal (236 usable) with nacelles. Inboard 56/53 gal each, outboard 40/38 gal each, nacelle 27 gal each. Fuel pressure 34–55 PSI.
+- Fuel rules: always depart on mains, balance within 200 lbs, no outboard tanks during climb/descent, nacelle transfer only when mains ≤ 50%, no prolonged slips on outboard/inboard below ¼ tank, crossfeed not for normal ops
+- Oil: 12 qt max per engine, min 10 qt for dispatch. Oil pressure 25–60–90–100 PSI, oil temp 50–120–245 °F
+- Weights: MTOW and landing weight data per BLR modification
+- Electrical: 28V DC system
+- De-ice boots max inflation speed: 213 CAS
+
+Your role: Be an engaging, scenario-based aviation mentor. Give realistic flight scenarios, quiz the student, explain the WHY behind limitations, and use memory aids. Keep answers focused, practical, and appropriately concise (2–4 paragraphs max unless a scenario warrants more detail). Use aviation phraseology naturally. Never make up numbers — if you're unsure of a specific limit, say so and direct the student to the AFM.`,
+
+  capgen: `You are a senior IFR instructor and Transport Canada expert mentoring a commercial pilot studying for IFR operations in Canada under the CAP GEN (Canada Air Pilot — General pages, NAV CANADA). Your student will be flying IFR in the PA31-350 Chieftain (Category B aircraft, 91–120 kt approach speed range) out of Kitchener-Waterloo (CYKF) and surrounding Ontario airports.
+
+Key CAP GEN knowledge you know cold:
+- DA (precision/APV) vs MDA (non-precision): DA initiates missed approach at that altitude; MDA is level-off until visual reference
+- Approach ban: legally limiting (not advisory visibility); RVR takes precedence; can continue past FAF if ban triggered after FAF
+- Alternate minima: precision approaches 600-2 or 300-1+HAT; non-precision 800-2 or 300-1+HAA; BECMG/TEMPO rules
+- Cold temperature corrections: true alt lower than indicated below ISA; apply when OAT ≤ 0°C; table values from 200 ft to 5,000 ft HAA at temps 0 to −50°C
+- Aircraft categories: Cat B = 91–120 kts. PA31 is Category B and a non-jet aircraft (affects SID/STAR eligibility)
+- Take-off premises: cross runway end at 35 ft, fly runway heading to 400 ft AAE, maintain 200 ft/NM climb gradient
+- MSA: emergency use only (25 NM, 1,000 ft clearance); TAA replaces MSA on RNAV approaches
+- Mountainous regions: Areas 1&5 = 2,000 ft clearance; Areas 2,3,4 = 1,500 ft clearance within 5 NM
+- Holding speeds: ≤6,000 ft = 200 KIAS; 6,001–14,000 ft = 230 KIAS; above 14,000 ft = 265 KIAS
+- CDA: constant descent angle technique for non-precision approaches; stabilised from FAF to MAP
+- RVR sensors: A = threshold, B = midpoint, C = rollout
+- LVP: activated when RVR imminent below 1,200 ft; no Cat I approaches while LVP in effect
+
+Your role: Be a rigorous but approachable IFR mentor. Give realistic Canadian IFR scenarios (weather, alternates, approach bans, cold temps). Quiz the student. Explain Transport Canada regulations in plain language. Reference specific runways and airports when giving examples (CYKF, CYYZ, CYOW, CYYC are good examples). Keep answers focused and practical. Use correct aviation terminology. If asked about something outside CAP GEN scope, say so clearly.`
+};
+
+function getSystemPrompt() {
+  return DOC_SYSTEM[currentDoc] || `You are a knowledgeable aviation mentor helping a commercial pilot study for IFR operations in Canada on the PA31-350 Chieftain. Be helpful, accurate, and scenario-based.`;
+}
+
+function getSuggestions() {
+  return DOC_SUGGESTIONS[currentDoc] || DOC_SUGGESTIONS.default;
+}
+
+function toggleChat() {
+  const panel = document.getElementById('aiPanel');
+  const isOpen = panel.classList.contains('open');
+  if (isOpen) {
+    panel.classList.remove('open');
+  } else {
+    panel.classList.add('open');
+    if (aiHistory.length === 0) renderSuggestions();
+    setTimeout(() => document.getElementById('aiInput').focus(), 300);
+  }
+}
+
+function renderSuggestions() {
+  const sugs = getSuggestions();
+  const el = document.getElementById('aiSuggestions');
+  el.innerHTML = `<div class="ai-sug-label">Try asking</div>` +
+    sugs.map(s => `<button class="ai-sug-btn" onclick="useSuggestion(this.textContent)">${s}</button>`).join('');
+}
+
+function useSuggestion(text) {
+  document.getElementById('aiInput').value = text;
+  document.getElementById('aiSuggestions').innerHTML = '';
+  sendChat();
+}
+
+function clearChat() {
+  aiHistory = [];
+  document.getElementById('aiMsgs').innerHTML = '';
+  renderSuggestions();
+}
+
+function appendMsg(role, text) {
+  const msgs = document.getElementById('aiMsgs');
+  const div = document.createElement('div');
+  div.className = `ai-msg ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-msg-bubble';
+  bubble.innerHTML = role === 'ai' ? formatAI(text) : escHtml(text);
+  div.appendChild(bubble);
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return bubble;
+}
+
+function escHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function formatAI(text) {
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/\n\n/g,'</p><p style="margin-top:8px">')
+    .replace(/\n/g,'<br>');
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+function aiKeyDown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function showKeyModal() {
+  const existing = localStorage.getItem('skycare_ai_key') || '';
+  const key = prompt('Enter your Anthropic API key (stored only in this browser):', existing);
+  if (key !== null) {
+    localStorage.setItem('skycare_ai_key', key.trim());
+  }
+}
+
+async function sendChat() {
+  if (aiStreaming) return;
+  if (!AI_KEY()) { showKeyModal(); return; }
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+
+  document.getElementById('aiSuggestions').innerHTML = '';
+  input.value = '';
+  input.style.height = 'auto';
+
+  appendMsg('user', text);
+  aiHistory.push({ role: 'user', content: text });
+
+  aiStreaming = true;
+  document.getElementById('aiSendBtn').disabled = true;
+
+  const aiBubble = appendMsg('ai', '');
+  const cursor = document.createElement('span');
+  cursor.className = 'ai-cursor';
+  aiBubble.appendChild(cursor);
+
+  let fullText = '';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': AI_KEY(),
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+        'anthropic-dangerous-direct-browser-use': 'true'
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 1024,
+        system: getSystemPrompt(),
+        messages: aiHistory,
+        stream: true
+      })
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${resp.status}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const data = line.slice(6).trim();
+        if (data === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.type === 'content_block_delta' && parsed.delta?.text) {
+            fullText += parsed.delta.text;
+            aiBubble.innerHTML = formatAI(fullText);
+            const c = document.createElement('span');
+            c.className = 'ai-cursor';
+            aiBubble.appendChild(c);
+            document.getElementById('aiMsgs').scrollTop = document.getElementById('aiMsgs').scrollHeight;
+          }
+        } catch(_) {}
+      }
+    }
+
+  } catch (err) {
+    fullText = `Sorry, I couldn't connect. Error: ${err.message}`;
+    aiBubble.innerHTML = formatAI(fullText);
+  }
+
+  cursor.remove();
+  aiBubble.innerHTML = formatAI(fullText);
+  aiHistory.push({ role: 'assistant', content: fullText });
+  aiStreaming = false;
+  document.getElementById('aiSendBtn').disabled = false;
+}
+
+// Show/hide FAB based on whether we're inside a document
+function updateAiFab() {
+  document.getElementById('aiFab').style.display = currentDoc ? 'flex' : 'none';
+  if (!currentDoc) document.getElementById('aiPanel').classList.remove('open');
+  if (currentDoc) {
+    const name = DOCS[currentDoc]?.title || 'Aviation Mentor';
+    document.getElementById('aiPanelName').textContent = name + ' — AI Tutor';
+  }
+}
 </script>
 </body>
 </html>
