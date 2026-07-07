@@ -1290,11 +1290,14 @@ function getSuggestions() {
 
 function toggleChat() {
   const panel = document.getElementById('aiPanel');
+  const fab = document.getElementById('aiFab');
   const isOpen = panel.classList.contains('open');
   if (isOpen) {
     panel.classList.remove('open');
+    fab.style.display = 'flex';
   } else {
     panel.classList.add('open');
+    fab.style.display = 'none';
     if (aiHistory.length === 0) renderSuggestions();
     setTimeout(() => document.getElementById('aiInput').focus(), 300);
   }
