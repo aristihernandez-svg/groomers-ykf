@@ -1387,15 +1387,11 @@ async function sendChat() {
   let fullText = '';
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const resp = await fetch('https://skycare-worker.skycare.workers.dev/ai', {
       method: 'POST',
-      headers: {
-        'x-api-key': AI_KEY(),
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-        'anthropic-dangerous-direct-browser-use': 'true'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
+        apiKey: AI_KEY(),
         model: AI_MODEL,
         max_tokens: 1024,
         system: getSystemPrompt(),
