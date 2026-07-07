@@ -280,20 +280,19 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-arrow">🧠</div>
     </div>
 
-    <div class="hub-tile locked" onclick="openLockedDoc('afm')" style="cursor:pointer;opacity:0.75">
+    <div class="hub-tile" onclick="openDoc('afm')">
       <div class="hub-tile-icon">📗</div>
-      <div class="hub-tile-tag coming">ASK AI</div>
+      <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">AFM</div>
-      <div class="hub-tile-desc">Airplane Flight Manual reference — limitations, performance charts, and emergency procedures. Ask the AI tutor.</div>
-      <div class="hub-tile-arrow">🧠</div>
+      <div class="hub-tile-desc">Airplane Flight Manual — limitations, V-speeds, normal &amp; emergency procedures, performance, and supplements.</div>
+      <div class="hub-tile-arrow">→</div>
     </div>
 
-    <div class="hub-tile locked" onclick="openLockedDoc('com')" style="cursor:pointer;opacity:0.75">
+    <div class="hub-tile locked">
       <div class="hub-tile-icon">📡</div>
-      <div class="hub-tile-tag coming">ASK AI</div>
+      <div class="hub-tile-tag coming">COMING SOON</div>
       <div class="hub-tile-title">COM</div>
-      <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight. Ask the AI tutor.</div>
-      <div class="hub-tile-arrow">🧠</div>
+      <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight.</div>
     </div>
   </div>
 
@@ -1030,6 +1029,232 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════════════
+     AFM VIEW
+══════════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-afm">
+
+  <div class="hero">
+    <div class="hero-label">Airplane Flight Manual · Study Reference Only</div>
+    <div class="hero-title">PA31-350 Chieftain — AFM</div>
+    <div class="hero-sub">Piper Aircraft Corporation · PA-31-350 · BLR Super Chieftain II STC SA00202SE</div>
+    <div class="hero-tags">
+      <span class="hero-tag">TIO(L)/LTIO(R)-540-J2BD</span>
+      <span class="hero-tag">350 HP × 2</span>
+      <span class="hero-tag">BLR Modified</span>
+      <span class="hero-tag">AVGAS 100/130</span>
+    </div>
+    <div class="hero-warn">⚠️ Study reference only — does not replace the current AFM, Supplements, Weight &amp; Balance, or placards in the aircraft. Always verify limits against the document in the airplane.</div>
+  </div>
+
+  <div class="no-results" id="noResultsAfm"></div>
+
+  <!-- §1 LIMITATIONS -->
+  <div class="section" id="afm-limitations">
+    <div class="section-header">
+      <div class="section-icon">⚠️</div>
+      <div><div class="section-title">Section I — Limitations</div><div class="section-ref">AFM Section I · Placards · BLR Supplement</div></div>
+    </div>
+    <div class="summary">Limitations are <strong>legally binding</strong>. Exceeding any of these values is prohibited and may void airworthiness. Where BLR STC SA00202SE values differ from the base AFM, <strong>BLR values apply</strong> — this aircraft has the STC installed.</div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>BLR Vortex Generator Requirement</strong>All 88 VGs must be in place (84 minimum). If fewer than 84 VGs are present, revert to base AFM limits: MTOW 7,000 lbs, Vmca 78 KIAS, Vyse 109 KIAS.</div></div>
+
+    <table class="ref-table">
+      <tr><th>V-Speed</th><th>KIAS / KCAS</th><th>MPH CAS</th><th>Condition</th></tr>
+      <tr><td>Vne — Never Exceed</td><td class="hi">236</td><td>272</td><td>Do not exceed in any operation</td></tr>
+      <tr><td>Vno — Max Structural Cruise</td><td class="hi">187</td><td>216</td><td>Max speed in smooth air</td></tr>
+      <tr><td>Va — Maneuvering</td><td class="hi">162</td><td>186</td><td>At 7,000 lbs gross weight</td></tr>
+      <tr><td>Vfe — Flaps 15°/25°</td><td class="hi">152</td><td>175</td><td>Max with 15° or 25° flaps</td></tr>
+      <tr><td>Vfe — Flaps 40°</td><td class="hi">130</td><td>150</td><td>Max with full flaps</td></tr>
+      <tr><td>Vlo / Vle — Gear</td><td class="hi">130</td><td>150</td><td>Gear extend / retract / extend limit</td></tr>
+      <tr><td>Vmca — Min Control Air (BLR)</td><td class="hi">72</td><td>—</td><td>OEI, critical engine failed and feathered</td></tr>
+      <tr><td>Vyse — Best Rate OEI (BLR)</td><td class="hi">107</td><td>125</td><td>Blue line — OEI best rate of climb</td></tr>
+      <tr><td>Vs — Stall (gear &amp; flaps dn)</td><td class="hi">74</td><td>85</td><td>At 7,000 lbs, power off</td></tr>
+      <tr><td>Vs — Stall (clean)</td><td class="hi">80</td><td>92</td><td>At 7,000 lbs, power off</td></tr>
+    </table>
+
+    <div class="section-header" style="margin-top:20px">
+      <div class="section-icon">⚖️</div>
+      <div><div class="section-title">Weight Limits</div></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Max Ramp (BLR)</div><div class="data-value">7,448<span class="data-unit">lbs</span></div><div class="data-sub">7,045 lbs base AFM</div></div>
+      <div class="data-card"><div class="data-label">Max T/O (BLR)</div><div class="data-value">7,368<span class="data-unit">lbs</span></div><div class="data-sub">7,000 lbs base AFM</div></div>
+      <div class="data-card"><div class="data-label">Max Landing (BLR)</div><div class="data-value">7,368<span class="data-unit">lbs</span></div><div class="data-sub">7,000 lbs base AFM</div></div>
+      <div class="data-card"><div class="data-label">Max Zero Fuel</div><div class="data-value">~6,200<span class="data-unit">lbs</span></div><div class="data-sub">Verify in W&amp;B supplement</div></div>
+    </div>
+
+    <div class="section-header" style="margin-top:20px">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title">Engine &amp; Power Limits</div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Parameter</th><th>Takeoff (5 min)</th><th>Max Continuous</th></tr>
+      <tr><td>RPM</td><td class="hi">2,575</td><td class="hi">2,400</td></tr>
+      <tr><td>Manifold Pressure</td><td class="hi">49 inHg</td><td class="hi">40 inHg</td></tr>
+      <tr><td>Horsepower</td><td class="hi">350 HP</td><td class="hi">315 HP</td></tr>
+      <tr><td>Max CHT</td><td class="hi">500 °F</td><td class="hi">475 °F</td></tr>
+      <tr><td>Max EGT</td><td colspan="2" class="hi">1,650 °F</td></tr>
+      <tr><td>Oil Pressure</td><td colspan="2">25 min · 60–90 normal · 100 max PSI</td></tr>
+      <tr><td>Oil Temperature</td><td colspan="2">50 min · 75–240 normal · 245 max °F</td></tr>
+      <tr><td>Fuel Pressure</td><td colspan="2">34–55 PSI</td></tr>
+    </table>
+
+    <div class="section-header" style="margin-top:20px">
+      <div class="section-icon">⛽</div>
+      <div><div class="section-title">Fuel &amp; Fluid Limits</div></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Fuel Grade (Min)</div><div class="data-value" style="font-size:14px">AVGAS<span class="data-unit">100/130</span></div><div class="data-sub">Blue — NOT auto gasoline</div></div>
+      <div class="data-card"><div class="data-label">Total Fuel (w/o Nac)</div><div class="data-value">192<span class="data-unit">gal</span></div><div class="data-sub">182 gal usable</div></div>
+      <div class="data-card"><div class="data-label">Total Fuel (w/ Nac)</div><div class="data-value">246<span class="data-unit">gal</span></div><div class="data-sub">236 gal usable</div></div>
+      <div class="data-card"><div class="data-label">Oil Capacity (each)</div><div class="data-value">12<span class="data-unit">qt</span></div><div class="data-sub">Min dispatch: 10 qt</div></div>
+    </div>
+
+    <div class="section-header" style="margin-top:20px">
+      <div class="section-icon">🧭</div>
+      <div><div class="section-title">Altitude &amp; Load Factor Limits</div></div>
+    </div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Max Operating Alt</div><div class="data-value">24,000<span class="data-unit">ft</span></div></div>
+      <div class="data-card"><div class="data-label">Service Ceiling</div><div class="data-value">27,200<span class="data-unit">ft</span></div></div>
+      <div class="data-card"><div class="data-label">SE Service Ceiling</div><div class="data-value">13,700<span class="data-unit">ft</span></div></div>
+      <div class="data-card"><div class="data-label">Load Factor (flaps up)</div><div class="data-value">+3.8<span class="data-unit">g</span></div><div class="data-sub">−1.52g limit</div></div>
+      <div class="data-card"><div class="data-label">Load Factor (flaps dn)</div><div class="data-value">+2.0<span class="data-unit">g</span></div></div>
+    </div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>De-Ice Boot Inflation Speed</strong>Maximum speed for inflating pneumatic de-ice boots: <strong>213 KIAS CAS</strong>. Boot inflation above this speed risks boot separation or structural damage.</div></div>
+  </div>
+
+  <!-- §2 NORMAL PROCEDURES -->
+  <div class="section" id="afm-normal">
+    <div class="section-header">
+      <div class="section-icon">📋</div>
+      <div><div class="section-title">Section II — Normal Procedures</div><div class="section-ref">AFM Section II · Normal Checklist</div></div>
+    </div>
+    <div class="summary">These are the procedural steps extracted from the AFM. <strong>Memory items are in CAPS BOLD</strong>. Always supplement with the actual printed checklist — do not fly from memory alone.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Engine Start — Left Engine First</strong><br>
+      1. Fuel selector — MAINS · 2. Props — FULL FORWARD · 3. Throttle — ½ inch cracked · 4. Mixture — RICH · 5. Boost pump — ON (check 34–55 PSI) · 6. Master — ON · 7. Clear prop · 8. Start — engage/release at fire · 9. Oil pressure — CHECK (within 30 sec) · 10. Warm-up — 1,000 RPM</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Run-Up (1,800 RPM)</strong><br>
+      • Mags — check each (max 125 RPM drop, max 50 RPM differential between mags) · • Props — exercise full-forward/full-back 3× · • Alternators — test (switch off, confirm load drops, switch on) · • Boost pump — ON, check pressure · • Suction — 4.8–5.2 in Hg · • Controls — free and correct · • Trim — set for T/O</div></div>
+
+    <table class="ref-table">
+      <tr><th>Phase</th><th>Configuration</th><th>Speed</th><th>Power</th></tr>
+      <tr><td>Normal T/O</td><td>Flaps 0°</td><td class="hi">Vr 85 KIAS</td><td>49 inHg / 2,575 RPM</td></tr>
+      <tr><td>Short/Soft T/O</td><td>Flaps 15°</td><td class="hi">Vr 76 KIAS</td><td>49 inHg / 2,575 RPM</td></tr>
+      <tr><td>Initial Climb</td><td>Gear up (pos rate), flaps up &gt;100 ft</td><td class="hi">107 KIAS (Vyse)</td><td>Full power</td></tr>
+      <tr><td>Climb</td><td>Cowl flaps open</td><td class="hi">120 KIAS</td><td>38 inHg / 2,400 RPM, Rich</td></tr>
+      <tr><td>Cruise</td><td>Cowl flaps closed</td><td>—</td><td>28 inHg / 2,200 RPM, ROP −50°C EGT</td></tr>
+      <tr><td>Descent</td><td>Reduce MP first, then RPM</td><td>—</td><td>Enrich as altitude decreases</td></tr>
+      <tr><td>Approach</td><td>Gear ≤130 KT, Flaps 15° ≤152 KT</td><td class="hi">95–100 KIAS</td><td>As required</td></tr>
+      <tr><td>Final</td><td>Flaps 40° when landing assured (≤130 KT)</td><td class="hi">90–95 KIAS</td><td>Reduce to idle over fence</td></tr>
+    </table>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Fuel Management in Cruise</strong>Switch to outboard tanks in level cruise only (never during climb/descent). Transfer nacelle fuel only when mains are ≤50% — allow ~55 min for full nacelle tanks to transfer. Keep balance within 200 lbs at all times.</div></div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>After Landing — Before Shutdown</strong>Let turbos cool at 1,000 RPM for 2 minutes minimum before shutdown. Cutting power abruptly on turbocharged engines causes oil coking in the turbo bearings.</div></div>
+  </div>
+
+  <!-- §3 EMERGENCY PROCEDURES -->
+  <div class="section" id="afm-emergency">
+    <div class="section-header">
+      <div class="section-icon">🚨</div>
+      <div><div class="section-title">Section III — Emergency Procedures</div><div class="section-ref">AFM Section III · Emergency Checklist</div></div>
+    </div>
+    <div class="summary">Emergency procedures are memory items first, checklist second. The <strong>first action on any engine failure is to maintain control and airspeed</strong>. Identify before you verify, verify before you feather.</div>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Engine Failure — Memory Items (In Order)</strong><br>
+      1. <strong>MIXTURES</strong> — RICH · 2. <strong>PROPS</strong> — FULL FORWARD · 3. <strong>THROTTLES</strong> — FULL · 4. <strong>GEAR</strong> — UP · 5. <strong>FLAPS</strong> — UP · 6. <strong>IDENTIFY</strong> — dead foot = dead engine · 7. <strong>VERIFY</strong> — close dead throttle, confirm yaw · 8. <strong>FEATHER</strong> — dead engine prop lever to feather · 9. Maintain Vyse (107 KIAS) · 10. Declare emergency / divert</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Dead Engine Secure Checklist</strong><br>
+      Fuel selector — OFF · Magnetos — OFF · Boost pump — OFF · Alternator — OFF · Cowl flap — CLOSED · Firewall shutoff — CLOSED (if engine fire)</div></div>
+
+    <table class="ref-table">
+      <tr><th>Scenario</th><th>Key Action</th><th>Speed</th></tr>
+      <tr><td>Engine failure — T/O (below Vy)</td><td>Land ahead, do not attempt to climb</td><td>Maintain control</td></tr>
+      <tr><td>Engine failure — en route</td><td>Feather above 1,000 RPM; blue line; divert</td><td class="hi">107 KIAS</td></tr>
+      <tr><td>OEI approach</td><td>Gear down 130 kts; flaps 15°; keep power; full flap when assured</td><td class="hi">100–107 KIAS</td></tr>
+      <tr><td>Gear-up landing</td><td>Declare emergency; secure both engines; land longest runway</td><td>Minimum speed</td></tr>
+      <tr><td>Engine fire — air</td><td>Throttle closed → Feather → Mixture cut-off → Fuel OFF → Firewall shutoff CLOSED</td><td>Vmne</td></tr>
+      <tr><td>Asymmetric flaps</td><td>Do not extend further; approach 100 kts; 500–800 fpm descent</td><td class="hi">100 KIAS</td></tr>
+      <tr><td>Prop overspeed (won't feather)</td><td>Do NOT shut down; reduce throttle; do not attempt feather if unresponsive</td><td>Reduce speed</td></tr>
+    </table>
+
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Feathering Requirements</strong>Feather above 1,000 RPM. If the engine has lost oil pressure, the prop will migrate toward feather automatically. A windmilling prop (unfeathered, low pitch) creates <strong>massive drag</strong> — equivalent to deploying a speed brake. Never leave a failed engine windmilling if feathering is possible.</div></div>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>OEI Climb — What to Expect</strong>At 7,000 lbs, sea level, ISA, blue line (107 kts): expect approximately 340–380 FPM single-engine rate of climb. This decreases rapidly with density altitude. Know your OEI ceiling before departure — it may be below your enroute MEA.</div></div>
+  </div>
+
+  <!-- §4 PERFORMANCE -->
+  <div class="section" id="afm-performance">
+    <div class="section-header">
+      <div class="section-icon">📈</div>
+      <div><div class="section-title">Section IV — Performance</div><div class="section-ref">AFM Section IV · Performance Charts</div></div>
+    </div>
+    <div class="summary">All AFM performance values are based on a new aircraft in average condition. Apply a practical margin — <strong>add 10–15%</strong> to published distances in real operations. Density altitude is the primary variable; calculate it for every departure.</div>
+
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Best Rate Climb (Vy)</div><div class="data-value">120<span class="data-unit">KIAS</span></div><div class="data-sub">Full power, both engines</div></div>
+      <div class="data-card"><div class="data-label">Best Angle Climb (Vx)</div><div class="data-value">~84<span class="data-unit">KIAS</span></div><div class="data-sub">Full power, obstacle clearance</div></div>
+      <div class="data-card"><div class="data-label">OEI Best Rate (Vyse)</div><div class="data-value">107<span class="data-unit">KIAS</span></div><div class="data-sub">Blue line — BLR modified</div></div>
+      <div class="data-card"><div class="data-label">Max Cruise Speed</div><div class="data-value">~200<span class="data-unit">KTAS</span></div><div class="data-sub">At altitude, ISA</div></div>
+    </div>
+
+    <table class="ref-table">
+      <tr><th>Performance Item</th><th>Typical Value</th><th>Conditions</th></tr>
+      <tr><td>T/O Ground Roll (normal)</td><td class="hi">~1,300 ft</td><td>7,000 lbs, sea level, ISA, hard/dry</td></tr>
+      <tr><td>T/O over 50 ft obstacle</td><td class="hi">~2,100 ft</td><td>7,000 lbs, sea level, ISA</td></tr>
+      <tr><td>Landing Ground Roll</td><td class="hi">~1,200 ft</td><td>7,000 lbs, sea level, ISA, hard/dry</td></tr>
+      <tr><td>Landing over 50 ft obstacle</td><td class="hi">~2,200 ft</td><td>7,000 lbs, sea level, ISA</td></tr>
+      <tr><td>Climb ROC (both engines)</td><td class="hi">~1,700 FPM</td><td>7,000 lbs, sea level, ISA, Vy</td></tr>
+      <tr><td>Climb ROC (OEI, BLR)</td><td class="hi">~380 FPM</td><td>7,000 lbs, sea level, ISA, Vyse</td></tr>
+      <tr><td>Fuel burn (cruise)</td><td class="hi">~22–26 GPH</td><td>Both engines, 65–75% power</td></tr>
+    </table>
+
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body"><strong>Density Altitude Effect</strong>Every 1,000 ft of density altitude reduces T/O distance by roughly 12% and ROC by roughly 70 FPM. At CYKF in summer (elev 1,054 ft, 35°C OAT), density altitude can exceed 4,000 ft — add over 50% to published ground roll distances.</div></div>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Rule of Thumb — Fuel</strong>Plan ~12–13 GPH per engine at cruise. Full inboard + outboard tanks (182 gal usable) gives roughly 7 hours endurance at 65% power. Always add reserve per CARs 602.88.</div></div>
+  </div>
+
+  <!-- §5 SUPPLEMENTS -->
+  <div class="section" id="afm-supplements">
+    <div class="section-header">
+      <div class="section-icon">📎</div>
+      <div><div class="section-title">Section V — Supplements &amp; STCs</div><div class="section-ref">AFM Supplements · BLR STC SA00202SE · AD 99-14-01 · AD 2000-06-06</div></div>
+    </div>
+    <div class="summary">Supplements modify base AFM data. <strong>All supplements in the aircraft's AFM are mandatory</strong>. This aircraft carries the BLR Super Chieftain II STC (weight increase + aerodynamic improvements) and pneumatic de-ice boots with applicable ADs.</div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>BLR Super Chieftain II — STC SA00202SE</strong><br>
+      Components: 4 engine nacelle strakes + 88 vortex generators + MLG modification<br>
+      Weight increase: MTOW 7,000 → 7,368 lbs · Max ramp 7,045 → 7,448 lbs<br>
+      Vmca: 78 KT → 72 KIAS · Vyse: 109 KT → 107 KIAS<br>
+      Requirement: Min 84 of 88 VGs installed. Check each preflight.</div></div>
+
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Pneumatic De-Ice Boots — AD 99-14-01 &amp; AD 2000-06-06</strong><br>
+      • Max boot inflation speed: 213 KIAS CAS<br>
+      • Activate boots when ice accumulation reaches ¼ – ½ inch (do not activate too early — thin ice sheds ineffectively)<br>
+      • Cycle: inflate → deflate → reinflate; do not leave inflated for extended periods<br>
+      • Wing and tail (horizontal stabilizer) boots are independent systems<br>
+      • Check suction (4.8–5.2 in Hg) during run-up</div></div>
+
+    <table class="ref-table">
+      <tr><th>Supplement / System</th><th>Notes</th></tr>
+      <tr><td>Oxygen System</td><td>Passenger O₂ available; crew supplemental oxygen required above 13,000 ft (30 min rule in Canada)</td></tr>
+      <tr><td>Autopilot — Bendix AltiMatic V / Piper AltiMatic IIIC</td><td>Do not use with flaps beyond 15°; disengage for approach below MDA/DA</td></tr>
+      <tr><td>Yaw Damper</td><td>Limits Dutch roll; not required for IFR but improves stability; check during run-up</td></tr>
+      <tr><td>Nacelle Fuel Tanks</td><td>AFM Supplement — 27 gal each; transfer-pump-only system; allow ~55 min for full transfer</td></tr>
+      <tr><td>Night &amp; IFR Equipment</td><td>Verify per MEL and CARs 605 before dispatch</td></tr>
+    </table>
+
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body"><strong>Supplement Check — Every Flight</strong>Before each flight, review which AFM supplements apply. A supplement can change a limitation, procedure, or performance value. If an STC or supplement is in the logbooks but not in the AFM binder, it's not legally current.</div></div>
+  </div>
+
+</div><!-- /view-afm -->
+
+
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -1099,6 +1324,16 @@ const DOCS = {
       { id:'cg-minima-box',  icon:'📋', label:'Minima Box & Aircraft Categories' },
       { id:'cg-sid',         icon:'⬆️', label:'Standard Instrument Departures' },
       { id:'cg-star',        icon:'⬇️', label:'Standard Terminal Arrivals' },
+    ]
+  },
+  afm: {
+    title: 'AFM — PA31-350',
+    toc: [
+      { id:'afm-limitations', icon:'⚠️', label:'§1 Limitations & V-Speeds' },
+      { id:'afm-normal',      icon:'📋', label:'§2 Normal Procedures' },
+      { id:'afm-emergency',   icon:'🚨', label:'§3 Emergency Procedures' },
+      { id:'afm-performance', icon:'📈', label:'§4 Performance' },
+      { id:'afm-supplements', icon:'📎', label:'§5 Supplements & STCs' },
     ]
   }
 };
@@ -1237,7 +1472,7 @@ const DOC_SUGGESTIONS = {
   ],
   capgen: [
     'Give me a CAT I approach ban scenario — walk me through the decision',
-    'Quiz me on alternate minima with a real example',
+    'Simulate a CYKF IFR departure clearance — I\'ll read it back',
     'Explain DA vs MDA like I\'m flying my first IFR approach',
     'Give me a cold temperature correction scenario at −30°C',
   ],
@@ -1248,10 +1483,10 @@ const DOC_SUGGESTIONS = {
     'Quiz me on the PA31 abnormal procedures',
   ],
   afm: [
-    'What are the PA31-350 performance limitations I must know cold?',
-    'Give me a density altitude scenario affecting takeoff performance',
-    'Walk me through the emergency gear extension procedure',
-    'Quiz me on PA31 engine-out climb performance',
+    'Quiz me on PA31-350 V-speeds — ask me 5 in a row',
+    'Give me a density altitude scenario: CYKF, 35°C OAT, full fuel — can we depart?',
+    'Walk me through an engine failure after takeoff — memory items go',
+    'What changes under BLR STC vs base AFM limits?',
   ],
   com: [
     'Give me a full IFR departure clearance — read it back with me',
@@ -1272,9 +1507,23 @@ const DOC_SYSTEM = {
 
   sop: `You are an experienced PA31-350 line captain and training captain helping a new first officer study Standard Operating Procedures for the Chieftain. You know normal checklists, abnormal procedures, and emergency drills cold. Focus on the WHY behind each SOP item — that's what examiners and real emergencies test. Give realistic scenarios, call out common mistakes, and quiz the student. Keep answers practical and cockpit-ready. Note: the official SOP document hasn't been uploaded yet, so base your answers on standard PA31 operating practices and Canadian commercial operations norms.`,
 
-  afm: `You are a PA31-350 type rating instructor with deep knowledge of the Airplane Flight Manual. You know limitations, performance charts, weight and balance, and emergency procedures. Help the student understand how to use the AFM, interpret performance tables, and apply limitations in real scenarios. Give density altitude examples, OEI climb gradient calculations, and emergency procedure walkthroughs. Note: the AFM document hasn't been uploaded yet — base answers on standard PA31-350 AFM data and BLR modification specs.`,
+  afm: `You are a PA31-350 type rating instructor with mastery of the Piper PA31-350 Chieftain Airplane Flight Manual and the BLR Super Chieftain II STC (SA00202SE). This aircraft is BLR-modified with the full kit: 4 engine nacelle strakes, 88 vortex generators, and MLG modification.
 
-  com: `You are an IFR communications instructor specialising in Canadian ATC phraseology and NAV CANADA procedures. You can simulate full ATC exchanges, quiz the student on readbacks, walk through departure clearances, approach clearances, missed approach calls, and emergency declarations. Use realistic Canadian airports (CYKF, CYYZ, CYOW, CYYC) and real-world phraseology. Correct mistakes gently but precisely — readback errors on the line have consequences. Note: the COM document hasn't been uploaded yet — base answers on Transport Canada AIM and NAV CANADA standard phraseology.`,
+Key AFM limits you know exactly:
+AIRSPEED (KCAS): Vne 236, Vno 187, Va 162, Vfe(15°/25°) 152, Vfe(40°) 130, Vlo/Vle 130, Vmca(BLR) 72, Vyse(BLR) 107, Vs(gear+flaps dn) 74, Vs(clean) 80, Vr 85 (0°flap) / 76 (15°flap)
+WEIGHTS: Max ramp 7,448 lbs / Max T/O 7,368 lbs / Max landing 7,368 lbs (BLR STC); base AFM without BLR: 7,000/7,000/7,000 lbs ramp/T/O/landing
+ENGINES (each): TIO-540-J2BD (left, CW) / LTIO-540-J2BD (right, CCW). T/O: 2,575 RPM / 49 inHg / 350 HP / 5 min. Continuous: 2,400 RPM / 40 inHg / 315 HP. Max CHT 500°F T/O / 475°F continuous. Max EGT 1,650°F. Oil press 25–100 PSI / temp 50–245°F. Fuel press 34–55 PSI.
+FUEL: AVGAS 100/130 min. 192 gal total / 182 usable (no nacelles); 246/236 gal with nacelles. Inboard 56/53 gal each; outboard 40/38 gal; nacelle 27 gal each.
+OIL: 12 qt max / 10 qt min for dispatch
+ALTITUDES: Max operating 24,000 ft / service ceiling 27,200 ft / SE ceiling 13,700 ft
+LOAD FACTORS: +3.8g / −1.52g clean; +2.0g flaps extended
+PERFORMANCE (SL, ISA, 7,000 lbs): T/O ground roll ~1,300 ft; T/O over 50 ft ~2,100 ft; ROC ~1,700 FPM (both); OEI ROC ~380 FPM; landing roll ~1,200 ft; fuel burn ~22–26 GPH
+EMERGENCY MEMORY ITEMS: Mixtures rich → Props forward → Throttles full → Gear up → Flaps up → Identify (dead foot = dead engine) → Verify → Feather
+BLR VG REQUIREMENT: Min 84 of 88 VGs installed. Fewer than 84 = revert to base AFM limits.
+
+Your role: Be a rigorous type rating instructor. Give density altitude scenarios, OEI climb gradient calculations, emergency procedure walkthroughs. Quiz the student on limitations and emergency memory items. Connect AFM data to real cockpit decisions. Never guess — if a precise AFM value is needed and you're unsure, say so and direct to the AFM.`,
+
+  com: `You are an IFR communications instructor specialising in Canadian ATC phraseology and NAV CANADA procedures. You can simulate full ATC exchanges, quiz the student on readbacks, walk through departure clearances, approach clearances, missed approach calls, and emergency declarations. Use realistic Canadian airports (CYKF, CYYZ, CYOW, CYYC) and real-world phraseology. Correct mistakes gently but precisely — readback errors on the line have consequences. Base answers on Transport Canada AIM and NAV CANADA standard phraseology.`,
   cheatsheet: `You are an experienced aviation instructor and mentor specialising in the Piper PA31-350 Chieftain — a turbocharged twin-engine piston aircraft modified with the BLR winglet kit. Your student is a commercial pilot studying for line operations at a regional carrier flying the Chieftain.
 
 Key aircraft data you know cold:
@@ -1307,7 +1556,9 @@ Key CAP GEN knowledge you know cold:
 - RVR sensors: A = threshold, B = midpoint, C = rollout
 - LVP: activated when RVR imminent below 1,200 ft; no Cat I approaches while LVP in effect
 
-Your role: Be a rigorous but approachable IFR mentor. Give realistic Canadian IFR scenarios (weather, alternates, approach bans, cold temps). Quiz the student. Explain Transport Canada regulations in plain language. Reference specific runways and airports when giving examples (CYKF, CYYZ, CYOW, CYYC are good examples). Keep answers focused and practical. Use correct aviation terminology. If asked about something outside CAP GEN scope, say so clearly.`
+Your role: Be a rigorous but approachable IFR mentor. Give realistic Canadian IFR scenarios (weather, alternates, approach bans, cold temps). Quiz the student. Explain Transport Canada regulations in plain language. Reference specific runways and airports when giving examples (CYKF, CYYZ, CYOW, CYYC are good examples). Keep answers focused and practical. Use correct aviation terminology.
+
+You also know Canadian ATC phraseology and NAV CANADA communications procedures. When asked, simulate realistic ATC exchanges, quiz the student on readbacks, walk through IFR departure clearances, approach clearances, holds, missed approach calls, and emergency declarations. Use authentic NAV CANADA phrasing. Correct readback errors precisely — these matter on the line.`
 };
 
 let aiTopic = 'hub';
