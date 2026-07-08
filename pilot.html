@@ -286,6 +286,59 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .qrh-mem-tag.checklist{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--amber)}
 .qrh-legend{display:flex;gap:16px;align-items:center;justify-content:center;margin:14px 0 6px;flex-wrap:wrap}
 .back-btn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:4px 10px;white-space:nowrap}
+/* ── QUIZ & FLASHCARD ── */
+.quiz-filter-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.quiz-filter-tab{padding:6px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;cursor:pointer;border:1px solid rgba(255,255,255,0.1);color:var(--t3);background:rgba(255,255,255,0.03);transition:all .15s}
+.quiz-filter-tab:hover{border-color:rgba(37,99,235,0.4);color:var(--accent)}
+.quiz-filter-tab.active{background:rgba(37,99,235,0.15);border-color:rgba(37,99,235,0.5);color:var(--accent)}
+.quiz-card{background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:28px 24px;margin-bottom:20px;min-height:200px;display:flex;flex-direction:column;gap:16px}
+.quiz-tags{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.quiz-type-tag{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase}
+.quiz-type-tag.WHAT{background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.35);color:#93c5fd}
+.quiz-type-tag.HOW{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:var(--green)}
+.quiz-type-tag.WHY{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--amber)}
+.quiz-doc-tag{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:700;letter-spacing:.5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:var(--t3)}
+.quiz-question{font-size:18px;font-weight:700;color:var(--t1);line-height:1.5;flex:1}
+.quiz-ref{font-size:11px;color:var(--t3);font-style:italic;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;border-left:3px solid rgba(37,99,235,0.4)}
+.quiz-show-btn{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border-radius:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.35);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s}
+.quiz-show-btn:hover{background:rgba(37,99,235,0.22)}
+.quiz-answer-wrap{display:none;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:16px}
+.quiz-answer-wrap.visible{display:block}
+.quiz-answer-label{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--green);text-transform:uppercase;margin-bottom:8px}
+.quiz-answer{font-size:15px;font-weight:600;color:var(--t1);line-height:1.55}
+.quiz-nav{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.quiz-nav-btn{padding:10px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.04);color:var(--t2);transition:all .15s}
+.quiz-nav-btn:hover{border-color:rgba(37,99,235,0.4);color:var(--accent);background:rgba(37,99,235,0.08)}
+.quiz-progress{font-size:13px;font-weight:700;color:var(--t3);text-align:center;min-width:80px}
+.quiz-progress-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:3px;margin-bottom:20px;overflow:hidden}
+.quiz-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+/* Flashcard */
+.fc-scene{perspective:1200px;margin-bottom:16px}
+.fc-card{width:100%;min-height:260px;position:relative;transform-style:preserve-3d;transition:transform .45s cubic-bezier(.25,.46,.45,.94);cursor:pointer;user-select:none}
+.fc-card.flipped{transform:rotateY(180deg)}
+.fc-front,.fc-back{position:absolute;inset:0;backface-visibility:hidden;border-radius:16px;padding:28px 24px;display:flex;flex-direction:column;gap:12px}
+.fc-front{background:var(--bg2);border:1px solid rgba(255,255,255,0.1)}
+.fc-back{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);transform:rotateY(180deg)}
+.fc-hint{font-size:11px;font-weight:700;letter-spacing:.5px;color:var(--t3);text-transform:uppercase}
+.fc-question{font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;flex:1;display:flex;align-items:center}
+.fc-answer-label{font-size:10px;font-weight:800;letter-spacing:1px;color:var(--green);text-transform:uppercase}
+.fc-answer{font-size:15px;font-weight:600;color:var(--t1);line-height:1.5;flex:1;display:flex;align-items:center}
+.fc-ref{font-size:11px;color:var(--t3);font-style:italic}
+.fc-action-row{display:flex;gap:12px;margin-top:8px}
+.fc-btn{flex:1;padding:12px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;border:none;text-align:center;transition:all .15s}
+.fc-btn.know{background:rgba(34,197,94,0.14);border:1px solid rgba(34,197,94,0.3);color:var(--green)}
+.fc-btn.know:hover{background:rgba(34,197,94,0.25)}
+.fc-btn.again{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red)}
+.fc-btn.again:hover{background:rgba(239,68,68,0.2)}
+.fc-stats{display:flex;gap:16px;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--t3);margin-bottom:16px}
+.fc-stat-know{color:var(--green)}
+.fc-stat-again{color:var(--red)}
+.fc-done{text-align:center;padding:40px 20px}
+.fc-done-icon{font-size:48px;margin-bottom:16px}
+.fc-done-title{font-size:22px;font-weight:800;color:var(--t1);margin-bottom:8px}
+.fc-done-sub{font-size:14px;color:var(--t3);margin-bottom:24px}
+.fc-restart-btn{padding:12px 32px;border-radius:12px;background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.4);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer}
+@media(max-width:768px){.quiz-question,.fc-question{font-size:15px}.fc-answer{font-size:14px}.quiz-card{padding:20px 16px}}
 </style>
 </head>
 <body>
@@ -387,6 +440,23 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-tag emergency">QRH</div>
       <div class="hub-tile-title">Emergency QRH</div>
       <div class="hub-tile-desc">Quick Reference Handbook — all 22 emergency &amp; abnormal procedures with step-by-step checklists and emergency speeds.</div>
+      <div class="hub-tile-arrow">→</div>
+    </div>
+  </div>
+
+    <div class="hub-tile" onclick="openQuiz()">
+      <div class="hub-tile-icon">❓</div>
+      <div class="hub-tile-tag ready">READY</div>
+      <div class="hub-tile-title">Quiz</div>
+      <div class="hub-tile-desc">200 questions across all documents — WHAT, HOW &amp; WHY. Answers hidden with one-tap reveal and document reference.</div>
+      <div class="hub-tile-arrow">→</div>
+    </div>
+
+    <div class="hub-tile" onclick="openFlashcard()">
+      <div class="hub-tile-icon">🃏</div>
+      <div class="hub-tile-tag ready">READY</div>
+      <div class="hub-tile-title">Flashcards</div>
+      <div class="hub-tile-desc">Tap to flip. Mark cards as Know or Review Again — the deck resurfaces your weak spots automatically.</div>
       <div class="hub-tile-arrow">→</div>
     </div>
   </div>
@@ -1941,6 +2011,106 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 </div><!-- /view-qrh -->
 
 
+<!-- ══════════════════════════════════════════════════════════════════
+     QUIZ VIEW
+══════════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-quiz">
+  <div class="hero" style="margin-bottom:20px">
+    <div class="hero-icon">❓</div>
+    <div class="hero-title">Quiz</div>
+    <div class="hero-sub">200 questions · WHAT · HOW · WHY · Tap "Show Answer" when ready</div>
+  </div>
+
+  <div class="quiz-filter-bar" id="quizFilters">
+    <button class="quiz-filter-tab active" onclick="initQuiz('all',this)">All (200)</button>
+    <button class="quiz-filter-tab" onclick="initQuiz('cheatsheet',this)">Cheat Sheet</button>
+    <button class="quiz-filter-tab" onclick="initQuiz('capgen',this)">CAP GEN</button>
+    <button class="quiz-filter-tab" onclick="initQuiz('afm',this)">AFM</button>
+    <button class="quiz-filter-tab" onclick="initQuiz('qrh',this)">QRH</button>
+  </div>
+
+  <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizBar" style="width:0%"></div></div>
+
+  <div class="quiz-card" id="quizCard">
+    <div class="quiz-tags">
+      <span class="quiz-type-tag WHAT" id="quizTypeTag">WHAT</span>
+      <span class="quiz-doc-tag" id="quizDocTag">Cheat Sheet</span>
+    </div>
+    <div class="quiz-question" id="quizQuestion">Loading…</div>
+    <div class="quiz-ref" id="quizRef"></div>
+    <button class="quiz-show-btn" id="quizShowBtn" onclick="showQuizAnswer()">👁 Show Answer</button>
+    <div class="quiz-answer-wrap" id="quizAnswerWrap">
+      <div class="quiz-answer-label">Answer</div>
+      <div class="quiz-answer" id="quizAnswer"></div>
+    </div>
+  </div>
+
+  <div class="quiz-nav">
+    <button class="quiz-nav-btn" onclick="prevQuiz()">← Prev</button>
+    <div class="quiz-progress" id="quizProgress">1 / 200</div>
+    <button class="quiz-nav-btn" onclick="nextQuiz()">Next →</button>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════════════
+     FLASHCARD VIEW
+══════════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-flashcard">
+  <div class="hero" style="margin-bottom:20px">
+    <div class="hero-icon">🃏</div>
+    <div class="hero-title">Flashcards</div>
+    <div class="hero-sub">Tap card to flip · Know = remove from deck · Review Again = resurface later</div>
+  </div>
+
+  <div class="quiz-filter-bar">
+    <button class="quiz-filter-tab active" onclick="initFlashcard('all',this)">All (200)</button>
+    <button class="quiz-filter-tab" onclick="initFlashcard('cheatsheet',this)">Cheat Sheet</button>
+    <button class="quiz-filter-tab" onclick="initFlashcard('capgen',this)">CAP GEN</button>
+    <button class="quiz-filter-tab" onclick="initFlashcard('afm',this)">AFM</button>
+    <button class="quiz-filter-tab" onclick="initFlashcard('qrh',this)">QRH</button>
+  </div>
+
+  <div class="fc-stats">
+    <span>Remaining: <strong id="fcRemaining">200</strong></span>
+    <span class="fc-stat-know">✓ Know: <strong id="fcKnow">0</strong></span>
+    <span class="fc-stat-again">↩ Review: <strong id="fcAgain">0</strong></span>
+  </div>
+
+  <div id="fcDeck">
+    <div class="fc-scene">
+      <div class="fc-card" id="fcCard" onclick="flipCard()">
+        <div class="fc-front">
+          <div class="quiz-tags">
+            <span class="quiz-type-tag WHAT" id="fcTypeTag">WHAT</span>
+            <span class="quiz-doc-tag" id="fcDocTag">Cheat Sheet</span>
+          </div>
+          <div class="fc-question" id="fcQuestion">Loading…</div>
+          <div class="fc-hint">Tap to reveal answer</div>
+        </div>
+        <div class="fc-back">
+          <div class="fc-answer-label">Answer</div>
+          <div class="fc-answer" id="fcAnswer"></div>
+          <div class="fc-ref" id="fcRef"></div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-action-row">
+      <button class="fc-btn again" onclick="fcMark('again')">↩ Review Again</button>
+      <button class="fc-btn know" onclick="fcMark('know')">✓ Got It</button>
+    </div>
+  </div>
+
+  <div id="fcDone" style="display:none" class="fc-done">
+    <div class="fc-done-icon">🎉</div>
+    <div class="fc-done-title">Deck complete!</div>
+    <div class="fc-done-sub" id="fcDoneSub">You marked 0 for review.</div>
+    <button class="fc-restart-btn" onclick="fcRestart()">Restart Weak Cards</button>
+    <button class="fc-restart-btn" style="margin-left:12px;background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.15);color:var(--t2)" onclick="initFlashcard(fcCurrentFilter)">Restart All</button>
+  </div>
+</div>
+
+
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -2609,6 +2779,348 @@ function updateAiFab() {
   if (!panel.classList.contains('open')) fab.style.display = 'flex';
   const name = currentDoc ? (DOCS[currentDoc]?.title || 'Aviation Mentor') : 'Aviation Mentor';
   document.getElementById('aiPanelName').textContent = name + ' — AI Tutor';
+}
+
+// ── QUIZ & FLASHCARD DATA ────────────────────────────────────────────────────
+const QUIZ_DB=[
+// ── CHEAT SHEET (50) ─────────────────────────────────────────────────────────
+{doc:'cheatsheet',type:'WHAT',q:'What speed is Vyse (best single-engine rate of climb) for the PA31-350?',a:'107 KIAS — the blue-line speed. Maintain this after engine failure to maximise single-engine climb performance.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHAT',q:'What is Vlo — maximum landing gear operating speed?',a:'128 KIAS. Above this speed you must not extend or retract the landing gear.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHAT',q:'What is Vle (maximum gear-extended speed) for post-1978 PA31-350 aircraft?',a:'153 KIAS. The gear may remain extended up to this speed.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'HOW',q:'How many degrees do you bank into the operating engine during single-engine flight, and why?',a:'5° bank toward the operative engine. This reduces effective Vmc and provides the best single-engine climb gradient by unloading the rudder.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHY',q:'Why are the PA31-350 engines counter-rotating?',a:'Counter-rotating propellers eliminate the critical engine problem — both engines produce the same yawing and rolling moment when the other fails, so there is no single engine that is more critical to lose.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHAT',q:'What powerplant does the PA31-350 Chieftain use?',a:'Two Lycoming TIO-540-J2BD engines — turbocharged, fuel-injected, six-cylinder opposed — each producing 350 HP.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHAT',q:'What does the BLR modification provide to the PA31-350?',a:'The BLR winglet/strake STC improves single-engine climb performance, reduces stall speed, and enhances lateral stability — particularly beneficial in engine-out scenarios.',ref:'Cheat Sheet · BLR Modification'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the purpose of the firewall fuel shutoff?',a:'It stops all fuel flow to an engine at the firewall — used in emergencies to prevent or fight engine fires. There is one per engine.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'WHY',q:'Why would you select the emergency fuel pump ON during a single-engine approach?',a:'To maintain continuous fuel pressure to the operative engine in case the engine-driven pump drops pressure, especially critical during power changes on final where any interruption is unrecoverable.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'WHAT',q:'What does the crossfeed system allow?',a:'It allows one engine to draw fuel from the opposite wing tanks, enabling fuel balancing and extending range on one engine.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'HOW',q:'How is crossfeed correctly configured in procedure 5A?',a:'Fuel selector (inop engine) = either tank; Boost CB (inop) = IN; Emergency pump (inop) = ON; Crossfeed = ON; then Fuel selector (operative) = OFF and Boost CB (operative) = PULLED.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'WHAT',q:'What does ICO stand for, and what does it do?',a:'Idle Cut-Off — the mixture control position that stops all fuel flow to the engine. Used to shut the engine down or minimise fire risk.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'WHY',q:'Why move mixture to ICO before feathering the propeller?',a:'To stop combustion before feathering, preventing hydraulic lock and reducing fire risk when the engine is being secured.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'WHAT',q:'What type of hydraulic system does the PA31-350 use for landing gear?',a:'Engine-driven hydraulic pumps (one per engine) actuate the landing gear. Emergency extension uses a hand pump drawing from a limited hydraulic reservoir.',ref:'Cheat Sheet · Hydraulic System'},
+{doc:'cheatsheet',type:'WHY',q:'Why is the hydraulic reservoir quantity limited during emergency gear extension?',a:'The hand pump reservoir contains a fixed fluid volume. If it runs out mid-extension, there is no more fluid to actuate remaining gear — potentially leaving partial extension.',ref:'Cheat Sheet · Hydraulic System'},
+{doc:'cheatsheet',type:'WHAT',q:'What two flap system types can be found on the PA31-350?',a:'The Duke system (standard) and the Calco system (alternative). Each has different failure modes: asymmetric flaps in Duke → procedure 7A; Calco malfunction → procedure 7B.',ref:'Cheat Sheet · Flaps — Duke & Calco Systems'},
+{doc:'cheatsheet',type:'HOW',q:'How do you detect an asymmetric flap condition in the Duke system?',a:'The aircraft rolls toward the wing with less flap. The flap position indicator shows a split reading. Initiate 7A immediately.',ref:'Cheat Sheet · Flaps — Duke & Calco Systems'},
+{doc:'cheatsheet',type:'WHY',q:'Why must you NOT reset the flap CB after a Duke system asymmetry until after landing?',a:'Resetting and reactivating the selector could trigger another flap movement, potentially making the asymmetry worse and reducing aileron authority further.',ref:'Cheat Sheet · Flaps — Duke & Calco Systems'},
+{doc:'cheatsheet',type:'HOW',q:'How many alternators does the PA31-350 have?',a:'Two — one engine-driven alternator per engine. Each supplies its respective bus; either can supply the full essential electrical load if needed.',ref:'Cheat Sheet · Electrical System'},
+{doc:'cheatsheet',type:'WHY',q:'Why can an ALTERNATOR INOP light appear with the alternator still functioning?',a:'The sensing circuit can fail independently of the alternator. Verify by checking system voltage: ~28V = alternator OK, light is faulty; ~24V = alternator has genuinely failed.',ref:'Cheat Sheet · Electrical System'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the pneumatic system primarily used for on the PA31-350?',a:'Inflating leading-edge pneumatic de-ice boots on the wings and tail surfaces to break off accumulated ice.',ref:'Cheat Sheet · Pneumatic System'},
+{doc:'cheatsheet',type:'HOW',q:'How do pneumatic de-ice boots work?',a:'Engine bleed air (or a dedicated pump) inflates rubber boots on the leading edges, expanding them to crack and shed accumulated ice.',ref:'Cheat Sheet · De-Icing & Anti-Ice Systems'},
+{doc:'cheatsheet',type:'WHY',q:'Why should de-ice boots NOT be activated before ice has accumulated?',a:'Activating too early can mold the boots to thin ice, creating a fixed ice pocket behind the boot after deflation — worse than not activating at all.',ref:'Cheat Sheet · De-Icing & Anti-Ice Systems'},
+{doc:'cheatsheet',type:'WHAT',q:'What is Vmc and why is it published?',a:'Vmc is the minimum control airspeed with the critical engine failed and the operative engine at maximum power. It is published as a red radial on the airspeed indicator — never fly below it on one engine.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'HOW',q:'How is aircraft approach category determined?',a:'By Vref = 1.3 × Vso at max certified landing weight. Category A < 91 kt; B = 91–120 kt; C = 121–140 kt; D = 141–165 kt.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHAT',q:'What are cowl flaps used for?',a:'To control engine cooling airflow. Open = more cooling (high-power, climb). Closed = less drag (cruise, engine secured). Inop engine cowl flaps should be closed to reduce drag.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHY',q:'Why close cowl flaps on the inoperative engine after securing it?',a:'An inoperative engine needs no cooling; open cowl flaps add parasite drag that degrades single-engine performance when every knot of climb matters.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHAT',q:'What does Vno represent?',a:'Vno is the maximum structural cruising speed (top of the green arc). Above Vno, flight should only occur in smooth air — turbulence above this speed risks structural damage.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'HOW',q:'How does the Janitrol combustion heater function?',a:'It burns aviation fuel to produce cabin heat independently of engine bleed air, using an electrical blower fan powered by the operative engine bus.',ref:'Cheat Sheet · Heating & Ventilation'},
+{doc:'cheatsheet',type:'WHAT',q:'What gear indication confirms gear is locked down?',a:'Three green lights — one for each gear (nose, left main, right main). Any light missing or an UNSAFE light after gear selection requires emergency gear extension (5C).',ref:'Cheat Sheet · Landing Gear'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the purpose of propeller feathering on the PA31-350?',a:'Feathering rotates prop blades edge-on to airflow, minimising drag on an inoperative engine. The PA31-350 uses full-feathering constant-speed props with oil-pressure unfeathering.',ref:'Cheat Sheet · Propellers'},
+{doc:'cheatsheet',type:'HOW',q:'How is a feathered propeller unfeathered for an air start?',a:'Procedure 6B: move prop control forward, engage starter to rotate prop out of feather, then advance mixture to restart once rotation is established.',ref:'Cheat Sheet · Propellers'},
+{doc:'cheatsheet',type:'WHY',q:'Why is RPM limited to 2000 during engine warm-up after an air start?',a:'The engine has no oil distributed to bearings and turbocharger after being shut down. High RPM before oil pressure is established risks catastrophic bearing damage.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHAT',q:'What instrument confirms alternator restoration after an alternator failure?',a:'System voltage gauge — should return to approximately 28V when the alternator is functioning normally.',ref:'Cheat Sheet · Electrical System'},
+{doc:'cheatsheet',type:'HOW',q:'How do you isolate a faulty circuit during an electrical fire (4B)?',a:'Turn master OFF, then restore essential electrical switches one at a time to identify the circuit that causes smoke or heat. Leave that CB pulled and the circuit OFF.',ref:'Cheat Sheet · Electrical System'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the primary use of the Garmin 7XX in an electrical fire (4B)?',a:'After master switch OFF, activate the Garmin 7XX on synthetic vision immediately to maintain attitude reference while all other electrical items are isolated.',ref:'Cheat Sheet · Instruments & Annunciator Panel'},
+{doc:'cheatsheet',type:'WHY',q:'Why does aft CG make an aircraft less stable but improve performance?',a:'Aft CG shortens the tail moment arm, reducing the download force the horizontal stabiliser must produce — this reduces induced drag and improves climb and cruise. But it reduces pitch stability margin.',ref:'Cheat Sheet · Flight Preparation & Loading'},
+{doc:'cheatsheet',type:'WHAT',q:'What is accelerate-stop distance?',a:'The runway length needed to accelerate to V1, then stop after an engine failure. Must fit within ASDA (runway + stopway).',ref:'Cheat Sheet · Flight Preparation & Loading'},
+{doc:'cheatsheet',type:'HOW',q:'How does high density altitude affect PA31-350 takeoff performance?',a:'Reduced air density means lower engine power, less aerodynamic lift, and higher true airspeed at rotation — resulting in a longer ground roll, reduced climb gradient, and greater obstacle clearance risk.',ref:'Cheat Sheet · Powerplant & Power Settings'},
+{doc:'cheatsheet',type:'WHAT',q:'What does oil pressure loss indicate in relation to propeller pitch?',a:'Oil pressure is used by the prop governor to maintain fine pitch (high RPM). Loss of oil pressure causes the prop to move to coarse pitch (low RPM) — the mechanism in a 4C underspeed event.',ref:'Cheat Sheet · Oil System'},
+{doc:'cheatsheet',type:'HOW',q:'How does oil pressure control propeller pitch?',a:'The prop governor routes high-pressure engine oil to the propeller hub to move blades toward fine pitch (high RPM). Spring and counterweight forces oppose this — loss of oil = prop goes coarse.',ref:'Cheat Sheet · Oil System'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the purpose of magnetos and why does each engine have two?',a:'Magnetos provide engine ignition independent of the aircraft electrical system. Two per engine = redundancy (each fires one spark plug per cylinder) and more complete combustion.',ref:'Cheat Sheet · Engines & Accessories'},
+{doc:'cheatsheet',type:'WHY',q:'Why do you check magnetos individually during runup, not both OFF simultaneously?',a:'Both mags OFF simultaneously stops ignition and stalls the engine on the runup pad. You check one at a time (significant drop = fault) to verify each independently without engine shutdown.',ref:'Cheat Sheet · Engines & Accessories'},
+{doc:'cheatsheet',type:'HOW',q:'How do you brief passengers before a gear-up landing (6A)?',a:'Procedure 6A step 2 specifically mandates PASSENGERS BRIEFED — covering brace position, exits to use, no carry-on items, and readiness to evacuate immediately on crew command after stop.',ref:'Cheat Sheet · Flight Preparation & Loading'},
+{doc:'cheatsheet',type:'WHAT',q:'What are the three sources of energy available during an approach?',a:'Height (altitude — exchangeable for airspeed), Airspeed (kinetic — exchangeable for altitude), and Engine Power (thrust — the only source that adds energy). All three must be managed positively.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHY',q:'Why do you reduce electrical load immediately after an alternator failure?',a:'The battery has limited capacity. Shedding non-essential electrics extends battery duration for essential navigation, communication, and instrument systems until landing.',ref:'Cheat Sheet · Electrical System'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the function of the emergency fuel pump CB in the crossfeed procedure?',a:'In 5A, the inop engine boost CB is pushed IN (to activate that pump for crossfeed), while the operative engine CB is PULLED to prevent over-pressuring the line from both pumps running simultaneously.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'HOW',q:'How is the landing gear normally actuated on the PA31-350?',a:'Electrically selected (gear handle), hydraulically actuated. Selecting gear up/down sends an electrical signal that opens hydraulic valves; engine-driven pumps provide fluid pressure to move the gear.',ref:'Cheat Sheet · Landing Gear'},
+{doc:'cheatsheet',type:'WHY',q:'Why is single-engine crosswind landing more demanding?',a:'Asymmetric power yaws the aircraft toward the inop engine, adding to the crosswind weathervaning tendency. The rudder must counter both effects simultaneously, reducing available control authority.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'WHAT',q:'What is the demonstrated crosswind component and what does it mean operationally?',a:"The crosswind component at which the aircraft was demonstrated during certification. It is NOT a structural limit — it is the manufacturer's demonstrated performance limit. Pilots must exercise judgement beyond it.",ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+{doc:'cheatsheet',type:'HOW',q:'How do you verify the prop governor is working during runup?',a:'At specified RPM, cycle the prop control from full forward to near-feather and back. RPM should drop smoothly and recover — confirming oil flow through the governor is unrestricted.',ref:'Cheat Sheet · Propellers'},
+
+// ── CAP GEN (50) ─────────────────────────────────────────────────────────────
+{doc:'capgen',type:'WHAT',q:'What is the approach ban?',a:'A prohibition from commencing or continuing an instrument approach when reported visibility at the destination is below published approach minima. It applies at or before the Final Approach Fix (FAF) inbound.',ref:'CAP GEN · pages 23–27 · CARs 602.129, 602.130'},
+{doc:'capgen',type:'WHY',q:'Why does the approach ban exist in Canadian regulations?',a:'To prevent pilots from starting or continuing an approach they statistically cannot complete safely — ensuring a go/no-go decision is made before committing to final, not at decision height.',ref:'CAP GEN · pages 23–27 · CARs 700.10, 700.11'},
+{doc:'capgen',type:'HOW',q:'How does the approach ban apply to a precision vs. non-precision approach?',a:'Both: if reported visibility is below minima at or before the FAF inbound, the approach cannot be commenced or continued. The FAF is the trigger point for both approach types.',ref:'CAP GEN · pages 23–27'},
+{doc:'capgen',type:'WHAT',q:'What are alternate aerodrome minima?',a:'Minimum forecast ceiling and visibility required for an aerodrome to be listed as an IFR alternate. The aerodrome must meet these minima at ETA ± 1 hour.',ref:'CAP GEN · pages 31–33 · CARs 605.18(j)'},
+{doc:'capgen',type:'WHY',q:'Why must you carry fuel to an alternate on an IFR flight?',a:"Destination weather can deteriorate below minima after departure. CARs 605.18(j) mandates fuel to the alternate plus reserves — ensuring you can always legally and safely land somewhere.",ref:'CAP GEN · Alternate Aerodrome Minima'},
+{doc:'capgen',type:'HOW',q:'How do you determine if an aerodrome is an adequate alternate?',a:'It must have a serviceable approach, be forecast at or above alternate minima for ETA ± 1 hour, and be usable for your aircraft type — check runway length, NOTAM status, and available approaches.',ref:'CAP GEN · pages 31–33'},
+{doc:'capgen',type:'WHAT',q:'What is cold temperature altitude correction?',a:'A correction applied to published IFR altitudes when OAT is below 0°C. Cold air is more dense, making true altitude lower than the altimeter reads — you are lower than indicated.',ref:'CAP GEN · pages 36–37'},
+{doc:'capgen',type:'HOW',q:'How do you apply cold temperature altitude corrections?',a:'Use the ICAO cold temperature error table: find the published altitude and aerodrome temperature, read off the correction, and ADD it to the published altitude to maintain actual terrain clearance.',ref:'CAP GEN · pages 36–37'},
+{doc:'capgen',type:'WHY',q:'Why does cold temperature cause your altimeter to read HIGH (true altitude lower than indicated)?',a:'Cold air is denser than ISA standard. The column of air above you is shorter per unit of pressure than the altimeter expects — so it reads a higher altitude than your actual height.',ref:'CAP GEN · pages 36–37'},
+{doc:'capgen',type:'WHAT',q:'What is a Noise Abatement Departure Procedure (NADP)?',a:'A standardized departure profile designed to minimise aircraft noise impact on communities near the airport. Two types: NADP 1 (reduce noise close to airport) and NADP 2 (reduce noise over distant communities).',ref:'CAP GEN · pages 34–35'},
+{doc:'capgen',type:'HOW',q:'How do NADP 1 and NADP 2 differ in execution?',a:'NADP 1: climb to 800 ft AGL at full power, reduce to climb power, delay flap retraction. NADP 2: climb to 800 ft, reduce power AND retract flaps earlier to leave the area quickly.',ref:'CAP GEN · pages 34–35'},
+{doc:'capgen',type:'WHAT',q:'What is a Standard Instrument Departure (SID)?',a:'A published departure route providing obstacle clearance from the runway to the en-route structure. Following it eliminates the need to calculate obstacle clearance independently.',ref:'CAP GEN · pages 83–95'},
+{doc:'capgen',type:'WHY',q:'Why do some SIDs require higher than standard climb gradients?',a:'Terrain, obstacles, or airspace in the departure area require a steeper climb path. The published gradient must be verified achievable by the operator\'s aircraft under the applicable conditions.',ref:'CAP GEN · pages 83–95'},
+{doc:'capgen',type:'HOW',q:'How do you calculate if your aircraft can meet a SID climb gradient?',a:'Use the climb gradient table (FPM by groundspeed): multiply the gradient (ft/NM) × groundspeed (NM/min). Compare to your actual climb performance at the departure weight and density altitude.',ref:'CAP GEN · Climb Gradient Table — FPM by GS'},
+{doc:'capgen',type:'WHAT',q:'What is a Standard Terminal Arrival Route (STAR)?',a:'A published ATC routing from en-route structure into the terminal area, leading to the Initial Approach Fix of an instrument approach. Provides traffic flow management and obstacle clearance.',ref:'CAP GEN · pages 96–105'},
+{doc:'capgen',type:'WHAT',q:'What does DA/H mean on an approach chart?',a:'Decision Altitude (DA, referenced to MSL) or Decision Height (DH, referenced to AGL via radio altimeter). On precision approaches, you must have required visual reference at this point or execute a missed approach.',ref:'CAP GEN · pages 71–73'},
+{doc:'capgen',type:'WHY',q:'Why is there a distinction between DA and DH?',a:'DA uses the subscale-set altimeter (MSL reference); DH uses the radio altimeter (AGL reference). DH is more precise over the threshold but requires serviceable radio altimetry equipment.',ref:'CAP GEN · pages 71–73'},
+{doc:'capgen',type:'WHAT',q:'What is MDA and which approach types use it?',a:'Minimum Descent Altitude — the lowest altitude on a non-precision approach. You may not descend below MDA unless the required visual reference is established and landing is assured.',ref:'CAP GEN · pages 71–73'},
+{doc:'capgen',type:'HOW',q:'How do you read an approach chart minima box?',a:'Find your aircraft approach category (A/B/C/D based on Vref), then read the applicable minima for each approach type: straight-in, circling, or category-specific. The PA31-350 is typically Category B.',ref:'CAP GEN · pages 71–73'},
+{doc:'capgen',type:'WHAT',q:'What approach category is the PA31-350 Chieftain?',a:'Category B — approach speed (1.3 × Vso) falls in the 91–120 knot range. Always verify with the AFM at actual landing weight.',ref:'CAP GEN · Minima Box & Aircraft Categories'},
+{doc:'capgen',type:'WHY',q:'Why are circling approach minima higher than straight-in minima?',a:'Circling requires visual maneuvering at low altitude. Higher minima ensure the pilot can maintain obstacle clearance during the turn to final while remaining entirely in visual conditions.',ref:'CAP GEN · pages 71–73'},
+{doc:'capgen',type:'WHAT',q:'What are the three RVR sensor positions?',a:'A = Touchdown zone (threshold); B = Mid-point; C = Rollout end. The controlling RVR for most approaches is position A (touchdown zone).',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'HOW',q:'How does RVR differ from meteorological visibility?',a:'RVR is measured electronically by transmissometers at specific runway points — it represents visibility along the runway surface. Met visibility is a human observer estimate across the aerodrome. RVR is more precise for approach decisions.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHAT',q:'What is Low Visibility Procedures (LVP) and when are they activated?',a:'Special ATC and ground procedures for operations when RVR drops toward or below 1,200 ft. While LVP is in effect, no Category I approaches are permitted — operations must meet appropriate Cat II/III qualification.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHAT',q:'What is a designated mountainous region?',a:'Areas designated in the CARs where standard minimum en-route altitudes are insufficient due to terrain. Special altitude rules and route construction requirements apply.',ref:'CAP GEN · page 15'},
+{doc:'capgen',type:'WHY',q:'Why are higher MEAs required in designated mountainous regions?',a:'Terrain gradient is too steep for standard obstacle clearance buffers. The MEA must be set higher to guarantee clearance in all conditions including navigation tolerance errors.',ref:'CAP GEN · page 15'},
+{doc:'capgen',type:'WHAT',q:'What is the standard IFR obstacle clearance gradient?',a:'200 ft/NM (approximately 3.3%). SIDs and ODPs requiring more will publish the higher gradient explicitly on the chart.',ref:'CAP GEN · Climb Gradient Table — FPM by GS'},
+{doc:'capgen',type:'HOW',q:'How do you convert a published climb gradient (ft/NM) to required FPM?',a:'Multiply the gradient (ft/NM) by groundspeed in NM/min. Example: 200 ft/NM × 2 NM/min (120 kt GS) = 400 FPM required minimum.',ref:'CAP GEN · Climb Gradient Table — FPM by GS'},
+{doc:'capgen',type:'WHAT',q:'What is a precision approach?',a:'An instrument approach with both lateral AND vertical electronic guidance (ILS, GLS/GBAS, RNP AR with advisory vertical path). Provides a continuous glidepath to decision altitude.',ref:'CAP GEN · IAP Chart Reading'},
+{doc:'capgen',type:'WHAT',q:'What is a non-precision approach?',a:'An approach with lateral guidance only (VOR, NDB, LOC, LNAV without vertical path). The pilot descends to MDA and then continues visually or executes missed approach at the MAP.',ref:'CAP GEN · IAP Chart Reading'},
+{doc:'capgen',type:'WHY',q:'Why is the CDFA (Constant Descent Final Approach) technique preferred over dive-and-drive on non-precision approaches?',a:'CDFA maintains a stabilised approach profile, eliminating the CFIT risk of descending to MDA at the FAF and flying level until MAP. It produces a glidepath-like profile without electronic guidance.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHAT',q:'What is the Missed Approach Point (MAP)?',a:'The point by which a missed approach must be initiated if required visual reference is not established. On precision approaches = DA; on non-precision = specific fix or timing from FAF.',ref:'CAP GEN · IAP Chart Reading'},
+{doc:'capgen',type:'HOW',q:'How do you identify the MAP on a non-precision approach?',a:'By DME distance from the FAF, elapsed time from FAF (using published time-speed table), or a specific named fix. The MAP is shown in the approach chart profile view.',ref:'CAP GEN · IAP Chart Reading'},
+{doc:'capgen',type:'WHAT',q:'What are IFR takeoff minima?',a:'The minimum visibility (and sometimes ceiling) required for an IFR departure. Published in the terminal procedures or operator OpSpecs. Standard Canadian minima is typically ½ SM or 1600 m RVR unless a higher minimum is required.',ref:'CAP GEN · pages 19–21'},
+{doc:'capgen',type:'WHY',q:'Why might takeoff minima exist even without a ceiling requirement?',a:'Obstacle clearance on departure relies on visual terrain reference during the initial climb. Insufficient visibility removes this margin even if there is no cloud below a specified ceiling.',ref:'CAP GEN · pages 19–21'},
+{doc:'capgen',type:'WHAT',q:'What are general operating minima for an approach?',a:'The minimum meteorological conditions (ceiling, visibility, RVR) under which an approach may be commenced. Determined by approach type, ground facility status, and aircraft/crew equipment and qualifications.',ref:'CAP GEN · pages 16–18'},
+{doc:'capgen',type:'HOW',q:'How do Canadian holding speed limits apply to the PA31-350?',a:'At or below 6,000 ft: 200 KIAS max (the applicable limit for the PA31-350). 6,001–14,000 ft: 230 KIAS max. Above 14,000 ft: 265 KIAS max.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHY',q:'Why are holding speeds lower at lower altitudes?',a:'Airspace is more constrained and traffic density higher at lower altitudes. Slower speeds reduce holding pattern size, keeping aircraft within the protected area boundaries.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHAT',q:'What is an Obstacle Departure Procedure (ODP)?',a:'A published procedure providing obstacle clearance during initial climb after takeoff. Unlike SIDs, ODPs are not mandatory unless part of the ATC clearance — but following them ensures obstruction clearance.',ref:'CAP GEN · Standard Instrument Departures'},
+{doc:'capgen',type:'HOW',q:'How do you find an ODP if ATC does not specify one?',a:'Check the terminal procedures for the departure airport under "Obstacle Departure Procedures." If none is published, maintain 200 ft/NM climb gradient to minimum safe altitude.',ref:'CAP GEN · Standard Instrument Departures'},
+{doc:'capgen',type:'WHAT',q:'What is TDZ RVR?',a:'Runway Visual Range measured at the Touchdown Zone — the first 3,000 ft of the runway. This is typically the controlling RVR for approach minimums, measured by transmissometer position A.',ref:'CAP GEN · Key Definitions'},
+{doc:'capgen',type:'WHY',q:'Why do landing minima vary between identical approach types at different aerodromes?',a:'Terrain, obstacle clearance requirements, approach light system type and length, and local factors each affect the minimum safe altitude and visibility for each specific runway approach.',ref:'CAP GEN · Landing Minima'},
+{doc:'capgen',type:'WHAT',q:'What is a circling approach?',a:'An instrument approach where the final approach course does not align with the intended landing runway. The pilot descends to circling MDA then maneuvers visually to the runway.',ref:'CAP GEN · IAP Chart Reading'},
+{doc:'capgen',type:'WHY',q:'Why are circling speeds important for approach category?',a:'Protected airspace for circling is sized by category based on approach speed. Flying faster than your category moves you outside the protected obstacle-free area.',ref:'CAP GEN · Minima Box & Aircraft Categories'},
+{doc:'capgen',type:'HOW',q:'How do you verify NOTAMs before IFR operations at CYKF?',a:'Check NAV CANADA FNS or NOTAM Service before every flight. Look for facility outages (ILS, NDB, lighting), runway/taxiway closures, and approach procedure changes affecting the planned operation.',ref:'CAP GEN · Operating Minima — General'},
+{doc:'capgen',type:'WHAT',q:'What does "in sight of the surface" mean for VFR flight?',a:'The pilot must be able to see the ground or water below at all times, ensuring terrain reference is continuously maintained during visual flight.',ref:'CAP GEN · Operating Minima — General'},
+{doc:'capgen',type:'HOW',q:'How do you determine minimum IFR en-route altitude for a non-airway route?',a:'Find the highest obstacle within 5 NM each side of the route, then add 1,000 ft (non-mountainous terrain) or 2,000 ft (mountainous terrain) to determine the Minimum IFR Altitude.',ref:'CAP GEN · Operating Minima — General'},
+{doc:'capgen',type:'WHAT',q:'What is an approach ban violation?',a:'Commencing or continuing an approach when the reported visibility at the destination is below the minima for the approach being flown. This is a regulatory offence under the CARs.',ref:'CAP GEN · pages 23–27 · CARs 602.129'},
+{doc:'capgen',type:'WHY',q:'Why do you apply cold temperature corrections during an ILS approach?',a:'Even though the ILS glidepath is unaffected by temperature, any published step-down fixes and missed approach altitudes are based on pressure altitude — in cold temperatures you may be lower than those altitudes indicate.',ref:'CAP GEN · pages 36–37'},
+{doc:'capgen',type:'WHAT',q:'What are the two types of IFR alternates commonly required?',a:'Destination alternate (required when destination weather is forecast below minima) and en-route alternate (required for extended overwater or remote operations). Each has specific minima requirements.',ref:'CAP GEN · Alternate Aerodrome Minima'},
+{doc:'capgen',type:'HOW',q:'How is a VFR-on-top clearance used?',a:'An IFR clearance authorising flight above cloud in VMC at a VFR altitude. The pilot is responsible for terrain clearance, cloud separation per VFR rules, and maintaining IFR separation from other IFR aircraft.',ref:'CAP GEN · Operating Minima — General'},
+
+// ── AFM (50) ─────────────────────────────────────────────────────────────────
+{doc:'afm',type:'WHAT',q:'What does AFM Section I cover?',a:'Limitations — all legally binding operating limits: airspeeds, weights, powerplant limits, fuel/fluid types, altitude limits, load factors, and placard requirements.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHY',q:'Why are AFM limitations legally binding?',a:'The AFM is a Transport Canada-approved document. Its limitations define the aircraft\'s certified envelope. Operating outside them may invalidate airworthiness, void insurance, and constitutes a CARs violation.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHAT',q:'What does AFM Section II cover?',a:'Normal Procedures — checklists and amplified procedures for all phases of normal flight: pre-flight, engine start, taxi, takeoff, climb, cruise, descent, approach, and landing.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'WHAT',q:'What does AFM Section III cover?',a:'Emergency Procedures — amplified procedures for all abnormal and emergency situations. The QRH is a condensed quick-reference version of this section.',ref:'AFM Section III · Emergency Procedures'},
+{doc:'afm',type:'WHY',q:'Why is the AFM emergency section more detailed than the QRH?',a:'The AFM provides full explanations, cautions, and background for each procedure — essential for ground study. The QRH condenses it to critical actions only for use during the time pressure of an in-flight emergency.',ref:'AFM Section III · Emergency Procedures'},
+{doc:'afm',type:'WHAT',q:'What does AFM Section IV cover?',a:'Performance — takeoff, climb, cruise, descent, and landing performance charts for flight planning, weight-and-balance calculations, and fuel planning.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'HOW',q:'How do you use AFM performance charts?',a:'Enter with the variables (pressure altitude, OAT or density altitude, aircraft weight, configuration). Read the performance value. Interpolate between chart lines as required.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'WHAT',q:'What does AFM Section V cover?',a:'Supplements & STCs — approved modifications (BLR winglet STC SA00202SE) and Airworthiness Directives (AD 99-14-01 and AD 2000-06-06) that affect limitations or procedures.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'WHY',q:'Why are Airworthiness Directives referenced in the AFM?',a:'ADs are legally mandatory compliance orders from Transport Canada or the FAA. Once incorporated into the AFM supplement, they carry AFM status and their associated limitations are enforceable.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'WHAT',q:'What are the two ADs referenced in the PA31-350 AFM?',a:'AD 99-14-01 and AD 2000-06-06. Both affect specific aircraft systems and must be complied with to maintain airworthiness.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'WHAT',q:'What is the BLR STC number for the PA31-350 winglet modification?',a:'STC SA00202SE — the BLR (Big Light Rods) modification covering winglets and strakes that improve performance and stability.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'HOW',q:'How does the BLR STC supplement interact with the base AFM?',a:'Where the BLR supplement provides different values (Vyse, Vmca, performance data), the supplement supersedes the base AFM. Always use BLR data for any BLR-equipped aircraft.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'WHAT',q:'What is the maximum RPM for the PA31-350 engines?',a:'2575 RPM — the published red-line limit. Referenced in procedure 4D: "if RPM cannot be kept under 2575 → FEATHER." Exceeding this risks mechanical damage.',ref:'AFM Section I · Engine & Power Limits'},
+{doc:'afm',type:'WHY',q:'Why is there a 5-minute limit on maximum takeoff power?',a:'Maximum power produces high cylinder temperatures and mechanical stress. Limiting it to 5 minutes protects engine life and prevents detonation under sustained high-power operation.',ref:'AFM Section I · Engine & Power Limits'},
+{doc:'afm',type:'WHAT',q:'What is maximum continuous power?',a:'The highest power setting approved for unlimited duration. It is lower than takeoff power. Operating at takeoff power beyond 5 minutes is a limitation exceedance.',ref:'AFM Section I · Engine & Power Limits'},
+{doc:'afm',type:'HOW',q:'How do you determine maximum allowable takeoff weight for a specific flight?',a:'Start from the published structural maximum in AFM Section I. Apply weight-and-balance limits. Then verify performance: accelerate-stop, accelerate-go, and climb gradient all within limits at that weight and conditions.',ref:'AFM Section I · Weight Limits'},
+{doc:'afm',type:'WHAT',q:'What is zero fuel weight (ZFW) and why does it matter?',a:'Maximum weight with zero fuel on board (airframe + payload). Fuel in the wings carries bending loads during flight; the ZFW limit prevents excessive wing root stress when fuel is depleted.',ref:'AFM Section I · Weight Limits'},
+{doc:'afm',type:'WHY',q:'Why does zero fuel weight limit matter during cruise when fuel is burning off?',a:'As fuel burns off during cruise, total weight decreases but wing root bending moment changes. If structural limits are calculated at max ZFW, falling below minimum fuel could violate limits — fuel scheduling must account for this.',ref:'AFM Section I · Weight Limits'},
+{doc:'afm',type:'WHAT',q:'What is the purpose of a cockpit placard?',a:'Placards are legally binding operating limitations, approved as part of the AFM/POH. They remind pilots of specific limits (speeds, configurations, switch positions) that must be observed at all times.',ref:'AFM Section I · Limitations · Placards'},
+{doc:'afm',type:'WHAT',q:'What does Vs0 represent and why is it used for approach category?',a:'Vs0 = stall speed in landing configuration (flaps full, gear down, max landing weight). Vref = 1.3 × Vs0 — the approach speed — which determines aircraft category.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHAT',q:'What does Vs1 represent?',a:'Stall speed in a specific clean configuration (typically flaps and gear up, power off). Used in clean-configuration performance analysis and defines the bottom of the green arc.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHY',q:'Why is Vmca determined at sea level at maximum power?',a:'Sea level + max power = worst case directional control scenario: maximum torque and slipstream effects, highest rudder effectiveness required. Vmca actually increases with altitude in practice despite lower power.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'HOW',q:'How do you perform a weight-and-balance calculation?',a:'1. List all items with weight and arm. 2. Compute moment (weight × arm) for each. 3. Sum all weights and all moments. 4. CG = total moment ÷ total weight. 5. Plot CG on envelope — must be within forward and aft limits at all weights.',ref:'AFM Section I · Weight Limits'},
+{doc:'afm',type:'WHAT',q:'What is accelerate-go distance?',a:'Runway length required to accelerate to V1, lose one engine, continue the takeoff, and clear a 50-ft obstacle. Must fit within TODA (runway + clearway).',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'WHY',q:'Why must you verify both accelerate-stop AND accelerate-go distances?',a:'Both scenarios must be achievable — the limiting one sets V1. Below V1 = stop required; above V1 = go required. Neither can be impossible given the available runway/clearway/stopway.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'HOW',q:'How does aircraft weight affect takeoff performance?',a:'Greater weight = higher rotation speed (higher stall speed), longer ground roll, shallower climb gradient. Always use actual departure weight in AFM charts — never approximate.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'WHAT',q:'What fuel type is approved for the PA31-350?',a:'AVGAS 100LL (100 octane low lead) is the primary approved fuel. 100/130 aviation gasoline is also approved if available. Automotive fuel (MOGAS) is NOT approved.',ref:'AFM Section I · Fuel & Fluid Limits'},
+{doc:'afm',type:'WHY',q:'Why is MOGAS not approved for the PA31-350?',a:'MOGAS has lower octane rating and different vapor pressure — high vapor pressure risks vapor lock in fuel lines; inadequate octane causes detonation in the high-compression turbocharged engines.',ref:'AFM Section I · Fuel & Fluid Limits'},
+{doc:'afm',type:'HOW',q:'How do you establish a stabilised approach for the PA31-350?',a:'By 500 ft AGL in IMC (1,000 ft VMC): on correct glidepath, on speed (Vref + corrections), in landing configuration, power stable, correct descent rate, checklists complete. Any deviation = consider go-around.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'WHY',q:'Why is a stabilised approach especially critical on single-engine?',a:'Deviations on single engine are harder to correct — asymmetric power limits go-around capability and energy margins are tighter. An unstabilised single-engine approach exponentially increases risk.',ref:'AFM Section III · Emergency Procedures'},
+{doc:'afm',type:'WHAT',q:'What is the maximum certified altitude for the PA31-350?',a:'Typically 24,000 ft for the turbocharged PA31-350. Verify with your specific AFM — STC modifications may alter this value.',ref:'AFM Section I · Altitude & Load Factor Limits'},
+{doc:'afm',type:'HOW',q:'How does turbocharging allow the PA31-350 to maintain power at altitude?',a:'The turbocharger compresses induction air to maintain near sea-level manifold pressure up to the critical altitude, where the turbo can no longer compensate fully for reduced atmospheric density.',ref:'AFM Section I · Engine & Power Limits'},
+{doc:'afm',type:'WHY',q:'Why must manifold pressure be monitored carefully on the PA31-350 at altitude?',a:'Overboosting (exceeding maximum MAP) causes detonation and engine damage. With turbocharging, sudden throttle advances can cause transient MAP spikes requiring careful throttle technique.',ref:'AFM Section I · Engine & Power Limits'},
+{doc:'afm',type:'WHAT',q:'What is a runup check and what does it verify?',a:'Pre-takeoff engine and systems check: magneto drop limits, prop governor cycling, engine instruments in limits, controls full and free, carb heat or alternate air function, abort criteria reviewed.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'HOW',q:'How do you check the propeller governor during runup?',a:'Advance throttle to specified RPM (e.g. 1800), then cycle the prop control from full forward to near-feather and back. RPM should drop smoothly and recover fully — confirming governor oil flow.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'WHY',q:'Why do you brief engine failure actions before EVERY takeoff?',a:'The V1 decision must be made instantly — there is no time to brief in the moment. Mental rehearsal ensures automatic correct response: "at V1, left engine fails → call, max power right, maintain control, gear up..."',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'WHAT',q:'What speed targets define the normal PA31-350 takeoff profile?',a:'V1 (decision speed), Vr (rotation), V2 (takeoff safety speed, target if engine fails after V1). Specific values depend on weight — found in AFM Section IV performance tables.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'HOW',q:'How do you verify performance is adequate for a given runway?',a:'Using AFM Section IV charts at actual weight, pressure altitude, and temperature: confirm takeoff distance, accelerate-stop distance, and accelerate-go distance all fit within the available field lengths.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'WHAT',q:'What is the demonstrated crosswind component?',a:"The crosswind at which the aircraft was demonstrated safe during certification testing. NOT a structural or regulatory limit — a pilot judgement boundary. The AFM states it's the maximum demonstrated, not the maximum permissible.",ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHY',q:'Why are normal procedures formatted as checklists?',a:'Checklists protect against memory lapses under workload, standardize procedures across crew members, and provide a systematic verification that steps are complete — critical in multi-crew operations.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'WHAT',q:'What is the purpose of the pre-takeoff briefing?',a:'Covers departure procedure, engine failure actions below/above V1, abort criteria, weather, emergency return plan, and crew responsibilities — ensuring both crew members share the same mental model before every departure.',ref:'AFM Section II · Normal Procedures'},
+{doc:'afm',type:'HOW',q:'How does the BLR modification affect single-engine performance data?',a:'The BLR supplement publishes revised Vyse, Vmca, and single-engine climb gradients that supersede the base AFM. The performance improvement may allow operation at weights or conditions not otherwise achievable.',ref:'AFM Section V · Supplements & STCs'},
+{doc:'afm',type:'WHAT',q:'What is the significance of the weight-moment envelope?',a:'The CG envelope defines the forward and aft CG limits at all weight conditions. Flight outside the envelope risks loss of pitch control authority (too far forward) or uncontrollable pitch instability (too far aft).',ref:'AFM Section I · Weight Limits'},
+{doc:'afm',type:'WHY',q:'Why does forward CG increase stall speed?',a:'Forward CG requires more nose-down elevator force (or more horizontal stabiliser download) to maintain trim. This download increases effective weight — requiring a higher angle of attack to stall.',ref:'AFM Section I · Limitations'},
+{doc:'afm',type:'WHAT',q:'What is density altitude and why does it matter?',a:'Pressure altitude corrected for non-standard temperature. At high density altitude, both engine power and aerodynamic performance are degraded — the aircraft "thinks" it is at a much higher standard-day altitude.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'HOW',q:'How do you calculate density altitude?',a:'Pressure altitude + (120 × (OAT°C − ISA temperature at that altitude)). ISA temperature = 15°C − (2°C per 1,000 ft PA). Alternatively, use an E6B or performance computer.',ref:'AFM Section IV · Performance'},
+{doc:'afm',type:'WHAT',q:'What is the load factor limit with flaps extended?',a:'Lower than the clean configuration limit. Flap extension increases lift but also increases structural bending loads on the wing — the extended-flap load limit is published in AFM Section I.',ref:'AFM Section I · Altitude & Load Factor Limits'},
+{doc:'afm',type:'WHY',q:'Why must you comply with AFM revision transmittal letters?',a:'AFM revisions incorporate approved changes to limitations, procedures, or performance data. Operating with an unincorporated revision means you may be using outdated limits — a regulatory and safety concern.',ref:'AFM Section I · Limitations'},
+
+// ── QRH (50) ─────────────────────────────────────────────────────────────────
+{doc:'qrh',type:'WHAT',q:'What is procedure 1A — Evacuation Drill and how is it classified?',a:'The procedure for evacuating the aircraft after a ground emergency. It is a RED MEMORY item — must be performed from memory without any reference. PIC commands evacuation, crew directs passengers to exits and upwind assembly area.',ref:'QRH · Page 1 · 1A'},
+{doc:'qrh',type:'WHY',q:'Why is the Evacuation Drill (1A) classified as a memory item?',a:'In a ground emergency (fire, crash landing), seconds determine survival. There is no time to reference any checklist — every crew member must initiate and execute evacuation automatically.',ref:'QRH · Page 1 · 1A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 1B — Engine Securing Procedure?',a:'A CHECKLIST procedure (amber) for the safe, complete shutdown of an inoperative engine. Referenced from procedures 2B, 2C, 3A, 4C, 4D, 6A, and 8A — it is the standard end-state for any engine failure.',ref:'QRH · Page 1 · 1B'},
+{doc:'qrh',type:'WHY',q:'Why is 1B (Engine Securing) referenced from so many other procedures?',a:'It consolidates all engine shutdown steps so they do not need to be repeated in every individual emergency procedure. It standardizes the final engine-secured state across all scenarios.',ref:'QRH · Page 1 · 1B'},
+{doc:'qrh',type:'WHAT',q:'What distinguishes procedure 1C from procedure 2A — both are Rejected Takeoffs?',a:'1C = sufficient runway to stop (CHECKLIST, 2 steps: throttle idle, brakes). 2A = insufficient runway to stop (MEMORY, full emergency shutdown + evacuation). The runway available determines which procedure applies.',ref:'QRH · Pages 1–2 · 1C & 2A'},
+{doc:'qrh',type:'HOW',q:'What are the exact steps of the 1C Rejected Takeoff procedure?',a:'2 steps only: 1 — THROTTLE: IDLE; 2 — BRAKES: AS REQUIRED. After full stop: set parking brake, follow applicable drill. If fire → Evacuation Drill 1A.',ref:'QRH · Page 1 · 1C'},
+{doc:'qrh',type:'WHY',q:'Why does the 2A RTO (no runway) require shutting off fuel, mags, and master before stopping?',a:'Without runway to stop, the aircraft will exit the runway — possibly colliding with obstacles. Shutting down all fuel and ignition before impact minimises fire ignition risk and post-crash hazard.',ref:'QRH · Page 2 · 2A'},
+{doc:'qrh',type:'WHAT',q:'After the 2A RTO at full stop, what must be completed?',a:'Evacuation Drill (→ 1A). The aircraft has exited the runway and there may be structural damage, fuel spillage, or fire — immediate evacuation is mandatory.',ref:'QRH · Page 2 · 2A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 2B — Engine Failure After Rotation?',a:'MEMORY procedure for takeoff continued after engine failure at or above V1/Vr. Steps: max power, gear up, flaps up, feather inop prop, target 104 KTS, then 107 KTS clear of obstacles, 5° bank into operative engine.',ref:'QRH · Page 2 · 2B'},
+{doc:'qrh',type:'HOW',q:'What is the target airspeed immediately after engine failure at rotation (2B), and why does it change?',a:'Target 104 KTS initially (minimum obstruction clearance speed). Once clear of obstacles: 107 KTS (Vyse / blue line) for best sustained single-engine climb rate.',ref:'QRH · Page 2 · 2B'},
+{doc:'qrh',type:'WHY',q:'Why do you retract gear and flaps before feathering in procedure 2B?',a:'Gear and flaps create the most drag — retracting them immediately removes that drag. Feathering takes several seconds of prop windmilling; drag removal is instantaneous and more effective.',ref:'QRH · Page 2 · 2B'},
+{doc:'qrh',type:'WHAT',q:'What additional steps apply in 2B if there is an engine fire?',a:'Steps 7–8 (fire-specific): 7 — FIREWALL FUEL SHUTOFF (inop engine) OFF; 8 — COWL FLAPS (inop engine) CLOSE. These follow immediately after the engine failure steps.',ref:'QRH · Page 2 · 2B'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 2C — Engine Fire After Rotation?',a:'MEMORY procedure: max power, gear up, flaps up, clear obstacles, 107 KTS. Then at 400 ft: firewall fuel shutoff off, prop feather, cowl flaps close, Engine Securing (→ 1B).',ref:'QRH · Page 2 · 2C'},
+{doc:'qrh',type:'WHY',q:'Why do you wait until 400 ft before securing the engine in 2C (fire after rotation)?',a:'At very low altitude, shutting down an engine before obstacle clearance is lethal. 400 ft provides a minimum safe margin to begin securing the engine while still maintaining terrain separation.',ref:'QRH · Page 2 · 2C'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 3A — Engine Failure/Fire In Flight?',a:'MEMORY procedure for in-flight engine failure or fire. Identify inop engine, adjust power, maintain 107 KTS+, gear up, flaps up. If no fire: check fuel/oil, try restart via 6B. If fire: fuel shutoff, feather, cowl flap close, engine securing (1B).',ref:'QRH · Page 3 · 3A'},
+{doc:'qrh',type:'HOW',q:'In 3A with no fire, what is the diagnostic sequence before feathering?',a:'Steps 6–12: fuel pressure/flow (pump ON if <34 PSI), fuel quantity, switch tanks if fuel available, oil pressure/temp, mags individually, mixture adjust, consider air start (→ 6B). Feather only if restart fails.',ref:'QRH · Page 3 · 3A'},
+{doc:'qrh',type:'WHY',q:'Why check fuel and oil before feathering in a 3A non-fire engine failure?',a:'The failure may be correctable (fuel starvation, mag fault, mixture). Feathering permanently removes engine power — if restart is possible, that is far preferable to continuing single-engine.',ref:'QRH · Page 3 · 3A'},
+{doc:'qrh',type:'WHAT',q:'What fuel pressure reading triggers emergency fuel pump selection in 3A?',a:'Below 34 PSI on the fuel pressure gauge → select EMERGENCY FUEL PUMP ON for the affected engine, indicating inadequate pressure from the engine-driven pump.',ref:'QRH · Page 3 · 3A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 3B — Engine Fire During Start?',a:'MEMORY procedure: 1-CONTINUE CRANKING; 2-BOOST PUMPS OFF; 3-MIXTURE ICO; 4-THROTTLES OPEN. If fire persists: FIREWALL FUEL SHUTOFF OFF; MASTER OFF; EVACUATION DRILL (→ 1A).',ref:'QRH · Page 3 · 3B'},
+{doc:'qrh',type:'WHY',q:'Why do you CONTINUE CRANKING in 3B (engine fire during start)?',a:'Continued cranking draws the burning mixture back into the engine and intake manifold, starving the external fire of fuel. It is counterintuitive but is the correct first action to try to extinguish a start fire.',ref:'QRH · Page 3 · 3B'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 4A — Engine Fire During Ground Operations?',a:'MEMORY procedure — only 2 steps: 1 — BRAKES APPLY AND SET; 2 — EVACUATION DRILL COMPLETE (→ 1A). Applies to all engine fires during ground operations once the aircraft is stopped.',ref:'QRH · Page 4 · 4A'},
+{doc:'qrh',type:'WHY',q:'Why is 4A so short — only 2 steps?',a:'On the ground with fire, the only priorities are stopping the aircraft and evacuating occupants. Complex system procedures would waste critical seconds. Speed of evacuation is the survival factor.',ref:'QRH · Page 4 · 4A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 4B — Electrical Fire?',a:'CHECKLIST: MASTER OFF, GARMIN 7XX ON (synthetic vision), extinguisher if needed, CBs CHECKED/PULLED, SWITCHES OFF, MASTER ON, restore essential items one at a time, LAND AS SOON AS PRACTICAL.',ref:'QRH · Page 4 · 4B'},
+{doc:'qrh',type:'WHY',q:'Why activate the Garmin 7XX immediately after master OFF in 4B?',a:'Master OFF removes all attitude instruments simultaneously. The Garmin 7XX provides synthetic vision attitude reference independently of the master, allowing safe flight while electrical systems are isolated.',ref:'QRH · Page 4 · 4B'},
+{doc:'qrh',type:'WHAT',q:'What is a 4C RPM Underspeed and what is the likely cause?',a:'RPM below normal for the power setting. Likely cause: prop moving to coarse pitch due to engine oil pressure loss. The prop governor defaults to coarse (high pitch, low RPM) when oil pressure is lost.',ref:'QRH · Page 4 · 4C'},
+{doc:'qrh',type:'HOW',q:'What do you do if the prop moves to coarse pitch in a 4C underspeed?',a:'Steps 4–6: MIXTURE ICO, PROP CONTROL FEATHER, ENGINE SECURING PROCEDURE (→ 1B). A coarse-to-feather prop move indicates the engine cannot sustain power — secure it.',ref:'QRH · Page 4 · 4C'},
+{doc:'qrh',type:'WHAT',q:'What is a 4D RPM Overspeed and how do you handle it?',a:'RPM above limits (>2575 RPM). Steps: REDUCE POWER, PITCH NOSE UP to reduce IAS quickly, reduce to ~130 KTS. If RPM still >2575 → FEATHER. If prop won\'t feather → do NOT shut down engine.',ref:'QRH · Page 4 · 4D'},
+{doc:'qrh',type:'WHY',q:'Why should you NOT shut down an engine if an overspeed prop will NOT feather?',a:'A windmilling unfeathered prop creates enormous drag that will severely compromise performance. With IAS below 130 KTS, the engine can run below 2575 RPM — a controllable situation preferable to the drag of a windmilling prop.',ref:'QRH · Page 4 · 4D'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 5A — Crossfeed?',a:'CHECKLIST to route fuel from opposite-side tanks to the operative engine. Specific sequencing: inop fuel selector, inop boost CB, inop emergency pump ON, crossfeed ON, then operative fuel selector OFF and operative CB PULLED.',ref:'QRH · Page 5 · 5A'},
+{doc:'qrh',type:'HOW',q:'What voltage confirms an actual alternator failure in procedure 5B?',a:'System voltage dropping from ~28V toward ~24V after turning off the suspect master switch confirms the alternator has genuinely failed. If voltage stays at ~28V, the INOP light itself is faulty.',ref:'QRH · Page 5 · 5B'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 5C — Emergency Landing Gear Extension?',a:'CHECKLIST: AIRSPEED MAX 128 KTS, GEAR SELECTOR DOWN, EMERG GEAR COVER OPEN, EMERG GEAR EXTENDER EXTEND, then PUMP RAPIDLY until 3 green and handle returns to neutral (~50 strokes).',ref:'QRH · Page 5 · 5C'},
+{doc:'qrh',type:'WHY',q:'Why must airspeed be at or below 128 KTS before emergency gear extension?',a:'128 KTS = Vlo. Above this speed, the forces on extending gear doors and structure exceed the design limit, potentially causing structural damage to the gear or airframe.',ref:'QRH · Page 5 · 5C'},
+{doc:'qrh',type:'HOW',q:'How does the nose gear extend differently from the mains in 5C?',a:'The nose gear extends AGAINST the airflow (unlike the mains which fall with it). To assist: slow to 90 KTS, reduce power, full flaps, nose-down attitude, then pump rapidly. Side slips help lock main gear.',ref:'QRH · Page 5 · 5C'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 6A — Gear Up Landing?',a:'CHECKLIST: burn off fuel if possible, brief passengers, complete normal landing checklist, gear selector UP, autopilot OFF, master OFF (daytime). When landing assured: mixtures ICO, props feather, fuel shutoffs OFF, fuel selectors OFF, mags OFF. At stop: evacuation.',ref:'QRH · Page 6 · 6A'},
+{doc:'qrh',type:'WHY',q:'Why do you feather props before touchdown in a gear-up landing (6A)?',a:'Rotating props contacting the runway create unpredictable gyroscopic forces, severe structural damage, and immediate fire risk from fuel ignition. Feathered props are edge-on and stop on first contact.',ref:'QRH · Page 6 · 6A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 6B — Air Start (Unfeathering)?',a:'CHECKLIST: fuel selector ON, boost CB IN, mags ON, throttle ½" open, prop forward to match other control, mixture slowly forward, starter until prop unfeathers, prop back through 1000 RPM to target 2000 RPM, throttles reduce.',ref:'QRH · Page 6 · 6B'},
+{doc:'qrh',type:'WHY',q:'Why limit RPM to 2000 during warm-up after an air start (6B)?',a:'The engine has no oil circulating to turbocharger bearings and cylinder walls after being shut down and feathered. High RPM before oil pressure is established risks immediate bearing failure.',ref:'QRH · Page 6 · 6B'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 6C — Engine Roughness?',a:'CHECKLIST: emergency fuel pumps ON, mixtures ADJUST, alternate air AS REQUIRED, fuel switch tanks, mags CHECK, reduce power as required. If smooth on one mag → leave defective mag OFF, land ASAP.',ref:'QRH · Page 6 · 6C'},
+{doc:'qrh',type:'HOW',q:'How do you diagnose a magneto fault in 6C?',a:'Check each magneto individually: if engine runs smoothly on L but rough on R, the R mag is faulty. Leave faulty mag OFF. Do not reset it — fly to the nearest suitable airport.',ref:'QRH · Page 6 · 6C'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 7A — Asymmetric Flaps (Duke System)?',a:'CHECKLIST: FLAP SWITCH OFF, aileron as needed to level wings, FLAP SWITCH UP incrementally to achieve symmetry, FLAP SWITCH OFF, FLAP CONTROL CB PULLED. Do NOT reset CB until after landing and problem resolved.',ref:'QRH · Page 7 · 7A'},
+{doc:'qrh',type:'WHY',q:'Why attempt to re-symmetrize flaps in 7A rather than leaving them asymmetric?',a:'Asymmetric flap creates a continuous roll tendency requiring constant aileron input, reducing authority for other purposes. Achieving symmetry (even both flaps UP) restores full aileron control for the approach.',ref:'QRH · Page 7 · 7A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 8A — Single Engine Landing?',a:'CHECKLIST: complete 1B, check hydraulic pump, secure seats/belts, heater fan to operative engine, emergency fuel pump ON, mixture RICH, prop FORWARD, fuel selector INBOARD, crossfeed OFF, cowl flaps as required, 116 KTS+, 15° flap one dot below glideslope, gear DOWN on slope, full flaps when landing assured.',ref:'QRH · Page 8 · 8A'},
+{doc:'qrh',type:'WHY',q:'Why fly slightly above the glideslope on a single-engine approach (8A)?',a:'Go-around capability on single engine is severely limited. Flying slightly above gives you energy to lose (reduce power) if needed, without ever being below slope where you might need to climb — and cannot.',ref:'QRH · Page 8 · 8A'},
+{doc:'qrh',type:'HOW',q:'When do you extend full flaps during a single-engine landing (8A)?',a:'Only when LANDING IS ASSURED — the green phase banner in step 14. Full flaps before this point creates drag that may prevent a go-around. 15° flap on approach until that point.',ref:'QRH · Page 8 · 8A'},
+{doc:'qrh',type:'WHAT',q:'What is procedure 8B — Primary Flight Display failure?',a:'CHECKLIST: blank PFD → FLY STANDBY HORIZON; MFD → SELECT FLIGHT DISPLAY; GARMIN 7XX → SYNTHETIC VISION; GARMIN 530/430 → NAV DISPLAY as needed; TROUBLESHOOT CHECKLISTS.',ref:'QRH · Page 8 · 8B'},
+{doc:'qrh',type:'WHY',q:'Why is the standby horizon the first reference in 8B (PFD failure)?',a:'Attitude is the highest-priority instrument — loss of it in IMC leads to spatial disorientation and loss of control within seconds. The standby horizon is powered independently of the PFD.',ref:'QRH · Page 8 · 8B'},
+{doc:'qrh',type:'WHAT',q:'What are the 7 RED (memory) procedures in the PA31-350 QRH?',a:'1A Evacuation, 2A RTO (no runway), 2B Engine Failure After Rotation, 2C Engine Fire After Rotation, 3A Engine Failure/Fire In Flight, 3B Engine Fire During Start, 4A Engine Fire Ground Operations.',ref:'QRH · Table of Contents'},
+{doc:'qrh',type:'WHY',q:'Why must memory items be performed without reference to any checklist?',a:'Memory items are time-critical emergencies where the consequence of delay (fire spreading, terrain impact, loss of control) happens faster than any checklist can be located and read.',ref:'QRH · Table of Contents'},
+{doc:'qrh',type:'HOW',q:'How do you identify memory vs. checklist items visually in this QRH?',a:'Red left border + 🧠 MEMORY badge = perform from memory, no checklist. Amber left border + 📋 CHECKLIST badge = reference the printed QRH. The section title badge confirms which type.',ref:'QRH · Table of Contents'},
+{doc:'qrh',type:'WHAT',q:'What are the three sources of energy a pilot manages during a single-engine approach?',a:'Height (altitude above terrain, exchangeable for airspeed), Airspeed (kinetic energy, exchangeable for altitude), and Engine Power (the only source that adds energy to the system). All three must stay positive.',ref:'QRH · Page 8 · 8A'},
+{doc:'qrh',type:'HOW',q:'How do you maintain directional control during a 2B engine failure at rotation?',a:'Apply maximum rudder toward the operative engine, bank 5° into the operative engine, maintain 104 KTS (do not let speed decay to Vmc), call "ENGINE FAILURE" and "MAX POWER" as memory flows.',ref:'QRH · Page 2 · 2B'},
+];
+
+// ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
+const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH'};
+let quizSet=[], quizIdx=0, quizAnswerShown=false;
+
+function openQuiz(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-quiz').classList.add('active');
+  document.getElementById('topbarTitle').textContent='Quiz';
+  document.getElementById('backBtn').style.display='';
+  document.getElementById('searchWrap').style.display='none';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.marginLeft='0';
+  currentDoc=null;
+  initQuiz('all', document.querySelector('#view-quiz .quiz-filter-tab'));
+  window.scrollTo(0,0);
+}
+
+function initQuiz(filter, tabEl){
+  document.querySelectorAll('#view-quiz .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  quizSet = filter==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===filter);
+  // shuffle
+  for(let i=quizSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[quizSet[i],quizSet[j]]=[quizSet[j],quizSet[i]];}
+  quizIdx=0;
+  renderQuiz();
+}
+
+function renderQuiz(){
+  const q=quizSet[quizIdx];
+  document.getElementById('quizTypeTag').textContent=q.type;
+  document.getElementById('quizTypeTag').className='quiz-type-tag '+q.type;
+  document.getElementById('quizDocTag').textContent=DOC_LABELS[q.doc]||q.doc;
+  document.getElementById('quizQuestion').textContent=q.q;
+  document.getElementById('quizRef').textContent='📎 '+q.ref;
+  document.getElementById('quizAnswer').textContent=q.a;
+  document.getElementById('quizAnswerWrap').classList.remove('visible');
+  document.getElementById('quizShowBtn').style.display='flex';
+  document.getElementById('quizProgress').textContent=(quizIdx+1)+' / '+quizSet.length;
+  document.getElementById('quizBar').style.width=(((quizIdx+1)/quizSet.length)*100)+'%';
+  quizAnswerShown=false;
+}
+
+function showQuizAnswer(){
+  document.getElementById('quizAnswerWrap').classList.add('visible');
+  document.getElementById('quizShowBtn').style.display='none';
+  quizAnswerShown=true;
+}
+
+function nextQuiz(){ quizIdx=(quizIdx+1)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
+function prevQuiz(){ quizIdx=(quizIdx-1+quizSet.length)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
+
+// ── FLASHCARD FUNCTIONS ──────────────────────────────────────────────────────
+let fcSet=[], fcIdx=0, fcFlipped=false, fcKnowCount=0, fcAgainList=[], fcCurrentFilter='all';
+
+function openFlashcard(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-flashcard').classList.add('active');
+  document.getElementById('topbarTitle').textContent='Flashcards';
+  document.getElementById('backBtn').style.display='';
+  document.getElementById('searchWrap').style.display='none';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.marginLeft='0';
+  currentDoc=null;
+  initFlashcard('all', document.querySelector('#view-flashcard .quiz-filter-tab'));
+  window.scrollTo(0,0);
+}
+
+function initFlashcard(filter, tabEl){
+  fcCurrentFilter=filter||'all';
+  document.querySelectorAll('#view-flashcard .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  const base = fcCurrentFilter==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===fcCurrentFilter);
+  // shuffle
+  fcSet=[...base];
+  for(let i=fcSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcSet[i],fcSet[j]]=[fcSet[j],fcSet[i]];}
+  fcIdx=0; fcFlipped=false; fcKnowCount=0; fcAgainList=[];
+  document.getElementById('fcDeck').style.display='';
+  document.getElementById('fcDone').style.display='none';
+  renderFlashcard();
+}
+
+function renderFlashcard(){
+  if(fcIdx>=fcSet.length){ showFcDone(); return; }
+  const q=fcSet[fcIdx];
+  document.getElementById('fcTypeTag').textContent=q.type;
+  document.getElementById('fcTypeTag').className='quiz-type-tag '+q.type;
+  document.getElementById('fcDocTag').textContent=DOC_LABELS[q.doc]||q.doc;
+  document.getElementById('fcQuestion').textContent=q.q;
+  document.getElementById('fcAnswer').textContent=q.a;
+  document.getElementById('fcRef').textContent='📎 '+q.ref;
+  const card=document.getElementById('fcCard');
+  card.classList.remove('flipped');
+  fcFlipped=false;
+  document.getElementById('fcRemaining').textContent=fcSet.length-fcIdx;
+  document.getElementById('fcKnow').textContent=fcKnowCount;
+  document.getElementById('fcAgain').textContent=fcAgainList.length;
+}
+
+function flipCard(){
+  const card=document.getElementById('fcCard');
+  fcFlipped=!fcFlipped;
+  fcFlipped ? card.classList.add('flipped') : card.classList.remove('flipped');
+}
+
+function fcMark(result){
+  const q=fcSet[fcIdx];
+  if(result==='again') fcAgainList.push(q);
+  else fcKnowCount++;
+  fcIdx++;
+  renderFlashcard();
+}
+
+function showFcDone(){
+  document.getElementById('fcDeck').style.display='none';
+  document.getElementById('fcDone').style.display='block';
+  document.getElementById('fcDoneSub').textContent=
+    'You got '+fcKnowCount+' correct. '+(fcAgainList.length>0 ? fcAgainList.length+' card'+(fcAgainList.length>1?'s':'')+' marked for review.' : 'Perfect round! 🎉');
+  document.getElementById('fcRemaining').textContent=0;
+}
+
+function fcRestart(){
+  if(!fcAgainList.length){ initFlashcard(fcCurrentFilter); return; }
+  fcSet=[...fcAgainList];
+  for(let i=fcSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcSet[i],fcSet[j]]=[fcSet[j],fcSet[i]];}
+  fcIdx=0; fcFlipped=false; fcKnowCount=0; fcAgainList=[];
+  document.getElementById('fcDeck').style.display='';
+  document.getElementById('fcDone').style.display='none';
+  renderFlashcard();
 }
 </script>
 </body>
