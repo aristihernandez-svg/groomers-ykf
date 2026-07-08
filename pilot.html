@@ -275,10 +275,36 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .lp-ai{background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.4);color:#93c5fd}
 .lp-soon{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);color:rgba(255,255,255,0.4)}
 @keyframes landingIn{from{opacity:0;transform:scale(.94) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+/* Splash screen */
+#splashScreen{position:fixed;inset:0;z-index:9999;background:linear-gradient(145deg,#030a17 0%,#07142a 50%,#0a1f3d 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;transition:opacity .5s ease,visibility .5s ease}
+#splashScreen.hiding{opacity:0;visibility:hidden}
+/* QRH memory vs checklist */
+.qrh-proc.memory{border-left:4px solid rgba(239,68,68,0.7)}
+.qrh-proc.checklist{border-left:4px solid rgba(245,158,11,0.55)}
+.qrh-mem-tag{display:inline-block;font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;padding:2px 8px;border-radius:4px;vertical-align:middle;margin-left:6px;white-space:nowrap}
+.qrh-mem-tag.memory{background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.4);color:var(--red)}
+.qrh-mem-tag.checklist{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--amber)}
+.qrh-legend{display:flex;gap:16px;align-items:center;justify-content:center;margin:14px 0 6px;flex-wrap:wrap}
 .back-btn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:4px 10px;white-space:nowrap}
 </style>
 </head>
 <body>
+
+<!-- ── 2-SECOND SPLASH ── -->
+<div id="splashScreen">
+  <div style="width:72px;height:72px;border-radius:22px;background:linear-gradient(135deg,rgba(37,99,235,0.4),rgba(59,130,246,0.18));border:1.5px solid rgba(37,99,235,0.55);display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:24px;box-shadow:0 0 40px rgba(37,99,235,0.4)">✈</div>
+  <div style="font-size:11px;font-weight:800;letter-spacing:6px;color:rgba(147,197,253,0.6);text-transform:uppercase;margin-bottom:12px">Skycare · YKF</div>
+  <div style="font-size:clamp(40px,10vw,80px);font-weight:900;color:#fff;letter-spacing:-3px;line-height:1;margin-bottom:10px">Study Hub</div>
+  <div style="font-size:clamp(13px,3vw,17px);font-weight:500;color:rgba(147,197,253,0.55);letter-spacing:.5px">PA31-350 Chieftain · Pilot Digital Library</div>
+  <div style="position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.15) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none"></div>
+</div>
+<script>
+  (function(){
+    var s = document.getElementById('splashScreen');
+    setTimeout(function(){ s.classList.add('hiding'); }, 1600);
+    setTimeout(function(){ s.style.display='none'; }, 2200);
+  })();
+</script>
 
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
@@ -1434,6 +1460,10 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <span class="hero-tag">Vyse 107 KTS</span>
     </div>
     <div class="hero-warn">⚠️ Study reference only. In the aircraft use the printed approved QRH. Memory items first — checklist second.</div>
+    <div class="qrh-legend">
+      <span class="qrh-mem-tag memory" style="font-size:11px;padding:4px 12px">🧠 MEMORY ITEM — do from memory, no checklist</span>
+      <span class="qrh-mem-tag checklist" style="font-size:11px;padding:4px 12px">📋 CHECKLIST — reference the printed QRH</span>
+    </div>
   </div>
 
   <div class="no-results" id="noResultsQrh"></div>
@@ -1468,7 +1498,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-1a">
     <div class="section-header">
       <div class="section-icon">🚨</div>
-      <div><div class="section-title"><span class="qrh-badge">1A</span> Evacuation Drill</div><div class="section-ref">QRH · Page 1</div></div>
+      <div><div class="section-title"><span class="qrh-badge">1A</span> Evacuation Drill <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 1</div></div>
     </div>
     <div class="qrh-crew">
       <div class="qrh-crew-col">
@@ -1499,9 +1529,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-1b">
     <div class="section-header">
       <div class="section-icon">⚙️</div>
-      <div><div class="section-title"><span class="qrh-badge amber">1B</span> Engine Securing Procedure</div><div class="section-ref">QRH · Page 1 · Referenced by most emergency procedures</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">1B</span> Engine Securing Procedure <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 1 · Referenced by most emergency procedures</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER ON OPERATING ENGINE <span class="qrh-note-inline">— inop engine only</span></div><div class="qrh-step-value">SET</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">THROTTLE</div><div class="qrh-step-value">CLOSE</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">PROPELLER <span class="qrh-note-inline">(1000 RPM min)</span></div><div class="qrh-step-value">FEATHER</div></div>
@@ -1523,16 +1553,16 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-rto">
     <div class="section-header">
       <div class="section-icon">🛑</div>
-      <div><div class="section-title"><span class="qrh-badge">1C</span><span class="qrh-badge" style="margin-left:4px">2A</span> Rejected Takeoff</div><div class="section-ref">QRH · Pages 1–2</div></div>
+      <div><div class="section-title"><span class="qrh-badge">1C</span><span class="qrh-badge" style="margin-left:4px">2A</span> Rejected Takeoff <span class="qrh-mem-tag checklist">📋 1C</span> <span class="qrh-mem-tag memory">🧠 2A</span></div><div class="section-ref">QRH · Pages 1–2</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>1C — With Sufficient Runway to Stop</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">THROTTLE</div><div class="qrh-step-value">IDLE</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BRAKES</div><div class="qrh-step-value">AS REQUIRED</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">After stop: set parking brake, follow applicable drill. If FIRE → Evacuation Drill <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
     <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>2A — Without Sufficient Runway to Stop</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">THROTTLES</div><div class="qrh-step-value">IDLE</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BRAKES MAX <span class="qrh-note-inline">— steer to avoid obstacles</span></div><div class="qrh-step-value">MAXIMUM</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MIXTURES</div><div class="qrh-step-value">ICO</div></div>
@@ -1549,9 +1579,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-2b">
     <div class="section-header">
       <div class="section-icon">🔥</div>
-      <div><div class="section-title"><span class="qrh-badge">2B</span> Engine Failure After Rotation — T/O Continued</div><div class="section-ref">QRH · Page 2</div></div>
+      <div><div class="section-title"><span class="qrh-badge">2B</span> Engine Failure After Rotation — T/O Continued <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 2</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">MAXIMUM</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">UP</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">UP</div></div>
@@ -1573,9 +1603,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-2c">
     <div class="section-header">
       <div class="section-icon">🔥</div>
-      <div><div class="section-title"><span class="qrh-badge">2C</span> Engine Fire After Rotation</div><div class="section-ref">QRH · Page 2 · Or after decision speed — decision to continue</div></div>
+      <div><div class="section-title"><span class="qrh-badge">2C</span> Engine Fire After Rotation <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 2 · Or after decision speed — decision to continue</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">MAXIMUM</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">UP</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">UP</div></div>
@@ -1593,9 +1623,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-3a">
     <div class="section-header">
       <div class="section-icon">✈️</div>
-      <div><div class="section-title"><span class="qrh-badge">3A</span> Engine Failure / Fire In Flight</div><div class="section-ref">QRH · Page 3 · At or above safe altitude</div></div>
+      <div><div class="section-title"><span class="qrh-badge">3A</span> Engine Failure / Fire In Flight <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 3 · At or above safe altitude</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">INOP ENGINE</div><div class="qrh-step-value">IDENTIFY</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">OPERATIVE ENGINE — adjust power to</div><div class="qrh-step-value">MAINTAIN ALT AND AIRSPEED</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">AIRSPEED — maintain</div><div class="qrh-step-value">107 KTS PLUS</div></div>
@@ -1627,9 +1657,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-3b">
     <div class="section-header">
       <div class="section-icon">🔥</div>
-      <div><div class="section-title"><span class="qrh-badge">3B</span> Engine Fire During Start</div><div class="section-ref">QRH · Page 3</div></div>
+      <div><div class="section-title"><span class="qrh-badge">3B</span> Engine Fire During Start <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 3</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">CONTINUE CRANKING</div><div class="qrh-step-value"></div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BOOST PUMPS</div><div class="qrh-step-value">OFF</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">IDLE CUT OFF</div></div>
@@ -1645,9 +1675,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-4a">
     <div class="section-header">
       <div class="section-icon">🔥</div>
-      <div><div class="section-title"><span class="qrh-badge">4A</span> Engine Fire During Ground Operations</div><div class="section-ref">QRH · Page 4 · All engine fires from start to RTO with sufficient runway</div></div>
+      <div><div class="section-title"><span class="qrh-badge">4A</span> Engine Fire During Ground Operations <span class="qrh-mem-tag memory">🧠 MEMORY</span></div><div class="section-ref">QRH · Page 4 · All engine fires from start to RTO with sufficient runway</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc memory">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">BRAKES</div><div class="qrh-step-value">APPLY AND SET</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">EVACUATION DRILL</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
     </div>
@@ -1657,9 +1687,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-4b">
     <div class="section-header">
       <div class="section-icon">⚡</div>
-      <div><div class="section-title"><span class="qrh-badge amber">4B</span> Electrical Fire</div><div class="section-ref">QRH · Page 4</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">4B</span> Electrical Fire <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 4</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">MASTER SWITCH</div><div class="qrh-step-value">OFF</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GARMIN 7XX</div><div class="qrh-step-value">ON — SYNTHETIC VISION</div></div>
       <div class="qrh-step-note">Use fire extinguisher if required</div>
@@ -1676,10 +1706,10 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-rpm">
     <div class="section-header">
       <div class="section-icon">🌀</div>
-      <div><div class="section-title"><span class="qrh-badge amber">4C</span><span class="qrh-badge amber" style="margin-left:4px">4D</span> RPM Underspeed / Overspeed</div><div class="section-ref">QRH · Page 4</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">4C</span><span class="qrh-badge amber" style="margin-left:4px">4D</span> RPM Underspeed / Overspeed <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 4</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>4C — RPM Underspeed</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">REDUCED</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">RICH</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">PROP CONTROL</div><div class="qrh-step-value">ADJUST AS REQUIRED</div></div>
@@ -1690,7 +1720,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">Prop will move to COARSE (decreased RPM) if engine oil pressure is lost.</div></div>
     <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>4D — RPM Overspeed</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">REDUCED</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">PITCH NOSE UP TO REDUCE SPEED QUICKLY</div><div class="qrh-step-value"></div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">AIRSPEED — reduce to approximately</div><div class="qrh-step-value">130 KTS</div></div>
@@ -1704,9 +1734,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-5a">
     <div class="section-header">
       <div class="section-icon">⛽</div>
-      <div><div class="section-title"><span class="qrh-badge blue">5A</span> Crossfeed</div><div class="section-ref">QRH · Page 5</div></div>
+      <div><div class="section-title"><span class="qrh-badge blue">5A</span> Crossfeed <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 5</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL SELECTOR <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">EITHER TANK</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">FUEL BOOST CB <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">IN</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">EMERGENCY FUEL PUMP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">ON</div></div>
@@ -1721,15 +1751,15 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-5b">
     <div class="section-header">
       <div class="section-icon">⚡</div>
-      <div><div class="section-title"><span class="qrh-badge amber">5B</span> Alternator Failure</div><div class="section-ref">QRH · Page 5</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">5B</span> Alternator Failure <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 5</div></div>
     </div>
     <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">It is possible to have an ALTERNATOR INOP light and still have the alternator functioning.</div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">SYSTEM VOLTAGE <span class="qrh-note-inline">(if equipped)*</span></div><div class="qrh-step-value">NOTED</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(opposite to INOP light)</span></div><div class="qrh-step-value">OFF</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">*Voltage 28V → ~24V: alternator FAILED → proceed steps 3–6. Voltage stays ~28V: INOP light faulty, alternator OK → restore both master sides, continue.</div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">ELECTRICS</div><div class="qrh-step-value">REDUCE</div></div>
       <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(appropriate side)</span></div><div class="qrh-step-value">OFF</div></div>
       <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">CB'S</div><div class="qrh-step-value">CHECK AND RESET</div></div>
@@ -1743,9 +1773,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-5c">
     <div class="section-header">
       <div class="section-icon">🛞</div>
-      <div><div class="section-title"><span class="qrh-badge">5C</span> Emergency Landing Gear Extension</div><div class="section-ref">QRH · Page 5</div></div>
+      <div><div class="section-title"><span class="qrh-badge">5C</span> Emergency Landing Gear Extension <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 5</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">AIRSPEED — MAX</div><div class="qrh-step-value">128 KTS *</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR SELECTOR</div><div class="qrh-step-value">DOWN</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">EMERG. GEAR COVER</div><div class="qrh-step-value">OPEN</div></div>
@@ -1759,9 +1789,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-6a">
     <div class="section-header">
       <div class="section-icon">🛬</div>
-      <div><div class="section-title"><span class="qrh-badge">6A</span> Gear Up Landing</div><div class="section-ref">QRH · Page 6</div></div>
+      <div><div class="section-title"><span class="qrh-badge">6A</span> Gear Up Landing <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL BURN OFF IF POSSIBLE</div><div class="qrh-step-value"></div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">PASSENGERS BRIEFED</div><div class="qrh-step-value"></div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">NORMAL LANDING CHECKLIST</div><div class="qrh-step-value">COMPLETE</div></div>
@@ -1783,9 +1813,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-6b">
     <div class="section-header">
       <div class="section-icon">🔄</div>
-      <div><div class="section-title"><span class="qrh-badge green">6B</span> Air Start — Unfeathering Procedure</div><div class="section-ref">QRH · Page 6</div></div>
+      <div><div class="section-title"><span class="qrh-badge green">6B</span> Air Start — Unfeathering Procedure <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL SELECTOR</div><div class="qrh-step-value">INBOARDS OR AS REQUIRED</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">FUEL BOOST CB</div><div class="qrh-step-value">IN</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">ON</div></div>
@@ -1805,9 +1835,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-6c">
     <div class="section-header">
       <div class="section-icon">🔧</div>
-      <div><div class="section-title"><span class="qrh-badge amber">6C</span> Engine Roughness</div><div class="section-ref">QRH · Page 6</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">6C</span> Engine Roughness <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">EMERGENCY FUEL PUMPS</div><div class="qrh-step-value">ON</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MIXTURES</div><div class="qrh-step-value">ADJUST</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">ALTERNATE AIR</div><div class="qrh-step-value">AS REQUIRED</div></div>
@@ -1822,9 +1852,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-7a">
     <div class="section-header">
       <div class="section-icon">🛫</div>
-      <div><div class="section-title"><span class="qrh-badge amber">7A</span> Asymmetric Flaps — Duke System</div><div class="section-ref">QRH · Page 7</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">7A</span> Asymmetric Flaps — Duke System <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 7</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP SWITCH</div><div class="qrh-step-value">OFF</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">AILERON — as required to</div><div class="qrh-step-value">MAINTAIN WINGS LEVEL</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAP SWITCH — up in increments to</div><div class="qrh-step-value">ACHIEVE SYMMETRY</div></div>
@@ -1838,10 +1868,10 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-7b">
     <div class="section-header">
       <div class="section-icon">🛫</div>
-      <div><div class="section-title"><span class="qrh-badge amber">7B</span> Flap System Malfunction — Calco</div><div class="section-ref">QRH · Page 7</div></div>
+      <div><div class="section-title"><span class="qrh-badge amber">7B</span> Flap System Malfunction — Calco <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 7</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Annunciator Light ON</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP SELECTOR</div><div class="qrh-step-value">REPOSITION SLIGHTLY</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF FLAPS MOVE</div><div class="qrh-step-value">REPLACE AMPLIFIER PRIOR TO NEXT FLIGHT</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF FLAPS DO NOT MOVE</div><div class="qrh-step-value">CHECK FOR SPLIT FLAP</div></div>
@@ -1850,13 +1880,13 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">IF FLAPS STILL DO NOT OPERATE</div><div class="qrh-step-value">PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</div></div>
     </div>
     <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Zero</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP CONTROL CB</div><div class="qrh-step-value">PULL AND RESET</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF INDICATOR REMAINS OFF</div><div class="qrh-step-value">FLAP CONTROL INOPERATIVE — CANNOT REPOSITION</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF INDICATOR SHOWS FLAP POSITION</div><div class="qrh-step-value">USE FOLLOWING CHECKLIST</div></div>
     </div>
     <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Flap Position</strong></div></div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP TEST SWITCH</div><div class="qrh-step-value">PUSH</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF ANNUCIATOR FAILS TO LIGHT</div><div class="qrh-step-value">FOLLOW "ANNUCIATOR LIGHT ON" CHECKLIST</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF ANNUCIATOR LIGHTS</div><div class="qrh-step-value">PULL AND RESET FLAP MOTOR CB</div></div>
@@ -1869,9 +1899,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-8a">
     <div class="section-header">
       <div class="section-icon">🛬</div>
-      <div><div class="section-title"><span class="qrh-badge">8A</span> Single Engine Landing</div><div class="section-ref">QRH · Page 8</div></div>
+      <div><div class="section-title"><span class="qrh-badge">8A</span> Single Engine Landing <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 8</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">HYDRAULIC PUMP</div><div class="qrh-step-value">CHECK</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">SEAT BELTS</div><div class="qrh-step-value">SECURE</div></div>
@@ -1897,9 +1927,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="section" id="qrh-8b">
     <div class="section-header">
       <div class="section-icon">🖥️</div>
-      <div><div class="section-title"><span class="qrh-badge blue">8B</span> Primary Flight Display</div><div class="section-ref">QRH · Page 8</div></div>
+      <div><div class="section-title"><span class="qrh-badge blue">8B</span> Primary Flight Display <span class="qrh-mem-tag checklist">📋 CHECKLIST</span></div><div class="section-ref">QRH · Page 8</div></div>
     </div>
-    <div class="qrh-proc">
+    <div class="qrh-proc checklist">
       <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">BLANK SCREEN</div><div class="qrh-step-value">FLY STBY HORIZON</div></div>
       <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MFD <span class="qrh-note-inline">(if installed)</span></div><div class="qrh-step-value">SELECT FLIGHT DISPLAY</div></div>
       <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">GARMIN 7XX</div><div class="qrh-step-value">SELECT SYNTHETIC VISION</div></div>
