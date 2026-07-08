@@ -219,8 +219,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 
 /* ── MOBILE TABLE SCROLL ── */
 @media(max-width:900px){
-  .ref-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .ref-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
   .ref-table td,.ref-table th{font-size:11px;padding:7px 8px}
+  .ref-table td:last-child{white-space:normal;word-break:break-word}
   .section{margin-bottom:20px}
   .alert{padding:9px 11px;font-size:11px}
   .hero{padding:20px}
@@ -244,7 +245,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .qrh-ref{color:var(--accent);cursor:pointer;font-weight:700;font-size:11px;border:1px solid rgba(37,99,235,0.4);border-radius:4px;padding:1px 6px;margin-left:3px;white-space:nowrap;display:inline-block}
 .qrh-ref:hover{background:var(--accent-glow)}
 /* Step rows */
-.qrh-proc{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:10px 0}
+.qrh-proc{border:1.5px solid rgba(255,255,255,0.18);border-radius:10px;overflow:hidden;margin:12px 0;box-shadow:0 1px 6px rgba(0,0,0,0.35)}
 .qrh-step{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05);min-height:48px}
 .qrh-step:last-child{border-bottom:none}
 .qrh-step-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(37,99,235,0.13);color:var(--accent);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
@@ -266,6 +267,8 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .qrh-crew-item:last-child{border-bottom:none}
 @media(max-width:768px){.qrh-crew{grid-template-columns:1fr}.qrh-step-action{font-size:13px}.qrh-step-value{font-size:12px;max-width:120px}}
 .hub-tile-tag.emergency{background:var(--warn-bg);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.hub-back-app{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--accent);background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.3);border-radius:8px;padding:5px 12px;text-decoration:none;margin-bottom:16px;letter-spacing:.3px}
+.hub-back-app:hover{background:rgba(37,99,235,0.2)}
 .back-btn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:4px 10px;white-space:nowrap}
 </style>
 </head>
@@ -301,6 +304,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 ══════════════════════════════════════════════════════════════════ -->
 <div class="view active" id="view-hub">
   <div class="hub-hero">
+    <a href="index.html" class="hub-back-app">‹ Back to App</a>
     <div class="hub-badge">✈ Pilot Study Hub</div>
     <div class="hub-title">PA31-350 Chieftain</div>
     <div class="hub-sub">Your digital study library. Tap a document to open it.</div>
