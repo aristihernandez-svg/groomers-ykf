@@ -339,6 +339,44 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .fc-done-sub{font-size:14px;color:var(--t3);margin-bottom:24px}
 .fc-restart-btn{padding:12px 32px;border-radius:12px;background:rgba(37,99,235,0.15);border:1px solid rgba(37,99,235,0.4);color:var(--accent);font-size:14px;font-weight:700;cursor:pointer}
 @media(max-width:768px){.quiz-question,.fc-question{font-size:15px}.fc-answer{font-size:14px}.quiz-card{padding:20px 16px}}
+/* SCENARIO type tag */
+.quiz-type-tag.SCENARIO{background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:#c4b5fd}
+/* Two-row filter bars */
+.quiz-filter-section{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+.quiz-filter-label{font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase;margin-bottom:2px}
+.quiz-filter-bar{gap:6px;margin-bottom:0}
+/* Tile study-tool overlay */
+.tile-tools{position:absolute;top:10px;left:10px;display:flex;gap:3px}
+.tile-tool{font-size:11px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:2px 5px;line-height:1.4}
+/* Streak */
+.hub-streak{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:5px 14px;margin-bottom:14px}
+/* Audio button */
+.quiz-audio-btn{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--t3);background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:4px 10px;cursor:pointer;transition:all .15s}
+.quiz-audio-btn:hover,.quiz-audio-btn.active{color:var(--green);border-color:rgba(34,197,94,0.4);background:rgba(34,197,94,0.08)}
+/* Exam Simulator */
+.exam-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px}
+.exam-q-label{font-size:12px;font-weight:700;color:var(--t3)}
+.exam-timer{font-size:32px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--t1);min-width:52px;text-align:center}
+.exam-timer.warn{color:var(--amber)}
+.exam-timer.danger{color:var(--red)}
+.exam-mark-row{display:flex;gap:12px;margin-top:14px}
+.exam-mark-btn{flex:1;padding:14px;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;border:none;transition:transform .1s}
+.exam-mark-btn.correct{background:rgba(34,197,94,0.14);border:1px solid rgba(34,197,94,0.3);color:var(--green)}
+.exam-mark-btn.incorrect{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red)}
+.exam-mark-btn:hover{transform:scale(1.02)}
+.exam-score{text-align:center;padding:28px 16px}
+.exam-grade{font-size:72px;font-weight:900;line-height:1;margin-bottom:4px}
+.exam-grade.pass{color:var(--green)}
+.exam-grade.fail{color:var(--red)}
+.exam-grade-label{font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:20px}
+.exam-breakdown{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin:20px 0}
+.exam-bd-item{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px;text-align:center}
+.exam-bd-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.exam-bd-val{font-size:18px;font-weight:800;color:var(--t1)}
+.exam-config{display:flex;flex-direction:column;gap:16px;align-items:center;padding:20px 0}
+.exam-start-btn{padding:16px 52px;border-radius:14px;background:var(--accent);border:none;color:#fff;font-size:16px;font-weight:800;cursor:pointer;transition:all .2s}
+.exam-start-btn:hover{opacity:.9;transform:translateY(-2px)}
+.exam-restart-btn{padding:11px 28px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer;margin:6px}
 </style>
 </head>
 <body>
@@ -392,11 +430,13 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     <a href="index.html" class="hub-back-app">‹ Back to App</a>
     <div class="hub-badge">✈ Pilot Study Hub</div>
     <div class="hub-title">PA31-350 Chieftain</div>
+    <div id="hubStreak" class="hub-streak" style="display:none"></div>
     <div class="hub-sub">Your digital study library. Tap a document to open it.</div>
   </div>
 
   <div class="hub-grid">
-    <div class="hub-tile" onclick="openDoc('cheatsheet')">
+    <div class="hub-tile" style="position:relative" onclick="openDoc('cheatsheet')">
+      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
       <div class="hub-tile-icon">📋</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">Systems Cheat Sheet</div>
@@ -404,7 +444,8 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-arrow">→</div>
     </div>
 
-    <div class="hub-tile" onclick="openDoc('capgen')">
+    <div class="hub-tile" style="position:relative" onclick="openDoc('capgen')">
+      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
       <div class="hub-tile-icon">🧭</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">CAP GEN — IFR</div>
@@ -420,7 +461,8 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-arrow">🧠</div>
     </div>
 
-    <div class="hub-tile" onclick="openDoc('afm')">
+    <div class="hub-tile" style="position:relative" onclick="openDoc('afm')">
+      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
       <div class="hub-tile-icon">📗</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">AFM</div>
@@ -435,20 +477,20 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight.</div>
     </div>
 
-    <div class="hub-tile" onclick="openDoc('qrh')">
+    <div class="hub-tile" style="position:relative" onclick="openDoc('qrh')">
+      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
       <div class="hub-tile-icon">🚨</div>
       <div class="hub-tile-tag emergency">QRH</div>
       <div class="hub-tile-title">Emergency QRH</div>
       <div class="hub-tile-desc">Quick Reference Handbook — all 22 emergency &amp; abnormal procedures with step-by-step checklists and emergency speeds.</div>
       <div class="hub-tile-arrow">→</div>
     </div>
-  </div>
 
     <div class="hub-tile" onclick="openQuiz()">
       <div class="hub-tile-icon">❓</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">Quiz</div>
-      <div class="hub-tile-desc">200 questions across all documents — WHAT, HOW &amp; WHY. Answers hidden with one-tap reveal and document reference.</div>
+      <div class="hub-tile-desc">200 + 60 scenario questions across all documents — WHAT, HOW, WHY &amp; SCENARIO types with one-tap answer reveal.</div>
       <div class="hub-tile-arrow">→</div>
     </div>
 
@@ -457,6 +499,14 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">Flashcards</div>
       <div class="hub-tile-desc">Tap to flip. Mark cards as Know or Review Again — the deck resurfaces your weak spots automatically.</div>
+      <div class="hub-tile-arrow">→</div>
+    </div>
+
+    <div class="hub-tile" onclick="openExam()">
+      <div class="hub-tile-icon">🎯</div>
+      <div class="hub-tile-tag ready">READY</div>
+      <div class="hub-tile-title">Exam Simulator</div>
+      <div class="hub-tile-desc">30-question timed test. 30 seconds per question. Self-score with a full category breakdown at the end.</div>
       <div class="hub-tile-arrow">→</div>
     </div>
   </div>
@@ -2018,23 +2068,34 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   <div class="hero" style="margin-bottom:20px">
     <div class="hero-icon">❓</div>
     <div class="hero-title">Quiz</div>
-    <div class="hero-sub">200 questions · WHAT · HOW · WHY · Tap "Show Answer" when ready</div>
+    <div class="hero-sub">WHAT · HOW · WHY · SCENARIO · Tap "Show Answer" when ready</div>
   </div>
 
-  <div class="quiz-filter-bar" id="quizFilters">
-    <button class="quiz-filter-tab active" onclick="initQuiz('all',this)">All (200)</button>
-    <button class="quiz-filter-tab" onclick="initQuiz('cheatsheet',this)">Cheat Sheet</button>
-    <button class="quiz-filter-tab" onclick="initQuiz('capgen',this)">CAP GEN</button>
-    <button class="quiz-filter-tab" onclick="initQuiz('afm',this)">AFM</button>
-    <button class="quiz-filter-tab" onclick="initQuiz('qrh',this)">QRH</button>
+  <div class="quiz-filter-section">
+    <div class="quiz-filter-label">Document</div>
+    <div class="quiz-filter-bar" id="quizDocFilters">
+      <button class="quiz-filter-tab active" onclick="setQuizDocFilter('all',this)">All</button>
+      <button class="quiz-filter-tab" onclick="setQuizDocFilter('cheatsheet',this)">Cheat Sheet</button>
+      <button class="quiz-filter-tab" onclick="setQuizDocFilter('capgen',this)">CAP GEN</button>
+      <button class="quiz-filter-tab" onclick="setQuizDocFilter('afm',this)">AFM</button>
+      <button class="quiz-filter-tab" onclick="setQuizDocFilter('qrh',this)">QRH</button>
+    </div>
+    <div class="quiz-filter-label" style="margin-top:6px">Type</div>
+    <div class="quiz-filter-bar" id="quizTypeFilters">
+      <button class="quiz-filter-tab active" onclick="setQuizTypeFilter('standard',this)">All Questions</button>
+      <button class="quiz-filter-tab" onclick="setQuizTypeFilter('scenario',this)">🎭 Scenarios</button>
+    </div>
   </div>
 
   <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="quizBar" style="width:0%"></div></div>
 
   <div class="quiz-card" id="quizCard">
-    <div class="quiz-tags">
-      <span class="quiz-type-tag WHAT" id="quizTypeTag">WHAT</span>
-      <span class="quiz-doc-tag" id="quizDocTag">Cheat Sheet</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="quiz-tags">
+        <span class="quiz-type-tag WHAT" id="quizTypeTag">WHAT</span>
+        <span class="quiz-doc-tag" id="quizDocTag">Cheat Sheet</span>
+      </div>
+      <button class="quiz-audio-btn" id="quizAudioBtn" onclick="speakQuizQ()">🔊 Listen</button>
     </div>
     <div class="quiz-question" id="quizQuestion">Loading…</div>
     <div class="quiz-ref" id="quizRef"></div>
@@ -2063,12 +2124,20 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     <div class="hero-sub">Tap card to flip · Know = remove from deck · Review Again = resurface later</div>
   </div>
 
-  <div class="quiz-filter-bar">
-    <button class="quiz-filter-tab active" onclick="initFlashcard('all',this)">All (200)</button>
-    <button class="quiz-filter-tab" onclick="initFlashcard('cheatsheet',this)">Cheat Sheet</button>
-    <button class="quiz-filter-tab" onclick="initFlashcard('capgen',this)">CAP GEN</button>
-    <button class="quiz-filter-tab" onclick="initFlashcard('afm',this)">AFM</button>
-    <button class="quiz-filter-tab" onclick="initFlashcard('qrh',this)">QRH</button>
+  <div class="quiz-filter-section">
+    <div class="quiz-filter-label">Document</div>
+    <div class="quiz-filter-bar" id="fcDocFilters">
+      <button class="quiz-filter-tab active" onclick="setFcDocFilter('all',this)">All</button>
+      <button class="quiz-filter-tab" onclick="setFcDocFilter('cheatsheet',this)">Cheat Sheet</button>
+      <button class="quiz-filter-tab" onclick="setFcDocFilter('capgen',this)">CAP GEN</button>
+      <button class="quiz-filter-tab" onclick="setFcDocFilter('afm',this)">AFM</button>
+      <button class="quiz-filter-tab" onclick="setFcDocFilter('qrh',this)">QRH</button>
+    </div>
+    <div class="quiz-filter-label" style="margin-top:6px">Type</div>
+    <div class="quiz-filter-bar" id="fcTypeFilters">
+      <button class="quiz-filter-tab active" onclick="setFcTypeFilter('standard',this)">All Questions</button>
+      <button class="quiz-filter-tab" onclick="setFcTypeFilter('scenario',this)">🎭 Scenarios</button>
+    </div>
   </div>
 
   <div class="fc-stats">
@@ -2081,9 +2150,12 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     <div class="fc-scene">
       <div class="fc-card" id="fcCard" onclick="flipCard()">
         <div class="fc-front">
-          <div class="quiz-tags">
-            <span class="quiz-type-tag WHAT" id="fcTypeTag">WHAT</span>
-            <span class="quiz-doc-tag" id="fcDocTag">Cheat Sheet</span>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div class="quiz-tags">
+              <span class="quiz-type-tag WHAT" id="fcTypeTag">WHAT</span>
+              <span class="quiz-doc-tag" id="fcDocTag">Cheat Sheet</span>
+            </div>
+            <button class="quiz-audio-btn" id="fcAudioBtn" onclick="event.stopPropagation();speakFcQ()">🔊</button>
           </div>
           <div class="fc-question" id="fcQuestion">Loading…</div>
           <div class="fc-hint">Tap to reveal answer</div>
@@ -2106,10 +2178,76 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     <div class="fc-done-title">Deck complete!</div>
     <div class="fc-done-sub" id="fcDoneSub">You marked 0 for review.</div>
     <button class="fc-restart-btn" onclick="fcRestart()">Restart Weak Cards</button>
-    <button class="fc-restart-btn" style="margin-left:12px;background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.15);color:var(--t2)" onclick="initFlashcard(fcCurrentFilter)">Restart All</button>
+    <button class="fc-restart-btn" style="margin-left:12px;background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.15);color:var(--t2)" onclick="initFlashcard(fcCurrentDocFilter,null,fcCurrentTypeFilter)">Restart All</button>
   </div>
 </div>
 
+
+<!-- ══════════════════════════════════════════════════════════════════
+     EXAM SIMULATOR VIEW
+══════════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-exam">
+  <div class="hero" style="margin-bottom:20px">
+    <div class="hero-icon">🎯</div>
+    <div class="hero-title">Exam Simulator</div>
+    <div class="hero-sub">30 questions · 30 seconds each · Self-scored</div>
+  </div>
+
+  <!-- Config screen (shown before exam starts) -->
+  <div id="examConfig" class="exam-config">
+    <div style="font-size:15px;color:var(--t2);text-align:center;max-width:320px;line-height:1.6">
+      30 randomly selected questions from all four documents.<br>
+      You have <strong style="color:var(--t1)">30 seconds</strong> per question.<br>
+      Mark yourself Correct or Incorrect after seeing the answer.
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:8px">
+      <div class="exam-bd-item" style="min-width:120px"><div class="exam-bd-label">Questions</div><div class="exam-bd-val">30</div></div>
+      <div class="exam-bd-item" style="min-width:120px"><div class="exam-bd-label">Time / Q</div><div class="exam-bd-val">30s</div></div>
+      <div class="exam-bd-item" style="min-width:120px"><div class="exam-bd-label">Pass</div><div class="exam-bd-val" style="color:var(--green)">70%</div></div>
+    </div>
+    <button class="exam-start-btn" onclick="startExam()">Start Exam</button>
+  </div>
+
+  <!-- Active exam -->
+  <div id="examActive" style="display:none">
+    <div class="exam-header">
+      <div>
+        <div class="exam-q-label" id="examQLabel">Question 1 of 30</div>
+        <div class="quiz-progress-bar" style="width:200px;margin-top:6px"><div class="quiz-progress-fill" id="examBar" style="width:0%"></div></div>
+      </div>
+      <div class="exam-timer" id="examTimer">30</div>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-tags" style="margin-bottom:10px">
+        <span class="quiz-type-tag WHAT" id="examTypeTag">WHAT</span>
+        <span class="quiz-doc-tag" id="examDocTag">Cheat Sheet</span>
+      </div>
+      <div class="quiz-question" id="examQuestion">Loading…</div>
+      <div class="quiz-ref" id="examRef"></div>
+
+      <button class="quiz-show-btn" id="examShowBtn" onclick="showExamAnswer()">👁 Show Answer</button>
+
+      <div class="quiz-answer-wrap" id="examAnswerWrap">
+        <div class="quiz-answer-label">Answer</div>
+        <div class="quiz-answer" id="examAnswer"></div>
+        <div class="exam-mark-row">
+          <button class="exam-mark-btn correct" onclick="examMark(true)">✓ Correct</button>
+          <button class="exam-mark-btn incorrect" onclick="examMark(false)">✗ Incorrect</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score screen -->
+  <div id="examScore" style="display:none" class="exam-score">
+    <div class="exam-grade" id="examGrade">--</div>
+    <div class="exam-grade-label" id="examGradeLabel">--</div>
+    <div class="exam-breakdown" id="examBreakdown"></div>
+    <button class="exam-start-btn" onclick="startExam()">Retake Exam</button>
+    <button class="exam-restart-btn" onclick="openHub()">Back to Hub</button>
+  </div>
+</div>
 
 </div><!-- /main -->
 </div><!-- /layout -->
@@ -2991,32 +3129,135 @@ const QUIZ_DB=[
 {doc:'qrh',type:'HOW',q:'How do you identify memory vs. checklist items visually in this QRH?',a:'Red left border + 🧠 MEMORY badge = perform from memory, no checklist. Amber left border + 📋 CHECKLIST badge = reference the printed QRH. The section title badge confirms which type.',ref:'QRH · Table of Contents'},
 {doc:'qrh',type:'WHAT',q:'What are the three sources of energy a pilot manages during a single-engine approach?',a:'Height (altitude above terrain, exchangeable for airspeed), Airspeed (kinetic energy, exchangeable for altitude), and Engine Power (the only source that adds energy to the system). All three must stay positive.',ref:'QRH · Page 8 · 8A'},
 {doc:'qrh',type:'HOW',q:'How do you maintain directional control during a 2B engine failure at rotation?',a:'Apply maximum rudder toward the operative engine, bank 5° into the operative engine, maintain 104 KTS (do not let speed decay to Vmc), call "ENGINE FAILURE" and "MAX POWER" as memory flows.',ref:'QRH · Page 2 · 2B'},
+
+// ── SCENARIO QUESTIONS (60 total — 15 per document) ──────────────────────────
+// Cheat Sheet scenarios
+{doc:'cheatsheet',type:'SCENARIO',q:'You are pre-flighting and notice the oil quantity on the left engine reads 9 US qts. The minimum for dispatch is 10 qts. The oil drum is on the ramp. What do you do?',a:'Add oil to bring the left engine to at least 10 US qts before flight — it is below the minimum dispatch quantity. Record the addition in the journey log. Do not defer this; operating below minimum oil quantity risks oil starvation, especially during prolonged cruise.',ref:'Cheat Sheet · Oil & Fluids'},
+{doc:'cheatsheet',type:'SCENARIO',q:'On final approach you notice the fuel quantity gauges read 15 US gal each side. You are 40 nm from destination, cruise fuel flow is 26 GPH per engine. Can you continue?',a:'Total fuel = 30 US gal. At 52 GPH combined, endurance ≈ 35 min. 40 nm at ~160 KTS ≈ 15 min flight + approach. Reserve looks adequate, but 15 gal per side is very low. Declare minimum fuel to ATC and plan for immediate landing. Do not accept a hold.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'SCENARIO',q:'During the run-up, the right propeller feathering check causes a larger-than-expected RPM drop and the prop will not return to full RPM for 8 seconds. What concern does this raise?',a:'A slow return to governing RPM suggests the propeller governor or feathering mechanism may be sluggish — a sign of low oil temperature, contaminated oil, or a governor fault. Do not depart until the issue is investigated; a slow-to-unfeather prop in flight becomes a partial engine failure.',ref:'Cheat Sheet · Powerplant & Propellers'},
+{doc:'cheatsheet',type:'SCENARIO',q:'You are climbing through 8,000 ft and note the left engine CHT is reading 420°F. The limit is 460°F. The OAT is +5°C. What action do you take?',a:'Monitor closely — you still have 40°F of margin. Open cowl flaps if not already open, consider reducing power slightly if CHT continues to climb, and level off if needed. Ensure mixture is not too lean for the altitude. If CHT approaches limit, reduce power and advise maintenance.',ref:'Cheat Sheet · Engine Limits'},
+{doc:'cheatsheet',type:'SCENARIO',q:'Dispatch asks you to depart with the left wing tip strobe unserviceable for a night IFR flight. Is this legal? What do you check?',a:'No — strobe lights are required equipment for night flight under CARs. The MEL (if applicable) and the POH equipment list must be checked. If the aircraft is operated under an MEL, the item must be listed and the deferral conditions met. If no MEL, the inoperative strobe grounds the aircraft for night ops.',ref:'Cheat Sheet · Electrical & Lighting'},
+{doc:'cheatsheet',type:'SCENARIO',q:'During cruise at FL180, both engines are turbocharged and manifold pressure reads 31" HG. The critical altitude for the LTIO-540 is approximately 16,500 ft. Is this normal?',a:'Yes — the turbocharger maintains sea-level manifold pressure above the critical altitude. 31" at FL180 is expected for a turbocharged engine at max continuous power. Monitor TIT (1,650°F max) and ensure fuel flow is within limits for the cruise power setting.',ref:'Cheat Sheet · Powerplant & Propellers'},
+{doc:'cheatsheet',type:'SCENARIO',q:'You weigh the aircraft and find the computed CG is at 144.2 inches aft datum. The AFM aft limit is 143.0 inches. What must you do before flight?',a:'You cannot depart — the CG exceeds the aft limit. Redistribute cargo forward or remove weight aft (passengers, baggage) to bring CG within the envelope. Recompute the W&B and confirm CG is within limits before release.',ref:'Cheat Sheet · Weights & CG'},
+{doc:'cheatsheet',type:'SCENARIO',q:'Approaching CYKF, the ATIS reports OAT +2°C and altimeter 29.58 inches. How does cold temperature affect your decision-height?',a:'At +2°C, cold-temperature correction is required under CARs. At a standard ILS DH of 200 ft AGL and OAT +2°C, the correction is approximately +20–30 ft. Apply the Transport Canada Cold Temperature Correction table and add the correction to your published minimums.',ref:'Cheat Sheet · Limitations & Performance'},
+{doc:'cheatsheet',type:'SCENARIO',q:'You notice the right fuel crossfeed valve warning light is illuminated amber during cruise. What does this indicate and what action do you take?',a:'The amber crossfeed light indicates the crossfeed valve is open or in transit. If it was not intentionally opened, close it and monitor. If it cannot be confirmed closed, treat as a crossfeed anomaly — fuel may be transferring unintentionally between sides. Land at the nearest suitable airport.',ref:'Cheat Sheet · Fuel System'},
+{doc:'cheatsheet',type:'SCENARIO',q:'During a winter pre-flight, you observe clear ice on the leading edges and prop blades. The ground de-icing crew is unavailable. Can you depart?',a:'No. All frost, ice, and snow must be removed from all critical surfaces before flight — this is a TC regulatory requirement (CARs 602.11). Clear ice on leading edges is especially dangerous as it disrupts airflow, increases stall speed, and reduces lift. Arrange de-icing before departure.',ref:'Cheat Sheet · De-ice & Anti-ice Systems'},
+{doc:'cheatsheet',type:'SCENARIO',q:'On engine start, the left engine oil pressure does not rise within 30 seconds. What do you do?',a:'Shut down the left engine immediately. Oil pressure must rise within 30 seconds of start (AMM/AFM guidance). A failure to pressurize indicates no oil flow — continuing risks bearing seizure. Investigate cause: low oil level, blocked pickup, or oil pump failure.',ref:'Cheat Sheet · Oil & Fluids'},
+{doc:'cheatsheet',type:'SCENARIO',q:'You are calculating takeoff performance and find the accelerate-stop distance required exceeds the available runway length. You have 20 minutes of fuel to burn. What are your options?',a:'Burn fuel to reduce gross weight and recalculate. Alternatively, check for a longer runway at an alternate departure airport, wait for cooler OAT (performance improves), or reduce payload. Do not depart if the accelerate-stop distance exceeds the ASDA — it is a hard regulatory limit.',ref:'Cheat Sheet · Performance'},
+{doc:'cheatsheet',type:'SCENARIO',q:'Cruise power is set at 65% with both engines synchronized. You notice the right tachometer fluctuating ±50 RPM continuously. What do you suspect?',a:'A fluctuating tachometer on one engine with the sync OFF suggests prop governor instability, a hunting governor, or synchronizer interference. Turn off the prop sync and observe. If the fluctuation persists, reduce power on the affected engine and proceed to destination for maintenance.',ref:'Cheat Sheet · Powerplant & Propellers'},
+{doc:'cheatsheet',type:'SCENARIO',q:'SIGMET Sierra 1 covers your route with severe icing from FL080–FL200. Your PA31 has TKS but not FIKI certification. Can you file IFR into that airspace?',a:'No — the PA31-350 (non-FIKI) is not approved for flight into known icing conditions. A SIGMET for severe icing constitutes known icing. You must deviate around or hold until the SIGMET expires. TKS without FIKI certification is de-icing, not anti-icing — it does not change the legal requirement.',ref:'Cheat Sheet · De-ice & Anti-ice Systems'},
+{doc:'cheatsheet',type:'SCENARIO',q:'You are at max gross weight departing from an airport at 3,500 ft elevation on a 30°C day. The density altitude is approximately 6,200 ft. How does this affect V-speeds?',a:'Use AFM performance tables at the calculated density altitude — published V-speeds are for sea-level standard conditions. At 6,200 ft DA, climb rate decreases significantly, rotate and climb speeds remain the same IAS but TAS is higher. Expect longer takeoff roll and reduced obstacle clearance margins.',ref:'Cheat Sheet · V-Speeds & Airspeed Limits'},
+
+// CAP GEN scenarios
+{doc:'capgen',type:'SCENARIO',q:'You are established on the ILS 26 at CYKF and descend below 1,000 ft AAE when the RVR drops from 1,200 ft to 600 ft — below your takeoff alternate minimum. What is the approach ban rule?',a:'Under CARs 602.128, once below 1,000 ft AAE you may continue the approach as long as flight visibility is not less than the published minimum at the time of decision height. The RVR drop does not force a go-around until you reach DH and cannot see the runway environment.',ref:'CAP GEN · Approach Ban'},
+{doc:'capgen',type:'SCENARIO',q:'ATC clears you to "maintain FL180, expect FL240 in 10 minutes." Shortly after, you lose radio contact. What altitude do you fly?',a:'Fly the highest of: last assigned altitude (FL180), altitude ATC said to expect (FL240 in 10 min), or filed altitude. Since the expect altitude was given with a time, after 10 minutes have elapsed, climb to FL240. Continue via filed route and squawk 7600.',ref:'CAP GEN · Lost Communications'},
+{doc:'capgen',type:'SCENARIO',q:'You are in a published hold at BOXUM at FL100, holding south on the 180° radial, right turns, 1-minute legs. ATC gives you an EFC of 1540Z. It is now 1535Z. When do you leave the hold?',a:'You leave the hold at the EFC of 1540Z — depart the fix at that time. Begin your timing to leave at 1540Z on the outbound leg so you arrive back over BOXUM at 1540Z to commence the approach or proceed on route.',ref:'CAP GEN · Holding Procedures'},
+{doc:'capgen',type:'SCENARIO',q:'You are flying the LOC/DME Rwy 08 at CYYZ. At the FAF you have the localizer and DME but the glide slope fails. What minimums apply?',a:'Revert to LOC-only minimums. The glide slope is not a monitored component for LOC approaches — treat it as a non-precision approach and use published LOC/DME MDA. Fly a stabilized descent using step-down fixes from the approach plate.',ref:'CAP GEN · Instrument Approach Procedures'},
+{doc:'capgen',type:'SCENARIO',q:'You are filed CYKF–CYOW at FL180. Your weather alternate is CYUL, which requires 600-2 at ETA+1h. Current CYUL TAF reads 400 OVC, vis 1 SM. Do you need an alternate?',a:'Yes, you need an alternate — and CYUL does not qualify as it is below alternate minimums (600-2 for precision; actual forecast is 400-1). You must file a different alternate that meets alternate weather minima for your ETA ±1 hour, per CARs 602.122.',ref:'CAP GEN · Alternate & Destination Minima'},
+{doc:'capgen',type:'SCENARIO',q:'ATC instructs you to "descend via STAR, cross POKEY at or above FL180, expect lower." You are at FL240. When can you descend?',a:'You may descend immediately — the STAR descent clearance authorizes you to begin descending per the STAR profile, subject to the constraint of crossing POKEY at or above FL180. Descend at your discretion to meet the restriction.',ref:'CAP GEN · STAR & Descent Clearances'},
+{doc:'capgen',type:'SCENARIO',q:'During an IFR flight, your altimeter is fluctuating ±200 ft continuously in smooth air. What do you suspect and what do you do?',a:'Suspect a blocked or icing static port, or a static system leak. Cross-check with standby altimeter — if discrepancy, switch to alternate static source. Declare PAN PAN if unable to confirm altitude. Advise ATC of equipment malfunction and request radar monitoring.',ref:'CAP GEN · Altimetry & Static Systems'},
+{doc:'capgen',type:'SCENARIO',q:'You are flying a SID that says "climb to 4,000, then proceed direct to ABCDE." ATC says "climb to 6,000." Which takes precedence?',a:'The ATC clearance takes precedence. ATC instruction supersedes the SID altitude. Climb to 6,000 as instructed, but continue to follow the lateral portion of the SID (proceed direct ABCDE) unless ATC provides a different routing.',ref:'CAP GEN · SIDs & Departure Procedures'},
+{doc:'capgen',type:'SCENARIO',q:'You are on an ILS with a published category I DH of 200 ft RA. The RA fails at 500 ft. What happens to your minimums?',a:'If RA is required for the approach (noted "RA required" on the plate), you must discontinue the approach and miss. If the approach does not require RA, use baro-altimeter and apply the published baro DH (which may be slightly higher). Check the approach plate for specific equipment requirements.',ref:'CAP GEN · ILS Approach & Categories'},
+{doc:'capgen',type:'SCENARIO',q:'You receive a PIREP reporting moderate turbulence at FL180 on your planned route. Your passengers include elderly individuals. What options do you have?',a:'Consider requesting a different altitude (FL140 or FL200) to avoid the reported layer. If none is available or the turbulence layer is thick, reduce speed to turbulence penetration speed (Va) and advise passengers/crew to fasten seatbelts. Issue a PIREP of your own. Divert if necessary.',ref:'CAP GEN · Turbulence & En-route Decision Making'},
+{doc:'capgen',type:'SCENARIO',q:'You are planning a night IFR flight. The aerodrome forecast shows a TS with heavy rain likely 30 minutes before your ETA. What must you do?',a:'You need a suitable weather alternate and must verify the storm will not affect the aerodrome at ETA. A TS renders all instrument approaches below minimums. Unless the TS is forecast to clear before ETA, plan to hold, divert, or delay departure to arrive after the storm.',ref:'CAP GEN · Weather Minima & Thunderstorms'},
+{doc:'capgen',type:'SCENARIO',q:'On an NDB approach, you are inbound on the 270° bearing to the NDB. The NDB fails at the FAF. What do you do?',a:'Execute an immediate missed approach — NDB failure after the FAF with no other source to confirm position means you cannot continue the approach safely. Advise ATC, squawk 7600 if comms lost, and proceed to alternate.',ref:'CAP GEN · NDB Approach & Equipment Failure'},
+{doc:'capgen',type:'SCENARIO',q:'You are issued a clearance limit of BOXUM intersection and instructed to hold. You have no EFC. Your fuel reaches minimum to proceed to alternate + 30 min reserve. What do you do?',a:'Depart the hold and proceed to destination or alternate. CARs require you to hold to EFC if given one, but in the absence of EFC and with fuel reaching minimums, you are not required to hold indefinitely. Declare MAYDAY or PAN PAN, advise ATC of fuel state, and proceed.',ref:'CAP GEN · Holding & Fuel Emergencies'},
+{doc:'capgen',type:'SCENARIO',q:'ATC clears you for the ILS but then says "maintain 3,000 until established." You intercept the localizer at 4,000. When can you descend on the glide slope?',a:'You may not descend below 3,000 ft until you are established on the localizer. "Established" means on the localizer centerline, within full-scale deflection, and in a position to track the approach. Once established, follow the glide slope.',ref:'CAP GEN · ILS Intercept & Clearances'},
+{doc:'capgen',type:'SCENARIO',q:'Your flight plan filed TAS is 190 KTS. En route, headwinds increase your block time estimate by 35 minutes. Do you need to notify ATC?',a:'Yes — if ETA at destination changes by more than 3 minutes (IFR) you must advise ATC. A 35-minute delay requires an updated ETA filed with ATC, and you should also advise your destination aerodrome or FSS if your arrival is significantly later than planned.',ref:'CAP GEN · Flight Plan & ETA Amendments'},
+
+// AFM scenarios
+{doc:'afm',type:'SCENARIO',q:'At rotation during a full-gross-weight takeoff the right engine loses all power. You are above V1. What is the immediate action?',a:'Continue the takeoff — you are above V1, the go/stop decision is made. Rotate at Vr (101 KTS), climb at V2 (104 KTS), identify dead engine (foot pressure), verify (throttle back slightly if uncertain), feather (if below acceleration altitude), then complete Engine Failure After Takeoff checklist per QRH.',ref:'AFM Section III · Emergency Procedures'},
+{doc:'afm',type:'SCENARIO',q:'You are at 10,000 ft cruise when the left engine oil pressure drops to 20 PSI and a faint burning smell enters the cabin. What is your procedure?',a:'Declare PAN PAN, reduce power on left engine, monitor oil temp — if oil temp rises rapidly, shut down the left engine using Emergency Engine Shutdown memory items. Feather propeller, secure engine, notify ATC, divert to nearest suitable airport. Suspicion of imminent seizure mandates immediate shutdown.',ref:'AFM Section III · Engine Oil Pressure Emergency'},
+{doc:'afm',type:'SCENARIO',q:'During a night flight, all cockpit lighting fails. You have a flashlight. The aircraft is on autopilot in VMC. What are your priorities?',a:'Maintain aircraft control (check AP is engaged and stable), advise ATC, squawk 7700 if appropriate. Verify circuit breakers for lighting (reset once only). Use flashlight to monitor instruments. Request radar vectors to nearest suitable airport and priority landing. Aviate, navigate, communicate.',ref:'AFM Section III · Electrical Failures'},
+{doc:'afm',type:'SCENARIO',q:'The AFM maximum demonstrated crosswind for the PA31-350 is 17 KTS. The reported crosswind at CYKF is 22 KTS gusting 28. Can you legally land?',a:'"Maximum demonstrated" is not a limitation — it is the crosswind tested in certification. However, company ops may prohibit exceeding the demonstrated value. Assess your skill level, runway length, surface condition, and gusting factor. If in doubt, divert. Most operators treat the demonstrated crosswind as an operational limit.',ref:'AFM Section II · Limitations'},
+{doc:'afm',type:'SCENARIO',q:'You are single-pilot, IMC, hand-flying, and the autopilot fails in a steep left bank. The aircraft is in a spiral dive. What do you do?',a:'Identify upset (airspeed rapidly increasing, altimeter unwinding, bank angle). Level wings using ailerons — do not pull back. Once wings level, apply back pressure smoothly to recover altitude. Reduce power if airspeed is above Vne. Then trim, reassess, and aviate. Declare emergency and request vectors.',ref:'AFM Section III · Unusual Attitudes'},
+{doc:'afm',type:'SCENARIO',q:'On final approach, the landing gear fails to extend using the normal system. What is the alternate extension procedure?',a:'Use the alternate gear extension procedure per AFM Section III: ensure airspeed is below Vle, select gear DOWN, then use the manual/emergency extension system (pull handle or crank per aircraft specific configuration). After extension, verify three green lights. If gear remains unsafe, plan for belly landing.',ref:'AFM Section III · Landing Gear Emergency'},
+{doc:'afm',type:'SCENARIO',q:'You are at the MEA of 4,000 ft in IMC when both generators fail. The battery is your only power source. How long do you have?',a:'Battery endurance depends on electrical load — typically 30 minutes at reduced load. Immediately shed all non-essential electrical loads (autopilot, weather radar, unnecessary avionics). Declare emergency, advise ATC, request immediate vectors to nearest VMC or suitable airport. Navigate with minimal equipment.',ref:'AFM Section III · Dual Generator Failure'},
+{doc:'afm',type:'SCENARIO',q:'After landing, you find the fuel was not balanced — left wing has 30 gal remaining, right has 8 gal. The AFM fuel imbalance limit is 15 US gal in flight. Was this a limitation exceedance?',a:'Yes — if the imbalance exceeded 15 US gal during flight, it was a limitation exceedance per AFM Section II. Write it up in the journey log, advise maintenance, and complete an occurrence report if the exceedance was significant. Review fuel management procedures.',ref:'AFM Section II · Fuel System Limitations'},
+{doc:'afm',type:'SCENARIO',q:'During cruise at 12,000 ft the cabin fails to pressurize — this aircraft is unpressurized but a partial cabin seal failure allows cold air in. Your concern is passenger hypothermia on a 2-hour leg. What do you do?',a:'The PA31-350 is unpressurized. A cabin air seal issue means cold and possibly smoky air. Descend to a lower altitude to improve ambient temperature, advise passengers, use cabin heat fully, and consider diverting if passengers are at risk. If smoke enters, initiate smoke removal procedure.',ref:'AFM Section III · Cabin Air & Environmental'},
+{doc:'afm',type:'SCENARIO',q:'The fuel-air ratio gauge shows excessively rich mixture at 8,000 ft despite proper leaning. Fuel flow is 18 GPH per engine. What do you suspect and do?',a:'Suspect a malfunctioning fuel control unit or stuck injector causing over-fueling. Monitor EGT/CHT — if EGT is low and CHT is within limits, fuel control may be faulty. Do not lean beyond normal limits. Reduce power to safe levels and divert for maintenance — a rich mixture wastes fuel and risks engine damage over time.',ref:'AFM Section IV · Engine Management'},
+{doc:'afm',type:'SCENARIO',q:'You are computing W&B for a ferry flight with no passengers, two 50 US gal ferry tanks in the cabin. How does this change your calculations?',a:'Each US gal of avgas weighs 6 lb. 100 US gal = 600 lb added in cabin. The CG moment must be computed at the tank arm. Ferry operations require an STC or special authority — verify the ferry permit, the tank arm in the W&B form, and ensure MTOW and CG remain within AFM envelope at all fuel states.',ref:'AFM Section V · Weight & Balance'},
+{doc:'afm',type:'SCENARIO',q:'On takeoff at a high-altitude airport you notice rotation takes noticeably longer than at sea level. You have 500 ft of runway remaining. Do you abort?',a:'You are at high-altitude where TAS at Vr is higher — the aircraft lifts off at the same IAS but with a longer ground roll. If you computed takeoff distance correctly using the AFM charts for that PA and OAT, the performance was accounted for. If runway remaining is within limits, continue. If not, it is an exceedance — review performance planning.',ref:'AFM Section IV · Takeoff Performance'},
+{doc:'afm',type:'SCENARIO',q:'You suspect fuel contamination — the left engine runs rough on takeoff and EGT is erratic. You abort and return to ramp. What do you do?',a:'Shut down and do not restart until fuel is checked. Drain and sample fuel from all sumps (wing, nacelle, gascolator). Send sample for analysis. Inspect injectors. Notify maintenance and file a fuel quality report. Do not fly until fuel system is confirmed clean and engine inspected.',ref:'AFM Section III · Engine Roughness / Contamination'},
+{doc:'afm',type:'SCENARIO',q:'The AFM published Vy (best rate of climb speed) is 119 KTS. You have a sick passenger aboard and ATC asks you to maintain max IAS below 10,000 ft. What is the tradeoff?',a:'Max IAS (250 KTS below FL100) gives fastest forward progress but worst climb gradient. Flying above Vy trades climb rate for speed — you reach cruise altitude slower. With a sick passenger, prioritize getting on the ground quickly; fly at high IAS toward destination or nearest suitable medical facility.',ref:'AFM Section IV · Climb Performance'},
+{doc:'afm',type:'SCENARIO',q:'You are computing landing distance. The AFM shows 2,400 ft for the conditions. The runway is wet grass. How do you adjust?',a:'The AFM dry hard-surface landing distance is 2,400 ft. For wet grass, apply a 40–60% correction factor per AFM guidance or operator SOP — typically multiply by 1.4 to 1.6. Adjusted distance = up to 3,840 ft. Confirm the destination runway length exceeds this with a safety margin.',ref:'AFM Section IV · Landing Performance'},
+
+// QRH scenarios
+{doc:'qrh',type:'SCENARIO',q:'You are climbing through 6,000 ft when the left engine fire warning light illuminates. Smoke is visible from the nacelle. What are your MEMORY items?',a:'MEMORY items for engine fire in flight: (1) Throttle – CLOSE, (2) Mixture – IDLE CUT-OFF, (3) Prop – FEATHER, (4) Fuel Selector – OFF, (5) Engine Fire Checklist – COMPLETE. Call MAYDAY. These must be done from memory — no checklist — because delay allows fire to spread.',ref:'QRH · Page 1 · 1A · MEMORY'},
+{doc:'qrh',type:'SCENARIO',q:'At 500 ft AGL on a single-engine climb after engine failure, you notice the aircraft is not climbing. Your gross weight is at maximum. What do you do?',a:'At max gross weight, single-engine climb rate may be minimal or zero at low altitude. Do not sacrifice airspeed for climb — maintain V2 (104 KTS) to keep the aircraft flying. Jettison nothing — the Chieftain has no jettison system. Declare MAYDAY, advise ATC, and plan landing straight ahead or minimum turn to the nearest runway.',ref:'QRH · Page 2 · 2B'},
+{doc:'qrh',type:'SCENARIO',q:'On final approach at 300 ft AGL, the gear unsafe light illuminates for the nose gear. You have three green lights but a red unsafe. What do you do?',a:'Go around — do not land with an unsafe gear indication. Return to altitude, attempt gear recycling per the gear emergency checklist, verify all three greens are solid. If gear status cannot be confirmed, land with fire/rescue standing by. Do not attempt a gear-up landing with only one unsafe indicator.',ref:'QRH · Gear Unsafe Procedure'},
+{doc:'qrh',type:'SCENARIO',q:'At cruise altitude your windshield suddenly cracks. Visibility through it is limited. It is -20°C outside. What are your priorities and concerns?',a:'Maintain control and structural integrity — cracked windshield in a non-pressurized aircraft is serious in cold temps due to implosion risk. Reduce speed below Va, reduce altitude if cabin heating is affected, keep heat on the windshield to slow crack propagation. Declare PAN PAN and divert immediately.',ref:'QRH · Windshield Damage'},
+{doc:'qrh',type:'SCENARIO',q:'You identify smoke in the cabin of unknown origin in IMC. What are the first memory items?',a:'MEMORY items: (1) Oxygen masks ON (if available), (2) Crew oxygen ON, (3) Identify source — electrical or other. If electrical smoke: (4) MASTER AVIONICS — OFF, (5) ELECTRICAL EQUIPMENT — OFF one by one to isolate. Declare emergency, descend if needed, land ASAP. Do not delay — smoke incapacitates crew rapidly.',ref:'QRH · Page 5 · 5A · MEMORY'},
+{doc:'qrh',type:'SCENARIO',q:'During an ILS approach in icing conditions, you notice the left pitot heat is failed and airspeed is unreliable. You are at 1,500 ft AGL. What do you do?',a:'Go around immediately. Unreliable airspeed in IMC on approach is a high-risk situation. Climbe at a known safe pitch attitude (10–12° nose up, climb power). Advise ATC. Use the unreliable airspeed checklist — cross-check VSI, altimeter rate of change, and engine power to infer airspeed. Divert to nearest VMC.',ref:'QRH · Unreliable Airspeed Procedure'},
+{doc:'qrh',type:'SCENARIO',q:'Both main AC buses fail in cruise. You have only DC power. What systems are lost and how do you prioritize?',a:'Loss of AC buses removes: autopilot, weather radar, some nav radios, and cockpit lighting on AC circuits. Remaining DC equipment: standby instruments, ADF, battery-powered GPS, transponder. Declare emergency. Reduce electrical load. Navigate with DC-powered GPS/VOR. Request radar vectors and priority handling.',ref:'QRH · Page 6 · 6A'},
+{doc:'qrh',type:'SCENARIO',q:'During a VOR approach in IMC, you reach MDA and see no runway environment. What must you do if you cannot make visual contact by the MAP?',a:'Execute missed approach immediately at the MAP — do not descend below MDA without the runway environment in sight and in a position to land. Apply missed approach procedure from the approach plate: climb to missed approach altitude, turn as published, advise ATC, proceed to alternate if needed.',ref:'QRH · Non-Precision Approach Missed Approach'},
+{doc:'qrh',type:'SCENARIO',q:'On a cold night departure, you select de-ice boots and nothing happens. The boots do not inflate. You are climbing into visible moisture. What do you do?',a:'If boots fail to inflate, return to controlled airspace, advise ATC, and turn back to the departure airport. Do not continue into known icing without functional de-ice protection. The PA31 non-FIKI boots are the primary protection — their failure in icing conditions is an emergency.',ref:'QRH · Page 7 · De-ice Boot Failure'},
+{doc:'qrh',type:'SCENARIO',q:'You declare MAYDAY after engine failure and ATC offers three options: ILS at an airport 20 nm away, VFR airport 8 nm away, or open field 2 nm away. You are at 4,000 ft AGL. Which do you choose?',a:'With one engine working and 4,000 ft, you can cover 8 nm easily on single engine. The VFR airport 8 nm away is your best option — you have a prepared surface, possibly ARFF, and enough altitude margin. The field 2 nm away is last resort (no services, unknown surface). The ILS at 20 nm may be beyond single-engine range depending on performance.',ref:'QRH · Engine Failure Decision Making'},
+{doc:'qrh',type:'SCENARIO',q:'You are hand-flying the ILS at 500 ft AGL in IMC when the primary AI tumbles. What do you do?',a:'Transition immediately to the standby AI (if installed) or use turn coordinator + VSI + altimeter for partial-panel. Call "attitude indicator failed" to co-pilot if crewed. Fly partial panel to DH — if at DH and conditions are met, land; otherwise execute missed approach on partial panel using published procedure.',ref:'QRH · Instrument Failure – Attitude Indicator'},
+{doc:'qrh',type:'SCENARIO',q:'On short final the flap actuator jams at 15° instead of the normal 40°. What performance change do you expect on landing?',a:'With partial flaps (15° vs 40°), stall speed is higher, approach speed must be increased (typically Vref + 5–10 KTS for partial flaps), and landing distance increases significantly — plan for at least 30% longer roll. If runway length is marginal, go around to a longer runway. Do not force a full-flap landing.',ref:'QRH · Flap Malfunction on Approach'},
+{doc:'qrh',type:'SCENARIO',q:'You observe a hydraulic fluid leak from the left main gear strut visible after landing. Can you fly the next leg?',a:'No — a visible hydraulic leak must be assessed by maintenance before the next flight. Hydraulic fluid is used for gear retraction and extension. A depleted hydraulic system means the gear may not retract after takeoff or extend for landing, leading to a gear-up landing. Write it up and ground the aircraft.',ref:'QRH · Hydraulic System Abnormal'},
+{doc:'qrh',type:'SCENARIO',q:'Both VHF radios fail in IMC at FL140 in Class A airspace. What do you do?',a:'Squawk 7600 (lost comm). Proceed per CARs lost communications in IMC: maintain last assigned altitude or MEA (whichever is higher), fly cleared route, expect approach at destination at filed ETA. Class A requires ATC clearance — ATC will protect your route. Land at destination and advise FSS.',ref:'QRH · Total Comms Failure in IMC'},
+{doc:'qrh',type:'SCENARIO',q:'After completing the engine-fire memory items, the fire warning light remains illuminated. What do you do next?',a:'If the fire warning light remains ON after securing the engine (throttle closed, mixture cut-off, prop feathered, fuel off), the fire may still be active. Increase airspeed to blow out nacelle fire, keep the secured engine and fuel off, declare MAYDAY, and land ASAP. Do not re-open fuel to a potentially burning engine.',ref:'QRH · Page 1 · 1A — Persistent Fire Warning'},
 ];
 
 // ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
 const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH'};
 let quizSet=[], quizIdx=0, quizAnswerShown=false;
+let quizCurrentDoc='all', quizCurrentType='standard';
 
-function openQuiz(){
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]];} return arr; }
+
+function switchView(id, title){
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-quiz').classList.add('active');
-  document.getElementById('topbarTitle').textContent='Quiz';
+  document.getElementById(id).classList.add('active');
+  document.getElementById('topbarTitle').textContent=title;
   document.getElementById('backBtn').style.display='';
   document.getElementById('searchWrap').style.display='none';
   document.getElementById('sidebar').style.display='none';
   document.getElementById('main').style.marginLeft='0';
   currentDoc=null;
-  initQuiz('all', document.querySelector('#view-quiz .quiz-filter-tab'));
   window.scrollTo(0,0);
 }
 
-function initQuiz(filter, tabEl){
-  document.querySelectorAll('#view-quiz .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+function openHub(){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-hub').classList.add('active');
+  document.getElementById('topbarTitle').textContent='Pilot Study Hub';
+  document.getElementById('backBtn').style.display='none';
+  document.getElementById('searchWrap').style.display='none';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main').style.marginLeft='0';
+}
+
+function openQuiz(){
+  switchView('view-quiz','Quiz');
+  quizCurrentDoc='all'; quizCurrentType='standard';
+  document.querySelector('#quizDocFilters .quiz-filter-tab').classList.add('active');
+  document.querySelector('#quizTypeFilters .quiz-filter-tab').classList.add('active');
+  applyQuizFilters();
+}
+
+function setQuizDocFilter(doc, tabEl){
+  document.querySelectorAll('#quizDocFilters .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
   if(tabEl) tabEl.classList.add('active');
-  quizSet = filter==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===filter);
-  // shuffle
-  for(let i=quizSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[quizSet[i],quizSet[j]]=[quizSet[j],quizSet[i]];}
+  quizCurrentDoc=doc;
+  applyQuizFilters();
+}
+
+function setQuizTypeFilter(type, tabEl){
+  document.querySelectorAll('#quizTypeFilters .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  quizCurrentType=type;
+  applyQuizFilters();
+}
+
+function applyQuizFilters(){
+  let base = quizCurrentDoc==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===quizCurrentDoc);
+  if(quizCurrentType==='scenario') base=base.filter(q=>q.type==='SCENARIO');
+  else base=base.filter(q=>q.type!=='SCENARIO');
+  quizSet=shuffle(base);
   quizIdx=0;
+  if(!quizSet.length){ document.getElementById('quizQuestion').textContent='No questions for this selection.'; return; }
   renderQuiz();
 }
 
@@ -3033,6 +3274,7 @@ function renderQuiz(){
   document.getElementById('quizProgress').textContent=(quizIdx+1)+' / '+quizSet.length;
   document.getElementById('quizBar').style.width=(((quizIdx+1)/quizSet.length)*100)+'%';
   quizAnswerShown=false;
+  stopSpeech();
 }
 
 function showQuizAnswer(){
@@ -3041,37 +3283,50 @@ function showQuizAnswer(){
   quizAnswerShown=true;
 }
 
-function nextQuiz(){ quizIdx=(quizIdx+1)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
-function prevQuiz(){ quizIdx=(quizIdx-1+quizSet.length)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
+function nextQuiz(){ if(!quizSet.length)return; quizIdx=(quizIdx+1)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
+function prevQuiz(){ if(!quizSet.length)return; quizIdx=(quizIdx-1+quizSet.length)%quizSet.length; renderQuiz(); window.scrollTo(0,0); }
 
 // ── FLASHCARD FUNCTIONS ──────────────────────────────────────────────────────
-let fcSet=[], fcIdx=0, fcFlipped=false, fcKnowCount=0, fcAgainList=[], fcCurrentFilter='all';
+let fcSet=[], fcIdx=0, fcFlipped=false, fcKnowCount=0, fcAgainList=[];
+let fcCurrentDocFilter='all', fcCurrentTypeFilter='standard';
 
 function openFlashcard(){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.getElementById('view-flashcard').classList.add('active');
-  document.getElementById('topbarTitle').textContent='Flashcards';
-  document.getElementById('backBtn').style.display='';
-  document.getElementById('searchWrap').style.display='none';
-  document.getElementById('sidebar').style.display='none';
-  document.getElementById('main').style.marginLeft='0';
-  currentDoc=null;
-  initFlashcard('all', document.querySelector('#view-flashcard .quiz-filter-tab'));
-  window.scrollTo(0,0);
+  switchView('view-flashcard','Flashcards');
+  fcCurrentDocFilter='all'; fcCurrentTypeFilter='standard';
+  document.querySelector('#fcDocFilters .quiz-filter-tab').classList.add('active');
+  document.querySelector('#fcTypeFilters .quiz-filter-tab').classList.add('active');
+  applyFcFilters();
 }
 
-function initFlashcard(filter, tabEl){
-  fcCurrentFilter=filter||'all';
-  document.querySelectorAll('#view-flashcard .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+function setFcDocFilter(doc, tabEl){
+  document.querySelectorAll('#fcDocFilters .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
   if(tabEl) tabEl.classList.add('active');
-  const base = fcCurrentFilter==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===fcCurrentFilter);
-  // shuffle
-  fcSet=[...base];
-  for(let i=fcSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcSet[i],fcSet[j]]=[fcSet[j],fcSet[i]];}
+  fcCurrentDocFilter=doc;
+  applyFcFilters();
+}
+
+function setFcTypeFilter(type, tabEl){
+  document.querySelectorAll('#fcTypeFilters .quiz-filter-tab').forEach(t=>t.classList.remove('active'));
+  if(tabEl) tabEl.classList.add('active');
+  fcCurrentTypeFilter=type;
+  applyFcFilters();
+}
+
+function applyFcFilters(){
+  let base = fcCurrentDocFilter==='all' ? [...QUIZ_DB] : QUIZ_DB.filter(q=>q.doc===fcCurrentDocFilter);
+  if(fcCurrentTypeFilter==='scenario') base=base.filter(q=>q.type==='SCENARIO');
+  else base=base.filter(q=>q.type!=='SCENARIO');
+  fcSet=shuffle(base);
   fcIdx=0; fcFlipped=false; fcKnowCount=0; fcAgainList=[];
   document.getElementById('fcDeck').style.display='';
   document.getElementById('fcDone').style.display='none';
   renderFlashcard();
+}
+
+function initFlashcard(doc, _tabEl, type){
+  fcCurrentDocFilter=doc||'all';
+  fcCurrentTypeFilter=type||'standard';
+  applyFcFilters();
 }
 
 function renderFlashcard(){
@@ -3083,24 +3338,22 @@ function renderFlashcard(){
   document.getElementById('fcQuestion').textContent=q.q;
   document.getElementById('fcAnswer').textContent=q.a;
   document.getElementById('fcRef').textContent='📎 '+q.ref;
-  const card=document.getElementById('fcCard');
-  card.classList.remove('flipped');
+  document.getElementById('fcCard').classList.remove('flipped');
   fcFlipped=false;
   document.getElementById('fcRemaining').textContent=fcSet.length-fcIdx;
   document.getElementById('fcKnow').textContent=fcKnowCount;
   document.getElementById('fcAgain').textContent=fcAgainList.length;
+  stopSpeech();
 }
 
 function flipCard(){
-  const card=document.getElementById('fcCard');
   fcFlipped=!fcFlipped;
-  fcFlipped ? card.classList.add('flipped') : card.classList.remove('flipped');
+  fcFlipped ? document.getElementById('fcCard').classList.add('flipped') : document.getElementById('fcCard').classList.remove('flipped');
 }
 
 function fcMark(result){
   const q=fcSet[fcIdx];
-  if(result==='again') fcAgainList.push(q);
-  else fcKnowCount++;
+  if(result==='again') fcAgainList.push(q); else fcKnowCount++;
   fcIdx++;
   renderFlashcard();
 }
@@ -3114,14 +3367,148 @@ function showFcDone(){
 }
 
 function fcRestart(){
-  if(!fcAgainList.length){ initFlashcard(fcCurrentFilter); return; }
-  fcSet=[...fcAgainList];
-  for(let i=fcSet.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[fcSet[i],fcSet[j]]=[fcSet[j],fcSet[i]];}
+  if(!fcAgainList.length){ applyFcFilters(); return; }
+  fcSet=shuffle([...fcAgainList]);
   fcIdx=0; fcFlipped=false; fcKnowCount=0; fcAgainList=[];
   document.getElementById('fcDeck').style.display='';
   document.getElementById('fcDone').style.display='none';
   renderFlashcard();
 }
+
+// ── EXAM SIMULATOR ───────────────────────────────────────────────────────────
+let examSet=[], examIdx=0, examResults=[], examTimer=null, examSecsLeft=30;
+
+function openExam(){
+  switchView('view-exam','Exam Simulator');
+  document.getElementById('examConfig').style.display='';
+  document.getElementById('examActive').style.display='none';
+  document.getElementById('examScore').style.display='none';
+}
+
+function startExam(){
+  // 30 random questions from full DB (excluding scenarios for standard exam)
+  const pool = shuffle(QUIZ_DB.filter(q=>q.type!=='SCENARIO'));
+  examSet = pool.slice(0,30);
+  examIdx=0; examResults=[];
+  document.getElementById('examConfig').style.display='none';
+  document.getElementById('examScore').style.display='none';
+  document.getElementById('examActive').style.display='';
+  renderExamQ();
+}
+
+function renderExamQ(){
+  clearInterval(examTimer);
+  const q=examSet[examIdx];
+  document.getElementById('examQLabel').textContent='Question '+(examIdx+1)+' of '+examSet.length;
+  document.getElementById('examBar').style.width=(((examIdx)/examSet.length)*100)+'%';
+  document.getElementById('examTypeTag').textContent=q.type;
+  document.getElementById('examTypeTag').className='quiz-type-tag '+q.type;
+  document.getElementById('examDocTag').textContent=DOC_LABELS[q.doc]||q.doc;
+  document.getElementById('examQuestion').textContent=q.q;
+  document.getElementById('examRef').textContent='📎 '+q.ref;
+  document.getElementById('examAnswer').textContent=q.a;
+  document.getElementById('examAnswerWrap').classList.remove('visible');
+  document.getElementById('examShowBtn').style.display='flex';
+  examSecsLeft=30;
+  updateExamTimer();
+  examTimer=setInterval(()=>{
+    examSecsLeft--;
+    updateExamTimer();
+    if(examSecsLeft<=0){ clearInterval(examTimer); showExamAnswer(); }
+  },1000);
+}
+
+function updateExamTimer(){
+  const el=document.getElementById('examTimer');
+  el.textContent=examSecsLeft;
+  el.className='exam-timer'+(examSecsLeft<=10?' danger':examSecsLeft<=15?' warn':'');
+}
+
+function showExamAnswer(){
+  clearInterval(examTimer);
+  document.getElementById('examAnswerWrap').classList.add('visible');
+  document.getElementById('examShowBtn').style.display='none';
+}
+
+function examMark(correct){
+  examResults.push({q:examSet[examIdx], correct});
+  examIdx++;
+  if(examIdx>=examSet.length){ finishExam(); return; }
+  renderExamQ();
+  window.scrollTo(0,0);
+}
+
+function finishExam(){
+  clearInterval(examTimer);
+  document.getElementById('examActive').style.display='none';
+  document.getElementById('examScore').style.display='';
+  const total=examResults.length;
+  const correct=examResults.filter(r=>r.correct).length;
+  const pct=Math.round((correct/total)*100);
+  const pass=pct>=70;
+  const gradeEl=document.getElementById('examGrade');
+  gradeEl.textContent=pct+'%';
+  gradeEl.className='exam-grade '+(pass?'pass':'fail');
+  document.getElementById('examGradeLabel').textContent=pass?'PASSED — Great work!':'FAILED — Keep studying';
+  // breakdown by doc
+  const docs=['cheatsheet','capgen','afm','qrh'];
+  const labels=DOC_LABELS;
+  let html='';
+  docs.forEach(d=>{
+    const qs=examResults.filter(r=>r.q.doc===d);
+    if(!qs.length)return;
+    const c=qs.filter(r=>r.correct).length;
+    html+=`<div class="exam-bd-item"><div class="exam-bd-label">${labels[d]}</div><div class="exam-bd-val">${c}/${qs.length}</div></div>`;
+  });
+  html+=`<div class="exam-bd-item"><div class="exam-bd-label">Total</div><div class="exam-bd-val" style="color:${pass?'var(--green)':'var(--red)'}">${correct}/${total}</div></div>`;
+  document.getElementById('examBreakdown').innerHTML=html;
+}
+
+// ── AUDIO / TTS ──────────────────────────────────────────────────────────────
+function stopSpeech(){ if('speechSynthesis' in window) window.speechSynthesis.cancel(); }
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  stopSpeech();
+  const utt=new SpeechSynthesisUtterance(text);
+  utt.rate=0.92; utt.pitch=1; utt.lang='en-CA';
+  window.speechSynthesis.speak(utt);
+}
+
+function speakQuizQ(){
+  if(!quizSet.length)return;
+  const q=quizSet[quizIdx];
+  speak(q.type+' question. '+q.q);
+}
+
+function speakFcQ(){
+  if(!fcSet.length||fcIdx>=fcSet.length)return;
+  speak(fcSet[fcIdx].q);
+}
+
+// ── STREAK COUNTER ───────────────────────────────────────────────────────────
+function initStreak(){
+  const today=new Date().toISOString().slice(0,10);
+  const last=localStorage.getItem('skycare_last');
+  let streak=parseInt(localStorage.getItem('skycare_streak')||'0',10);
+  if(last===today){
+    // already counted today — just display
+  } else {
+    const yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+    if(last===yesterday) streak++;
+    else streak=1;
+    localStorage.setItem('skycare_last',today);
+    localStorage.setItem('skycare_streak',streak);
+  }
+  const el=document.getElementById('hubStreak');
+  if(streak>0){
+    el.textContent='🔥 '+streak+'-day streak';
+    el.style.display='inline-flex';
+  }
+}
+
+// ── INIT ON LOAD ─────────────────────────────────────────────────────────────
+initStreak();
 </script>
 </body>
 </html>
