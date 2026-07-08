@@ -216,6 +216,44 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
   .ai-panel{width:100%;border-radius:16px 16px 0 0}
   .ai-fab{bottom:20px;right:16px}
 }
+
+/* ── MOBILE TABLE SCROLL ── */
+@media(max-width:900px){
+  .ref-table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+  .ref-table td,.ref-table th{font-size:11px;padding:7px 8px}
+  .section{margin-bottom:20px}
+  .alert{padding:9px 11px;font-size:11px}
+  .hero{padding:20px}
+  .summary{font-size:12px}
+}
+
+/* ── LANDSCAPE PHONE SIDEBAR FIX ── */
+@media(min-width:769px) and (max-width:1100px) and (orientation:landscape) and (max-height:620px){
+  .menu-btn{display:block !important}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .overlay.open{display:block}
+  .main{margin-left:0 !important;padding:16px}
+}
+
+/* ── QRH ── */
+.qrh-badge{display:inline-flex;align-items:center;background:var(--warn-bg);border:1px solid rgba(239,68,68,0.35);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin-right:6px;vertical-align:middle;flex-shrink:0}
+.qrh-badge.amber{background:var(--caution-bg);border-color:rgba(245,158,11,0.35);color:var(--amber)}
+.qrh-badge.blue{background:var(--note-bg);border-color:rgba(37,99,235,0.35);color:#93c5fd}
+.qrh-badge.green{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);color:var(--green)}
+.qrh-ref{color:var(--accent);cursor:pointer;font-weight:700;font-size:11px;border:1px solid rgba(37,99,235,0.4);border-radius:4px;padding:1px 6px;margin-left:3px;white-space:nowrap;display:inline-block}
+.qrh-ref:hover{background:var(--accent-glow)}
+.qrh-table td:first-child{color:var(--accent);font-weight:700;font-size:12px;width:22px;text-align:center;padding-right:4px}
+.qrh-table td:last-child{color:#60a5fa;font-weight:700;text-align:right;padding-left:12px}
+.qrh-phase{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 0 2px;border-top:1px solid rgba(255,255,255,0.07);margin-top:4px}
+.qrh-crew{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.qrh-crew-col{background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px}
+.qrh-crew-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
+.qrh-crew-item{padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;color:var(--t2);line-height:1.4}
+.qrh-crew-item:last-child{border-bottom:none}
+@media(max-width:768px){.qrh-crew{grid-template-columns:1fr}}
+.hub-tile-tag.emergency{background:var(--warn-bg);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.back-btn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:4px 10px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -225,7 +263,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 <!-- TOP BAR -->
 <div class="topbar">
   <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
-  <button class="back-btn" id="backBtn" onclick="showHub()" style="display:none">‹</button>
+  <button class="back-btn" id="backBtn" onclick="showHub()" style="display:none">‹ Hub</button>
   <span class="topbar-logo">✈ Skycare</span>
   <span class="topbar-title" id="topbarTitle">Pilot Study Hub</span>
   <div class="search-wrap" id="searchWrap" style="display:none">
@@ -293,6 +331,14 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-tag coming">COMING SOON</div>
       <div class="hub-tile-title">COM</div>
       <div class="hub-tile-desc">Communications — phraseology, ATC procedures, and radio management in IFR flight.</div>
+    </div>
+
+    <div class="hub-tile" onclick="openDoc('qrh')">
+      <div class="hub-tile-icon">🚨</div>
+      <div class="hub-tile-tag emergency">QRH</div>
+      <div class="hub-tile-title">Emergency QRH</div>
+      <div class="hub-tile-desc">Quick Reference Handbook — all 22 emergency &amp; abnormal procedures with step-by-step checklists and emergency speeds.</div>
+      <div class="hub-tile-arrow">→</div>
     </div>
   </div>
 
@@ -1349,6 +1395,501 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 </div><!-- /view-afm -->
 
 
+<!-- ══════════════════════════════════════════════════════════════════
+     QRH VIEW
+══════════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-qrh">
+
+  <div class="hero">
+    <div class="hero-label">Emergency / Abnormal Procedures · Study Reference Only</div>
+    <div class="hero-title">PA31 Quick Reference Handbook</div>
+    <div class="hero-sub">Date: May 14, 2025 · Revision: 6 · BLR Modified</div>
+    <div class="hero-tags">
+      <span class="hero-tag">22 Procedures</span>
+      <span class="hero-tag">Single &amp; Multi-Crew</span>
+      <span class="hero-tag">Vmca 72 KTS</span>
+      <span class="hero-tag">Vyse 107 KTS</span>
+    </div>
+    <div class="hero-warn">⚠️ Study reference only. In the aircraft use the printed approved QRH. Memory items first — checklist second.</div>
+  </div>
+
+  <div class="no-results" id="noResultsQrh"></div>
+
+  <!-- SPEEDS -->
+  <div class="section" id="qrh-speeds">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><div class="section-title">Emergency &amp; Operational Speeds</div><div class="section-ref">QRH · Table of Contents page</div></div>
+    </div>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Single Pilot Operations</strong> require the pilot to complete both PM/FO and PF/Captain checks.</div></div>
+    <div class="data-grid">
+      <div class="data-card"><div class="data-label">Vmc</div><div class="data-value">72<span class="data-unit">KTS</span></div></div>
+      <div class="data-card"><div class="data-label">Vxse</div><div class="data-value">104<span class="data-unit">KTS</span></div></div>
+      <div class="data-card"><div class="data-label">Vyse</div><div class="data-value">107<span class="data-unit">KTS</span></div></div>
+      <div class="data-card"><div class="data-label">Va</div><div class="data-value">159<span class="data-unit">KTS</span></div></div>
+      <div class="data-card"><div class="data-label">Vne</div><div class="data-value">236<span class="data-unit">KTS</span></div></div>
+    </div>
+    <table class="ref-table">
+      <tr><th>Operational Speed</th><th>Value</th><th>Notes</th></tr>
+      <tr><td>Vbarrier</td><td class="hi">95 KTS</td><td></td></tr>
+      <tr><td>Vx</td><td class="hi">84 KTS</td><td></td></tr>
+      <tr><td>Vy</td><td class="hi">101 KTS</td><td></td></tr>
+      <tr><td>Vle *</td><td class="hi">128 KTS</td><td>* 153 KTS post-1978 models</td></tr>
+      <tr><td>Vlo *</td><td class="hi">128 KTS</td><td>* 153 KTS post-1978 models</td></tr>
+      <tr><td>Vfe (0–25°) **</td><td class="hi">153 KTS</td><td>** 162 KTS post-1978 models</td></tr>
+      <tr><td>Vfe (25–40°)</td><td class="hi">130 KTS</td><td></td></tr>
+    </table>
+  </div>
+
+  <!-- 1A EVACUATION DRILL -->
+  <div class="section" id="qrh-1a">
+    <div class="section-header">
+      <div class="section-icon">🚨</div>
+      <div><div class="section-title"><span class="qrh-badge">1A</span> Evacuation Drill</div><div class="section-ref">QRH · Page 1</div></div>
+    </div>
+    <div class="qrh-crew">
+      <div class="qrh-crew-col">
+        <div class="qrh-crew-label">Captain's Duties</div>
+        <div class="qrh-crew-item">CALL "EVACUATE LEFT OR RIGHT"</div>
+        <div class="qrh-crew-item">BOTH FIREWALL FUEL SHUTOFFS — <strong>OFF</strong></div>
+        <div class="qrh-crew-item">BOTH FUEL SELECTORS — <strong>OFF</strong></div>
+        <div class="qrh-crew-item">BOTH EMERGENCY FUEL PUMPS — <strong>OFF</strong></div>
+        <div class="qrh-crew-item">BOTH FUEL BOOST CB'S — <strong>PULLED</strong></div>
+        <div class="qrh-crew-item">BOTH MIXTURES — <strong>ICO</strong></div>
+        <div class="qrh-crew-item">BOTH THROTTLES — <strong>CLOSED</strong></div>
+        <div class="qrh-crew-item">BOTH MAGS — <strong>OFF</strong></div>
+        <div class="qrh-crew-item">MAKE RADIO CALL (IF SINGLE PILOT)</div>
+        <div class="qrh-crew-item">MASTER — <strong>OFF</strong></div>
+        <div class="qrh-crew-item">DIRECT AND ASSIST PASSENGERS AS APPLICABLE</div>
+      </div>
+      <div class="qrh-crew-col">
+        <div class="qrh-crew-label">F/O's Duties</div>
+        <div class="qrh-crew-item">ADVISE ATC INCLUDING SOULS ON BOARD, FUEL LOAD AND D.G.s</div>
+        <div class="qrh-crew-item">TURN ON ENTRANCE LIGHT IF REQUIRED</div>
+        <div class="qrh-crew-item">USE PORTABLE FIRE EXTINGUISHER IF REQUIRED AND COMMENCE EVACUATION</div>
+        <div class="qrh-crew-item">ASSIST WITH EVACUATION AND CONFIRM THAT ALL PERSONS ARE ACCOUNTED FOR</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1B ENGINE SECURING -->
+  <div class="section" id="qrh-1b">
+    <div class="section-header">
+      <div class="section-icon">⚙️</div>
+      <div><div class="section-title"><span class="qrh-badge amber">1B</span> Engine Securing Procedure</div><div class="section-ref">QRH · Page 1 · Referenced by most emergency procedures</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>POWER ON OPERATING ENGINE <em style="color:var(--t3);font-size:11px">— INOPERATIVE ENGINE ONLY</em></td><td>SET</td></tr>
+      <tr><td>2</td><td>THROTTLE</td><td>CLOSE</td></tr>
+      <tr><td>3</td><td>PROPELLER (1000 RPM MIN)</td><td>FEATHER</td></tr>
+      <tr><td>4</td><td>MIXTURE</td><td>ICO</td></tr>
+      <tr><td>5</td><td>COWL FLAPS</td><td>CLOSE</td></tr>
+      <tr><td>6</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
+      <tr><td>7</td><td>FUEL SELECTOR</td><td>OFF</td></tr>
+      <tr><td>8</td><td>EMERGENCY FUEL PUMP</td><td>OFF</td></tr>
+      <tr><td>9</td><td>MAGS</td><td>OFF</td></tr>
+      <tr><td>10</td><td>AIRCONDITIONER</td><td>OFF</td></tr>
+      <tr><td>11</td><td>FUEL BOOST CB</td><td>PULLED</td></tr>
+      <tr><td>12</td><td>ALTERNATOR CB</td><td>OFF</td></tr>
+      <tr><td>13</td><td>ELECTRICAL LOAD</td><td>REDUCED</td></tr>
+      <tr><td>14</td><td>CROSSFEED</td><td>CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-5a')">→ 5A</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 1C + 2A REJECTED TAKEOFF -->
+  <div class="section" id="qrh-rto">
+    <div class="section-header">
+      <div class="section-icon">🛑</div>
+      <div><div class="section-title"><span class="qrh-badge">1C</span><span class="qrh-badge" style="margin-left:4px">2A</span> Rejected Takeoff</div><div class="section-ref">QRH · Pages 1–2</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>1C — With Sufficient Runway to Stop</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>THROTTLE</td><td>IDLE</td></tr>
+      <tr><td>2</td><td>BRAKES</td><td>AS REQUIRED</td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">After stop: set parking brake, follow applicable drill. If FIRE → Evacuation Drill <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
+
+    <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>2A — Without Sufficient Runway to Stop</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>THROTTLES</td><td>IDLE</td></tr>
+      <tr><td>2</td><td>BRAKES MAX</td><td>Steer to avoid obstacles</td></tr>
+      <tr><td>3</td><td>MIXTURES</td><td>ICO</td></tr>
+      <tr><td>4</td><td>FIREWALL FUEL SHUTOFFS</td><td>OFF</td></tr>
+      <tr><td>5</td><td>EMERGENCY FUEL PUMPS</td><td>OFF</td></tr>
+      <tr><td>6</td><td>MAGS</td><td>OFF</td></tr>
+      <tr><td>7</td><td>MASTER</td><td>OFF</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT FULL STOP</td></tr>
+      <tr><td>8</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 2B ENGINE FAILURE AFTER ROTATION -->
+  <div class="section" id="qrh-2b">
+    <div class="section-header">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title"><span class="qrh-badge">2B</span> Engine Failure After Rotation — T/O Continued</div><div class="section-ref">QRH · Page 2</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>POWER</td><td>MAXIMUM</td></tr>
+      <tr><td>2</td><td>GEAR</td><td>UP</td></tr>
+      <tr><td>3</td><td>FLAPS</td><td>UP</td></tr>
+      <tr><td>4</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
+      <tr><td>5</td><td>AIRSPEED — MAINTAIN AS ABLE TARGET</td><td>104 KTS</td></tr>
+      <tr><td>6</td><td>DIRECTIONAL CONTROL — MAINTAIN</td><td>5° INTO OPERATING ENGINE</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF THERE IS AN ENGINE FIRE</td></tr>
+      <tr><td>7</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
+      <tr><td>8</td><td>COWL FLAPS (INOP ENGINE)</td><td>CLOSE</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AIRSPEED (CLEAR OF OBSTACLES)</td></tr>
+      <tr><td>9</td><td>AIRSPEED</td><td>107 KTS</td></tr>
+      <tr><td>10</td><td>TRIM (5 DEGREES TO GOOD ENGINE)</td><td>ADJUST</td></tr>
+      <tr><td>11</td><td>COWL FLAPS (OPERATIVE ENGINE)</td><td>AS REQUIRED</td></tr>
+      <tr><td>12</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 2C ENGINE FIRE AFTER ROTATION -->
+  <div class="section" id="qrh-2c">
+    <div class="section-header">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title"><span class="qrh-badge">2C</span> Engine Fire After Rotation</div><div class="section-ref">QRH · Page 2 · Or after decision speed with decision to continue</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>POWER</td><td>MAXIMUM</td></tr>
+      <tr><td>2</td><td>GEAR</td><td>UP</td></tr>
+      <tr><td>3</td><td>FLAPS</td><td>UP</td></tr>
+      <tr><td>4</td><td>OBSTACLES</td><td>CLEAR</td></tr>
+      <tr><td>5</td><td>AIRSPEED</td><td>107 KTS</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT 400 FEET</td></tr>
+      <tr><td>6</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
+      <tr><td>7</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
+      <tr><td>8</td><td>COWL FLAPS (INOP ENGINE)</td><td>CLOSE</td></tr>
+      <tr><td>9</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 3A ENGINE FAILURE/FIRE IN FLIGHT -->
+  <div class="section" id="qrh-3a">
+    <div class="section-header">
+      <div class="section-icon">✈️</div>
+      <div><div class="section-title"><span class="qrh-badge">3A</span> Engine Failure / Fire In Flight</div><div class="section-ref">QRH · Page 3 · At or above safe altitude</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>INOP ENGINE</td><td>IDENTIFY</td></tr>
+      <tr><td>2</td><td>OPERATIVE ENGINE — ADJUST POWER TO</td><td>MAINTAIN ALT AND AIRSPEED</td></tr>
+      <tr><td>3</td><td>AIRSPEED — MAINTAIN</td><td>107 KTS PLUS</td></tr>
+      <tr><td>4</td><td>GEAR</td><td>UP</td></tr>
+      <tr><td>5</td><td>FLAPS</td><td>UP</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF FIRE → SKIP CAUSE CHECK → GO TO STEP 13 · IF NO FIRE → COMPLETE STEPS 6–12 FIRST</td></tr>
+      <tr><td>6</td><td>FUEL PRESSURE AND FLOW — CHECK. IF PRESSURE &lt;34 PSI</td><td>SELECT EMERG. FUEL PUMP ON</td></tr>
+      <tr><td>7</td><td>FUEL QUANTITY</td><td>CHECK</td></tr>
+      <tr><td>8</td><td>FUEL SELECTOR — SWITCH TO OPPOSITE TANK</td><td>IF FUEL REMAINING</td></tr>
+      <tr><td>9</td><td>OIL PRESS / TEMP</td><td>CHECK</td></tr>
+      <tr><td>10</td><td>MAGS (L AND R FOR FAILED ENGINE)</td><td>ON INDIVIDUALLY</td></tr>
+      <tr><td>11</td><td>MIXTURE</td><td>ADJUST</td></tr>
+      <tr><td>12</td><td>AIR START</td><td>CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-6b')">→ 6B</span></td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--t3);font-size:11px;font-style:italic">If engine does not start → complete Engine Securing Procedure <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+      <tr><td>13</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
+      <tr><td>14</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
+      <tr><td>15</td><td>FUEL PUMP (INOP ENGINE)</td><td>OFF</td></tr>
+      <tr><td>16</td><td>COWL FLAP (INOP ENGINE)</td><td>CLOSED</td></tr>
+      <tr><td>17</td><td>POWER (OPERATIVE ENGINE)</td><td>POWER AND MIXTURE AS REQUIRED</td></tr>
+      <tr><td>18</td><td>FUEL (OPERATIVE ENGINE)</td><td>FUEL QTY AND EMERG. FUEL PUMP AS REQUIRED</td></tr>
+      <tr><td>19</td><td>COWL FLAP (OPERATIVE ENGINE)</td><td>AS REQUIRED</td></tr>
+      <tr><td>20</td><td>TRIM (5 DEGREES TO GOOD ENGINE)</td><td>ADJUST</td></tr>
+      <tr><td>21</td><td>ELECTRICAL LOAD</td><td>DECREASE TO MINIMUM</td></tr>
+      <tr><td>22</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 3B ENGINE FIRE DURING START -->
+  <div class="section" id="qrh-3b">
+    <div class="section-header">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title"><span class="qrh-badge">3B</span> Engine Fire During Start</div><div class="section-ref">QRH · Page 3</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>CONTINUE CRANKING</td><td></td></tr>
+      <tr><td>2</td><td>BOOST PUMPS</td><td>OFF</td></tr>
+      <tr><td>3</td><td>MIXTURE</td><td>IDLE CUT OFF</td></tr>
+      <tr><td>4</td><td>THROTLES</td><td>OPEN</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF FIRE PERSISTS</td></tr>
+      <tr><td>5</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
+      <tr><td>6</td><td>MASTER</td><td>OFF</td></tr>
+      <tr><td>7</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 4A ENGINE FIRE GROUND OPS -->
+  <div class="section" id="qrh-4a">
+    <div class="section-header">
+      <div class="section-icon">🔥</div>
+      <div><div class="section-title"><span class="qrh-badge">4A</span> Engine Fire During Ground Operations</div><div class="section-ref">QRH · Page 4 · All engine fires from start to RTO with sufficient runway</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>BRAKES</td><td>APPLY AND SET</td></tr>
+      <tr><td>2</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 4B ELECTRICAL FIRE -->
+  <div class="section" id="qrh-4b">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><div class="section-title"><span class="qrh-badge amber">4B</span> Electrical Fire</div><div class="section-ref">QRH · Page 4</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>MASTER SWITCH</td><td>OFF</td></tr>
+      <tr><td>2</td><td>GARMIN 7XX</td><td>ON AND SET TO SYNTHETIC VISION</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--t3);font-size:11px;font-style:italic">Use fire extinguisher if required</td></tr>
+      <tr><td>3</td><td>CB'S</td><td>CHECKED/PULLED</td></tr>
+      <tr><td>4</td><td>ELECTRICAL SWITCHES</td><td>OFF</td></tr>
+      <tr><td>5</td><td>MASTER SWITCH</td><td>ON</td></tr>
+      <tr><td>6</td><td>CB &amp; SWITCHES FOR ESSENTIAL ELECTRICS ONLY</td><td>ON ONE AT A TIME UNTIL FAULTY CIRCUIT LOCATED</td></tr>
+      <tr><td>7</td><td>CB &amp; SWITCH FOR FAILED UNIT</td><td>OFF</td></tr>
+      <tr><td>8</td><td>LAND AS SOON AS PRACTICAL</td><td></td></tr>
+    </table>
+  </div>
+
+  <!-- 4C + 4D RPM -->
+  <div class="section" id="qrh-rpm">
+    <div class="section-header">
+      <div class="section-icon">🌀</div>
+      <div><div class="section-title"><span class="qrh-badge amber">4C</span><span class="qrh-badge amber" style="margin-left:4px">4D</span> RPM Underspeed / Overspeed</div><div class="section-ref">QRH · Page 4</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>4C — RPM Underspeed</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>POWER</td><td>REDUCED</td></tr>
+      <tr><td>2</td><td>MIXTURE</td><td>RICH</td></tr>
+      <tr><td>3</td><td>PROP CONTROL</td><td>ADJUST AS REQUIRED</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">IF PROP MOVES TO COARSE</td></tr>
+      <tr><td>4</td><td>MIXTURE</td><td>ICO</td></tr>
+      <tr><td>5</td><td>PROP CONTROL</td><td>FEATHER</td></tr>
+      <tr><td>6</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">Prop will move to COARSE (decreased RPM) if engine oil pressure is lost.</div></div>
+
+    <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>4D — RPM Overspeed</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>POWER</td><td>REDUCED</td></tr>
+      <tr><td>2</td><td>PITCH NOSE UP TO REDUCE SPEED QUICKLY</td><td></td></tr>
+      <tr><td>3</td><td>AIRSPEED — REDUCED TO APPROXIMATELY</td><td>130 KTS</td></tr>
+      <tr><td>4</td><td>PROP (IF PROP SPEED CANNOT BE KEPT UNDER 2575 RPM)</td><td>FEATHERED</td></tr>
+      <tr><td>5</td><td>IF PROP FEATHERS</td><td>COMPLETE ENGINE SECURING PROCEDURE</td></tr>
+    </table>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">If prop will NOT feather — <strong>do NOT shut down engine</strong>. With IAS below 130 KTS minimal power should be available without exceeding 2575 RPM.</div></div>
+  </div>
+
+  <!-- 5A CROSSFEED -->
+  <div class="section" id="qrh-5a">
+    <div class="section-header">
+      <div class="section-icon">⛽</div>
+      <div><div class="section-title"><span class="qrh-badge blue">5A</span> Crossfeed</div><div class="section-ref">QRH · Page 5</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FUEL SELECTOR (INOP ENGINE)</td><td>EITHER TANK</td></tr>
+      <tr><td>2</td><td>FUEL BOOST CB (INOP ENGINE)</td><td>IN</td></tr>
+      <tr><td>3</td><td>EMERGENCY FUEL PUMP (INOP ENGINE)</td><td>ON</td></tr>
+      <tr><td>4</td><td>CROSSFEED</td><td>ON</td></tr>
+      <tr><td>5</td><td>FUEL SELECTOR (OPERATIVE ENGINE)</td><td>OFF</td></tr>
+      <tr><td>6</td><td>FUEL BOOST CB (OPERATIVE ENGINE)</td><td>PULLED</td></tr>
+      <tr><td>7</td><td>EMERGENCY FUEL PUMP (OPERATIVE ENGINE)</td><td>OFF</td></tr>
+    </table>
+  </div>
+
+  <!-- 5B ALTERNATOR FAILURE -->
+  <div class="section" id="qrh-5b">
+    <div class="section-header">
+      <div class="section-icon">⚡</div>
+      <div><div class="section-title"><span class="qrh-badge amber">5B</span> Alternator Failure</div><div class="section-ref">QRH · Page 5</div></div>
+    </div>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">It is possible to have an ALTERNATOR INOP light and still have the alternator functioning.</div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>SYSTEM VOLTAGE (IF EQUIPPED)*</td><td>NOTED</td></tr>
+      <tr><td>2</td><td>MASTER SWITCH (OPPOSITE TO INOP LIGHT)</td><td>OFF</td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">*If voltage drops 28V → ~24V: alternator FAILED → proceed steps 3–6. If voltage stays ~28V: INOP light faulty, alternator OK → restore both master sides, continue with occasional alternator checks.</div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>3</td><td>ELECTRICS</td><td>REDUCE</td></tr>
+      <tr><td>4</td><td>MASTER SWITCH (APPROPRIATE SIDE)</td><td>OFF</td></tr>
+      <tr><td>5</td><td>CB'S</td><td>CHECK AND RESET</td></tr>
+      <tr><td>6</td><td>MASTER SWITCH (APPROPRIATE SIDE)</td><td>BACK ON</td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If alternator functioning normally: reinstate electrical load. If not operating: turn appropriate master side OFF, continue with reduced electrical load — land as soon as practical.</div></div>
+    <div class="alert warn" style="margin-top:12px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Dual Alternator Failure</strong><br>1. ELECTRICS — REDUCE<br>2. Complete steps 4–6 one alternator at a time<br>3. LAND AS SOON AS PRACTICAL</div></div>
+  </div>
+
+  <!-- 5C EMERGENCY GEAR EXTENSION -->
+  <div class="section" id="qrh-5c">
+    <div class="section-header">
+      <div class="section-icon">🛞</div>
+      <div><div class="section-title"><span class="qrh-badge">5C</span> Emergency Landing Gear Extension</div><div class="section-ref">QRH · Page 5</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>AIRSPEED — MAX</td><td>128 KTS *</td></tr>
+      <tr><td>2</td><td>GEAR SELECTOR</td><td>DOWN</td></tr>
+      <tr><td>3</td><td>EMERG. GEAR COVER</td><td>OPEN</td></tr>
+      <tr><td>4</td><td>EMERG. GEAR EXTENDER</td><td>EXTEND</td></tr>
+      <tr><td>5</td><td>EXTENDER HANDLE — PUMP UNTIL 3 GREEN &amp; HANDLE RETURNS TO NEUTRAL (~50 STROKES)</td><td>PUMP RAPIDLY FOR BEST RESULTS</td></tr>
+    </table>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">* Post-1978 models: Vle is 153 KIAS. Side slips can help lock the mains. Nose extends against airflow — slow to 90 KTS, reduce power, full flaps, nose down attitude, then pump rapidly. Hydraulic reservoir has LIMITED quantity. If unsuccessful, complete landing with two gears.</div></div>
+  </div>
+
+  <!-- 6A GEAR UP LANDING -->
+  <div class="section" id="qrh-6a">
+    <div class="section-header">
+      <div class="section-icon">🛬</div>
+      <div><div class="section-title"><span class="qrh-badge">6A</span> Gear Up Landing</div><div class="section-ref">QRH · Page 6</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FUEL BURN OFF IF POSSIBLE</td><td></td></tr>
+      <tr><td>2</td><td>PASSENGERS BRIEFED</td><td></td></tr>
+      <tr><td>3</td><td>NORMAL LANDING CHECKLIST</td><td>COMPLETE</td></tr>
+      <tr><td>4</td><td>GEAR SELECTOR</td><td>UP</td></tr>
+      <tr><td>5</td><td>AUTO PILOT</td><td>OFF</td></tr>
+      <tr><td>6</td><td>MASTER SWITCH (DAYTIME)</td><td>OFF</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">WHEN LANDING IS ASSURED</td></tr>
+      <tr><td>7</td><td>MIXTURES</td><td>ICO</td></tr>
+      <tr><td>8</td><td>PROP CONTROLS</td><td>FEATHER</td></tr>
+      <tr><td>9</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
+      <tr><td>10</td><td>FUEL SELECTORS</td><td>OFF</td></tr>
+      <tr><td>11</td><td>MAGS</td><td>OFF</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT FULL STOP</td></tr>
+      <tr><td>12</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
+    </table>
+  </div>
+
+  <!-- 6B AIR START -->
+  <div class="section" id="qrh-6b">
+    <div class="section-header">
+      <div class="section-icon">🔄</div>
+      <div><div class="section-title"><span class="qrh-badge green">6B</span> Air Start — Unfeathering Procedure</div><div class="section-ref">QRH · Page 6</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FUEL SELECTOR</td><td>INBOARDS OR AS REQUIRED</td></tr>
+      <tr><td>2</td><td>FUEL BOOST CB</td><td>IN</td></tr>
+      <tr><td>3</td><td>MAGS</td><td>ON</td></tr>
+      <tr><td>4</td><td>THROTTLE</td><td>OPEN ½"</td></tr>
+      <tr><td>5</td><td>PROP</td><td>FORWARD TO MATCH OTHER CONTROL</td></tr>
+      <tr><td>6</td><td>MIXTURE</td><td>SLOWLY FORWARD</td></tr>
+      <tr><td>7</td><td>STARTER</td><td>ENGAGED UNTIL PROP UNFEATHERS</td></tr>
+      <tr><td>8</td><td>PROP — PULL BACK TO LOW RPM THROUGH 1000 RPM</td><td>TARGET 2000 RPM</td></tr>
+      <tr><td>9</td><td>THROTLES — REDUCED TILL WARM</td><td>2000 RPM MAX</td></tr>
+      <tr><td>10</td><td>ALTERNATOR</td><td>ON</td></tr>
+      <tr><td>11</td><td>ENGINE INSTRUMENTS</td><td>CHECK</td></tr>
+      <tr><td>12</td><td>AFTER START CHECKS</td><td>COMPLETE</td></tr>
+    </table>
+  </div>
+
+  <!-- 6C ENGINE ROUGHNESS -->
+  <div class="section" id="qrh-6c">
+    <div class="section-header">
+      <div class="section-icon">🔧</div>
+      <div><div class="section-title"><span class="qrh-badge amber">6C</span> Engine Roughness</div><div class="section-ref">QRH · Page 6</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>EMERGENCY FUEL PUMPS</td><td>ON</td></tr>
+      <tr><td>2</td><td>MIXTURES</td><td>ADJUST</td></tr>
+      <tr><td>3</td><td>ALTERNATE AIR</td><td>AS REQUIRED</td></tr>
+      <tr><td>4</td><td>FUEL</td><td>SWITCH TANKS</td></tr>
+      <tr><td>5</td><td>MAGS</td><td>CHECK</td></tr>
+      <tr><td>6</td><td>REDUCE POWER AS REQUIRED</td><td></td></tr>
+    </table>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If engine operates smooth on ONE mag, leave the defective mag OFF and land as soon as practical.</div></div>
+  </div>
+
+  <!-- 7A ASYMMETRIC FLAPS DUKE -->
+  <div class="section" id="qrh-7a">
+    <div class="section-header">
+      <div class="section-icon">🛫</div>
+      <div><div class="section-title"><span class="qrh-badge amber">7A</span> Asymmetric Flaps — Duke System</div><div class="section-ref">QRH · Page 7</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FLAP SWITCH</td><td>OFF</td></tr>
+      <tr><td>2</td><td>AILERON — AS REQUIRED TO</td><td>MAINTAIN WINGS LEVEL</td></tr>
+      <tr><td>3</td><td>FLAP SWITCH — UP IN INCREMENTS TO</td><td>ACHIEVE SYMMETRY</td></tr>
+      <tr><td>4</td><td>FLAP SWITCH</td><td>OFF</td></tr>
+      <tr><td>5</td><td>FLAP CONTROL CB</td><td>PULLED</td></tr>
+    </table>
+    <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body">Do NOT reset the flap control CB until the aircraft has landed and the problem resolved. Resetting and activating the flap selector will enable another operation — the asymmetric differential may become more severe.</div></div>
+  </div>
+
+  <!-- 7B FLAP MALFUNCTION CALCO -->
+  <div class="section" id="qrh-7b">
+    <div class="section-header">
+      <div class="section-icon">🛫</div>
+      <div><div class="section-title"><span class="qrh-badge amber">7B</span> Flap System Malfunction — Calco</div><div class="section-ref">QRH · Page 7</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Annunciator Light ON</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FLAP SELECTOR</td><td>REPOSITION SLIGHTLY</td></tr>
+      <tr><td>2</td><td>IF FLAPS MOVE</td><td>REPLACE AMPLIFIER PRIOR TO NEXT FLIGHT</td></tr>
+      <tr><td>3</td><td>IF FLAPS DO NOT MOVE</td><td>CHECK FOR SPLIT FLAP</td></tr>
+      <tr><td>4</td><td>IF FLAPS ARE SPLIT</td><td>PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</td></tr>
+      <tr><td>5</td><td>IF FLAPS ARE NOT SPLIT</td><td>PULL AND RESET FLAP MOTOR CB</td></tr>
+      <tr><td>6</td><td>IF FLAPS STILL DO NOT OPERATE</td><td>PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</td></tr>
+    </table>
+    <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Zero</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FLAP CONTROL CB</td><td>PULL AND RESET</td></tr>
+      <tr><td>2</td><td>IF INDICATOR REMAINS OFF</td><td>FLAP CONTROL INOPERATIVE — CANNOT REPOSITION</td></tr>
+      <tr><td>3</td><td>IF INDICATOR SHOWS FLAP POSITION</td><td>USE FOLLOWING CHECKLIST</td></tr>
+    </table>
+    <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Flap Position</strong></div></div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>FLAP TEST SWITCH</td><td>PUSH</td></tr>
+      <tr><td>2</td><td>IF ANNUCIATOR FAILS TO LIGHT</td><td>FOLLOW "ANNUCIATOR LIGHT ON" CHECKLIST</td></tr>
+      <tr><td>3</td><td>IF ANNUCIATOR LIGHTS</td><td>PULL AND RESET FLAP MOTOR CB</td></tr>
+      <tr><td>4</td><td>IF FLAPS FAIL TO RESPOND</td><td>FLAP DRIVE FAULT — FURTHER EFFORT MAY CAUSE DAMAGE</td></tr>
+    </table>
+    <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">If flaps not fully retracted: land as soon as practical, do not exceed flap speed. If flap symmetry cannot be achieved: land ASAP, plan circuit so all turns are toward the side with flap UP. In crosswind: land with the UP-flap wing on the upwind side.</div></div>
+  </div>
+
+  <!-- 8A SINGLE ENGINE LANDING -->
+  <div class="section" id="qrh-8a">
+    <div class="section-header">
+      <div class="section-icon">🛬</div>
+      <div><div class="section-title"><span class="qrh-badge">8A</span> Single Engine Landing</div><div class="section-ref">QRH · Page 8</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
+      <tr><td>2</td><td>HYDRAULIC PUMP</td><td>CHECK</td></tr>
+      <tr><td>3</td><td>SEAT BELTS</td><td>SECURE</td></tr>
+      <tr><td>4</td><td>HEATER FAN</td><td>OPERATIVE ENGINE</td></tr>
+      <tr><td>5</td><td>EMERGENCY FUEL PUMP</td><td>ON</td></tr>
+      <tr><td>6</td><td>MIXTURE</td><td>RICH</td></tr>
+      <tr><td>7</td><td>PROP</td><td>FORWARD</td></tr>
+      <tr><td>8</td><td>FUEL SELECTOR</td><td>INBOARD</td></tr>
+      <tr><td>9</td><td>CROSSFEED</td><td>OFF</td></tr>
+      <tr><td>10</td><td>COWL FLAPS</td><td>AS REQUIRED</td></tr>
+      <tr><td>11</td><td>AIRSPEED — MAINTAIN</td><td>116 KTS OR ABOVE</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">GLIDESLOPE — 1 DOT BELOW</td></tr>
+      <tr><td>12</td><td>FLAPS</td><td>15°</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">GLIDESLOPE — ON SLOPE</td></tr>
+      <tr><td>13</td><td>GEAR</td><td>DOWN</td></tr>
+      <tr><td></td><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px;letter-spacing:.5px">LANDING ASSURED</td></tr>
+      <tr><td>14</td><td>FLAPS</td><td>FULL</td></tr>
+    </table>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body">When flying an ILS or 3° glide slope: fly slightly ABOVE slope and slightly above normal airspeed with gear down and 15° flap. More flap may be used on short final when landing is assured.<br><strong>MAINTAIN POSITIVE ENERGY! REMEMBER YOUR THREE SOURCES OF ENERGY.</strong></div></div>
+  </div>
+
+  <!-- 8B PRIMARY FLIGHT DISPLAY -->
+  <div class="section" id="qrh-8b">
+    <div class="section-header">
+      <div class="section-icon">🖥️</div>
+      <div><div class="section-title"><span class="qrh-badge blue">8B</span> Primary Flight Display</div><div class="section-ref">QRH · Page 8</div></div>
+    </div>
+    <table class="ref-table qrh-table">
+      <tr><td>1</td><td>BLANK SCREEN</td><td>FLY STBY HORIZON</td></tr>
+      <tr><td>2</td><td>MFD (IF INSTALLED)</td><td>SELECT FLIGHT DISPLAY</td></tr>
+      <tr><td>3</td><td>GARMIN 7XX</td><td>SELECT SYNTHETIC VISION</td></tr>
+      <tr><td>4</td><td>GARMIN 530/430</td><td>SELECT NAV DISPLAY AS REQUIRED</td></tr>
+      <tr><td>5</td><td>TROUBLESHOOT CHECKLISTS</td><td></td></tr>
+    </table>
+  </div>
+
+</div><!-- /view-qrh -->
+
+
 </div><!-- /main -->
 </div><!-- /layout -->
 
@@ -1429,6 +1970,32 @@ const DOCS = {
       { id:'afm-emergency',   icon:'🚨', label:'§3 Emergency Procedures' },
       { id:'afm-performance', icon:'📈', label:'§4 Performance' },
       { id:'afm-supplements', icon:'📎', label:'§5 Supplements & STCs' },
+    ]
+  },
+  qrh: {
+    title: 'Emergency QRH',
+    toc: [
+      { id:'qrh-speeds', icon:'⚡', label:'Emergency & Operational Speeds' },
+      { id:'qrh-1a',     icon:'🚨', label:'1A · Evacuation Drill' },
+      { id:'qrh-1b',     icon:'⚙️', label:'1B · Engine Securing' },
+      { id:'qrh-rto',    icon:'🛑', label:'1C / 2A · Rejected Takeoff' },
+      { id:'qrh-2b',     icon:'🔥', label:'2B · Engine Failure After Rotation' },
+      { id:'qrh-2c',     icon:'🔥', label:'2C · Engine Fire After Rotation' },
+      { id:'qrh-3a',     icon:'✈️', label:'3A · Engine Failure/Fire In Flight' },
+      { id:'qrh-3b',     icon:'🔥', label:'3B · Engine Fire During Start' },
+      { id:'qrh-4a',     icon:'🔥', label:'4A · Engine Fire Ground Ops' },
+      { id:'qrh-4b',     icon:'⚡', label:'4B · Electrical Fire' },
+      { id:'qrh-rpm',    icon:'🌀', label:'4C / 4D · RPM Underspeed / Overspeed' },
+      { id:'qrh-5a',     icon:'⛽', label:'5A · Crossfeed' },
+      { id:'qrh-5b',     icon:'⚡', label:'5B · Alternator Failure' },
+      { id:'qrh-5c',     icon:'🛞', label:'5C · Emergency Gear Extension' },
+      { id:'qrh-6a',     icon:'🛬', label:'6A · Gear Up Landing' },
+      { id:'qrh-6b',     icon:'🔄', label:'6B · Air Start' },
+      { id:'qrh-6c',     icon:'🔧', label:'6C · Engine Roughness' },
+      { id:'qrh-7a',     icon:'🛫', label:'7A · Asymmetric Flaps (Duke)' },
+      { id:'qrh-7b',     icon:'🛫', label:'7B · Flap Malfunction (Calco)' },
+      { id:'qrh-8a',     icon:'🛬', label:'8A · Single Engine Landing' },
+      { id:'qrh-8b',     icon:'🖥️', label:'8B · Primary Flight Display' },
     ]
   }
 };
@@ -1583,6 +2150,12 @@ const DOC_SUGGESTIONS = {
     'Walk me through an engine failure after takeoff — memory items go',
     'What changes under BLR STC vs base AFM limits?',
   ],
+  qrh: [
+    'Walk me through procedure 3A — engine failure in flight — step by step',
+    'Quiz me: what\'s the first thing I do if a prop overspeeds above 2575 RPM?',
+    'Explain the single engine landing sequence — why 116 KTS and gear on slope?',
+    'When do I skip steps 6–12 in procedure 3A?',
+  ],
   com: [
     'Give me a full IFR departure clearance — read it back with me',
     'Walk me through a missed approach call to ATC',
@@ -1634,6 +2207,59 @@ Key aircraft data you know cold:
 - De-ice boots max inflation speed: 213 CAS
 
 Your role: Be an engaging, scenario-based aviation mentor. Give realistic flight scenarios, quiz the student, explain the WHY behind limitations, and use memory aids. Keep answers focused, practical, and appropriately concise (2–4 paragraphs max unless a scenario warrants more detail). Use aviation phraseology naturally. Never make up numbers — if you're unsure of a specific limit, say so and direct the student to the AFM.`,
+
+  qrh: `You are a PA31-350 emergency procedures instructor. You know every procedure in the PA31 Quick Reference Handbook (Revision 6, May 14 2025, BLR modified) by heart.
+
+EMERGENCY SPEEDS (exact):
+Vmc 72 KTS · Vxse 104 KTS · Vyse 107 KTS · Va 159 KTS · Vne 236 KTS
+Vbarrier 95 · Vx 84 · Vy 101 · Vle*/Vlo* 128 KTS (*153 post-1978) · Vfe(0–25°)** 153 KTS (**162 post-1978) · Vfe(25–40°) 130 KTS
+
+PROCEDURES (exact steps):
+1A EVACUATION DRILL — Captain: CALL "EVACUATE LEFT OR RIGHT" · BOTH FIREWALL FUEL SHUTOFFS OFF · BOTH FUEL SELECTORS OFF · BOTH EMERG FUEL PUMPS OFF · BOTH FUEL BOOST CBs PULLED · BOTH MIXTURES ICO · BOTH THROTTLES CLOSED · BOTH MAGS OFF · RADIO CALL (if single pilot) · MASTER OFF · DIRECT PASSENGERS. F/O: ADVISE ATC (souls/fuel/DGs) · ENTRANCE LIGHT if required · FIRE EXTINGUISHER if required · CONFIRM ALL PERSONS ACCOUNTED.
+
+1B ENGINE SECURING (inop engine): 1-POWER operating engine SET · 2-THROTTLE CLOSE · 3-PROP (1000 RPM min) FEATHER · 4-MIXTURE ICO · 5-COWL FLAPS CLOSE · 6-FIREWALL FUEL SHUTOFF OFF · 7-FUEL SELECTOR OFF · 8-EMERG FUEL PUMP OFF · 9-MAGS OFF · 10-AIRCONDITIONER OFF · 11-FUEL BOOST CB PULLED · 12-ALTERNATOR CB OFF · 13-ELECTRICAL LOAD REDUCED · 14-CROSSFEED CONSIDER (→5A).
+
+1C REJECTED T/O (sufficient runway): 1-THROTTLE IDLE · 2-BRAKES AS REQUIRED. After stop: parking brake set, follow applicable drill. FIRE → 1A.
+
+2A REJECTED T/O (insufficient runway): 1-THROTTLES IDLE · 2-BRAKES MAX (steer to avoid obstacles) · 3-MIXTURES ICO · 4-FIREWALL FUEL SHUTOFFS OFF · 5-EMERG FUEL PUMPS OFF · 6-MAGS OFF · 7-MASTER OFF. AT FULL STOP: 8-EVACUATION DRILL → 1A.
+
+2B ENGINE FAILURE AFTER ROTATION (T/O continued): 1-POWER MAXIMUM · 2-GEAR UP · 3-FLAPS UP · 4-PROP (inop) FEATHER · 5-AIRSPEED TARGET 104 KTS · 6-DIRECTIONAL CONTROL 5° INTO OPERATING ENGINE. IF FIRE: 7-FIREWALL FUEL SHUTOFF (inop) OFF · 8-COWL FLAPS (inop) CLOSE. CLEAR OF OBSTACLES: 9-AIRSPEED 107 KTS · 10-TRIM 5° TO GOOD ENGINE · 11-COWL FLAPS (operative) AS REQUIRED · 12-ENGINE SECURING → 1B.
+
+2C ENGINE FIRE AFTER ROTATION: 1-POWER MAXIMUM · 2-GEAR UP · 3-FLAPS UP · 4-OBSTACLES CLEAR · 5-AIRSPEED 107 KTS. AT 400 FEET: 6-FIREWALL FUEL SHUTOFF (inop) OFF · 7-PROP (inop) FEATHER · 8-COWL FLAPS (inop) CLOSE · 9-ENGINE SECURING → 1B.
+
+3A ENGINE FAILURE/FIRE IN FLIGHT (at or above safe alt): 1-INOP ENGINE IDENTIFY · 2-OPERATIVE ENGINE ADJUST POWER · 3-AIRSPEED 107 KTS PLUS · 4-GEAR UP · 5-FLAPS UP. IF NO FIRE: 6-FUEL PRESS/FLOW CHECK (if <34 PSI → EMERG PUMP ON) · 7-FUEL QTY CHECK · 8-FUEL SELECTOR SWITCH OPPOSITE TANK · 9-OIL PRESS/TEMP CHECK · 10-MAGS ON INDIVIDUALLY · 11-MIXTURE ADJUST · 12-AIR START CONSIDER → 6B. If no start → secure → 1B. IF FIRE (skip 6–12): 13-FIREWALL FUEL SHUTOFF (inop) OFF · 14-PROP (inop) FEATHER · 15-FUEL PUMP (inop) OFF · 16-COWL FLAP (inop) CLOSED · 17-POWER (operative) AS REQUIRED · 18-FUEL (operative) QTY/PUMP AS REQUIRED · 19-COWL FLAP (operative) AS REQUIRED · 20-TRIM 5° TO GOOD ENGINE · 21-ELECTRICAL LOAD DECREASE TO MINIMUM · 22-ENGINE SECURING → 1B.
+
+3B ENGINE FIRE DURING START: 1-CONTINUE CRANKING · 2-BOOST PUMPS OFF · 3-MIXTURE ICO · 4-THROTLES OPEN. IF FIRE PERSISTS: 5-FIREWALL FUEL SHUTOFF OFF · 6-MASTER OFF · 7-EVACUATION DRILL → 1A.
+
+4A ENGINE FIRE GROUND OPS: 1-BRAKES APPLY AND SET · 2-EVACUATION DRILL → 1A.
+
+4B ELECTRICAL FIRE: 1-MASTER SWITCH OFF · 2-GARMIN 7XX ON/SYNTHETIC VISION · (use fire extinguisher if required) · 3-CBs CHECKED/PULLED · 4-ELECTRICAL SWITCHES OFF · 5-MASTER SWITCH ON · 6-CBs & SWITCHES essential only ON ONE AT A TIME until faulty circuit located · 7-CB/SWITCH FOR FAILED UNIT OFF · 8-LAND ASAP.
+
+4C RPM UNDERSPEED: 1-POWER REDUCED · 2-MIXTURE RICH · 3-PROP CONTROL ADJUST. IF PROP MOVES TO COARSE: 4-MIXTURE ICO · 5-PROP FEATHER · 6-ENGINE SECURING → 1B. Note: prop moves coarse (RPM decreases) if engine oil pressure is lost.
+
+4D RPM OVERSPEED: 1-POWER REDUCED · 2-PITCH NOSE UP · 3-AIRSPEED ~130 KTS · 4-PROP FEATHER (if >2575 RPM cannot be held) · 5-IF FEATHERS → ENGINE SECURING. CAUTION: if prop will NOT feather, do NOT shut down — with IAS below 130 KTS minimal power available without exceeding 2575 RPM.
+
+5A CROSSFEED: 1-FUEL SELECTOR (inop) EITHER TANK · 2-FUEL BOOST CB (inop) IN · 3-EMERG FUEL PUMP (inop) ON · 4-CROSSFEED ON · 5-FUEL SELECTOR (operative) OFF · 6-FUEL BOOST CB (operative) PULLED · 7-EMERG FUEL PUMP (operative) OFF.
+
+5B ALTERNATOR FAILURE: 1-SYSTEM VOLTAGE NOTED · 2-MASTER SWITCH (opposite to INOP light) OFF. If voltage 28→24V: alternator failed → 3-ELECTRICS REDUCE · 4-MASTER (appropriate side) OFF · 5-CBs CHECK/RESET · 6-MASTER (appropriate side) BACK ON. If voltage stays ~28V: INOP light faulty, alternator OK. DUAL FAILURE: reduce electrics → steps 4–6 one at a time → LAND ASAP.
+
+5C EMERGENCY GEAR EXTENSION: 1-AIRSPEED MAX 128 KTS (*153 post-1978) · 2-GEAR SELECTOR DOWN · 3-EMERG GEAR COVER OPEN · 4-EMERG GEAR EXTENDER EXTEND · 5-PUMP UNTIL 3 GREEN (~50 strokes, pump rapidly). Side slips help lock mains. Nose extends against airflow. If unsuccessful, land with two gears.
+
+6A GEAR UP LANDING: 1-BURN FUEL IF POSSIBLE · 2-PASSENGERS BRIEFED · 3-NORMAL LANDING CHECKLIST · 4-GEAR SELECTOR UP · 5-AUTOPILOT OFF · 6-MASTER OFF (daytime). LANDING ASSURED: 7-MIXTURES ICO · 8-PROPS FEATHER · 9-FIREWALL FUEL SHUTOFFS OFF · 10-FUEL SELECTORS OFF · 11-MAGS OFF. AT FULL STOP: 12-EVACUATION DRILL → 1A.
+
+6B AIR START (unfeathering): 1-FUEL SELECTOR INBOARDS · 2-FUEL BOOST CB IN · 3-MAGS ON · 4-THROTTLE OPEN ½" · 5-PROP FORWARD TO MATCH · 6-MIXTURE SLOWLY FORWARD · 7-STARTER UNTIL PROP UNFEATHERS · 8-PROP BACK THROUGH 1000 RPM TARGET 2000 RPM · 9-THROTLES REDUCED TILL WARM (2000 RPM MAX) · 10-ALTERNATOR ON · 11-ENGINE INSTRUMENTS CHECK · 12-AFTER START CHECKS COMPLETE.
+
+6C ENGINE ROUGHNESS: 1-EMERG FUEL PUMPS ON · 2-MIXTURES ADJUST · 3-ALTERNATE AIR AS REQUIRED · 4-FUEL SWITCH TANKS · 5-MAGS CHECK · 6-REDUCE POWER AS REQUIRED. If smooth on ONE mag → leave defective mag OFF, land ASAP.
+
+7A ASYMMETRIC FLAPS DUKE: 1-FLAP SWITCH OFF · 2-AILERON AS REQUIRED (wings level) · 3-FLAP SWITCH UP IN INCREMENTS FOR SYMMETRY · 4-FLAP SWITCH OFF · 5-FLAP CONTROL CB PULLED. Do NOT reset CB until landed and problem resolved.
+
+7B FLAP SYSTEM MALFUNCTION CALCO — Annunciator ON: 1-FLAP SELECTOR REPOSITION SLIGHTLY · 2-IF FLAPS MOVE: replace amplifier before next flight · 3-IF NO MOVE: check for split flap · 4-IF SPLIT: pull flap motor CB, land · 5-IF NOT SPLIT: pull/reset flap motor CB · 6-IF STILL NO OPERATE: pull CB, land. Indicator at Zero: pull/reset flap control CB; if indicator stays off = inoperative. Indicator at Flap Position: push FLAP TEST SWITCH; if ANNUCIATOR fails to light → follow annuciator-on checklist; if ANNUCIATOR lights → pull/reset flap motor CB; if still no response → flap drive fault, further effort may cause damage.
+
+8A SINGLE ENGINE LANDING: 1-ENGINE SECURING → 1B · 2-HYD PUMP CHECK · 3-SEAT BELTS SECURE · 4-HEATER FAN ON OPERATIVE ENGINE · 5-EMERG FUEL PUMP ON · 6-MIXTURE RICH · 7-PROP FORWARD · 8-FUEL SELECTOR INBOARD · 9-CROSSFEED OFF · 10-COWL FLAPS AS REQUIRED · 11-AIRSPEED MAINTAIN 116 KTS OR ABOVE. AT 1 DOT BELOW GS: 12-FLAPS 15°. ON SLOPE: 13-GEAR DOWN. LANDING ASSURED: 14-FLAPS FULL. Tip: fly slightly above slope/airspeed with gear and 15° flap. More flap on short final when landing assured. MAINTAIN POSITIVE ENERGY — THREE SOURCES OF ENERGY.
+
+8B PRIMARY FLIGHT DISPLAY: 1-BLANK SCREEN → FLY STBY HORIZON · 2-MFD (if installed) SELECT FLIGHT DISPLAY · 3-GARMIN 7XX SELECT SYNTHETIC VISION · 4-GARMIN 530/430 SELECT NAV DISPLAY · 5-TROUBLESHOOT CHECKLISTS.
+
+Your role: Quiz the student on emergency procedures, walk through scenarios step-by-step, explain the WHY behind critical steps (why 107 KTS, why feather at 1000 RPM, why gear on slope not before). Correct any errors precisely — these are memory items that save lives. Note: "THROTLES" and "ANNUCIATOR" are the exact spellings from the physical QRH document.`,
 
   capgen: `You are a senior IFR instructor and Transport Canada expert mentoring a commercial pilot studying for IFR operations in Canada under the CAP GEN (Canada Air Pilot — General pages, NAV CANADA). Your student will be flying IFR in the PA31-350 Chieftain (Category B aircraft, 91–120 kt approach speed range) out of Kitchener-Waterloo (CYKF) and surrounding Ontario airports.
 
