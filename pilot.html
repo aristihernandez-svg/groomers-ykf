@@ -237,21 +237,34 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 }
 
 /* ── QRH ── */
-.qrh-badge{display:inline-flex;align-items:center;background:var(--warn-bg);border:1px solid rgba(239,68,68,0.35);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin-right:6px;vertical-align:middle;flex-shrink:0}
+.qrh-badge{display:inline-flex;align-items:center;background:var(--warn-bg);border:1px solid rgba(239,68,68,0.35);border-radius:5px;padding:2px 8px;font-size:11px;font-weight:800;color:var(--red);letter-spacing:1px;margin-right:4px;vertical-align:middle;flex-shrink:0}
 .qrh-badge.amber{background:var(--caution-bg);border-color:rgba(245,158,11,0.35);color:var(--amber)}
 .qrh-badge.blue{background:var(--note-bg);border-color:rgba(37,99,235,0.35);color:#93c5fd}
 .qrh-badge.green{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.3);color:var(--green)}
 .qrh-ref{color:var(--accent);cursor:pointer;font-weight:700;font-size:11px;border:1px solid rgba(37,99,235,0.4);border-radius:4px;padding:1px 6px;margin-left:3px;white-space:nowrap;display:inline-block}
 .qrh-ref:hover{background:var(--accent-glow)}
-.qrh-table td:first-child{color:var(--accent);font-weight:700;font-size:12px;width:22px;text-align:center;padding-right:4px}
-.qrh-table td:last-child{color:#60a5fa;font-weight:700;text-align:right;padding-left:12px}
-.qrh-phase{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 0 2px;border-top:1px solid rgba(255,255,255,0.07);margin-top:4px}
+/* Step rows */
+.qrh-proc{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin:10px 0}
+.qrh-step{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(255,255,255,0.05);min-height:48px}
+.qrh-step:last-child{border-bottom:none}
+.qrh-step-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:rgba(37,99,235,0.13);color:var(--accent);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;line-height:1}
+.qrh-step-action{flex:1;font-size:14px;font-weight:600;color:var(--t1);line-height:1.35}
+.qrh-note-inline{font-size:11px;font-weight:400;color:var(--t3);font-style:italic}
+.qrh-step-value{flex-shrink:0;font-size:13px;font-weight:800;color:var(--amber);text-align:right;max-width:145px;line-height:1.25}
+.qrh-step-value .qrh-ref{font-size:11px}
+/* Phase banners */
+.qrh-phase{padding:7px 14px;font-size:11px;font-weight:800;letter-spacing:.7px;text-align:center;text-transform:uppercase}
+.qrh-phase.ph-fire{background:rgba(239,68,68,0.12);color:var(--red);border-top:1px solid rgba(239,68,68,0.25);border-bottom:1px solid rgba(239,68,68,0.25)}
+.qrh-phase.ph-caution{background:rgba(245,158,11,0.1);color:var(--amber);border-top:1px solid rgba(245,158,11,0.22);border-bottom:1px solid rgba(245,158,11,0.22)}
+.qrh-phase.ph-green{background:rgba(34,197,94,0.09);color:var(--green);border-top:1px solid rgba(34,197,94,0.22);border-bottom:1px solid rgba(34,197,94,0.22)}
+.qrh-step-note{padding:7px 14px;font-size:11px;color:var(--t3);font-style:italic;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)}
+/* Crew grid (1A) */
 .qrh-crew{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 .qrh-crew-col{background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px}
 .qrh-crew-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.06)}
-.qrh-crew-item{padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;color:var(--t2);line-height:1.4}
+.qrh-crew-item{padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px;font-weight:600;color:var(--t1);line-height:1.4}
 .qrh-crew-item:last-child{border-bottom:none}
-@media(max-width:768px){.qrh-crew{grid-template-columns:1fr}}
+@media(max-width:768px){.qrh-crew{grid-template-columns:1fr}.qrh-step-action{font-size:13px}.qrh-step-value{font-size:12px;max-width:120px}}
 .hub-tile-tag.emergency{background:var(--warn-bg);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
 .back-btn{font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;background:rgba(37,99,235,0.1);border:1px solid rgba(37,99,235,0.25);border-radius:8px;padding:4px 10px;white-space:nowrap}
 </style>
@@ -1396,7 +1409,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 
 
 <!-- ══════════════════════════════════════════════════════════════════
-     QRH VIEW
+     QRH VIEW  (v2 — flex-row layout)
 ══════════════════════════════════════════════════════════════════ -->
 <div class="view" id="view-qrh">
 
@@ -1478,22 +1491,22 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">⚙️</div>
       <div><div class="section-title"><span class="qrh-badge amber">1B</span> Engine Securing Procedure</div><div class="section-ref">QRH · Page 1 · Referenced by most emergency procedures</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>POWER ON OPERATING ENGINE <em style="color:var(--t3);font-size:11px">— INOPERATIVE ENGINE ONLY</em></td><td>SET</td></tr>
-      <tr><td>2</td><td>THROTTLE</td><td>CLOSE</td></tr>
-      <tr><td>3</td><td>PROPELLER (1000 RPM MIN)</td><td>FEATHER</td></tr>
-      <tr><td>4</td><td>MIXTURE</td><td>ICO</td></tr>
-      <tr><td>5</td><td>COWL FLAPS</td><td>CLOSE</td></tr>
-      <tr><td>6</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
-      <tr><td>7</td><td>FUEL SELECTOR</td><td>OFF</td></tr>
-      <tr><td>8</td><td>EMERGENCY FUEL PUMP</td><td>OFF</td></tr>
-      <tr><td>9</td><td>MAGS</td><td>OFF</td></tr>
-      <tr><td>10</td><td>AIRCONDITIONER</td><td>OFF</td></tr>
-      <tr><td>11</td><td>FUEL BOOST CB</td><td>PULLED</td></tr>
-      <tr><td>12</td><td>ALTERNATOR CB</td><td>OFF</td></tr>
-      <tr><td>13</td><td>ELECTRICAL LOAD</td><td>REDUCED</td></tr>
-      <tr><td>14</td><td>CROSSFEED</td><td>CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-5a')">→ 5A</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER ON OPERATING ENGINE <span class="qrh-note-inline">— inop engine only</span></div><div class="qrh-step-value">SET</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">THROTTLE</div><div class="qrh-step-value">CLOSE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">PROPELLER <span class="qrh-note-inline">(1000 RPM min)</span></div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">ICO</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">COWL FLAPS</div><div class="qrh-step-value">CLOSE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">FUEL SELECTOR</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">EMERGENCY FUEL PUMP</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">AIRCONDITIONER</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">FUEL BOOST CB</div><div class="qrh-step-value">PULLED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">ALTERNATOR CB</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">13</div><div class="qrh-step-action">ELECTRICAL LOAD</div><div class="qrh-step-value">REDUCED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">14</div><div class="qrh-step-action">CROSSFEED</div><div class="qrh-step-value">CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-5a')">→ 5A</span></div></div>
+    </div>
   </div>
 
   <!-- 1C + 2A REJECTED TAKEOFF -->
@@ -1503,24 +1516,23 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div><div class="section-title"><span class="qrh-badge">1C</span><span class="qrh-badge" style="margin-left:4px">2A</span> Rejected Takeoff</div><div class="section-ref">QRH · Pages 1–2</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>1C — With Sufficient Runway to Stop</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>THROTTLE</td><td>IDLE</td></tr>
-      <tr><td>2</td><td>BRAKES</td><td>AS REQUIRED</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">THROTTLE</div><div class="qrh-step-value">IDLE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BRAKES</div><div class="qrh-step-value">AS REQUIRED</div></div>
+    </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">After stop: set parking brake, follow applicable drill. If FIRE → Evacuation Drill <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
-
     <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>2A — Without Sufficient Runway to Stop</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>THROTTLES</td><td>IDLE</td></tr>
-      <tr><td>2</td><td>BRAKES MAX</td><td>Steer to avoid obstacles</td></tr>
-      <tr><td>3</td><td>MIXTURES</td><td>ICO</td></tr>
-      <tr><td>4</td><td>FIREWALL FUEL SHUTOFFS</td><td>OFF</td></tr>
-      <tr><td>5</td><td>EMERGENCY FUEL PUMPS</td><td>OFF</td></tr>
-      <tr><td>6</td><td>MAGS</td><td>OFF</td></tr>
-      <tr><td>7</td><td>MASTER</td><td>OFF</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT FULL STOP</td></tr>
-      <tr><td>8</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">THROTTLES</div><div class="qrh-step-value">IDLE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BRAKES MAX <span class="qrh-note-inline">— steer to avoid obstacles</span></div><div class="qrh-step-value">MAXIMUM</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MIXTURES</div><div class="qrh-step-value">ICO</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFFS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">EMERGENCY FUEL PUMPS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">MASTER</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-phase ph-caution">AT FULL STOP</div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">EVACUATION DRILL</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
+    </div>
   </div>
 
   <!-- 2B ENGINE FAILURE AFTER ROTATION -->
@@ -1529,42 +1541,42 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🔥</div>
       <div><div class="section-title"><span class="qrh-badge">2B</span> Engine Failure After Rotation — T/O Continued</div><div class="section-ref">QRH · Page 2</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>POWER</td><td>MAXIMUM</td></tr>
-      <tr><td>2</td><td>GEAR</td><td>UP</td></tr>
-      <tr><td>3</td><td>FLAPS</td><td>UP</td></tr>
-      <tr><td>4</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
-      <tr><td>5</td><td>AIRSPEED — MAINTAIN AS ABLE TARGET</td><td>104 KTS</td></tr>
-      <tr><td>6</td><td>DIRECTIONAL CONTROL — MAINTAIN</td><td>5° INTO OPERATING ENGINE</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF THERE IS AN ENGINE FIRE</td></tr>
-      <tr><td>7</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
-      <tr><td>8</td><td>COWL FLAPS (INOP ENGINE)</td><td>CLOSE</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AIRSPEED (CLEAR OF OBSTACLES)</td></tr>
-      <tr><td>9</td><td>AIRSPEED</td><td>107 KTS</td></tr>
-      <tr><td>10</td><td>TRIM (5 DEGREES TO GOOD ENGINE)</td><td>ADJUST</td></tr>
-      <tr><td>11</td><td>COWL FLAPS (OPERATIVE ENGINE)</td><td>AS REQUIRED</td></tr>
-      <tr><td>12</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">MAXIMUM</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">PROP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">AIRSPEED — maintain as able, target</div><div class="qrh-step-value">104 KTS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">DIRECTIONAL CONTROL — maintain</div><div class="qrh-step-value">5° INTO OPERATING ENGINE</div></div>
+      <div class="qrh-phase ph-fire">IF THERE IS AN ENGINE FIRE</div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">COWL FLAPS <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">CLOSE</div></div>
+      <div class="qrh-phase ph-caution">CLEAR OF OBSTACLES</div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">AIRSPEED</div><div class="qrh-step-value">107 KTS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">TRIM <span class="qrh-note-inline">(5° to good engine)</span></div><div class="qrh-step-value">ADJUST</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">COWL FLAPS <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
+    </div>
   </div>
 
   <!-- 2C ENGINE FIRE AFTER ROTATION -->
   <div class="section" id="qrh-2c">
     <div class="section-header">
       <div class="section-icon">🔥</div>
-      <div><div class="section-title"><span class="qrh-badge">2C</span> Engine Fire After Rotation</div><div class="section-ref">QRH · Page 2 · Or after decision speed with decision to continue</div></div>
+      <div><div class="section-title"><span class="qrh-badge">2C</span> Engine Fire After Rotation</div><div class="section-ref">QRH · Page 2 · Or after decision speed — decision to continue</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>POWER</td><td>MAXIMUM</td></tr>
-      <tr><td>2</td><td>GEAR</td><td>UP</td></tr>
-      <tr><td>3</td><td>FLAPS</td><td>UP</td></tr>
-      <tr><td>4</td><td>OBSTACLES</td><td>CLEAR</td></tr>
-      <tr><td>5</td><td>AIRSPEED</td><td>107 KTS</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT 400 FEET</td></tr>
-      <tr><td>6</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
-      <tr><td>7</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
-      <tr><td>8</td><td>COWL FLAPS (INOP ENGINE)</td><td>CLOSE</td></tr>
-      <tr><td>9</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">MAXIMUM</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">OBSTACLES</div><div class="qrh-step-value">CLEAR</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">AIRSPEED</div><div class="qrh-step-value">107 KTS</div></div>
+      <div class="qrh-phase ph-caution">AT 400 FEET</div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">PROP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">COWL FLAPS <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">CLOSE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
+    </div>
   </div>
 
   <!-- 3A ENGINE FAILURE/FIRE IN FLIGHT -->
@@ -1573,32 +1585,32 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">✈️</div>
       <div><div class="section-title"><span class="qrh-badge">3A</span> Engine Failure / Fire In Flight</div><div class="section-ref">QRH · Page 3 · At or above safe altitude</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>INOP ENGINE</td><td>IDENTIFY</td></tr>
-      <tr><td>2</td><td>OPERATIVE ENGINE — ADJUST POWER TO</td><td>MAINTAIN ALT AND AIRSPEED</td></tr>
-      <tr><td>3</td><td>AIRSPEED — MAINTAIN</td><td>107 KTS PLUS</td></tr>
-      <tr><td>4</td><td>GEAR</td><td>UP</td></tr>
-      <tr><td>5</td><td>FLAPS</td><td>UP</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF FIRE → SKIP CAUSE CHECK → GO TO STEP 13 · IF NO FIRE → COMPLETE STEPS 6–12 FIRST</td></tr>
-      <tr><td>6</td><td>FUEL PRESSURE AND FLOW — CHECK. IF PRESSURE &lt;34 PSI</td><td>SELECT EMERG. FUEL PUMP ON</td></tr>
-      <tr><td>7</td><td>FUEL QUANTITY</td><td>CHECK</td></tr>
-      <tr><td>8</td><td>FUEL SELECTOR — SWITCH TO OPPOSITE TANK</td><td>IF FUEL REMAINING</td></tr>
-      <tr><td>9</td><td>OIL PRESS / TEMP</td><td>CHECK</td></tr>
-      <tr><td>10</td><td>MAGS (L AND R FOR FAILED ENGINE)</td><td>ON INDIVIDUALLY</td></tr>
-      <tr><td>11</td><td>MIXTURE</td><td>ADJUST</td></tr>
-      <tr><td>12</td><td>AIR START</td><td>CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-6b')">→ 6B</span></td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--t3);font-size:11px;font-style:italic">If engine does not start → complete Engine Securing Procedure <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-      <tr><td>13</td><td>FIREWALL FUEL SHUTOFF (INOP ENGINE)</td><td>OFF</td></tr>
-      <tr><td>14</td><td>PROP (INOP ENGINE)</td><td>FEATHER</td></tr>
-      <tr><td>15</td><td>FUEL PUMP (INOP ENGINE)</td><td>OFF</td></tr>
-      <tr><td>16</td><td>COWL FLAP (INOP ENGINE)</td><td>CLOSED</td></tr>
-      <tr><td>17</td><td>POWER (OPERATIVE ENGINE)</td><td>POWER AND MIXTURE AS REQUIRED</td></tr>
-      <tr><td>18</td><td>FUEL (OPERATIVE ENGINE)</td><td>FUEL QTY AND EMERG. FUEL PUMP AS REQUIRED</td></tr>
-      <tr><td>19</td><td>COWL FLAP (OPERATIVE ENGINE)</td><td>AS REQUIRED</td></tr>
-      <tr><td>20</td><td>TRIM (5 DEGREES TO GOOD ENGINE)</td><td>ADJUST</td></tr>
-      <tr><td>21</td><td>ELECTRICAL LOAD</td><td>DECREASE TO MINIMUM</td></tr>
-      <tr><td>22</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">INOP ENGINE</div><div class="qrh-step-value">IDENTIFY</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">OPERATIVE ENGINE — adjust power to</div><div class="qrh-step-value">MAINTAIN ALT AND AIRSPEED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">AIRSPEED — maintain</div><div class="qrh-step-value">107 KTS PLUS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-phase ph-fire">IF FIRE → SKIP TO STEP 13 · IF NO FIRE → COMPLETE STEPS 6–12 FIRST</div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">FUEL PRESSURE AND FLOW — check; if &lt;34 PSI</div><div class="qrh-step-value">SELECT EMERG. FUEL PUMP ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">FUEL QUANTITY</div><div class="qrh-step-value">CHECK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">FUEL SELECTOR — switch to opposite tank</div><div class="qrh-step-value">IF FUEL REMAINING</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">OIL PRESS / TEMP</div><div class="qrh-step-value">CHECK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">MAGS (L and R for failed engine)</div><div class="qrh-step-value">ON INDIVIDUALLY</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">ADJUST</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">AIR START</div><div class="qrh-step-value">CONSIDER <span class="qrh-ref" onclick="scrollToSection('qrh-6b')">→ 6B</span></div></div>
+      <div class="qrh-step-note">If engine does not start → complete Engine Securing Procedure <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div>
+      <div class="qrh-step"><div class="qrh-step-num">13</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">14</div><div class="qrh-step-action">PROP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">15</div><div class="qrh-step-action">FUEL PUMP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">16</div><div class="qrh-step-action">COWL FLAP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">CLOSED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">17</div><div class="qrh-step-action">POWER <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">POWER AND MIXTURE AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">18</div><div class="qrh-step-action">FUEL <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">QTY AND EMERG. FUEL PUMP AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">19</div><div class="qrh-step-action">COWL FLAP <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">20</div><div class="qrh-step-action">TRIM <span class="qrh-note-inline">(5° to good engine)</span></div><div class="qrh-step-value">ADJUST</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">21</div><div class="qrh-step-action">ELECTRICAL LOAD</div><div class="qrh-step-value">DECREASE TO MINIMUM</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">22</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
+    </div>
   </div>
 
   <!-- 3B ENGINE FIRE DURING START -->
@@ -1607,16 +1619,16 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🔥</div>
       <div><div class="section-title"><span class="qrh-badge">3B</span> Engine Fire During Start</div><div class="section-ref">QRH · Page 3</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>CONTINUE CRANKING</td><td></td></tr>
-      <tr><td>2</td><td>BOOST PUMPS</td><td>OFF</td></tr>
-      <tr><td>3</td><td>MIXTURE</td><td>IDLE CUT OFF</td></tr>
-      <tr><td>4</td><td>THROTLES</td><td>OPEN</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--red);font-weight:700;font-size:11px;letter-spacing:.5px">IF FIRE PERSISTS</td></tr>
-      <tr><td>5</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
-      <tr><td>6</td><td>MASTER</td><td>OFF</td></tr>
-      <tr><td>7</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">CONTINUE CRANKING</div><div class="qrh-step-value"></div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">BOOST PUMPS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">IDLE CUT OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">THROTLES</div><div class="qrh-step-value">OPEN</div></div>
+      <div class="qrh-phase ph-fire">IF FIRE PERSISTS</div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MASTER</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">EVACUATION DRILL</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
+    </div>
   </div>
 
   <!-- 4A ENGINE FIRE GROUND OPS -->
@@ -1625,10 +1637,10 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🔥</div>
       <div><div class="section-title"><span class="qrh-badge">4A</span> Engine Fire During Ground Operations</div><div class="section-ref">QRH · Page 4 · All engine fires from start to RTO with sufficient runway</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>BRAKES</td><td>APPLY AND SET</td></tr>
-      <tr><td>2</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">BRAKES</div><div class="qrh-step-value">APPLY AND SET</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">EVACUATION DRILL</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
+    </div>
   </div>
 
   <!-- 4B ELECTRICAL FIRE -->
@@ -1637,17 +1649,17 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">⚡</div>
       <div><div class="section-title"><span class="qrh-badge amber">4B</span> Electrical Fire</div><div class="section-ref">QRH · Page 4</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>MASTER SWITCH</td><td>OFF</td></tr>
-      <tr><td>2</td><td>GARMIN 7XX</td><td>ON AND SET TO SYNTHETIC VISION</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--t3);font-size:11px;font-style:italic">Use fire extinguisher if required</td></tr>
-      <tr><td>3</td><td>CB'S</td><td>CHECKED/PULLED</td></tr>
-      <tr><td>4</td><td>ELECTRICAL SWITCHES</td><td>OFF</td></tr>
-      <tr><td>5</td><td>MASTER SWITCH</td><td>ON</td></tr>
-      <tr><td>6</td><td>CB &amp; SWITCHES FOR ESSENTIAL ELECTRICS ONLY</td><td>ON ONE AT A TIME UNTIL FAULTY CIRCUIT LOCATED</td></tr>
-      <tr><td>7</td><td>CB &amp; SWITCH FOR FAILED UNIT</td><td>OFF</td></tr>
-      <tr><td>8</td><td>LAND AS SOON AS PRACTICAL</td><td></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">MASTER SWITCH</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GARMIN 7XX</div><div class="qrh-step-value">ON — SYNTHETIC VISION</div></div>
+      <div class="qrh-step-note">Use fire extinguisher if required</div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">CB'S</div><div class="qrh-step-value">CHECKED / PULLED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">ELECTRICAL SWITCHES</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">MASTER SWITCH</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">CB &amp; SWITCHES — essential electrics only</div><div class="qrh-step-value">ON ONE AT A TIME — locate faulty circuit</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">CB &amp; SWITCH FOR FAILED UNIT</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">LAND AS SOON AS PRACTICAL</div><div class="qrh-step-value"></div></div>
+    </div>
   </div>
 
   <!-- 4C + 4D RPM -->
@@ -1657,25 +1669,24 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div><div class="section-title"><span class="qrh-badge amber">4C</span><span class="qrh-badge amber" style="margin-left:4px">4D</span> RPM Underspeed / Overspeed</div><div class="section-ref">QRH · Page 4</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>4C — RPM Underspeed</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>POWER</td><td>REDUCED</td></tr>
-      <tr><td>2</td><td>MIXTURE</td><td>RICH</td></tr>
-      <tr><td>3</td><td>PROP CONTROL</td><td>ADJUST AS REQUIRED</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">IF PROP MOVES TO COARSE</td></tr>
-      <tr><td>4</td><td>MIXTURE</td><td>ICO</td></tr>
-      <tr><td>5</td><td>PROP CONTROL</td><td>FEATHER</td></tr>
-      <tr><td>6</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">REDUCED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">RICH</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">PROP CONTROL</div><div class="qrh-step-value">ADJUST AS REQUIRED</div></div>
+      <div class="qrh-phase ph-caution">IF PROP MOVES TO COARSE</div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">ICO</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">PROP CONTROL</div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
+    </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">Prop will move to COARSE (decreased RPM) if engine oil pressure is lost.</div></div>
-
     <div class="alert warn" style="margin-top:14px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>4D — RPM Overspeed</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>POWER</td><td>REDUCED</td></tr>
-      <tr><td>2</td><td>PITCH NOSE UP TO REDUCE SPEED QUICKLY</td><td></td></tr>
-      <tr><td>3</td><td>AIRSPEED — REDUCED TO APPROXIMATELY</td><td>130 KTS</td></tr>
-      <tr><td>4</td><td>PROP (IF PROP SPEED CANNOT BE KEPT UNDER 2575 RPM)</td><td>FEATHERED</td></tr>
-      <tr><td>5</td><td>IF PROP FEATHERS</td><td>COMPLETE ENGINE SECURING PROCEDURE</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">POWER</div><div class="qrh-step-value">REDUCED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">PITCH NOSE UP TO REDUCE SPEED QUICKLY</div><div class="qrh-step-value"></div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">AIRSPEED — reduce to approximately</div><div class="qrh-step-value">130 KTS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">PROP — if speed cannot be kept under 2575 RPM</div><div class="qrh-step-value">FEATHERED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">IF PROP FEATHERS</div><div class="qrh-step-value">COMPLETE ENGINE SECURING PROCEDURE</div></div>
+    </div>
     <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">If prop will NOT feather — <strong>do NOT shut down engine</strong>. With IAS below 130 KTS minimal power should be available without exceeding 2575 RPM.</div></div>
   </div>
 
@@ -1685,15 +1696,15 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">⛽</div>
       <div><div class="section-title"><span class="qrh-badge blue">5A</span> Crossfeed</div><div class="section-ref">QRH · Page 5</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FUEL SELECTOR (INOP ENGINE)</td><td>EITHER TANK</td></tr>
-      <tr><td>2</td><td>FUEL BOOST CB (INOP ENGINE)</td><td>IN</td></tr>
-      <tr><td>3</td><td>EMERGENCY FUEL PUMP (INOP ENGINE)</td><td>ON</td></tr>
-      <tr><td>4</td><td>CROSSFEED</td><td>ON</td></tr>
-      <tr><td>5</td><td>FUEL SELECTOR (OPERATIVE ENGINE)</td><td>OFF</td></tr>
-      <tr><td>6</td><td>FUEL BOOST CB (OPERATIVE ENGINE)</td><td>PULLED</td></tr>
-      <tr><td>7</td><td>EMERGENCY FUEL PUMP (OPERATIVE ENGINE)</td><td>OFF</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL SELECTOR <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">EITHER TANK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">FUEL BOOST CB <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">IN</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">EMERGENCY FUEL PUMP <span class="qrh-note-inline">(inop engine)</span></div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">CROSSFEED</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">FUEL SELECTOR <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">FUEL BOOST CB <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">PULLED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">EMERGENCY FUEL PUMP <span class="qrh-note-inline">(operative engine)</span></div><div class="qrh-step-value">OFF</div></div>
+    </div>
   </div>
 
   <!-- 5B ALTERNATOR FAILURE -->
@@ -1703,18 +1714,18 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div><div class="section-title"><span class="qrh-badge amber">5B</span> Alternator Failure</div><div class="section-ref">QRH · Page 5</div></div>
     </div>
     <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">It is possible to have an ALTERNATOR INOP light and still have the alternator functioning.</div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>SYSTEM VOLTAGE (IF EQUIPPED)*</td><td>NOTED</td></tr>
-      <tr><td>2</td><td>MASTER SWITCH (OPPOSITE TO INOP LIGHT)</td><td>OFF</td></tr>
-    </table>
-    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">*If voltage drops 28V → ~24V: alternator FAILED → proceed steps 3–6. If voltage stays ~28V: INOP light faulty, alternator OK → restore both master sides, continue with occasional alternator checks.</div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>3</td><td>ELECTRICS</td><td>REDUCE</td></tr>
-      <tr><td>4</td><td>MASTER SWITCH (APPROPRIATE SIDE)</td><td>OFF</td></tr>
-      <tr><td>5</td><td>CB'S</td><td>CHECK AND RESET</td></tr>
-      <tr><td>6</td><td>MASTER SWITCH (APPROPRIATE SIDE)</td><td>BACK ON</td></tr>
-    </table>
-    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If alternator functioning normally: reinstate electrical load. If not operating: turn appropriate master side OFF, continue with reduced electrical load — land as soon as practical.</div></div>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">SYSTEM VOLTAGE <span class="qrh-note-inline">(if equipped)*</span></div><div class="qrh-step-value">NOTED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(opposite to INOP light)</span></div><div class="qrh-step-value">OFF</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">*Voltage 28V → ~24V: alternator FAILED → proceed steps 3–6. Voltage stays ~28V: INOP light faulty, alternator OK → restore both master sides, continue.</div></div>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">ELECTRICS</div><div class="qrh-step-value">REDUCE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(appropriate side)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">CB'S</div><div class="qrh-step-value">CHECK AND RESET</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(appropriate side)</span></div><div class="qrh-step-value">BACK ON</div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If alternator functioning normally: reinstate electrical load. If not: turn appropriate master side OFF, continue with reduced load — land as soon as practical.</div></div>
     <div class="alert warn" style="margin-top:12px"><span class="alert-icon">⛔</span><div class="alert-body"><strong>Dual Alternator Failure</strong><br>1. ELECTRICS — REDUCE<br>2. Complete steps 4–6 one alternator at a time<br>3. LAND AS SOON AS PRACTICAL</div></div>
   </div>
 
@@ -1724,13 +1735,13 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🛞</div>
       <div><div class="section-title"><span class="qrh-badge">5C</span> Emergency Landing Gear Extension</div><div class="section-ref">QRH · Page 5</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>AIRSPEED — MAX</td><td>128 KTS *</td></tr>
-      <tr><td>2</td><td>GEAR SELECTOR</td><td>DOWN</td></tr>
-      <tr><td>3</td><td>EMERG. GEAR COVER</td><td>OPEN</td></tr>
-      <tr><td>4</td><td>EMERG. GEAR EXTENDER</td><td>EXTEND</td></tr>
-      <tr><td>5</td><td>EXTENDER HANDLE — PUMP UNTIL 3 GREEN &amp; HANDLE RETURNS TO NEUTRAL (~50 STROKES)</td><td>PUMP RAPIDLY FOR BEST RESULTS</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">AIRSPEED — MAX</div><div class="qrh-step-value">128 KTS *</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">GEAR SELECTOR</div><div class="qrh-step-value">DOWN</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">EMERG. GEAR COVER</div><div class="qrh-step-value">OPEN</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">EMERG. GEAR EXTENDER</div><div class="qrh-step-value">EXTEND</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">EXTENDER HANDLE — pump until 3 green &amp; handle returns to neutral <span class="qrh-note-inline">(~50 strokes)</span></div><div class="qrh-step-value">PUMP RAPIDLY</div></div>
+    </div>
     <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">* Post-1978 models: Vle is 153 KIAS. Side slips can help lock the mains. Nose extends against airflow — slow to 90 KTS, reduce power, full flaps, nose down attitude, then pump rapidly. Hydraulic reservoir has LIMITED quantity. If unsuccessful, complete landing with two gears.</div></div>
   </div>
 
@@ -1740,22 +1751,22 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🛬</div>
       <div><div class="section-title"><span class="qrh-badge">6A</span> Gear Up Landing</div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FUEL BURN OFF IF POSSIBLE</td><td></td></tr>
-      <tr><td>2</td><td>PASSENGERS BRIEFED</td><td></td></tr>
-      <tr><td>3</td><td>NORMAL LANDING CHECKLIST</td><td>COMPLETE</td></tr>
-      <tr><td>4</td><td>GEAR SELECTOR</td><td>UP</td></tr>
-      <tr><td>5</td><td>AUTO PILOT</td><td>OFF</td></tr>
-      <tr><td>6</td><td>MASTER SWITCH (DAYTIME)</td><td>OFF</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">WHEN LANDING IS ASSURED</td></tr>
-      <tr><td>7</td><td>MIXTURES</td><td>ICO</td></tr>
-      <tr><td>8</td><td>PROP CONTROLS</td><td>FEATHER</td></tr>
-      <tr><td>9</td><td>FIREWALL FUEL SHUTOFF</td><td>OFF</td></tr>
-      <tr><td>10</td><td>FUEL SELECTORS</td><td>OFF</td></tr>
-      <tr><td>11</td><td>MAGS</td><td>OFF</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">AT FULL STOP</td></tr>
-      <tr><td>12</td><td>EVACUATION DRILL</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL BURN OFF IF POSSIBLE</div><div class="qrh-step-value"></div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">PASSENGERS BRIEFED</div><div class="qrh-step-value"></div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">NORMAL LANDING CHECKLIST</div><div class="qrh-step-value">COMPLETE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">GEAR SELECTOR</div><div class="qrh-step-value">UP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">AUTO PILOT</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MASTER SWITCH <span class="qrh-note-inline">(daytime)</span></div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-phase ph-caution">WHEN LANDING IS ASSURED</div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">MIXTURES</div><div class="qrh-step-value">ICO</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">PROP CONTROLS</div><div class="qrh-step-value">FEATHER</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">FIREWALL FUEL SHUTOFF</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">FUEL SELECTORS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-phase ph-caution">AT FULL STOP</div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">EVACUATION DRILL</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1a')">→ 1A</span></div></div>
+    </div>
   </div>
 
   <!-- 6B AIR START -->
@@ -1764,20 +1775,20 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🔄</div>
       <div><div class="section-title"><span class="qrh-badge green">6B</span> Air Start — Unfeathering Procedure</div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FUEL SELECTOR</td><td>INBOARDS OR AS REQUIRED</td></tr>
-      <tr><td>2</td><td>FUEL BOOST CB</td><td>IN</td></tr>
-      <tr><td>3</td><td>MAGS</td><td>ON</td></tr>
-      <tr><td>4</td><td>THROTTLE</td><td>OPEN ½"</td></tr>
-      <tr><td>5</td><td>PROP</td><td>FORWARD TO MATCH OTHER CONTROL</td></tr>
-      <tr><td>6</td><td>MIXTURE</td><td>SLOWLY FORWARD</td></tr>
-      <tr><td>7</td><td>STARTER</td><td>ENGAGED UNTIL PROP UNFEATHERS</td></tr>
-      <tr><td>8</td><td>PROP — PULL BACK TO LOW RPM THROUGH 1000 RPM</td><td>TARGET 2000 RPM</td></tr>
-      <tr><td>9</td><td>THROTLES — REDUCED TILL WARM</td><td>2000 RPM MAX</td></tr>
-      <tr><td>10</td><td>ALTERNATOR</td><td>ON</td></tr>
-      <tr><td>11</td><td>ENGINE INSTRUMENTS</td><td>CHECK</td></tr>
-      <tr><td>12</td><td>AFTER START CHECKS</td><td>COMPLETE</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FUEL SELECTOR</div><div class="qrh-step-value">INBOARDS OR AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">FUEL BOOST CB</div><div class="qrh-step-value">IN</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">THROTTLE</div><div class="qrh-step-value">OPEN ½"</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">PROP</div><div class="qrh-step-value">FORWARD TO MATCH OTHER CONTROL</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">SLOWLY FORWARD</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">STARTER</div><div class="qrh-step-value">ENGAGED UNTIL PROP UNFEATHERS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">PROP — pull back to low RPM through 1000 RPM</div><div class="qrh-step-value">TARGET 2000 RPM</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">THROTLES — reduced till warm</div><div class="qrh-step-value">2000 RPM MAX</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">ALTERNATOR</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">ENGINE INSTRUMENTS</div><div class="qrh-step-value">CHECK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">AFTER START CHECKS</div><div class="qrh-step-value">COMPLETE</div></div>
+    </div>
   </div>
 
   <!-- 6C ENGINE ROUGHNESS -->
@@ -1786,15 +1797,15 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🔧</div>
       <div><div class="section-title"><span class="qrh-badge amber">6C</span> Engine Roughness</div><div class="section-ref">QRH · Page 6</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>EMERGENCY FUEL PUMPS</td><td>ON</td></tr>
-      <tr><td>2</td><td>MIXTURES</td><td>ADJUST</td></tr>
-      <tr><td>3</td><td>ALTERNATE AIR</td><td>AS REQUIRED</td></tr>
-      <tr><td>4</td><td>FUEL</td><td>SWITCH TANKS</td></tr>
-      <tr><td>5</td><td>MAGS</td><td>CHECK</td></tr>
-      <tr><td>6</td><td>REDUCE POWER AS REQUIRED</td><td></td></tr>
-    </table>
-    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If engine operates smooth on ONE mag, leave the defective mag OFF and land as soon as practical.</div></div>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">EMERGENCY FUEL PUMPS</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MIXTURES</div><div class="qrh-step-value">ADJUST</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">ALTERNATE AIR</div><div class="qrh-step-value">AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">FUEL</div><div class="qrh-step-value">SWITCH TANKS</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">MAGS</div><div class="qrh-step-value">CHECK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">REDUCE POWER AS REQUIRED</div><div class="qrh-step-value"></div></div>
+    </div>
+    <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body">If engine operates smooth on ONE mag — leave the defective mag OFF and land as soon as practical.</div></div>
   </div>
 
   <!-- 7A ASYMMETRIC FLAPS DUKE -->
@@ -1803,13 +1814,13 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🛫</div>
       <div><div class="section-title"><span class="qrh-badge amber">7A</span> Asymmetric Flaps — Duke System</div><div class="section-ref">QRH · Page 7</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FLAP SWITCH</td><td>OFF</td></tr>
-      <tr><td>2</td><td>AILERON — AS REQUIRED TO</td><td>MAINTAIN WINGS LEVEL</td></tr>
-      <tr><td>3</td><td>FLAP SWITCH — UP IN INCREMENTS TO</td><td>ACHIEVE SYMMETRY</td></tr>
-      <tr><td>4</td><td>FLAP SWITCH</td><td>OFF</td></tr>
-      <tr><td>5</td><td>FLAP CONTROL CB</td><td>PULLED</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP SWITCH</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">AILERON — as required to</div><div class="qrh-step-value">MAINTAIN WINGS LEVEL</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">FLAP SWITCH — up in increments to</div><div class="qrh-step-value">ACHIEVE SYMMETRY</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">FLAP SWITCH</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">FLAP CONTROL CB</div><div class="qrh-step-value">PULLED</div></div>
+    </div>
     <div class="alert warn"><span class="alert-icon">⛔</span><div class="alert-body">Do NOT reset the flap control CB until the aircraft has landed and the problem resolved. Resetting and activating the flap selector will enable another operation — the asymmetric differential may become more severe.</div></div>
   </div>
 
@@ -1820,27 +1831,27 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div><div class="section-title"><span class="qrh-badge amber">7B</span> Flap System Malfunction — Calco</div><div class="section-ref">QRH · Page 7</div></div>
     </div>
     <div class="alert note"><span class="alert-icon">📌</span><div class="alert-body"><strong>Annunciator Light ON</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FLAP SELECTOR</td><td>REPOSITION SLIGHTLY</td></tr>
-      <tr><td>2</td><td>IF FLAPS MOVE</td><td>REPLACE AMPLIFIER PRIOR TO NEXT FLIGHT</td></tr>
-      <tr><td>3</td><td>IF FLAPS DO NOT MOVE</td><td>CHECK FOR SPLIT FLAP</td></tr>
-      <tr><td>4</td><td>IF FLAPS ARE SPLIT</td><td>PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</td></tr>
-      <tr><td>5</td><td>IF FLAPS ARE NOT SPLIT</td><td>PULL AND RESET FLAP MOTOR CB</td></tr>
-      <tr><td>6</td><td>IF FLAPS STILL DO NOT OPERATE</td><td>PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP SELECTOR</div><div class="qrh-step-value">REPOSITION SLIGHTLY</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF FLAPS MOVE</div><div class="qrh-step-value">REPLACE AMPLIFIER PRIOR TO NEXT FLIGHT</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF FLAPS DO NOT MOVE</div><div class="qrh-step-value">CHECK FOR SPLIT FLAP</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">IF FLAPS ARE SPLIT</div><div class="qrh-step-value">PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">IF FLAPS ARE NOT SPLIT</div><div class="qrh-step-value">PULL AND RESET FLAP MOTOR CB</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">IF FLAPS STILL DO NOT OPERATE</div><div class="qrh-step-value">PULL FLAP MOTOR CB AND LAND IN THIS CONDITION</div></div>
+    </div>
     <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Zero</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FLAP CONTROL CB</td><td>PULL AND RESET</td></tr>
-      <tr><td>2</td><td>IF INDICATOR REMAINS OFF</td><td>FLAP CONTROL INOPERATIVE — CANNOT REPOSITION</td></tr>
-      <tr><td>3</td><td>IF INDICATOR SHOWS FLAP POSITION</td><td>USE FOLLOWING CHECKLIST</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP CONTROL CB</div><div class="qrh-step-value">PULL AND RESET</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF INDICATOR REMAINS OFF</div><div class="qrh-step-value">FLAP CONTROL INOPERATIVE — CANNOT REPOSITION</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF INDICATOR SHOWS FLAP POSITION</div><div class="qrh-step-value">USE FOLLOWING CHECKLIST</div></div>
+    </div>
     <div class="alert note" style="margin-top:10px"><span class="alert-icon">📌</span><div class="alert-body"><strong>Flaps Fail to Respond — Indicator at Flap Position</strong></div></div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>FLAP TEST SWITCH</td><td>PUSH</td></tr>
-      <tr><td>2</td><td>IF ANNUCIATOR FAILS TO LIGHT</td><td>FOLLOW "ANNUCIATOR LIGHT ON" CHECKLIST</td></tr>
-      <tr><td>3</td><td>IF ANNUCIATOR LIGHTS</td><td>PULL AND RESET FLAP MOTOR CB</td></tr>
-      <tr><td>4</td><td>IF FLAPS FAIL TO RESPOND</td><td>FLAP DRIVE FAULT — FURTHER EFFORT MAY CAUSE DAMAGE</td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">FLAP TEST SWITCH</div><div class="qrh-step-value">PUSH</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">IF ANNUCIATOR FAILS TO LIGHT</div><div class="qrh-step-value">FOLLOW "ANNUCIATOR LIGHT ON" CHECKLIST</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">IF ANNUCIATOR LIGHTS</div><div class="qrh-step-value">PULL AND RESET FLAP MOTOR CB</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">IF FLAPS FAIL TO RESPOND</div><div class="qrh-step-value">FLAP DRIVE FAULT — FURTHER EFFORT MAY CAUSE DAMAGE</div></div>
+    </div>
     <div class="alert caution"><span class="alert-icon">⚠️</span><div class="alert-body">If flaps not fully retracted: land as soon as practical, do not exceed flap speed. If flap symmetry cannot be achieved: land ASAP, plan circuit so all turns are toward the side with flap UP. In crosswind: land with the UP-flap wing on the upwind side.</div></div>
   </div>
 
@@ -1850,26 +1861,26 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🛬</div>
       <div><div class="section-title"><span class="qrh-badge">8A</span> Single Engine Landing</div><div class="section-ref">QRH · Page 8</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>ENGINE SECURING PROCEDURE</td><td>COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></td></tr>
-      <tr><td>2</td><td>HYDRAULIC PUMP</td><td>CHECK</td></tr>
-      <tr><td>3</td><td>SEAT BELTS</td><td>SECURE</td></tr>
-      <tr><td>4</td><td>HEATER FAN</td><td>OPERATIVE ENGINE</td></tr>
-      <tr><td>5</td><td>EMERGENCY FUEL PUMP</td><td>ON</td></tr>
-      <tr><td>6</td><td>MIXTURE</td><td>RICH</td></tr>
-      <tr><td>7</td><td>PROP</td><td>FORWARD</td></tr>
-      <tr><td>8</td><td>FUEL SELECTOR</td><td>INBOARD</td></tr>
-      <tr><td>9</td><td>CROSSFEED</td><td>OFF</td></tr>
-      <tr><td>10</td><td>COWL FLAPS</td><td>AS REQUIRED</td></tr>
-      <tr><td>11</td><td>AIRSPEED — MAINTAIN</td><td>116 KTS OR ABOVE</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">GLIDESLOPE — 1 DOT BELOW</td></tr>
-      <tr><td>12</td><td>FLAPS</td><td>15°</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--amber);font-weight:700;font-size:11px;letter-spacing:.5px">GLIDESLOPE — ON SLOPE</td></tr>
-      <tr><td>13</td><td>GEAR</td><td>DOWN</td></tr>
-      <tr><td></td><td colspan="2" style="color:var(--green);font-weight:700;font-size:11px;letter-spacing:.5px">LANDING ASSURED</td></tr>
-      <tr><td>14</td><td>FLAPS</td><td>FULL</td></tr>
-    </table>
-    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body">When flying an ILS or 3° glide slope: fly slightly ABOVE slope and slightly above normal airspeed with gear down and 15° flap. More flap may be used on short final when landing is assured.<br><strong>MAINTAIN POSITIVE ENERGY! REMEMBER YOUR THREE SOURCES OF ENERGY.</strong></div></div>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">ENGINE SECURING PROCEDURE</div><div class="qrh-step-value">COMPLETE <span class="qrh-ref" onclick="scrollToSection('qrh-1b')">→ 1B</span></div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">HYDRAULIC PUMP</div><div class="qrh-step-value">CHECK</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">SEAT BELTS</div><div class="qrh-step-value">SECURE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">HEATER FAN</div><div class="qrh-step-value">OPERATIVE ENGINE</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">EMERGENCY FUEL PUMP</div><div class="qrh-step-value">ON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">6</div><div class="qrh-step-action">MIXTURE</div><div class="qrh-step-value">RICH</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">7</div><div class="qrh-step-action">PROP</div><div class="qrh-step-value">FORWARD</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">8</div><div class="qrh-step-action">FUEL SELECTOR</div><div class="qrh-step-value">INBOARD</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">9</div><div class="qrh-step-action">CROSSFEED</div><div class="qrh-step-value">OFF</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">10</div><div class="qrh-step-action">COWL FLAPS</div><div class="qrh-step-value">AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">11</div><div class="qrh-step-action">AIRSPEED — maintain</div><div class="qrh-step-value">116 KTS OR ABOVE</div></div>
+      <div class="qrh-phase ph-caution">GLIDESLOPE — 1 DOT BELOW</div>
+      <div class="qrh-step"><div class="qrh-step-num">12</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">15°</div></div>
+      <div class="qrh-phase ph-caution">GLIDESLOPE — ON SLOPE</div>
+      <div class="qrh-step"><div class="qrh-step-num">13</div><div class="qrh-step-action">GEAR</div><div class="qrh-step-value">DOWN</div></div>
+      <div class="qrh-phase ph-green">LANDING ASSURED</div>
+      <div class="qrh-step"><div class="qrh-step-num">14</div><div class="qrh-step-action">FLAPS</div><div class="qrh-step-value">FULL</div></div>
+    </div>
+    <div class="alert tip"><span class="alert-icon">💡</span><div class="alert-body">Fly slightly ABOVE slope and slightly above normal airspeed with gear down and 15° flap. More flap on short final when landing is assured.<br><strong>MAINTAIN POSITIVE ENERGY! REMEMBER YOUR THREE SOURCES OF ENERGY.</strong></div></div>
   </div>
 
   <!-- 8B PRIMARY FLIGHT DISPLAY -->
@@ -1878,13 +1889,13 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="section-icon">🖥️</div>
       <div><div class="section-title"><span class="qrh-badge blue">8B</span> Primary Flight Display</div><div class="section-ref">QRH · Page 8</div></div>
     </div>
-    <table class="ref-table qrh-table">
-      <tr><td>1</td><td>BLANK SCREEN</td><td>FLY STBY HORIZON</td></tr>
-      <tr><td>2</td><td>MFD (IF INSTALLED)</td><td>SELECT FLIGHT DISPLAY</td></tr>
-      <tr><td>3</td><td>GARMIN 7XX</td><td>SELECT SYNTHETIC VISION</td></tr>
-      <tr><td>4</td><td>GARMIN 530/430</td><td>SELECT NAV DISPLAY AS REQUIRED</td></tr>
-      <tr><td>5</td><td>TROUBLESHOOT CHECKLISTS</td><td></td></tr>
-    </table>
+    <div class="qrh-proc">
+      <div class="qrh-step"><div class="qrh-step-num">1</div><div class="qrh-step-action">BLANK SCREEN</div><div class="qrh-step-value">FLY STBY HORIZON</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">2</div><div class="qrh-step-action">MFD <span class="qrh-note-inline">(if installed)</span></div><div class="qrh-step-value">SELECT FLIGHT DISPLAY</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">3</div><div class="qrh-step-action">GARMIN 7XX</div><div class="qrh-step-value">SELECT SYNTHETIC VISION</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">4</div><div class="qrh-step-action">GARMIN 530/430</div><div class="qrh-step-value">SELECT NAV DISPLAY AS REQUIRED</div></div>
+      <div class="qrh-step"><div class="qrh-step-num">5</div><div class="qrh-step-action">TROUBLESHOOT CHECKLISTS</div><div class="qrh-step-value"></div></div>
+    </div>
   </div>
 
 </div><!-- /view-qrh -->
