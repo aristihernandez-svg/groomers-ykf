@@ -346,8 +346,9 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .quiz-filter-label{font-size:9px;font-weight:800;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase;margin-bottom:2px}
 .quiz-filter-bar{gap:6px;margin-bottom:0}
 /* Tile study-tool overlay */
-.tile-tools{position:absolute;top:10px;left:10px;display:flex;gap:3px}
-.tile-tool{font-size:11px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.12);border-radius:5px;padding:2px 5px;line-height:1.4}
+.tile-tools{position:absolute;top:10px;left:10px;display:flex;gap:6px;z-index:5}
+.tile-tool{font-size:18px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(10,20,40,0.72);border:1px solid rgba(255,255,255,0.18);border-radius:10px;cursor:pointer;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent}
+.tile-tool:hover,.tile-tool:active{background:rgba(37,99,235,0.35);border-color:rgba(37,99,235,0.6);transform:scale(1.12)}
 /* Streak */
 .hub-streak{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;color:var(--amber);background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:20px;padding:5px 14px;margin-bottom:14px}
 /* Audio button */
@@ -436,7 +437,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 
   <div class="hub-grid">
     <div class="hub-tile" style="position:relative" onclick="openDoc('cheatsheet')">
-      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
+      <div class="tile-tools"><span class="tile-tool" onclick="event.stopPropagation();openQuizFor('cheatsheet')" title="Quiz">❓</span><span class="tile-tool" onclick="event.stopPropagation();openFlashcardFor('cheatsheet')" title="Flashcards">🃏</span><span class="tile-tool" onclick="event.stopPropagation();openScenarios('cheatsheet')" title="Scenarios">🎭</span></div>
       <div class="hub-tile-icon">📋</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">Systems Cheat Sheet</div>
@@ -445,7 +446,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     </div>
 
     <div class="hub-tile" style="position:relative" onclick="openDoc('capgen')">
-      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
+      <div class="tile-tools"><span class="tile-tool" onclick="event.stopPropagation();openQuizFor('capgen')" title="Quiz">❓</span><span class="tile-tool" onclick="event.stopPropagation();openFlashcardFor('capgen')" title="Flashcards">🃏</span><span class="tile-tool" onclick="event.stopPropagation();openScenarios('capgen')" title="Scenarios">🎭</span></div>
       <div class="hub-tile-icon">🧭</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">CAP GEN — IFR</div>
@@ -462,7 +463,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     </div>
 
     <div class="hub-tile" style="position:relative" onclick="openDoc('afm')">
-      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
+      <div class="tile-tools"><span class="tile-tool" onclick="event.stopPropagation();openQuizFor('afm')" title="Quiz">❓</span><span class="tile-tool" onclick="event.stopPropagation();openFlashcardFor('afm')" title="Flashcards">🃏</span><span class="tile-tool" onclick="event.stopPropagation();openScenarios('afm')" title="Scenarios">🎭</span></div>
       <div class="hub-tile-icon">📗</div>
       <div class="hub-tile-tag ready">READY</div>
       <div class="hub-tile-title">AFM</div>
@@ -478,7 +479,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
     </div>
 
     <div class="hub-tile" style="position:relative" onclick="openDoc('qrh')">
-      <div class="tile-tools"><span class="tile-tool">❓</span><span class="tile-tool">🃏</span><span class="tile-tool">🎭</span></div>
+      <div class="tile-tools"><span class="tile-tool" onclick="event.stopPropagation();openQuizFor('qrh')" title="Quiz">❓</span><span class="tile-tool" onclick="event.stopPropagation();openFlashcardFor('qrh')" title="Flashcards">🃏</span><span class="tile-tool" onclick="event.stopPropagation();openScenarios('qrh')" title="Scenarios">🎭</span></div>
       <div class="hub-tile-icon">🚨</div>
       <div class="hub-tile-tag emergency">QRH</div>
       <div class="hub-tile-title">Emergency QRH</div>
@@ -3234,6 +3235,41 @@ function openQuiz(){
   quizCurrentDoc='all'; quizCurrentType='standard';
   document.querySelector('#quizDocFilters .quiz-filter-tab').classList.add('active');
   document.querySelector('#quizTypeFilters .quiz-filter-tab').classList.add('active');
+  applyQuizFilters();
+}
+
+function openQuizFor(doc){
+  switchView('view-quiz','Quiz');
+  quizCurrentDoc=doc; quizCurrentType='standard';
+  document.querySelectorAll('#quizDocFilters .quiz-filter-tab').forEach((t,i)=>{
+    const docs=['all','cheatsheet','capgen','afm','qrh'];
+    t.classList.toggle('active', docs[i]===doc);
+  });
+  document.querySelector('#quizTypeFilters .quiz-filter-tab').classList.add('active');
+  document.querySelectorAll('#quizTypeFilters .quiz-filter-tab')[1].classList.remove('active');
+  applyQuizFilters();
+}
+
+function openFlashcardFor(doc){
+  switchView('view-flashcard','Flashcards');
+  fcCurrentDocFilter=doc; fcCurrentTypeFilter='standard';
+  document.querySelectorAll('#fcDocFilters .quiz-filter-tab').forEach((t,i)=>{
+    const docs=['all','cheatsheet','capgen','afm','qrh'];
+    t.classList.toggle('active', docs[i]===doc);
+  });
+  document.querySelector('#fcTypeFilters .quiz-filter-tab').classList.add('active');
+  document.querySelectorAll('#fcTypeFilters .quiz-filter-tab')[1].classList.remove('active');
+  applyFcFilters();
+}
+
+function openScenarios(doc){
+  switchView('view-quiz','Quiz · Scenarios');
+  quizCurrentDoc=doc; quizCurrentType='scenario';
+  document.querySelectorAll('#quizDocFilters .quiz-filter-tab').forEach((t,i)=>{
+    const docs=['all','cheatsheet','capgen','afm','qrh'];
+    t.classList.toggle('active', docs[i]===doc);
+  });
+  document.querySelectorAll('#quizTypeFilters .quiz-filter-tab').forEach((t,i)=>t.classList.toggle('active',i===1));
   applyQuizFilters();
 }
 
