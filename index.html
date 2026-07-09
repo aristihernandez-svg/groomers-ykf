@@ -13,6 +13,8 @@
 <link rel="apple-touch-icon" sizes="192x192" href="cars/skycare-icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="cars/skycare-icon-512.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Leaflet (fleet map) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js"></script>
@@ -714,6 +716,9 @@ body::before{
 .rating-good{background:#1a7a40}
 .rating-fair{background:#C08000}
 .rating-poor{background:#C03030}
+/* Fleet map tooltip */
+.fleet-tip{background:#0d1520!important;border:1px solid rgba(200,168,75,0.35)!important;color:#e2e8f0!important;font-size:11px!important;font-weight:500!important;box-shadow:0 2px 8px rgba(0,0,0,0.6)!important;border-radius:6px!important;padding:4px 8px!important}
+.fleet-tip::before{display:none!important}
 </style>
 </head>
 <body>
@@ -830,6 +835,15 @@ const TODAY = getToday(); // kept for init-time use (S.dayView, boot fetch)
 const APP_VERSION = 'v2.0';
 
 const FLEET_TAILS = ['IOA','IOB','IOC','IOE','IOH','IOJ','DAX','IAW','XAW','XDP'];
+// CYKF coords (Waterloo Region Airport)
+const CYKF_LAT = 43.4601, CYKF_LON = -80.3782;
+function haversineNm(lat1,lon1,lat2,lon2){
+  const R=3440.065,dLat=(lat2-lat1)*Math.PI/180,dLon=(lon2-lon1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function etaMinutes(distNm, speedKts){ return speedKts>20 ? Math.round(distNm/speedKts*60) : null; }
+let _fleetNotified = new Set(); // tails already notified this session at 25nm
 const PROC_TAILS  = {
   metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
   westwind: ['IAW','XAW','XDP'],
@@ -1154,7 +1168,7 @@ function render() {
       break;
     case 'contacts':   renderContacts(el); break;
     case 'bored':        renderBored(el); break;
-    case 'fleet':        renderFleet(el); break;
+    case 'fleet':        renderFleet(el); if(!_fleetLastFetch) refreshFleet(); break;
   }
 }
 
@@ -5942,16 +5956,16 @@ function openQrWindow(url, title, desc) {
 
 // ── FLEET TRACKER ───────────────────────────────────────────────────────
 const FLEET_AIRCRAFT = [
-  {reg:'C-GIOC', tail:'IOC', type:'Metroliner', icao24:''},
-  {reg:'C-GIOJ', tail:'IOJ', type:'Metroliner', icao24:''},
-  {reg:'C-GIOB', tail:'IOB', type:'Metroliner', icao24:''},
-  {reg:'C-GIOE', tail:'IOE', type:'Metroliner', icao24:''},
-  {reg:'C-GIOH', tail:'IOH', type:'Metroliner', icao24:''},
-  {reg:'C-GIOA', tail:'IOA', type:'Metroliner', icao24:''},
-  {reg:'C-FIAW', tail:'IAW', type:'Westwind',   icao24:''},
+  {reg:'C-FIOC', tail:'IOC', type:'Metroliner', icao24:''},
+  {reg:'C-FIOE', tail:'IOE', type:'Metroliner', icao24:''},
+  {reg:'C-FIOJ', tail:'IOJ', type:'Metroliner', icao24:''},
+  {reg:'C-FIOA', tail:'IOA', type:'Metroliner', icao24:''},
+  {reg:'C-FIOB', tail:'IOB', type:'Metroliner', icao24:''},
+  {reg:'C-FIOH', tail:'IOH', type:'Metroliner', icao24:''},
+  {reg:'C-GIAW', tail:'IAW', type:'Westwind',   icao24:''},
   {reg:'C-FXAW', tail:'XAW', type:'Westwind',   icao24:''},
   {reg:'C-FXDP', tail:'XDP', type:'Westwind',   icao24:''},
-  {reg:'C-GDAX', tail:'DAX', type:'Astra',      icao24:''},
+  {reg:'C-FDAX', tail:'DAX', type:'Astra',      icao24:''},
 ];
 
 let _fleetData = {}; // icao24/callsign → state
@@ -5972,29 +5986,46 @@ async function fetchFleetOpenSky() {
 
 function fleetCallsignMatch(callsign) {
   if(!callsign) return null;
-  const cs = callsign.trim().toUpperCase();
+  const cs = callsign.trim().toUpperCase().replace(/\s/g,'');
   return FLEET_AIRCRAFT.find(a => {
-    const reg = a.reg.replace('-','').toUpperCase(); // e.g. CGIOC
-    return cs === reg || cs === ('C'+a.tail) || cs.includes(a.tail);
+    const reg = a.reg.replace('-','').toUpperCase(); // e.g. CFIOC
+    return cs === reg || cs.endsWith(a.tail);
   }) || null;
 }
 
 async function refreshFleet() {
   const btn = document.getElementById('fleetRefreshBtn');
-  if(btn) { btn.textContent = '⏳ Fetching...'; btn.disabled = true; }
+  if(btn) { btn.textContent = '⏳ Fetching…'; btn.disabled = true; }
   const states = await fetchFleetOpenSky();
   _fleetData = {};
   if(states) {
     states.forEach(s => {
       const ac = fleetCallsignMatch(s[1]);
-      if(ac) _fleetData[ac.tail] = {
-        callsign: (s[1]||'').trim(),
-        lat: s[6], lon: s[5],
-        altitude: s[7],
-        speed: s[9],
-        onGround: s[8],
-        lastSeen: s[4]
-      };
+      if(ac) {
+        const lat=s[6], lon=s[5], speedKts=s[9]?Math.round(s[9]*1.944):null;
+        const altFt=s[7]?Math.round(s[7]*3.28084):null;
+        const distNm=lat&&lon?Math.round(haversineNm(lat,lon,CYKF_LAT,CYKF_LON)):null;
+        const eta=distNm&&speedKts?etaMinutes(distNm,speedKts):null;
+        _fleetData[ac.tail]={
+          callsign:(s[1]||'').trim(), lat, lon,
+          altFt, speedKts, track:s[10]||0,
+          onGround:s[8], lastSeen:s[4],
+          distNm, eta
+        };
+        // 25 nm push notification
+        if(distNm!==null && distNm<=25 && !s[8] && !_fleetNotified.has(ac.tail)){
+          _fleetNotified.add(ac.tail);
+          if('Notification' in window && Notification.permission==='granted'){
+            new Notification('✈ '+ac.reg+' approaching CYKF',{
+              body: distNm+' nm out · '+(altFt?altFt.toLocaleString()+' ft · ':'')+
+                    (speedKts?speedKts+' KTS · ':'')+(eta?'ETA '+eta+' min':''),
+              icon:'/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',tag:'fleet-'+ac.tail
+            });
+          }
+        }
+        // Reset notification when aircraft departs area (>50nm)
+        if(distNm!==null && distNm>50) _fleetNotified.delete(ac.tail);
+      }
     });
   }
   _fleetLastFetch = Date.now();
@@ -6021,80 +6052,177 @@ function flipBoardDigit(val, label) {
 function renderFleet(el) {
   setBarLogo();
   document.getElementById('fab').style.display='none';
-  const secsSinceFetch = Math.floor((Date.now() - _fleetLastFetch) / 1000);
-  const fetchAge = _fleetLastFetch ? (secsSinceFetch < 60 ? secsSinceFetch+'s ago' : Math.floor(secsSinceFetch/60)+'m ago') : 'Not yet fetched';
-
-  // Flip-board demo countdown (counts up from last fetch, simulating a timer)
-  const elapsed = _fleetLastFetch ? Math.floor((Date.now() - _fleetLastFetch)/1000) : 0;
-  const hh = Math.floor(elapsed/3600), mm = Math.floor((elapsed%3600)/60), ss = elapsed%60;
-
-  let html = `
-    <div style="background:linear-gradient(160deg,#0a0e1a,#0d1520);min-height:100vh;padding-bottom:100px">
-      <!-- Header -->
-      <div style="padding:18px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.07)">
-        <div style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.35);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">✈ Skycare Aviation</div>
-        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px">Fleet Status Board</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:4px">Data: OpenSky Network · ${fetchAge}</div>
-      </div>
-
-      <!-- Flip board timer -->
-      <div style="margin:18px 16px;background:#0a0d14;border-radius:16px;padding:18px;border:1px solid rgba(255,215,0,0.12);box-shadow:0 4px 32px rgba(0,0,0,0.5)">
-        <div style="font-size:10px;font-weight:700;color:rgba(255,215,0,0.5);letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:14px">⏱ Time Since Last Refresh</div>
-        <div style="display:flex;align-items:flex-start;justify-content:center;gap:10px">
-          ${flipBoardDigit(hh,'HRS')}
-          <div style="font-size:36px;font-weight:800;color:#FFD700;margin-top:4px;line-height:1">:</div>
-          ${flipBoardDigit(mm,'MIN')}
-          <div style="font-size:36px;font-weight:800;color:#FFD700;margin-top:4px;line-height:1">:</div>
-          ${flipBoardDigit(ss,'SEC')}
-        </div>
-        <button id="fleetRefreshBtn" onclick="refreshFleet()"
-          style="margin-top:16px;width:100%;padding:12px;border-radius:10px;border:none;
-                 background:linear-gradient(135deg,#FFD700,#F39C12);color:#0a0d14;
-                 font-size:14px;font-weight:800;cursor:pointer;letter-spacing:0.3px">
-          🔄 Refresh Fleet Data
-        </button>
-      </div>
-
-      <!-- Fleet board -->
-      <div style="margin:0 16px">
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:rgba(255,255,255,0.06);border-radius:10px 10px 0 0;padding:8px 10px;font-size:10px;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:1px;text-transform:uppercase">
-          <span>Registration</span><span style="text-align:center">Type</span><span style="text-align:right">Status</span>
-        </div>
-        ${FLEET_AIRCRAFT.map(ac => {
-          const live = _fleetData[ac.tail];
-          const statusDot = live ? (live.onGround ? '#F39C12' : '#27AE60') : 'rgba(255,255,255,0.15)';
-          const statusLabel = live ? (live.onGround ? '🟡 On Ground' : '🟢 Airborne') : '⚫ No Signal';
-          const altStr = live && !live.onGround && live.altitude ? `${Math.round(live.altitude*3.28084).toLocaleString()} ft` : '';
-          return `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:11px 10px;border-top:1px solid rgba(255,255,255,0.05);align-items:center;background:${live?'rgba(255,255,255,0.03)':'transparent'}">
-            <div>
-              <div style="font-size:14px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</div>
-              <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px">${ac.tail}</div>
-            </div>
-            <div style="text-align:center;font-size:12px;color:rgba(255,255,255,0.55)">${ac.type}</div>
-            <div style="text-align:right">
-              <div style="font-size:11px;font-weight:700;color:${live?(live.onGround?'#F39C12':'#27AE60'):'rgba(255,255,255,0.25)'}">${statusLabel}</div>
-              ${altStr?`<div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:1px">${altStr}</div>`:''}
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-
-      <!-- Note -->
-      <div style="margin:16px;padding:12px 14px;background:rgba(255,255,255,0.04);border-radius:10px;border:1px solid rgba(255,255,255,0.07)">
-        <div style="font-size:11px;color:rgba(255,255,255,0.35);line-height:1.6">
-          ℹ️ Live positions from <b style="color:rgba(255,255,255,0.5)">OpenSky Network</b> (free ADS-B). Aircraft registrations shown are estimates — confirm ICAO24 codes with your ops team for exact matching. Refresh every ~60s for best results.
-        </div>
-      </div>
-    </div>`;
-
-  el.innerHTML = html;
-
-  // Auto-tick the flip clock every second
   clearTimeout(_fleetTimer);
-  if(S.tab === 'fleet') {
-    _fleetTimer = setTimeout(() => {
-      if(S.tab === 'fleet') renderFleet(document.getElementById('content'));
-    }, 1000);
+
+  const fetchAge = _fleetLastFetch
+    ? (() => { const s=Math.floor((Date.now()-_fleetLastFetch)/1000); return s<60?s+'s ago':Math.floor(s/60)+'m ago'; })()
+    : 'not yet fetched';
+
+  const airborne = FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&!_fleetData[a.tail].onGround);
+  const onGround = FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&_fleetData[a.tail].onGround);
+  const noSignal = FLEET_AIRCRAFT.filter(a=>!_fleetData[a.tail]);
+
+  // Inbound = airborne + within 250 nm (reasonable range to show ETA)
+  const inbound = airborne.filter(a=>{
+    const d=_fleetData[a.tail];
+    return d.distNm!==null && d.distNm<=250 && d.eta!==null;
+  }).sort((a,b)=>_fleetData[a.tail].distNm-_fleetData[b.tail].distNm);
+
+  const notifBtn = ('Notification' in window && Notification.permission!=='granted')
+    ? `<button onclick="Notification.requestPermission().then(()=>renderFleet(document.getElementById('content')))"
+         style="margin-top:8px;padding:8px 14px;border-radius:8px;border:1px solid rgba(200,168,75,0.4);
+                background:rgba(200,168,75,0.1);color:#C8A84B;font-size:12px;font-weight:600;cursor:pointer;width:100%">
+         🔔 Enable 25 nm arrival alerts
+       </button>` : '';
+
+  el.innerHTML = `
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <div style="background:#0a0e1a;min-height:100vh;padding-bottom:100px">
+
+    <!-- Header -->
+    <div style="padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">✈ Skycare · Fleet Operations</div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:20px;font-weight:800;color:#fff">Fleet Status</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span style="font-size:10px;color:rgba(255,255,255,0.3)">${fetchAge}</span>
+          <button id="fleetRefreshBtn" onclick="refreshFleet()"
+            style="padding:7px 14px;border-radius:8px;border:none;background:#C8A84B;
+                   color:#0a0e1a;font-size:12px;font-weight:700;cursor:pointer">🔄 Refresh</button>
+        </div>
+      </div>
+      ${notifBtn}
+    </div>
+
+    <!-- Summary pills -->
+    <div style="display:flex;gap:8px;padding:12px 16px">
+      <div style="flex:1;background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.25);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#2ECC8A">${airborne.length}</div>
+        <div style="font-size:10px;color:rgba(46,204,138,0.7);font-weight:600;letter-spacing:1px;text-transform:uppercase">Airborne</div>
+      </div>
+      <div style="flex:1;background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.25);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:#F39C12">${onGround.length}</div>
+        <div style="font-size:10px;color:rgba(243,156,18,0.7);font-weight:600;letter-spacing:1px;text-transform:uppercase">On Ground</div>
+      </div>
+      <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px;text-align:center">
+        <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.25)">${noSignal.length}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:1px;text-transform:uppercase">No Signal</div>
+      </div>
+    </div>
+
+    <!-- Live Map -->
+    <div style="margin:0 16px 16px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
+      <div id="fleetMap" style="height:260px;width:100%;background:#0d1520"></div>
+    </div>
+
+    <!-- Inbound section -->
+    ${inbound.length ? `
+    <div style="margin:0 16px 10px">
+      <div style="font-size:10px;font-weight:700;color:#C8A84B;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">⬇ Inbound to CYKF</div>
+      ${inbound.map(ac=>{
+        const d=_fleetData[ac.tail];
+        const etaStr = d.eta!=null ? (d.eta<60 ? d.eta+' min' : Math.floor(d.eta/60)+'h '+(d.eta%60)+'m') : '—';
+        const alert25 = d.distNm<=25 ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ 25 NM</span>` : '';
+        return `<div style="background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:15px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
+              <span style="font-size:10px;color:rgba(255,255,255,0.4)">${ac.type}</span>
+              ${alert25}
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:18px;font-weight:800;color:#2ECC8A">${etaStr}</div>
+              <div style="font-size:9px;color:rgba(46,204,138,0.6);font-weight:600">ETA CYKF</div>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
+              <div style="font-size:13px;font-weight:700;color:#fff">${d.distNm} nm</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Distance</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
+              <div style="font-size:13px;font-weight:700;color:#fff">${d.altFt?d.altFt.toLocaleString():'—'} ft</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Altitude</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
+              <div style="font-size:13px;font-weight:700;color:#fff">${d.speedKts||'—'} KTS</div>
+              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Speed</div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>` : ''}
+
+    <!-- Full roster -->
+    <div style="margin:0 16px">
+      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Fleet Roster</div>
+      ${FLEET_AIRCRAFT.map(ac=>{
+        const d=_fleetData[ac.tail];
+        if(!d) return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.3);font-family:'Courier New',monospace">${ac.reg}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.2);margin-left:8px">${ac.type}</span>
+          </div>
+          <span style="font-size:11px;color:rgba(255,255,255,0.2)">⚫ No signal</span>
+        </div>`;
+        const col = d.onGround ? '#F39C12' : '#2ECC8A';
+        const status = d.onGround ? '🟡 Ground' : '🟢 Airborne';
+        const etaStr = !d.onGround && d.eta!=null ? `· ETA ${d.eta<60?d.eta+'m':Math.floor(d.eta/60)+'h'+(d.eta%60)+'m'}` : '';
+        const distStr = !d.onGround && d.distNm!=null ? `${d.distNm} nm · ` : '';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div>
+            <span style="font-size:13px;font-weight:700;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.35);margin-left:8px">${ac.type}</span>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;font-weight:700;color:${col}">${status}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px">${distStr}${d.altFt?d.altFt.toLocaleString()+' ft':''}${etaStr}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div style="margin:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: OpenSky Network (free ADS-B). 25 nm ring alert fires once per inbound arrival. Tap Refresh every ~60s.</div>
+    </div>
+  </div>`;
+
+  // Init Leaflet map after DOM is ready
+  setTimeout(()=>{
+    if(typeof L === 'undefined') return;
+    const mapEl = document.getElementById('fleetMap');
+    if(!mapEl || mapEl._leaflet_id) return;
+    const map = L.map('fleetMap',{zoomControl:false,attributionControl:false}).setView([CYKF_LAT,CYKF_LON],7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:14}).addTo(map);
+    // CYKF marker
+    L.circle([CYKF_LAT,CYKF_LON],{radius:25*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
+    L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#C8A84B',fillColor:'#C8A84B',fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
+    // Aircraft markers
+    FLEET_AIRCRAFT.forEach(ac=>{
+      const d=_fleetData[ac.tail];
+      if(!d||!d.lat||!d.lon) return;
+      const col=d.onGround?'#F39C12':'#2ECC8A';
+      const rot=d.track||0;
+      const etaStr=d.eta!=null?(d.eta<60?d.eta+' min':Math.floor(d.eta/60)+'h '+(d.eta%60)+'m'):'';
+      const icon=L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],html:
+        `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center">
+           <svg viewBox="0 0 24 24" width="22" height="22" style="transform:rotate(${rot}deg);filter:drop-shadow(0 0 4px ${col})">
+             <path fill="${col}" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+           </svg>
+         </div>`
+      });
+      const tip=`<b>${ac.reg}</b><br>${d.altFt?d.altFt.toLocaleString()+' ft · ':''}`+
+                `${d.speedKts||''}${d.speedKts?' KTS':''}${etaStr?' · ETA '+etaStr:''}`;
+      L.marker([d.lat,d.lon],{icon}).bindTooltip(tip,{direction:'top',className:'fleet-tip'}).addTo(map);
+    });
+    // Fit bounds if aircraft present
+    const pts=FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&_fleetData[a.tail].lat).map(a=>[_fleetData[a.tail].lat,_fleetData[a.tail].lon]);
+    if(pts.length) { pts.push([CYKF_LAT,CYKF_LON]); try{map.fitBounds(pts,{padding:[20,20]});}catch(e){} }
+  },100);
+
+  // Auto-refresh every 60s while on fleet tab
+  if(S.tab==='fleet'){
+    _fleetTimer=setTimeout(()=>{ if(S.tab==='fleet') refreshFleet(); },60000);
   }
 }
 
