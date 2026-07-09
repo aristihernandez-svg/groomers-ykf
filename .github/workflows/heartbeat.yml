@@ -1,0 +1,11 @@
+name: Heartbeat
+
+on:
+  schedule:
+    - cron: '0 12 * * 1'   # every Monday at noon UTC
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Skycare YKF heartbeat — keeping workflows active"
