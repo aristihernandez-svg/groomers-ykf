@@ -1,16 +1,9 @@
 name: MX Parts Notification
 
 on:
-  workflow_dispatch:
-    inputs:
-      title:
-        description: 'Notification title'
-        required: true
-        default: '🔧 MX Parts Request'
-      body:
-        description: 'Notification body'
-        required: true
-        default: 'New item added to the MX order list'
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 minutes — picks up items added by mechanics
+  workflow_dispatch:         # manual trigger for testing
 
 jobs:
   send:
@@ -28,12 +21,10 @@ jobs:
         run: npm install
         working-directory: notif
 
-      - name: Send MX push notification
+      - name: Send MX push notifications
         run: node mx-notif.js
         working-directory: notif
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           VAPID_PUBLIC_KEY: "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU"
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
-          NOTIF_TITLE: ${{ inputs.title }}
-          NOTIF_BODY: ${{ inputs.body }}

@@ -11,6 +11,8 @@ on:
     - cron: '40 16 * * *'   # EST 11:40 AM
     - cron: '40 19 * * *'   # EDT  3:40 PM
     - cron: '40 20 * * *'   # EST  3:40 PM
+    - cron: '0 0 * * *'     # EDT  8:00 PM (midnight UTC)
+    - cron: '0 1 * * *'     # EST  8:00 PM
   workflow_dispatch:         # manual trigger for testing
 
 jobs:

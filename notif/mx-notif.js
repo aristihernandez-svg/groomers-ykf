@@ -1,5 +1,7 @@
 // Skycare YKF — MX Parts push notification sender
-// Triggered by Cloudflare Worker when a mechanic adds an item.
+// Runs every 5 minutes via GitHub Actions.
+// When a mechanic adds an item in mechanics.html, it writes to mxNotifQueue.
+// This script picks up unsent items, sends a push to all subscribers, and marks them sent.
 
 const admin   = require('firebase-admin');
 const webpush = require('web-push');
@@ -14,40 +16,35 @@ webpush.setVapidDetails(
   process.env.VAPID_PRIVATE_KEY
 );
 
-async function main() {
+async function sendToAll(title, body, tag) {
   const snap = await db.collection('pushSubscriptions').get();
   const docs = snap.docs.map(d => ({ id: d.id, sub: d.data().sub })).filter(d => d.sub);
 
-  if (!docs.length) {
-    console.log('No push subscriptions — skipping');
-    process.exit(0);
-  }
+  if (!docs.length) { console.log('No push subscriptions — skipping'); return; }
 
-  console.log(`Sending MX notification to ${docs.length} device(s)`);
+  console.log(`Sending to ${docs.length} device(s): ${title}`);
 
   const payload = JSON.stringify({
-    title: process.env.NOTIF_TITLE || '🔧 MX Parts Request',
-    body:  process.env.NOTIF_BODY  || 'New item added to the MX order list',
+    title,
+    body,
     icon:  'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
     badge: 'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
-    tag:   `mx-parts-${Date.now()}`,
-    url:   'https://aristihernandez-svg.github.io/groomers-ykf/',
+    tag,
+    url:   'https://aristihernandez-svg.github.io/groomers-ykf/mechanics.html',
   });
 
-  const results = await Promise.allSettled(
-    docs.map(d => webpush.sendNotification(d.sub, payload))
-  );
-
+  const results = await Promise.allSettled(docs.map(d => webpush.sendNotification(d.sub, payload)));
   const ok   = results.filter(r => r.status === 'fulfilled').length;
   const fail = results.filter(r => r.status === 'rejected').length;
-  console.log(`Done — ${ok} sent, ${fail} failed`);
+  console.log(`Push sent — ${ok} ok, ${fail} failed`);
 
-  // Remove expired subscriptions
+  // Clean up expired subscriptions
   const stale = [];
-  results.forEach((r, i) => {
+  docs.forEach((d, i) => {
+    const r = results[i];
     if (r.status === 'rejected') {
       const status = r.reason?.statusCode;
-      if (status === 404 || status === 410) stale.push(docs[i].id);
+      if (status === 404 || status === 410) stale.push(d.id);
     }
   });
   if (stale.length) {
@@ -56,6 +53,27 @@ async function main() {
     await batch.commit();
     console.log(`Removed ${stale.length} expired subscription(s)`);
   }
+}
+
+async function main() {
+  // Find all unsent MX notifications queued by mechanics.html
+  const snap = await db.collection('mxNotifQueue').where('sent', '==', false).get();
+
+  if (snap.empty) {
+    console.log('No pending MX notifications — done');
+    process.exit(0);
+  }
+
+  console.log(`Found ${snap.size} pending MX notification(s)`);
+
+  for (const doc of snap.docs) {
+    const { title, body } = doc.data();
+    await sendToAll(title || '🔧 MX Parts Request', body || 'New item added to the order list', `mx-${doc.id}`);
+    // Mark as sent so it doesn't fire again
+    await doc.ref.update({ sent: true, sentAt: admin.firestore.FieldValue.serverTimestamp() });
+  }
+
+  console.log('Done.');
 }
 
 main().catch(e => { console.error('Fatal:', e); process.exit(1); });
