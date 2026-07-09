@@ -716,6 +716,8 @@ body::before{
 .rating-good{background:#1a7a40}
 .rating-fair{background:#C08000}
 .rating-poor{background:#C03030}
+/* Fleet roster pulse */
+@keyframes grnpulse{0%,100%{opacity:1;box-shadow:0 0 5px #2ECC8A}50%{opacity:.6;box-shadow:0 0 2px #2ECC8A}}
 /* Fleet map tooltip */
 .fleet-tip{background:#0d1520!important;border:1px solid rgba(200,168,75,0.35)!important;color:#e2e8f0!important;font-size:11px!important;font-weight:500!important;box-shadow:0 2px 8px rgba(0,0,0,0.6)!important;border-radius:6px!important;padding:4px 8px!important}
 .fleet-tip::before{display:none!important}
@@ -6049,6 +6051,35 @@ function flipBoardDigit(val, label) {
   </div>`;
 }
 
+// Compact split-flap ETA display — white on black, airport style
+// etaMins: number of minutes, null = show dashes
+function flipEta(etaMins) {
+  const chars = etaMins == null ? ['—','—','—','—','—']
+    : etaMins < 60
+      ? String(etaMins).padStart(2,'0').split('').concat([' ','M','N'])
+      : (()=>{
+          const h=Math.floor(etaMins/60), m=etaMins%60;
+          return [String(h),...String(m).padStart(2,'0'),'H',String(Math.floor(m/10)),String(m%10),'M'];
+        })();
+  // Simple two-group: HH:MM or MM mn
+  const display = etaMins == null ? '-- --'
+    : etaMins < 60  ? String(etaMins).padStart(2,'0') + ' mn'
+    : Math.floor(etaMins/60) + 'h' + String(etaMins%60).padStart(2,'0');
+  return display.split('').map(ch => {
+    if(ch===' ') return `<div style="width:5px"></div>`;
+    const isLetter = isNaN(ch) && ch!==':' && ch!=='-';
+    return `<div style="
+      width:${isLetter?16:20}px;height:28px;background:#111;border-radius:4px;
+      border:1px solid #2a2a2a;display:inline-flex;align-items:center;justify-content:center;
+      font-size:${isLetter?11:18}px;font-weight:800;color:#fff;
+      font-family:'Courier New',monospace;position:relative;overflow:hidden;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.06)">
+      <div style="position:absolute;top:0;left:0;right:0;height:50%;background:rgba(0,0,0,0.3);pointer-events:none;border-bottom:1px solid #1a1a1a"></div>
+      ${ch}
+    </div>`;
+  }).join('');
+}
+
 function renderFleet(el) {
   setBarLogo();
   document.getElementById('fab').style.display='none';
@@ -6158,26 +6189,37 @@ function renderFleet(el) {
       <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Fleet Roster</div>
       ${FLEET_AIRCRAFT.map(ac=>{
         const d=_fleetData[ac.tail];
-        if(!d) return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,0.3);font-family:'Courier New',monospace">${ac.reg}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.2);margin-left:8px">${ac.type}</span>
+        if(!d) return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="flex:1;min-width:0">
+            <span style="font-size:14px;font-weight:800;color:rgba(255,255,255,0.28);font-family:'Courier New',monospace">${ac.reg}</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.18);margin-left:8px">${ac.type}</span>
           </div>
-          <span style="font-size:11px;color:rgba(255,255,255,0.2)">⚫ No signal</span>
+          <span style="font-size:11px;color:rgba(255,255,255,0.18)">⚫ No signal</span>
         </div>`;
         const col = d.onGround ? '#F39C12' : '#2ECC8A';
-        const status = d.onGround ? '🟡 Ground' : '🟢 Airborne';
-        const etaStr = !d.onGround && d.eta!=null ? `· ETA ${d.eta<60?d.eta+'m':Math.floor(d.eta/60)+'h'+(d.eta%60)+'m'}` : '';
-        const distStr = !d.onGround && d.distNm!=null ? `${d.distNm} nm · ` : '';
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div>
-            <span style="font-size:13px;font-weight:700;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.35);margin-left:8px">${ac.type}</span>
+        const statusDot = d.onGround
+          ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F39C12;margin-right:5px"></span>`
+          : `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#2ECC8A;box-shadow:0 0 5px #2ECC8A;margin-right:5px;animation:grnpulse 1.8s infinite"></span>`;
+        const sub = [
+          d.distNm!=null&&!d.onGround ? d.distNm+' nm' : null,
+          d.altFt&&!d.onGround ? d.altFt.toLocaleString()+' ft' : null,
+          d.speedKts&&!d.onGround ? d.speedKts+' KTS' : null,
+        ].filter(Boolean).join(' · ');
+        return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
+              ${statusDot}
+              <span style="font-size:14px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
+              <span style="font-size:10px;color:rgba(255,255,255,0.35)">${ac.type}</span>
+            </div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);padding-left:12px">${sub||'On ground · CYKF'}</div>
           </div>
-          <div style="text-align:right">
-            <div style="font-size:11px;font-weight:700;color:${col}">${status}</div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:1px">${distStr}${d.altFt?d.altFt.toLocaleString()+' ft':''}${etaStr}</div>
-          </div>
+          ${!d.onGround && d.eta!=null ? `
+          <div style="display:flex;align-items:center;gap:2px;flex-shrink:0" title="ETA to CYKF">
+            ${flipEta(d.eta)}
+          </div>` : d.onGround ? `<span style="font-size:11px;color:#F39C12;font-weight:600">Ground</span>` : ''}
         </div>`;
       }).join('')}
     </div>
