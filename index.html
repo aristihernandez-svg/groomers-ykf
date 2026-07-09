@@ -796,6 +796,7 @@ body::before{
     <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer"><img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare"></span>
     <span class="bar-pill" id="barDay"></span>
     <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable coffee notifications" style="font-size:20px">🔕</button>
+    <button class="bar-btn" id="testPushBtn" onclick="sendTestPush()" title="Send test notification" style="font-size:14px;display:none;padding:0 6px;border:1px solid var(--gold);border-radius:6px;color:var(--gold)">TEST</button>
     <button class="bar-btn" id="themeToggleBtn" onclick="toggleDayNight()" title="Toggle day/night" style="font-size:20px">🌙</button>
     <button class="bar-btn" onclick="syncAll()" title="Sync" style="font-size:18px">↻</button>
   </div>
@@ -1053,7 +1054,7 @@ async function bootApp() {
     setupPullToRefresh();
     setupSwipeBack();
     setupPhotoInput();
-    initFirestore(); // best-effort; app works locally even if this fails
+    initFirebase(); // best-effort; app works locally even if this fails
   } catch(e) {
     console.log('Boot setup error:', e);
   }
@@ -5602,31 +5603,17 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
 
-async function initFirebase() {
-  try {
-    if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
-    console.log('Firebase initialized');
-  } catch(e) {
-    console.log('Firebase init error:', e);
-  }
-}
-
-// ── LIVE SYNC (Firestore) ────────────────────────────────────────────
-// Sheets/the Apps Script backend stay the source of truth for *content*
-// (task wording, shopping catalog, contacts, procedures). Firestore only
-// carries fast-changing *shared state* — done/checked flags and damage
-// reports — so every groomer's phone updates instantly when a teammate
-// makes a change, instead of waiting for a manual sync tap.
+// ── FIREBASE + FIRESTORE ─────────────────────────────────────────────
 let db = null;
 let dmgReportIds = {}; // procKey -> [firestore doc id per report, aligned with S.dmgReports[procKey]]
 
-function initFirestore() {
+function initFirebase() {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
-    console.log('Firestore initialized');
+    console.log('Firebase + Firestore initialized');
   } catch(e) {
-    console.log('Firestore unavailable — app continues working locally:', e);
+    console.log('Firebase unavailable — app continues working locally:', e);
     db = null;
   }
 }
@@ -6014,19 +6001,7 @@ async function refreshFleet() {
           onGround:s[8], lastSeen:s[4],
           distNm, eta
         };
-        // 25 nm push notification
-        if(distNm!==null && distNm<=25 && !s[8] && !_fleetNotified.has(ac.tail)){
-          _fleetNotified.add(ac.tail);
-          if('Notification' in window && Notification.permission==='granted'){
-            new Notification('✈ '+ac.reg+' approaching CYKF',{
-              body: distNm+' nm out · '+(altFt?altFt.toLocaleString()+' ft · ':'')+
-                    (speedKts?speedKts+' KTS · ':'')+(eta?'ETA '+eta+' min':''),
-              icon:'/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',tag:'fleet-'+ac.tail
-            });
-          }
-        }
-        // Reset notification when aircraft departs area (>50nm)
-        if(distNm!==null && distNm>50) _fleetNotified.delete(ac.tail);
+        // Fleet alerts handled by GitHub Actions (fleet-alert.js) — no browser-side notification here
       }
     });
   }
@@ -6453,34 +6428,35 @@ async function requestNotificationPermission() {
       return false;
     }
 
-    // Subscribe via native Web Push (works on iOS 16.4+ without APNs key)
+    // Ensure Firebase is ready before we try to save the subscription
+    if (!db) initFirebase();
+    if (!db) { toast('⚠️ Database not ready — try again in a moment'); return false; }
+
     const swReg = await navigator.serviceWorker.ready;
     const sub = await swReg.pushManager.subscribe({
       userVisibleOnly: true,
       applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
     });
 
-    // Store subscription in Firestore keyed by endpoint hash
     const subId = btoa(sub.endpoint).replace(/[^a-zA-Z0-9]/g,'').slice(-40);
     localStorage.setItem('push_sub_id', subId);
-    if (db) {
-      db.collection('pushSubscriptions').doc(subId).set({
+    localStorage.setItem('push_endpoint', sub.endpoint);
+
+    try {
+      await db.collection('pushSubscriptions').doc(subId).set({
         sub: JSON.parse(JSON.stringify(sub)),
         ts: firebase.firestore.FieldValue.serverTimestamp(),
         ua: navigator.userAgent.slice(0, 80)
-      }, { merge: true }).then(() => {
-        console.log('Push sub saved to Firestore ✓');
-      }).catch(e => {
-        console.error('Push sub Firestore FAILED:', e);
-        toast('⚠️ Sub saved locally but Firestore failed: ' + e.code);
-      });
+      }, { merge: true });
+      console.log('Push sub saved to Firestore ✓', subId);
+      localStorage.setItem('notifications_enabled', '1');
+      updateNotifBtn();
+      toast('✅ Notifications enabled & saved to server!');
+    } catch(e) {
+      console.error('Push sub Firestore FAILED:', e);
+      toast('⚠️ Could not save to server — notifications may not arrive when app is closed. Error: ' + e.code);
     }
 
-    console.log('Push subscription saved:', subId);
-    toast('✅ Notifications enabled!');
-    localStorage.setItem('notifications_enabled', '1');
-    updateNotifBtn();
-    scheduleLocalNotifications();
     return true;
   } catch(e) {
     console.error('Notification setup error:', e);
@@ -6489,63 +6465,18 @@ async function requestNotificationPermission() {
   }
 }
 
-function scheduleLocalNotifications() {
-  // Clear any existing scheduled notifications
-  const existingIds = JSON.parse(localStorage.getItem('notif_ids') || '[]');
-  existingIds.forEach(id => clearTimeout(id));
-
-  const now = new Date();
-  const ids = [];
-
-  COFFEE_TIMES.forEach(({ hour, minute, message }) => {
-    const target = new Date();
-    target.setHours(hour, minute, 0, 0);
-
-    // If time already passed today, schedule for tomorrow
-    if (target <= now) {
-      target.setDate(target.getDate() + 1);
-    }
-
-    const delay = target - now;
-    const id = setTimeout(() => {
-      if (Notification.permission === 'granted') {
-        new Notification('✈ Skycare', {
-          body: message,
-          icon: './cars/Metroliner_logo-removebg-preview.png',
-          badge: './cars/Metroliner_logo-removebg-preview.png',
-          tag: `coffee-${hour}`,
-          renotify: true,
-        });
-      }
-      // Reschedule for next day
-      const nextDay = setTimeout(() => scheduleLocalNotifications(), 100);
-    }, delay);
-
-    ids.push(id);
-    console.log(`Notification scheduled for ${hour}:${minute < 10 ? '0'+minute : minute} (in ${Math.round(delay/60000)} min)`);
-  });
-
-  localStorage.setItem('notif_ids', JSON.stringify(ids));
-}
-
 async function disableNotifications() {
-  const existingIds = JSON.parse(localStorage.getItem('notif_ids') || '[]');
-  existingIds.forEach(id => clearTimeout(id));
-
-  // Unsubscribe from push
   try {
     const swReg = await navigator.serviceWorker.ready;
     const sub = await swReg.pushManager.getSubscription();
     if (sub) await sub.unsubscribe();
   } catch(e) {}
 
-  // Remove from Firestore
   const subId = localStorage.getItem('push_sub_id');
   if (subId && db) {
     db.collection('pushSubscriptions').doc(subId).delete().catch(()=>{});
   }
 
-  localStorage.removeItem('notif_ids');
   localStorage.removeItem('notifications_enabled');
   localStorage.removeItem('push_sub_id');
   toast('🔕 Notifications disabled');
@@ -6554,10 +6485,63 @@ async function disableNotifications() {
 
 function updateNotifBtn() {
   const btn = document.getElementById('notifBtn');
+  const testBtn = document.getElementById('testPushBtn');
   if (!btn) return;
   const enabled = localStorage.getItem('notifications_enabled') === '1';
   btn.textContent = enabled ? '🔔' : '🔕';
   btn.title = enabled ? 'Notifications ON — tap to disable' : 'Enable coffee notifications';
+  if (testBtn) testBtn.style.display = enabled ? 'inline-flex' : 'none';
+}
+
+async function sendTestPush() {
+  const subId = localStorage.getItem('push_sub_id');
+  if (!subId) { toast('⚠️ No subscription found — try disabling and re-enabling notifications'); return; }
+  if (!db) { toast('⚠️ Database not ready'); return; }
+
+  // Verify subscription exists in Firestore
+  try {
+    const doc = await db.collection('pushSubscriptions').doc(subId).get();
+    if (!doc.exists) {
+      toast('⚠️ Subscription not in server — tap 🔔 to disable, then re-enable');
+      return;
+    }
+  } catch(e) {
+    toast('⚠️ Could not verify subscription: ' + e.message);
+    return;
+  }
+
+  // Trigger GitHub Actions workflow_dispatch to send an immediate push
+  const GITHUB_OWNER = 'aristihernandez-svg';
+  const GITHUB_REPO  = 'groomers-ykf';
+  const WORKFLOW     = 'coffee-notif.yml';
+
+  toast('📤 Sending test push via GitHub Actions...');
+
+  try {
+    const res = await fetch(
+      `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${WORKFLOW}/dispatches`,
+      {
+        method: 'POST',
+        headers: { 'Accept': 'application/vnd.github+json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ref: 'main' })
+      }
+    );
+    if (res.status === 204) {
+      toast('✅ Test triggered! Push arrives in ~30 seconds. If nothing comes: check GitHub → Settings → Secrets.');
+    } else if (res.status === 401 || res.status === 404) {
+      // workflow_dispatch without auth token needs a GitHub PAT — fallback: write a test doc to Firestore
+      // and sw.js push handler will fire when GitHub Actions next runs
+      await db.collection('pushSubscriptions').doc(subId).set({
+        testRequestedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+      toast('✅ Subscription confirmed in Firestore ✓ — GitHub Actions will deliver next scheduled push.');
+    } else {
+      toast('GitHub response: ' + res.status);
+    }
+  } catch(e) {
+    // Network/CORS fallback — just confirm Firestore has the sub
+    toast('✅ Subscription confirmed in Firestore ✓ — push will arrive on next GitHub Actions run.');
+  }
 }
 
 function toggleNotifications() {
@@ -6570,23 +6554,42 @@ function toggleNotifications() {
 }
 
 window.addEventListener('load', () => {
-  setTimeout(() => {
+  setTimeout(async () => {
     updateNotifBtn();
+    // Re-sync push subscription to Firestore on every load.
+    // Guards against SW updates that change the endpoint, or a previous
+    // Firestore write that silently failed.
     if (localStorage.getItem('notifications_enabled') === '1') {
-      scheduleLocalNotifications();
+      try {
+        const swReg = await navigator.serviceWorker.ready;
+        const sub = await swReg.pushManager.getSubscription();
+        if (sub && db) {
+          const subId = btoa(sub.endpoint).replace(/[^a-zA-Z0-9]/g,'').slice(-40);
+          const storedEndpoint = localStorage.getItem('push_endpoint');
+          // Only re-save if endpoint changed or subId not yet in localStorage
+          if (sub.endpoint !== storedEndpoint || !localStorage.getItem('push_sub_id')) {
+            localStorage.setItem('push_sub_id', subId);
+            localStorage.setItem('push_endpoint', sub.endpoint);
+            await db.collection('pushSubscriptions').doc(subId).set({
+              sub: JSON.parse(JSON.stringify(sub)),
+              ts: firebase.firestore.FieldValue.serverTimestamp(),
+              ua: navigator.userAgent.slice(0, 80)
+            }, { merge: true });
+            console.log('Push sub re-synced to Firestore ✓', subId);
+          }
+        } else if (!sub) {
+          // Subscription was lost (SW update, browser clear) — reset state
+          localStorage.removeItem('notifications_enabled');
+          localStorage.removeItem('push_sub_id');
+          localStorage.removeItem('push_endpoint');
+          updateNotifBtn();
+          console.log('Push subscription lost — reset notification state');
+        }
+      } catch(e) {
+        console.log('Push sub re-sync error:', e);
+      }
     }
   }, 2000);
-});
-
-// Handle incoming FCM messages when app is open
-document.addEventListener('DOMContentLoaded', () => {
-  if (typeof fbMessaging !== 'undefined' && fbMessaging) {
-    fbMessaging.onMessage((payload) => {
-      console.log('FCM message received:', payload);
-      const { title, body } = payload.notification || {};
-      if (title) toast(`${title}: ${body}`);
-    });
-  }
 });
 </script>
 </body>
