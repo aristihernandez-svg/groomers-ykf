@@ -1,7 +1,9 @@
-// Skycare YKF — MX Parts push notification sender
+// Skycare YKF — Items push notification sender
 // Runs every 5 minutes via GitHub Actions.
-// When a mechanic adds an item in mechanics.html, it writes to mxNotifQueue.
-// This script picks up unsent items, sends a push to all subscribers, and marks them sent.
+// Checks two queues:
+//   mxNotifQueue  — written by mechanics.html when a part is added
+//   shopNotifQueue — written by index.html when a shopping item is marked/added
+// Sends a push to all subscribers for each unsent item, then marks it sent.
 
 const admin   = require('firebase-admin');
 const webpush = require('web-push');
@@ -30,7 +32,7 @@ async function sendToAll(title, body, tag) {
     icon:  'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
     badge: 'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
     tag,
-    url:   'https://aristihernandez-svg.github.io/groomers-ykf/mechanics.html',
+    url:   'https://aristihernandez-svg.github.io/groomers-ykf/',
   });
 
   const results = await Promise.allSettled(docs.map(d => webpush.sendNotification(d.sub, payload)));
@@ -55,24 +57,21 @@ async function sendToAll(title, body, tag) {
   }
 }
 
-async function main() {
-  // Find all unsent MX notifications queued by mechanics.html
-  const snap = await db.collection('mxNotifQueue').where('sent', '==', false).get();
+async function processQueue(collectionName) {
+  const snap = await db.collection(collectionName).where('sent', '==', false).get();
+  if (snap.empty) { console.log(`${collectionName}: no pending items`); return; }
 
-  if (snap.empty) {
-    console.log('No pending MX notifications — done');
-    process.exit(0);
-  }
-
-  console.log(`Found ${snap.size} pending MX notification(s)`);
-
+  console.log(`${collectionName}: found ${snap.size} pending notification(s)`);
   for (const doc of snap.docs) {
     const { title, body } = doc.data();
-    await sendToAll(title || '🔧 MX Parts Request', body || 'New item added to the order list', `mx-${doc.id}`);
-    // Mark as sent so it doesn't fire again
+    await sendToAll(title, body, `${collectionName}-${doc.id}`);
     await doc.ref.update({ sent: true, sentAt: admin.firestore.FieldValue.serverTimestamp() });
   }
+}
 
+async function main() {
+  await processQueue('mxNotifQueue');
+  await processQueue('shopNotifQueue');
   console.log('Done.');
 }
 

@@ -3829,6 +3829,12 @@ function _doToggleShop(idx) {
   renderShopping(document.getElementById('content'));
   if(item.checked) {
     broadcastNotif('🛒 Shopping', `${item.item} needs restocking`, 'shopping');
+    if(db) db.collection('shopNotifQueue').add({
+      title: '🛒 Crew House Shopping',
+      body: `${item.item} needs restocking`,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      sent: false
+    }).catch(()=>{});
     toast(S.buyerOut ? '🔔 Added to list — buyer is out and will see this!' : '🔴 Needs restocking');
   } else {
     toast('✅ Marked as In Stock');
@@ -4566,6 +4572,12 @@ function openAddShopItem() {
       if(db) {
         db.collection('shoppingCatalog').doc(id).set({item,cabinet,store,notes:'',url})
           .catch(e => { console.log('Add shopping item Firestore write failed:', e); toast('⚠️ Saved locally — will retry sync when online'); });
+        db.collection('shopNotifQueue').add({
+          title: '🛒 Crew House Shopping',
+          body: `${item} added to the shopping list`,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          sent: false
+        }).catch(()=>{});
       }
     });
 }
