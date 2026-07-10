@@ -167,6 +167,14 @@ function toggleItem(key, name) {
     console.error('[crewhouse] Firestore write FAILED:', e);
     toast('❌ Could not sync — check connection');
   });
+  if(nowChecked) {
+    db.collection('shopNotifQueue').add({
+      title: '🏠 Crew House Shopping',
+      body: `${name} needs restocking`,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      sent: false
+    }).catch(() => {});
+  }
 }
 
 function changeQty(key, delta) {
