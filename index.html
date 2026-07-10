@@ -5917,6 +5917,21 @@ function broadcastNotif(title, body, tag) {
 
 function markHandoffComplete(id) {
   if(!db) { toast('Not connected — try again when online'); return; }
+  document.getElementById('mTitle').textContent = 'Mark handoff as complete?';
+  document.getElementById('mFields').innerHTML = `
+    <p style="text-align:center;font-size:16px;color:var(--t1);margin:8px 0 20px;line-height:1.5">
+      <span style="font-size:13px;color:var(--t2)">This will remove the handoff note for everyone.</span>
+    </p>
+    <div style="display:flex;justify-content:center;gap:32px;margin-bottom:8px">
+      <button onclick="closeModal()" style="width:64px;height:64px;border-radius:50%;border:none;background:rgba(220,50,50,0.12);color:#e53935;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✕</button>
+      <button onclick="closeModal();_confirmHandoffComplete('${id}')" style="width:64px;height:64px;border-radius:50%;border:none;background:rgba(46,160,80,0.12);color:#2ea050;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent">✓</button>
+    </div>`;
+  document.getElementById('mSave').style.display = 'none';
+  document.getElementById('mBtnRow').style.display = 'none';
+  document.getElementById('overlay').classList.add('open');
+}
+
+function _confirmHandoffComplete(id) {
   db.collection('handoffNotes').doc(id).update({resolved:true})
     .catch(e => console.log('markHandoffComplete failed:', e));
 }
