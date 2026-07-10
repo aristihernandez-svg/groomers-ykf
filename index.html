@@ -846,7 +846,7 @@ function haversineNm(lat1,lon1,lat2,lon2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 function etaMinutes(distNm, speedKts){ return speedKts>20 ? Math.round(distNm/speedKts*60) : null; }
-let _fleetNotified = new Set(); // tails already notified this session at 25nm
+const FLEET_ALERT_NM = 30;
 const PROC_TAILS  = {
   metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
   westwind: ['IAW','XAW','XDP'],
@@ -6078,7 +6078,7 @@ function renderFleet(el) {
     ? `<button onclick="Notification.requestPermission().then(()=>renderFleet(document.getElementById('content')))"
          style="margin-top:8px;padding:8px 14px;border-radius:8px;border:1px solid rgba(200,168,75,0.4);
                 background:rgba(200,168,75,0.1);color:#C8A84B;font-size:12px;font-weight:600;cursor:pointer;width:100%">
-         🔔 Enable 25 nm arrival alerts
+         🔔 Enable 30 nm arrival alerts
        </button>` : '';
 
   el.innerHTML = `
@@ -6128,7 +6128,7 @@ function renderFleet(el) {
       ${inbound.map(ac=>{
         const d=_fleetData[ac.tail];
         const etaStr = d.eta!=null ? (d.eta<60 ? d.eta+' min' : Math.floor(d.eta/60)+'h '+(d.eta%60)+'m') : '—';
-        const alert25 = d.distNm<=25 ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ 25 NM</span>` : '';
+        const alert25 = d.distNm<=FLEET_ALERT_NM ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ 30 NM</span>` : '';
         return `<div style="background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:8px">
@@ -6200,7 +6200,7 @@ function renderFleet(el) {
     </div>
 
     <div style="margin:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: OpenSky Network (free ADS-B). 25 nm ring alert fires once per inbound arrival. Tap Refresh every ~60s.</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: OpenSky Network (free ADS-B). 30 nm ring alert fires once per inbound arrival. Tap Refresh every ~3 min.</div>
     </div>
   </div>`;
 
@@ -6212,7 +6212,7 @@ function renderFleet(el) {
     const map = L.map('fleetMap',{zoomControl:false,attributionControl:false}).setView([CYKF_LAT,CYKF_LON],7);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:14}).addTo(map);
     // CYKF marker
-    L.circle([CYKF_LAT,CYKF_LON],{radius:25*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
+    L.circle([CYKF_LAT,CYKF_LON],{radius:30*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
     L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#C8A84B',fillColor:'#C8A84B',fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
     // Aircraft markers
     FLEET_AIRCRAFT.forEach(ac=>{
@@ -6239,7 +6239,7 @@ function renderFleet(el) {
 
   // Auto-refresh every 60s while on fleet tab
   if(S.tab==='fleet'){
-    _fleetTimer=setTimeout(()=>{ if(S.tab==='fleet') refreshFleet(); },60000);
+    _fleetTimer=setTimeout(()=>{ if(S.tab==='fleet') refreshFleet(); },180000);
   }
 }
 

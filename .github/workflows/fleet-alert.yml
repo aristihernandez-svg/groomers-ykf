@@ -1,4 +1,4 @@
-name: Fleet 25 nm Arrival Alert
+name: Fleet 30 nm Arrival Alert
 
 on:
   schedule:

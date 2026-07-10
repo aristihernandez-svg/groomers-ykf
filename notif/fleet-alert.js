@@ -1,6 +1,6 @@
-// Skycare YKF — Fleet 25 nm arrival alert
+// Skycare YKF — Fleet 30 nm arrival alert
 // Runs every 5 minutes via GitHub Actions.
-// Sends a push notification when a fleet aircraft crosses inside 25 nm of CYKF.
+// Sends a push notification when a fleet aircraft crosses inside 30 nm of CYKF.
 // Firestore collection `fleetNotifications/{tail}` tracks last-notified state
 // so each inbound arrival fires exactly once.
 
@@ -21,8 +21,8 @@ webpush.setVapidDetails(
 // ── Config ──────────────────────────────────────────────────────────────────
 const CYKF_LAT = 43.4601;
 const CYKF_LON = -80.3782;
-const ALERT_NM = 25;
-const RESET_NM = 50;   // re-arm the alert once aircraft goes beyond this
+const ALERT_NM = 30;
+const RESET_NM = 60;   // re-arm the alert once aircraft goes beyond this
 const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2-hour cooldown per tail
 
 const FLEET = [
