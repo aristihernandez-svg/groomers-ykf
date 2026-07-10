@@ -221,6 +221,13 @@ async function saveItem() {
       store: store,
       cabinet: 'Crew House'
     });
+    // Notify via GitHub Actions push (works when main app is closed)
+    db.collection('shopNotifQueue').add({
+      title: '🏠 Crew House Shopping',
+      body: `${name} added to the shopping list`,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      sent: false
+    }).catch(() => {});
     toast('✅ Added to shopping list!');
     view = 'list';
     render();
