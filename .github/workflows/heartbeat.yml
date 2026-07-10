@@ -8,4 +8,15 @@ jobs:
   heartbeat:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "Skycare YKF heartbeat — keeping workflows active"
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bump heartbeat timestamp
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "$(date -u)" > .heartbeat
+          git add .heartbeat
+          git commit -m "Heartbeat $(date -u +%Y-%m-%d)"
+          git push
