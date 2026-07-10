@@ -5962,9 +5962,8 @@ let _fleetLastFetch = 0;
 let _fleetTimer = null;
 
 async function fetchFleetOpenSky() {
-  // Query bounding box around CYKF (Waterloo Region Airport)
-  // lat 43.46, lon -80.38 ± generous margin
-  const url = 'https://opensky-network.org/api/states/all?lamin=42.8&lomin=-81.5&lamax=44.2&lomax=-79.0';
+  // Wide bounding box covering Ontario, Quebec, and Maritimes so fleet is visible at any eastern Canadian airport
+  const url = 'https://opensky-network.org/api/states/all?lamin=41.0&lomin=-95.0&lamax=50.0&lomax=-60.0';
   try {
     const r = await fetch(url);
     if(!r.ok) return null;
@@ -6189,7 +6188,7 @@ function renderFleet(el) {
               <span style="font-size:14px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
               <span style="font-size:10px;color:rgba(255,255,255,0.35)">${ac.type}</span>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3);padding-left:12px">${sub||'On ground · CYKF'}</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.3);padding-left:12px">${sub||(d.onGround ? (d.distNm!=null&&d.distNm<=5 ? 'On ground · CYKF' : 'On ground') : '—')}</div>
           </div>
           ${!d.onGround && d.eta!=null ? `
           <div style="display:flex;align-items:center;gap:2px;flex-shrink:0" title="ETA to CYKF">
