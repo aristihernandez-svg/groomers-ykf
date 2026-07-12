@@ -2310,6 +2310,15 @@ function auditDocKey(carKey) { return auditMonth()+'-'+carKey; }
 function loadCarAudits() {
   try { S.carAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.carAudits={}; }
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
+  if(!db) return;
+  const month=auditMonth();
+  db.collection('auditCars').where('month','==',month).get()
+    .then(snap=>{
+      snap.docs.forEach(d=>{ S.carAudits[d.id]={...S.carAudits[d.id],...d.data()}; });
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+      render();
+    })
+    .catch(e=>console.log('loadCarAudits Firestore failed:',e));
 }
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
