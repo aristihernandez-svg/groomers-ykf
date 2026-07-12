@@ -1,0 +1,26 @@
+name: Notification Queue Cleanup
+
+on:
+  workflow_dispatch:         # triggered by cron-job.org once daily
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: notif/package.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: notif
+
+      - name: Delete sent notifications older than 30 days
+        run: node cleanup.js
+        working-directory: notif
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
