@@ -5984,13 +5984,16 @@ let _fleetLastFetch = 0;
 let _fleetTimer = null;
 
 async function fetchFleetOpenSky() {
-  // Wide bounding box covering Ontario, Quebec, and Maritimes so fleet is visible at any eastern Canadian airport
-  const url = 'https://opensky-network.org/api/states/all?lamin=41.0&lomin=-95.0&lamax=50.0&lomax=-60.0';
+  // Read from Firestore — positions are written every 5 min by fleet-alert.js (GitHub Actions)
+  // This avoids OpenSky's CORS block on browser requests
   try {
-    const r = await fetch(url);
-    if(!r.ok) return null;
-    const data = await r.json();
-    return data.states || [];
+    if(!db) return null;
+    const snap = await db.collection('fleetPositions').doc('live').get();
+    if(!snap.exists) return null;
+    const { positions } = snap.data();
+    if(!positions) return null;
+    // Convert Firestore position map back to array format expected by refreshFleet
+    return Object.values(positions).filter(Boolean);
   } catch(e) { return null; }
 }
 
@@ -6006,24 +6009,20 @@ function fleetCallsignMatch(callsign) {
 async function refreshFleet() {
   const btn = document.getElementById('fleetRefreshBtn');
   if(btn) { btn.textContent = '⏳ Fetching…'; btn.disabled = true; }
-  const states = await fetchFleetOpenSky();
+  const positions = await fetchFleetOpenSky();
   _fleetData = {};
-  if(states) {
-    states.forEach(s => {
-      const ac = fleetCallsignMatch(s[1]);
-      if(ac) {
-        const lat=s[6], lon=s[5], speedKts=s[9]?Math.round(s[9]*1.944):null;
-        const altFt=s[7]?Math.round(s[7]*3.28084):null;
-        const distNm=lat&&lon?Math.round(haversineNm(lat,lon,CYKF_LAT,CYKF_LON)):null;
-        const eta=distNm&&speedKts?etaMinutes(distNm,speedKts):null;
-        _fleetData[ac.tail]={
-          callsign:(s[1]||'').trim(), lat, lon,
-          altFt, speedKts, track:s[10]||0,
-          onGround:s[8], lastSeen:s[4],
-          distNm, eta
-        };
-        // Fleet alerts handled by GitHub Actions (fleet-alert.js) — no browser-side notification here
-      }
+  if(positions) {
+    positions.forEach(p => {
+      if(!p || !p.tail) return;
+      const eta = p.distNm && p.speedKts ? etaMinutes(p.distNm, p.speedKts) : null;
+      _fleetData[p.tail] = {
+        callsign: p.reg || p.tail,
+        lat: p.lat, lon: p.lon,
+        altFt: p.altFt, speedKts: p.speedKts,
+        track: p.track || 0,
+        onGround: p.onGround,
+        distNm: p.distNm, eta
+      };
     });
   }
   _fleetLastFetch = Date.now();

@@ -178,6 +178,20 @@ async function main() {
     }
   }
 
+  // Write live positions to Firestore so the browser map can read them
+  // without calling OpenSky directly (OpenSky blocks browser CORS requests)
+  const positionData = {};
+  FLEET.forEach(ac => {
+    positionData[ac.tail] = live[ac.tail]
+      ? { ...live[ac.tail], updatedAt: admin.firestore.FieldValue.serverTimestamp() }
+      : null;
+  });
+  await db.collection('fleetPositions').doc('live').set({
+    positions: positionData,
+    fetchedAt: admin.firestore.FieldValue.serverTimestamp()
+  });
+  console.log('Fleet positions written to Firestore.');
+
   console.log('Done.');
 }
 
