@@ -2312,13 +2312,11 @@ function loadCarAudits() {
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
   if(!db) return;
   const month=auditMonth();
-  db.collection('auditCars').where('month','==',month).get()
-    .then(snap=>{
-      snap.docs.forEach(d=>{ S.carAudits[d.id]={...S.carAudits[d.id],...d.data()}; });
-      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
-      render();
-    })
-    .catch(e=>console.log('loadCarAudits Firestore failed:',e));
+  db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
+    snap.docs.forEach(d=>{ S.carAudits[d.id]={...S.carAudits[d.id],...d.data()}; });
+    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+    render();
+  }, e=>console.log('loadCarAudits Firestore failed:',e));
 }
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
