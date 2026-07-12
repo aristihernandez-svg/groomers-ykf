@@ -21,8 +21,8 @@ webpush.setVapidDetails(
 // ── Config ──────────────────────────────────────────────────────────────────
 const CYKF_LAT = 43.4601;
 const CYKF_LON = -80.3782;
-const ALERT_NM = 30;
-const RESET_NM = 60;   // re-arm the alert once aircraft goes beyond this
+const ALERT_NM = 60;
+const RESET_NM = 120;  // re-arm the alert once aircraft goes beyond this
 const COOLDOWN_MS = 2 * 60 * 60 * 1000; // 2-hour cooldown per tail
 
 const FLEET = [
