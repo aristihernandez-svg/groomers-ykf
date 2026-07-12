@@ -1,9 +1,7 @@
 name: Fleet 30 nm Arrival Alert
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'   # every 5 minutes, 24/7
-  workflow_dispatch:          # manual trigger for testing
+  workflow_dispatch:          # triggered by cron-job.org every 5 minutes
 
 jobs:
   fleet-alert:

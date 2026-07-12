@@ -1,19 +1,7 @@
 name: Coffee Notifications
 
 on:
-  # EDT (UTC-4, summer): 9:40=13:40, 11:40=15:40, 15:40=19:40
-  # EST (UTC-5, winter): 9:40=14:40, 11:40=16:40, 15:40=20:40
-  # Both sets run year-round; send.js checks Eastern time and skips the wrong one.
-  schedule:
-    - cron: '40 13 * * *'   # EDT  9:40 AM
-    - cron: '40 14 * * *'   # EST  9:40 AM
-    - cron: '40 15 * * *'   # EDT 11:40 AM
-    - cron: '40 16 * * *'   # EST 11:40 AM
-    - cron: '40 19 * * *'   # EDT  3:40 PM
-    - cron: '40 20 * * *'   # EST  3:40 PM
-    - cron: '0 0 * * *'     # EDT  8:00 PM (midnight UTC)
-    - cron: '0 1 * * *'     # EST  8:00 PM
-  workflow_dispatch:         # manual trigger for testing
+  workflow_dispatch:         # triggered by cron-job.org every 5 minutes
 
 jobs:
   send-push:
