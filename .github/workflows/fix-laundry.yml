@@ -1,0 +1,26 @@
+name: Fix Laundry Task (one-time)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: notif/package.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: notif
+
+      - name: Fix Laundry task on Tuesday and Friday
+        run: node fix-laundry.js
+        working-directory: notif
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
