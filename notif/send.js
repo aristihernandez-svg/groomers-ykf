@@ -34,6 +34,18 @@ async function main() {
     process.exit(0);
   }
 
+  // Check if already sent for this coffee slot today — prevents duplicate sends
+  // when cron-job.org fires every 5 min within the ±20 min window
+  const dateStr = eastern.toISOString().slice(0, 10); // e.g. "2026-07-12"
+  const sentKey = `${dateStr}-${match.hour}-${match.minute}`;
+  const sentRef = db.collection('coffeeNotifSent').doc(sentKey);
+  const sentSnap = await sentRef.get();
+  if (sentSnap.exists) {
+    console.log(`Already sent for ${sentKey} — skipping duplicate`);
+    process.exit(0);
+  }
+  await sentRef.set({ sentAt: admin.firestore.FieldValue.serverTimestamp() });
+
   console.log(`Coffee time! Sending for ${h}:${String(match.minute).padStart(2,'0')} Eastern`);
 
   const snap  = await db.collection('pushSubscriptions').get();

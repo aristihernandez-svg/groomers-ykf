@@ -25,9 +25,24 @@ async function cleanQueue(collectionName) {
   console.log(`${collectionName}: deleted ${snap.size} old document(s)`);
 }
 
+async function cleanCoffeeSent() {
+  const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
+  const snap = await db.collection('coffeeNotifSent')
+    .where('sentAt', '<', cutoff)
+    .get();
+
+  if (snap.empty) { console.log('coffeeNotifSent: nothing to clean'); return; }
+
+  const batch = db.batch();
+  snap.docs.forEach(doc => batch.delete(doc.ref));
+  await batch.commit();
+  console.log(`coffeeNotifSent: deleted ${snap.size} old document(s)`);
+}
+
 async function main() {
   await cleanQueue('mxNotifQueue');
   await cleanQueue('shopNotifQueue');
+  await cleanCoffeeSent();
   console.log('Cleanup done.');
 }
 
