@@ -2507,7 +2507,11 @@ function renderCrewCarsList(el) {
       <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:${allDone&&!alreadyArchived?'10px':'0'}">
         <div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
       </div>
-      ${allDone&&!alreadyArchived?`<button onclick="archiveAudit()" style="width:100%;padding:10px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer">✅ Save Audit to Records</button>`:''}
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">📧 Email</button>
+        <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button>
+      </div>
+      ${allDone&&!alreadyArchived?`<button onclick="archiveAudit()" style="width:100%;margin-top:8px;padding:10px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer">✅ Save Audit to Records</button>`:''}
       ${alreadyArchived?`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;text-align:center">✅ ${month} audit saved to records</div>`:''}
     </div>`;
 
