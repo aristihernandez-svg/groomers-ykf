@@ -3948,10 +3948,10 @@ async function cleanupOneOffTasks() {
       const docSnap = await db.collection('tasks').doc(day).get();
       if(!docSnap.exists || !docSnap.data().migrated) continue;
       const all = docSnap.data().tasks || [];
-      const filtered = all.filter(t => t.freq !== 'One-off');
+      const filtered = all.filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
       if(filtered.length === all.length) continue; // nothing to remove
       await db.collection('tasks').doc(day).set({tasks: filtered, migrated: true});
-      if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => t.freq !== 'One-off');
+      if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
     } catch(_) {}
   }
   db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(()=>{});
@@ -3962,6 +3962,24 @@ function fsSaveTaskContent(tabName) {
   const content = (S.tasks[tabName]||[]).map(({task,freq,area})=>({task,freq:freq||'',area,done:false}));
   db.collection('tasks').doc(tabName).set({tasks:content,migrated:true},{merge:true})
     .catch(e=>console.log('fsSaveTaskContent failed:',e));
+}
+
+async function fsAddTaskToDay(taskObj, day) {
+  if(!db) return;
+  const clean = {task:taskObj.task, freq:taskObj.freq||'', area:taskObj.area||'', done:false};
+  if(S.tasks[day] !== undefined) {
+    // Day loaded in memory — push (dedup) then overwrite full doc
+    if(!S.tasks[day].find(t => fsKey(t.task)===fsKey(taskObj.task))) {
+      S.tasks[day].push(clean);
+    }
+    fsSaveTaskContent(day);
+  } else {
+    // Day not in memory — use arrayUnion to add atomically without reading (R9, R10)
+    await db.collection('tasks').doc(day).set(
+      {tasks: firebase.firestore.FieldValue.arrayUnion(clean), migrated:true},
+      {merge:true}
+    );
+  }
 }
 
 function hideTaskToday(tabName,idx) {
@@ -4027,59 +4045,118 @@ function deleteTaskPermanent(tabName,idx) {
   render(); toast(`🗑 Deleted from ${affected.length} day${affected.length!==1?'s':''}`);
 }
 
-const FREQ_OPTIONS = ['Daily','3x/week','2x/week','Weekly','Every Monday','Every Tuesday','Every Wednesday','Every Thursday','Every Friday','Every Saturday','Every Sunday','Monthly','As needed','When aircraft on ground','One-off'];
+const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+// Freq-picker state — reset each time a task modal opens
+let _fpMode = 'specific';
+let _fpDays = []; // selected day indices 0–6
+
+function _fpSetMode(m) {
+  _fpMode = m;
+  const grid = document.getElementById('fpDayGrid');
+  if(grid) grid.style.display = m==='specific' ? 'flex' : 'none';
+  ['daily','specific','once'].forEach(k => {
+    const b = document.getElementById('fpBtn'+k);
+    if(!b) return;
+    const on = k===m;
+    b.style.background = on ? 'var(--blue)' : 'var(--glass2)';
+    b.style.color = on ? '#fff' : 'var(--t1)';
+    b.style.borderColor = on ? 'var(--blue)' : 'var(--border2)';
+  });
+  _fpUpdateLabel();
+}
+function _fpToggle(i) {
+  const ix = _fpDays.indexOf(i);
+  if(ix>=0) _fpDays.splice(ix,1); else _fpDays.push(i);
+  const b = document.getElementById('fpDay'+i);
+  if(b) {
+    const on = _fpDays.includes(i);
+    b.style.background = on ? 'var(--blue)' : 'transparent';
+    b.style.color = on ? '#fff' : 'var(--t2)';
+    b.style.borderColor = on ? 'var(--blue)' : 'var(--border2)';
+  }
+  _fpUpdateLabel();
+}
+function _fpLabel() {
+  if(_fpMode==='daily') return 'Every day — forever';
+  if(_fpMode==='once') return 'One time only, then removed';
+  if(!_fpDays.length) return 'Select at least one day';
+  return [..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ') + ' — forever';
+}
+function _fpUpdateLabel() {
+  const el = document.getElementById('fpLabel');
+  if(el) el.textContent = _fpLabel();
+}
+function _fpHTML(initMode, initDays) {
+  _fpMode = initMode; _fpDays = [...initDays];
+  const mBtn = (k,lbl) => {
+    const on = k===initMode;
+    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'var(--glass2)'};color:${on?'#fff':'var(--t1)'};border:1px solid ${on?'var(--blue)':'var(--border2)'};border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer">${lbl}</button>`;
+  };
+  const dBtn = i => {
+    const on = initDays.includes(i);
+    return `<button type="button" id="fpDay${i}" onclick="_fpToggle(${i})" style="width:40px;height:40px;border-radius:50%;border:2px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer">${DAY_SHORT[i]}</button>`;
+  };
+  return `
+    <label style="margin-top:8px">Schedule</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      ${mBtn('daily','🔁 Daily')}${mBtn('specific','📅 Specific days')}${mBtn('once','1️⃣ Once')}
+    </div>
+    <div id="fpDayGrid" style="display:${initMode==='specific'?'flex':'none'};gap:8px;flex-wrap:wrap;margin-bottom:10px;justify-content:center">
+      ${[0,1,2,3,4,5,6].map(dBtn).join('')}
+    </div>
+    <div id="fpLabel" style="text-align:center;font-size:12px;color:var(--t2);min-height:16px;margin-bottom:4px">${_fpLabel()}</div>`;
+}
 
 function locationSelect(selected='') {
   const blank = `<option value="" ${!selected?'selected':''}>— Select location —</option>`;
   return blank + Object.keys(AREA_COLORS).map(a=>`<option value="${a}" ${a===selected?'selected':''}>${a}</option>`).join('');
 }
-function freqSelect(selected='') {
-  const opts = FREQ_OPTIONS.map(f=>`<option value="${f}" ${f===selected?'selected':''}>${f}</option>`).join('');
-  return `<option value="">— Select frequency —</option>${opts}`;
-}
 
 function openEditTask(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
+  const oldKey=fsKey(t.task);
+  // Find which loaded days have this task — use as pre-selection
+  const loadedDayIndices=[];
+  DAYS.forEach((day,i)=>{ if(S.tasks[day]?.find(x=>fsKey(x.task)===oldKey)) loadedDayIndices.push(i); });
+  // Determine init mode from stored freq
+  let initMode='specific';
+  if(t.freq==='Daily') initMode='daily';
+  else if(t.freq==='Once'||t.freq==='One-off') initMode='once';
+  const initDays = initMode==='daily'?[0,1,2,3,4,5,6]:initMode==='once'?[DAYS.indexOf(tabName)]:loadedDayIndices;
+
   openModal('✏️ Edit Task',
     `<label>Task description</label>
      <input id="eTTask" value="${t.task.replace(/"/g,'&quot;')}">
      <label>Location</label>
      <select id="eTArea">${locationSelect(t.area||'')}</select>
-     <label>Frequency</label>
-     <select id="eTFreq">${freqSelect(t.freq||'')}</select>
-     <label style="display:flex;align-items:center;gap:8px;font-weight:500;margin-top:4px">
-       <input type="checkbox" id="eTAllDays" style="width:18px;height:18px;accent-color:var(--blue)">
-       Apply to all days
-     </label>`,
+     ${_fpHTML(initMode, initDays)}`,
     async()=>{
       const task=document.getElementById('eTTask').value.trim();
-      const freq=document.getElementById('eTFreq').value;
       const area=document.getElementById('eTArea').value;
-      const allDays=document.getElementById('eTAllDays').checked;
       if(!task) return;
-      const oldKey=fsKey(t.task), newKey=fsKey(task);
+      const newKey=fsKey(task);
       const nameChanged=oldKey!==newKey;
-      const daysToUpdate=allDays?DAYS:[tabName];
-      for(const day of daysToUpdate) {
-        if(!S.tasks[day]) continue;
+      const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
+      // Update in every loaded day that has this task
+      DAYS.forEach(day=>{
+        if(!S.tasks[day]) return;
         const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===oldKey);
-        if(mi<0) continue;
+        if(mi<0) return;
         const wasHidden=S.tasks[day][mi].hidden;
         S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area,hidden:wasHidden};
         fsSaveTaskContent(day);
-        // If name changed and task was hidden, migrate hidden key in taskState
         if(nameChanged && wasHidden && db) {
           const patch={_date:new Date().toDateString()};
           patch[oldKey+'_hidden']=firebase.firestore.FieldValue.delete();
           patch[newKey+'_hidden']=true;
           db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
         }
-      }
+      });
       if(db) db.collection('taskEdits').add({
-        day:allDays?'ALL':tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
+        day:tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
       }).catch(()=>{});
       closeModal(); render();
-      toast(allDays?'Updated across all days ✓':'Task updated ✓');
+      toast('Task updated ✓');
     });
 }
 function resetDay() {
@@ -4530,23 +4607,41 @@ function checkTaskDuplicate() {
 }
 
 function openAddTask(tabName,area='') {
+  const tabIdx = DAYS.indexOf(tabName);
+  const initDays = tabIdx >= 0 ? [tabIdx] : [];
   openModal('Add Task',
     `<label>Task description</label>
      <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()" data-tab="${tabName}">
      <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location</label>
      <select id="mArea">${locationSelect(area)}</select>
-     <label>Frequency</label>
-     <select id="mFreq">${freqSelect()}</select>`,
+     ${_fpHTML('specific', initDays)}`,
     async()=>{
       const task=document.getElementById('mTask').value.trim();
-      const freq=document.getElementById('mFreq').value;
       const areaVal=document.getElementById('mArea').value;
-      if(!task) return;
-      if(!S.tasks[tabName]) S.tasks[tabName]=[];
-      S.tasks[tabName].push({task,freq,area:areaVal,done:false});
-      fsSaveTaskContent(tabName);
-      closeModal(); renderToday(document.getElementById('content')); toast('Task added ✓');
+      if(!task){ toast('Enter a task name'); return; }
+      if(_fpMode==='specific' && !_fpDays.length){ toast('Select at least one day'); return; }
+      // Build target days array
+      let targetDays;
+      if(_fpMode==='daily') targetDays=[...DAYS];
+      else if(_fpMode==='once') targetDays=[tabName];
+      else targetDays=[..._fpDays].sort((a,b)=>a-b).map(i=>DAYS[i]);
+      const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
+      const taskObj = {task, freq, area:areaVal, done:false};
+      // Disable save button to prevent double-tap (R2)
+      const saveBtn=document.getElementById('mSave');
+      if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Saving…'; }
+      try {
+        await Promise.all(targetDays.map(day=>fsAddTaskToDay(taskObj,day)));
+        closeModal();
+        renderToday(document.getElementById('content'));
+        const label = targetDays.length===7 ? 'every day' : targetDays.length===1 ? (targetDays[0].replace(/[\d️⃣☀🗓]/gu,'').trim()||targetDays[0]) : targetDays.length+' days';
+        toast(`Task added to ${label} ✓`);
+      } catch(e) {
+        console.error('openAddTask failed:',e);
+        if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='Save'; }
+        toast('Save failed — try again');
+      }
     });
 }
 
