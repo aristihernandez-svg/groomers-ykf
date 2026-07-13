@@ -45,12 +45,17 @@ async function cleanAuditPhotos() {
   const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
   const [files] = await bucket.getFiles({ prefix: 'audits/' });
   const stale = files.filter(f => {
-    const updated = new Date(f.metadata.updated);
-    return updated < cutoff;
+    const updatedStr = f.metadata && f.metadata.updated;
+    if (!updatedStr) return false; // skip files with no timestamp — never delete blindly
+    const updated = new Date(updatedStr);
+    return !isNaN(updated.getTime()) && updated < cutoff;
   });
   if (!stale.length) { console.log('auditPhotos: nothing to clean'); return; }
-  await Promise.all(stale.map(f => f.delete()));
-  console.log(`auditPhotos: deleted ${stale.length} old file(s)`);
+  const results = await Promise.allSettled(stale.map(f => f.delete()));
+  const ok   = results.filter(r => r.status === 'fulfilled').length;
+  const fail = results.filter(r => r.status === 'rejected').length;
+  if (fail) console.warn(`auditPhotos: ${fail} file(s) failed to delete`);
+  console.log(`auditPhotos: deleted ${ok} old file(s)`);
 }
 
 async function main() {
