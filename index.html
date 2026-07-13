@@ -1283,9 +1283,14 @@ const TAB_GIDS = {
 };
 
 async function fetchDay(tabName) {
-  // Preserve current done and hidden states so re-render after fetch doesn't lose them
+  const isToday = tabName === DAYS[getToday()];
+  // Only preserve done/hidden states for today — previous days always start fresh
   const prevDone = {}, prevHidden = {};
-  (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
+  if(isToday) {
+    (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
+  } else {
+    (S.tasks[tabName]||[]).forEach(t => { prevHidden[fsKey(t.task)] = t.hidden; });
+  }
 
   // ── Firestore path ───────────────────────────────────────────────
   if(S.tasksSource === 'firestore' && db) {
@@ -1293,13 +1298,13 @@ async function fetchDay(tabName) {
       const snap = await db.collection('tasks').doc(tabName).get();
       if(snap.exists && snap.data().migrated === true) {
         S.tasks[tabName] = (snap.data().tasks || []).map(t => ({...t, done: false}));
-        // Re-apply done and hidden states
+        // Re-apply done states only for today; re-apply hidden for all days
         S.tasks[tabName].forEach(t => {
-          if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
+          if(isToday && fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
           if(prevHidden[fsKey(t.task)]) t.hidden = true;
         });
-        // Apply cached taskState only for today — never bleed today's done-flags onto other days
-        if(_cachedTaskState && tabName === DAYS[getToday()]) {
+        // Apply cached taskState only for today
+        if(isToday && _cachedTaskState) {
           const today = new Date().toDateString();
           if(!_cachedTaskState._date || _cachedTaskState._date === today) {
             S.tasks[tabName].forEach(t => {
@@ -1342,7 +1347,10 @@ async function fetchDay(tabName) {
       if(isNum && colB && !colB.toLowerCase().includes('clean aircraft')) tasks.push({task:colB,freq:colC,area,done:false});
     });
     S.tasks[tabName] = tasks;
-    S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+    // Only re-apply done states for today
+    if(isToday) {
+      S.tasks[tabName].forEach(t => { if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)]; });
+    }
   } catch(e){ S.tasks[tabName]=S.tasks[tabName]||fallback(); }
   _cacheTasksLocal(tabName);
 }
