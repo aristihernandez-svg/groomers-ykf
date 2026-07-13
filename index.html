@@ -19,6 +19,7 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -4275,10 +4276,39 @@ function setupPhotoInput() {
   document.getElementById('photoInput').addEventListener('change',e=>{
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
-    reader.onload=async ev=>applyCapturedPhoto(await compressImage(ev.target.result));
+    reader.onload=async ev=>{
+      const compressed=await compressImage(ev.target.result);
+      if(S.photoCtx==='audit' && auditPhotoTarget && storage) {
+        await uploadAuditPhoto(compressed, auditPhotoTarget);
+      } else {
+        applyCapturedPhoto(compressed);
+      }
+    };
     reader.readAsDataURL(file);
     e.target.value=''; // reset so the next tap reliably reopens the picker
   });
+}
+
+async function uploadAuditPhoto(dataUrl, key) {
+  toast('Uploading photo…');
+  try {
+    const month=auditMonth();
+    const path=`audits/${month}/${key}/${Date.now()}.jpg`;
+    const ref=storage.ref(path);
+    // Convert data URL to blob
+    const res=await fetch(dataUrl);
+    const blob=await res.blob();
+    await ref.put(blob,{contentType:'image/jpeg'});
+    const url=await ref.getDownloadURL();
+    carAuditData(key).photos.push({src:url,rating:'Good',note:''});
+    saveCarAudit(key);
+    render();
+    toast('Photo saved ✓');
+  } catch(err) {
+    console.error('Storage upload failed, falling back to local:', err);
+    // Fallback: save as base64 if Storage fails
+    applyCapturedPhoto(dataUrl);
+  }
 }
 function triggerPhoto(ctx) {
   S.photoCtx=ctx;
@@ -5616,16 +5646,19 @@ function urlBase64ToUint8Array(base64String) {
 
 // ── FIREBASE + FIRESTORE ─────────────────────────────────────────────
 let db = null;
+let storage = null;
 let dmgReportIds = {}; // procKey -> [firestore doc id per report, aligned with S.dmgReports[procKey]]
 
 function initFirebase() {
   try {
     if(!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
-    console.log('Firebase + Firestore initialized');
+    storage = firebase.storage();
+    console.log('Firebase + Firestore + Storage initialized');
   } catch(e) {
     console.log('Firebase unavailable — app continues working locally:', e);
     db = null;
+    storage = null;
   }
 }
 
