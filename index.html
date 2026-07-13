@@ -4058,9 +4058,9 @@ function _fpSetMode(m) {
     const b = document.getElementById('fpBtn'+k);
     if(!b) return;
     const on = k===m;
-    b.style.background = on ? 'var(--blue)' : 'var(--glass2)';
-    b.style.color = on ? '#fff' : 'var(--t1)';
-    b.style.borderColor = on ? 'var(--blue)' : 'var(--border2)';
+    b.style.background = on ? 'var(--blue)' : 'transparent';
+    b.style.color = on ? '#fff' : 'var(--t2)';
+    b.style.border = on ? '1px solid var(--blue)' : '1px solid transparent';
   });
   _fpUpdateLabel();
 }
@@ -4090,7 +4090,7 @@ function _fpHTML(initMode, initDays) {
   _fpMode = initMode; _fpDays = [...initDays];
   const mBtn = (k,lbl) => {
     const on = k===initMode;
-    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'var(--glass2)'};color:${on?'#fff':'var(--t1)'};border:1px solid ${on?'var(--blue)':'var(--border2)'};border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer">${lbl}</button>`;
+    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t2)'};border:1px solid ${on?'var(--blue)':'transparent'};border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer">${lbl}</button>`;
   };
   const dBtn = i => {
     const on = initDays.includes(i);
