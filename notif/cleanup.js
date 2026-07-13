@@ -14,17 +14,23 @@ const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 async function cleanQueue(collectionName) {
   const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
+  // Query only by sent==true to avoid needing a composite index.
+  // Filter by sentAt in JS — safe and index-free.
   const snap = await db.collection(collectionName)
     .where('sent', '==', true)
-    .where('sentAt', '<', cutoff)
     .get();
 
-  if (snap.empty) { console.log(`${collectionName}: nothing to clean`); return; }
+  const stale = snap.docs.filter(doc => {
+    const sentAt = doc.data().sentAt?.toDate?.();
+    return sentAt && sentAt < cutoff;
+  });
+
+  if (!stale.length) { console.log(`${collectionName}: nothing to clean`); return; }
 
   const batch = db.batch();
-  snap.docs.forEach(doc => batch.delete(doc.ref));
+  stale.forEach(doc => batch.delete(doc.ref));
   await batch.commit();
-  console.log(`${collectionName}: deleted ${snap.size} old document(s)`);
+  console.log(`${collectionName}: deleted ${stale.length} old document(s)`);
 }
 
 async function cleanCoffeeSent() {
