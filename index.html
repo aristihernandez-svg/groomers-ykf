@@ -4059,8 +4059,10 @@ function _fpSetMode(m) {
     if(!b) return;
     const on = k===m;
     b.style.background = on ? 'var(--blue)' : 'transparent';
-    b.style.color = on ? '#fff' : 'var(--t2)';
-    b.style.border = on ? '1px solid var(--blue)' : '1px solid transparent';
+    b.style.color = on ? '#fff' : 'var(--t3)';
+    b.style.border = on ? '2px solid var(--blue)' : '2px solid var(--border2)';
+    b.style.fontSize = on ? '14px' : '12px';
+    b.style.fontWeight = on ? '700' : '500';
   });
   _fpUpdateLabel();
 }
@@ -4078,7 +4080,7 @@ function _fpToggle(i) {
 }
 function _fpLabel() {
   if(_fpMode==='daily') return 'Every day — forever';
-  if(_fpMode==='once') return 'One time only, then removed';
+  if(_fpMode==='once') return 'One time only';
   if(!_fpDays.length) return 'Select at least one day';
   return [..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ') + ' — forever';
 }
@@ -4090,7 +4092,7 @@ function _fpHTML(initMode, initDays) {
   _fpMode = initMode; _fpDays = [...initDays];
   const mBtn = (k,lbl) => {
     const on = k===initMode;
-    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t2)'};border:1px solid ${on?'var(--blue)':'transparent'};border-radius:20px;padding:7px 16px;font-size:13px;font-weight:600;cursor:pointer">${lbl}</button>`;
+    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t3)'};border:2px solid ${on?'var(--blue)':'var(--border2)'};border-radius:20px;padding:7px 16px;font-size:${on?'14px':'12px'};font-weight:${on?'700':'500'};cursor:pointer">${lbl}</button>`;
   };
   const dBtn = i => {
     const on = initDays.includes(i);
