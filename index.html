@@ -3004,11 +3004,25 @@ window._calPick=function(key,type,iso){
 // ── AUDIT HELPERS ─────────────────────────────────────────────
 let auditPhotoTarget=null;
 
+function refreshAuditPhotos(key) {
+  if(!db) return;
+  db.collection('auditCars').doc(auditDocKey(key)).get().then(snap=>{
+    if(!snap.exists) return;
+    const data = snap.data();
+    if(!S.carAudits[snap.id]) S.carAudits[snap.id]={photos:[],comments:'',done:false,completedAt:null};
+    S.carAudits[snap.id] = {...S.carAudits[snap.id], ...data};
+    const el=document.getElementById('auditSection_'+key);
+    if(el) el.outerHTML = auditSectionHTML(key);
+  }).catch(()=>{});
+}
+
 function auditSectionHTML(key) {
+  // Kick off a fresh read from Firestore in the background so photos are always current
+  setTimeout(()=>refreshAuditPhotos(key), 0);
   const cd=carAuditData(key);
   const month=auditMonth();
   let h=`
-  <div style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
+  <div id="auditSection_${key}" style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📋 Monthly Audit — ${month}</div>
 
     <!-- Groomer name -->
