@@ -1776,6 +1776,17 @@ function renderGroups(tasks, tabName) {
 
 // ── WEEK ───────────────────────────────────────────────────────────
 function renderWeek(el) {
+  // If the app was left open overnight, clear done states for all previous days
+  const today = new Date().toDateString();
+  if(today !== _lastLoadedDate) {
+    _lastLoadedDate = today;
+    const todayTab = DAYS[getToday()];
+    DAYS.forEach(day => {
+      if(day !== todayTab && S.tasks[day]) {
+        S.tasks[day].forEach(t => { t.done = false; });
+      }
+    });
+  }
   setBarLogo();
   document.getElementById('fab').style.display='none';
   let html='<div class="week-list">';
@@ -3800,6 +3811,7 @@ function toggleBoredById(id) {
 
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
 let _lastSelfWrite = 0; // suppress listener re-render for own writes
+let _lastLoadedDate = new Date().toDateString(); // tracks calendar date for overnight reset
 let _lastShopWrite = 0; // suppress shopping listener re-render for own writes
 let _cachedShopState = null; // Firestore shopState cache — bridges catalog/state listener race
 let _cachedTaskState = null; // bridges taskState listener firing before task content loads
