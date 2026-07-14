@@ -4482,7 +4482,7 @@ function openModal(title,fields,onSave) {
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.querySelector('#mFields input,#mFields textarea')?.focus(),100);
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; document.getElementById('mSave').textContent='Save'; document.getElementById('mSave').style.display=''; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; const ms=document.getElementById('mSave'); ms.textContent='Save'; ms.disabled=false; ms.style.display=''; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
 function fuzzyDistance(a, b) {
