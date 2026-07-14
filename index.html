@@ -875,7 +875,7 @@ function getAllStores() {
   return [...new Set([...Object.keys(STORE_COLORS), ...S.customStores, ...fromItems])].sort();
 }
 function saveCustomStores() {
-  if(db) db.collection('appConfig').doc('stores').set({custom: S.customStores})
+  if(db) db.collection('appConfig').doc('stores').set({custom: S.customStores}, {merge:true})
     .catch(e=>console.log('saveCustomStores failed:', e));
 }
 function loadCustomStores() {
@@ -2280,7 +2280,7 @@ function loadCrewCarData() {
 function saveCrewCarData() {
   try { localStorage.setItem('gykf_ccd',JSON.stringify(S.crewCarData)); } catch(e){}
   if(db) {
-    db.collection('crewCarData').doc('all').set(S.crewCarData)
+    db.collection('crewCarData').doc('all').set(S.crewCarData, {merge:true})
       .catch(e=>console.log('crewCarData Firestore write failed:', e));
   }
 }
@@ -2344,7 +2344,7 @@ function saveCarAudit(carKey) {
   if(!db) return;
   const month=auditMonth();
   const data={...S.carAudits[auditDocKey(carKey)], month, carKey};
-  db.collection('auditCars').doc(auditDocKey(carKey)).set(data)
+  db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
     .catch(e=>console.log('saveCarAudit Firestore failed:',e));
 }
 function carAuditData(carKey) {
@@ -3918,7 +3918,7 @@ function resetShop() {
     const clearState = {};
     S.shopping.forEach(i=>{ clearState[fsKey(i.item)]={checked:false,status:'In Stock'}; });
     _lastShopWrite = Date.now();
-    db.collection('shopState').doc('state').set(clearState)
+    db.collection('shopState').doc('state').set(clearState, {merge:true})
       .catch(e=>console.log('resetShop Firestore sync failed:', e));
   }
   renderShopping(document.getElementById('content'));
@@ -3968,7 +3968,7 @@ async function cleanupOneOffTasks() {
   try {
     const snap = await db.collection('appConfig').doc('oneOffCleaned').get();
     if(snap.exists && snap.data()?.date === today) return; // already ran today
-  } catch(_) {}
+  } catch(e) { console.log('cleanupOneOffTasks: failed to read oneOffCleaned:', e); }
   for(const day of DAYS) {
     try {
       const docSnap = await db.collection('tasks').doc(day).get();
@@ -3978,9 +3978,9 @@ async function cleanupOneOffTasks() {
       if(filtered.length === all.length) continue; // nothing to remove
       await db.collection('tasks').doc(day).set({tasks: filtered, migrated: true});
       if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
-    } catch(_) {}
+    } catch(e) { console.log('cleanupOneOffTasks: failed to clean day', day, e); }
   }
-  db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(()=>{});
+  db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(e=>console.log('cleanupOneOffTasks: failed to mark done:', e));
 }
 
 function fsSaveTaskContent(tabName) {
@@ -4195,7 +4195,7 @@ function resetDay() {
   if(db) {
     const clearState = {_date: new Date().toDateString()};
     S.tasks[tabName]?.forEach(t=>{ clearState[fsKey(t.task)]=false; });
-    db.collection('taskState').doc(tabName).set(clearState)
+    db.collection('taskState').doc(tabName).set(clearState, {merge:true})
       .catch(e=>console.log('resetDay Firestore sync failed:', e));
   }
   renderToday(document.getElementById('content'));
