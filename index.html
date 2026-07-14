@@ -4404,9 +4404,8 @@ async function uploadAuditPhoto(dataUrl, key) {
     render();
     toast('Photo saved ✓');
   } catch(err) {
-    console.error('Storage upload failed, falling back to local:', err);
-    // Fallback: save as base64 if Storage fails
-    applyCapturedPhoto(dataUrl);
+    console.error('Storage upload failed:', err?.code, err?.message, err);
+    toast(`⚠️ Photo upload failed: ${err?.code || err?.message || 'unknown error'}`);
   }
 }
 function triggerPhoto(ctx) {
