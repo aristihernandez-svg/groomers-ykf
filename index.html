@@ -4394,13 +4394,20 @@ async function uploadAuditPhoto(dataUrl, key) {
     const month=auditMonth();
     const path=`audits/${month}/${key}/${Date.now()}.jpg`;
     const ref=storage.ref(path);
-    // Convert data URL to blob
     const res=await fetch(dataUrl);
     const blob=await res.blob();
     await ref.put(blob,{contentType:'image/jpeg'});
     const url=await ref.getDownloadURL();
-    carAuditData(key).photos.push({src:url,rating:'Good',note:''});
-    saveCarAudit(key);
+    const newPhoto={src:url,rating:'Good',note:''};
+    // Use arrayUnion so we ADD to existing photos instead of overwriting them
+    if(db) {
+      await db.collection('auditCars').doc(auditDocKey(key)).set(
+        {photos:firebase.firestore.FieldValue.arrayUnion(newPhoto), month, carKey:key},
+        {merge:true}
+      );
+    }
+    // Mirror in memory for immediate UI update (onSnapshot will confirm)
+    carAuditData(key).photos.push(newPhoto);
     render();
     toast('Photo saved ✓');
   } catch(err) {
