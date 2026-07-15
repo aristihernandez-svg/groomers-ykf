@@ -1,4 +1,4 @@
-<title>Skycare YKF — Executive Overview</title>
+<title>XXXXXX — Executive Overview</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -8,9 +8,8 @@
   --text:  #ddeeff; --muted:  #6a9ac0; --light:  #3a6080;
   --mono:  'Courier New', Courier, monospace;
   --sans:  -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-  --nav-w: 228px;
+  --nav-w: 232px;
 }
-
 :root[data-theme="light"] {
   --bg:#f0f4f8; --panel:#fff; --raised:#e8f0f8; --lift:#dceaf8;
   --blue:#1a5ab8; --amber:#a06010; --green:#0a8040; --red:#c02020;
@@ -21,150 +20,184 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-track{background:var(--bg)} ::-webkit-scrollbar-thumb{background:var(--light);border-radius:2px}
 
 /* ── SIDEBAR ── */
-.sidebar {
-  width:var(--nav-w); flex-shrink:0; position:fixed; top:0; left:0; height:100vh;
-  background:var(--panel); border-right:1px solid rgba(42,126,245,0.12);
-  display:flex; flex-direction:column; overflow-y:auto;
-}
-.sb-brand { padding:28px 22px 22px; border-bottom:1px solid rgba(42,126,245,0.1); }
-.sb-eyebrow { font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber); margin-bottom:6px; }
-.sb-title { font-size:17px; font-weight:900; color:var(--text); letter-spacing:-.02em; }
-.sb-title b { color:var(--blue); }
-.sb-sub { font-family:var(--mono); font-size:10px; color:var(--muted); margin-top:4px; }
-.sb-sec { font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--light); padding:20px 22px 6px; display:block; }
-.nav-link { display:flex; align-items:center; gap:8px; padding:8px 22px; font-size:12.5px; color:var(--muted); text-decoration:none; border-left:2px solid transparent; transition:color .15s,border-color .15s,background .12s; }
+.sidebar { width:var(--nav-w); flex-shrink:0; position:fixed; top:0; left:0; height:100vh; background:var(--panel); border-right:1px solid rgba(42,126,245,0.12); display:flex; flex-direction:column; overflow-y:auto; }
+.sb-brand { padding:28px 22px 24px; border-bottom:1px solid rgba(42,126,245,0.1); }
+.sb-eyebrow { font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber); margin-bottom:8px; }
+.sb-appname { font-size:22px; font-weight:900; color:var(--text); letter-spacing:-.03em; line-height:1.1; margin-bottom:4px; }
+.sb-sub { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.sb-sec-label { font-family:var(--mono); font-size:9px; letter-spacing:.18em; text-transform:uppercase; color:var(--light); padding:20px 22px 6px; display:block; }
+.nav-link { display:flex; align-items:center; gap:9px; padding:9px 22px; font-size:13px; color:var(--muted); text-decoration:none; border-left:2px solid transparent; transition:color .15s, border-color .15s, background .12s; }
 .nav-link:hover { color:var(--text); background:rgba(42,126,245,.05); }
-.nav-link.active { color:var(--blue); border-left-color:var(--blue); background:rgba(42,126,245,.07); }
-.nav-link .n { font-family:var(--mono); font-size:10px; color:var(--light); min-width:16px; }
+.nav-link.active { color:var(--blue); border-left-color:var(--blue); background:rgba(42,126,245,.07); font-weight:600; }
+.nav-link .n { font-family:var(--mono); font-size:10px; color:var(--light); min-width:18px; }
 .nav-link.active .n { color:var(--blue); }
-.sb-footer { margin-top:auto; padding:18px 22px; border-top:1px solid rgba(42,126,245,.1); font-family:var(--mono); font-size:10px; color:var(--light); }
+.sb-footer { margin-top:auto; padding:18px 22px; border-top:1px solid rgba(42,126,245,.1); font-family:var(--mono); font-size:10px; color:var(--light); line-height:1.6; }
 
 /* ── MAIN ── */
-.main { margin-left:var(--nav-w); flex:1; padding:52px 52px 120px; max-width:calc(var(--nav-w) + 760px); }
+.main { margin-left:var(--nav-w); flex:1; padding:56px 56px 120px; max-width:calc(var(--nav-w) + 780px); }
 
 /* ── SECTION ── */
-.section { margin-bottom:80px; scroll-margin-top:32px; }
-.eyebrow { font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--blue); margin-bottom:10px; display:block; }
-.section-h { font-size:clamp(22px,3vw,30px); font-weight:900; letter-spacing:-.03em; line-height:1.15; color:var(--text); margin-bottom:14px; }
-.lead { font-size:14px; color:var(--muted); line-height:1.8; margin-bottom:20px; max-width:620px; }
+.section { margin-bottom:88px; scroll-margin-top:32px; }
+
+/* Section eyebrow label */
+.sec-eyebrow { font-family:var(--mono); font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--blue); margin-bottom:8px; display:flex; align-items:center; gap:10px; }
+.sec-eyebrow::after { content:''; flex:1; height:1px; background:rgba(42,126,245,.12); }
+
+/* Main section heading */
+.sec-h { font-size:clamp(26px,3.5vw,36px); font-weight:900; letter-spacing:-.04em; line-height:1.1; color:var(--text); margin-bottom:16px; }
+
+/* Sub-heading — used within sections */
+.sub-h { font-size:18px; font-weight:800; color:var(--text); letter-spacing:-.02em; margin:36px 0 12px; display:flex; align-items:center; gap:10px; }
+.sub-h::before { content:''; width:3px; height:20px; background:var(--blue); border-radius:2px; flex-shrink:0; }
+.sub-h.amber::before { background:var(--amber); }
+.sub-h.green::before { background:var(--green); }
+
+/* Body text */
+.lead { font-size:14px; color:var(--muted); line-height:1.85; margin-bottom:18px; max-width:640px; }
 
 /* ── STAT TILES ── */
 .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:28px; }
-.stat { background:var(--raised); padding:22px 16px; text-align:center; }
-.stat-val { font-family:var(--mono); font-size:34px; font-weight:700; color:var(--amber); line-height:1; }
-.stat-label { font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted); margin-top:6px; }
+.stat { background:var(--raised); padding:24px 16px; text-align:center; }
+.stat-val { font-family:var(--mono); font-size:36px; font-weight:700; color:var(--amber); line-height:1; }
+.stat-label { font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--muted); margin-top:7px; }
 
 /* ── CALLOUT ── */
-.callout { background:var(--raised); border:1px solid rgba(42,126,245,.18); border-left:3px solid var(--blue); border-radius:8px; padding:16px 18px; margin-bottom:16px; }
-.callout-title { font-size:12px; font-weight:700; color:var(--text); margin-bottom:7px; }
+.callout { background:var(--raised); border:1px solid rgba(42,126,245,.18); border-left:3px solid var(--blue); border-radius:8px; padding:16px 20px; margin-bottom:18px; }
+.callout-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:7px; }
 .callout ul { padding-left:16px; display:flex; flex-direction:column; gap:4px; }
 .callout li { font-size:13px; color:var(--muted); line-height:1.65; }
-.callout.amber { border-left-color:var(--amber); }
 .callout.green { border-left-color:var(--green); }
 
-/* ── PROBLEM BLOCKS ── */
-.problem-grid { display:flex; flex-direction:column; gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:20px; }
-.problem-block { background:var(--panel); padding:20px 22px; display:grid; grid-template-columns:36px 1fr; gap:16px; align-items:start; }
-.pb-num { font-family:var(--mono); font-size:16px; font-weight:700; color:rgba(42,126,245,.35); line-height:1; padding-top:2px; }
-.pb-title { font-size:13.5px; font-weight:700; color:var(--text); margin-bottom:4px; }
-.pb-desc { font-size:12.5px; color:var(--muted); line-height:1.65; }
+/* ── BUILT FEATURE BLOCKS ── */
+.feat-block { background:var(--panel); border:1px solid rgba(42,126,245,.12); border-radius:10px; padding:20px 22px; margin-bottom:14px; }
+.feat-block-title { font-size:15px; font-weight:700; color:var(--text); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+.feat-block-title .dot { width:8px; height:8px; border-radius:50%; background:var(--blue); flex-shrink:0; }
+.feat-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { font-size:12px; padding:4px 11px; border-radius:5px; background:var(--raised); border:1px solid rgba(42,126,245,.12); color:var(--text); }
 
-/* ── TWO-COL SPLIT ── */
-.split { display:grid; grid-template-columns:1fr 1fr; gap:28px; align-items:start; margin-bottom:28px; }
-@media(max-width:700px){ .split{grid-template-columns:1fr} }
+/* ── PROBLEM BLOCKS ── */
+.problem-grid { display:flex; flex-direction:column; gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:28px; }
+.problem-block { background:var(--panel); padding:22px 24px; display:grid; grid-template-columns:40px 1fr; gap:16px; align-items:start; }
+.pb-num { font-family:var(--mono); font-size:20px; font-weight:700; color:rgba(42,126,245,.3); line-height:1; padding-top:2px; }
+.pb-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:5px; }
+.pb-desc { font-size:13px; color:var(--muted); line-height:1.7; }
+
+/* ── USER ROLE BLOCKS ── */
+.role-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:24px; }
+.role-block { background:var(--panel); padding:20px 22px; }
+.role-label { font-family:var(--mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+.role-name { font-size:16px; font-weight:800; color:var(--text); margin-bottom:10px; }
+.role-block ul { padding-left:16px; display:flex; flex-direction:column; gap:4px; }
+.role-block li { font-size:12.5px; color:var(--muted); line-height:1.6; }
 
 /* ── WIDGET SHARED ── */
 .widget { background:var(--raised); border:1px solid rgba(42,126,245,.15); border-radius:10px; overflow:hidden; }
-.wh { background:var(--lift); border-bottom:1px solid rgba(42,126,245,.15); padding:11px 16px; display:flex; align-items:center; justify-content:space-between; }
+.wh { background:var(--lift); border-bottom:1px solid rgba(42,126,245,.12); padding:12px 16px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
 .wh-title { font-family:var(--mono); font-size:10px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase; }
 .wh-meta { font-family:var(--mono); font-size:10px; color:var(--blue); }
 .wh-live { font-family:var(--mono); font-size:10px; color:var(--green); display:flex; align-items:center; gap:5px; }
 .wh-live::before { content:''; width:5px; height:5px; border-radius:50%; background:var(--green); animation:pulse-dot 1.5s infinite; }
+.wfooter { padding:10px 16px; border-top:1px solid rgba(42,126,245,.1); display:flex; justify-content:space-between; align-items:center; font-family:var(--mono); font-size:10px; color:var(--muted); }
 
 /* task widget */
 .progress-track { height:2px; background:var(--light); }
 .progress-fill { height:100%; background:var(--blue); transition:width .4s ease; }
 .task-list { padding:6px; display:flex; flex-direction:column; gap:3px; }
-.task-row { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:6px; cursor:pointer; transition:background .12s; user-select:none; }
+.task-row { display:flex; align-items:center; gap:10px; padding:9px 11px; border-radius:6px; cursor:pointer; transition:background .12s; user-select:none; }
 .task-row:hover { background:var(--lift); }
 .task-row.done .t-label { color:var(--muted); text-decoration:line-through; }
 .t-cb { width:18px; height:18px; border-radius:50%; border:2px solid var(--light); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:9px; transition:all .2s; }
 .task-row.done .t-cb { background:var(--blue); border-color:var(--blue); color:white; }
-.t-label { font-size:12.5px; color:var(--text); }
-.wfooter { padding:10px 16px; border-top:1px solid rgba(42,126,245,.1); display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px; color:var(--muted); }
+.t-label { font-size:13px; color:var(--text); }
 
 /* fleet widget */
 .fleet-rows { padding:6px; display:flex; flex-direction:column; gap:3px; }
-.fleet-row { display:grid; grid-template-columns:38px 1fr auto; align-items:center; gap:10px; padding:9px 10px; border-radius:6px; background:var(--panel); }
+.fleet-row { display:grid; grid-template-columns:40px 1fr auto; align-items:center; gap:10px; padding:9px 11px; border-radius:6px; background:var(--panel); }
 .f-tail { font-family:var(--mono); font-size:12px; font-weight:700; color:var(--text); }
-.f-info { font-size:11.5px; color:var(--muted); }
+.f-info { font-size:12px; color:var(--muted); }
 .f-info b { color:var(--text); }
 .f-eta { font-family:var(--mono); font-size:10.5px; text-align:right; white-space:nowrap; }
 .f-eta.live { color:var(--blue); }
 .f-eta.close { color:var(--amber); }
 .f-eta.down { color:var(--light); }
-.fleet-alert { margin:3px 6px 6px; background:#061810; border:1px solid rgba(32,192,96,.25); border-radius:6px; padding:9px 12px; font-family:var(--mono); font-size:11px; line-height:1.55; }
+.fleet-alert { margin:3px 6px 6px; background:#061810; border:1px solid rgba(32,192,96,.25); border-radius:6px; padding:10px 14px; font-family:var(--mono); font-size:11px; line-height:1.55; }
 .fa-title { color:var(--green); font-weight:700; }
 .fa-body { color:#4a9860; }
 
 /* vehicle widget */
 .veh-rows { padding:6px; display:flex; flex-direction:column; gap:3px; }
-.veh-row { padding:12px 10px; border-radius:6px; background:var(--panel); cursor:pointer; transition:background .12s; }
+.veh-row { padding:12px 11px; border-radius:6px; background:var(--panel); cursor:pointer; transition:background .12s; }
 .veh-row:hover { background:var(--lift); }
-.veh-top { display:flex; justify-content:space-between; margin-bottom:7px; }
-.v-name { font-size:12.5px; font-weight:700; color:var(--text); }
+.veh-top { display:flex; justify-content:space-between; margin-bottom:8px; }
+.v-name { font-size:13px; font-weight:700; color:var(--text); }
 .v-km { font-family:var(--mono); font-size:10px; color:var(--muted); }
 .gauge-track { height:4px; background:var(--light); border-radius:2px; overflow:hidden; margin-bottom:5px; }
 .gauge-fill { height:100%; border-radius:2px; transition:width 1.2s cubic-bezier(.4,0,.2,1); width:0; }
 .veh-bot { display:flex; justify-content:space-between; }
-.v-pct { font-family:var(--mono); font-size:10.5px; }
-.v-status { font-size:10.5px; font-weight:600; }
-.veh-alert { margin:3px 6px 6px; border-radius:6px; padding:9px 12px; font-family:var(--mono); font-size:11px; line-height:1.55; display:none; }
+.v-pct { font-family:var(--mono); font-size:11px; }
+.v-status { font-size:11px; font-weight:600; }
+.veh-alert { margin:3px 6px 6px; border-radius:6px; padding:10px 14px; font-family:var(--mono); font-size:11px; line-height:1.55; display:none; }
 .va-title { font-weight:700; margin-bottom:2px; }
+.va-body { font-size:11px; color:var(--muted); }
 
-/* notif feed */
-.notif-feed { padding:6px; display:flex; flex-direction:column; gap:3px; min-height:180px; }
-.notif-item { padding:9px 12px; border-radius:6px; background:var(--panel); font-family:var(--mono); font-size:11.5px; line-height:1.5; opacity:0; transform:translateY(8px); transition:opacity .35s ease, transform .35s ease; }
+/* notification feed */
+.notif-feed { padding:6px; display:flex; flex-direction:column; gap:3px; min-height:160px; }
+.notif-item { padding:10px 12px; border-radius:6px; background:var(--panel); font-size:12px; opacity:0; transform:translateY(8px); transition:opacity .35s ease,transform .35s ease; }
 .notif-item.in { opacity:1; transform:translateY(0); }
 .notif-item .nt { font-weight:700; margin-bottom:2px; }
 .notif-item .nb { color:var(--muted); }
 .notif-item.shift .nt { color:var(--blue); }
-.notif-item.fuel .nt  { color:var(--amber); }
+.notif-item.fuel .nt { color:var(--amber); }
 .notif-item.fleet .nt { color:var(--green); }
-.notif-item.mx .nt    { color:var(--purple,#a855f7); }
 
-/* feat groups */
-.feat-group { margin-bottom:20px; }
-.fg-title { font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--blue); margin-bottom:10px; padding-bottom:7px; border-bottom:1px solid rgba(42,126,245,.12); }
-.chips { display:flex; flex-wrap:wrap; gap:6px; }
-.chip { font-size:12px; padding:4px 11px; border-radius:5px; background:var(--raised); border:1px solid rgba(42,126,245,.12); color:var(--text); }
+/* supply widget */
+.sf-btn { font-family:var(--mono); font-size:9px; letter-spacing:.08em; text-transform:uppercase; padding:4px 10px; border-radius:4px; border:1px solid var(--light); color:var(--muted); background:transparent; cursor:pointer; transition:all .12s; }
+.sf-btn:hover { border-color:var(--blue); color:var(--blue); }
+.sf-btn.active { background:var(--blue); border-color:var(--blue); color:white; }
+.supply-row { display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:10px; padding:9px 11px; border-radius:6px; background:var(--panel); }
+.supply-row.in-cart { background:rgba(42,126,245,.07); }
+.sr-info { display:flex; flex-direction:column; gap:2px; }
+.sr-name { font-size:13px; color:var(--text); }
+.sr-meta { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.sr-tag { font-family:var(--mono); font-size:9px; padding:2px 7px; border-radius:3px; background:var(--raised); border:1px solid var(--light); color:var(--muted); white-space:nowrap; }
+.sr-add { font-family:var(--mono); font-size:11px; font-weight:700; width:28px; height:28px; border-radius:50%; border:1.5px solid var(--blue); color:var(--blue); background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .15s; flex-shrink:0; }
+.sr-add:hover { background:var(--blue); color:white; }
+.sr-add.added { background:var(--blue); color:white; border-color:var(--blue); }
+.cart-store-name { font-family:var(--mono); font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--amber); padding:7px 11px 4px; }
+.cart-item-row { display:flex; align-items:center; justify-content:space-between; padding:7px 11px; border-radius:5px; background:var(--panel); margin-bottom:2px; }
+.cart-item-name { font-size:12.5px; color:var(--text); }
+.cart-item-remove { font-family:var(--mono); font-size:10px; color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 6px; transition:color .12s; }
+.cart-item-remove:hover { color:var(--red); }
+.buying-active { background:rgba(32,192,96,.03) !important; border-color:rgba(32,192,96,.25) !important; }
 
-/* user grid */
-.user-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:20px; }
-.user-block { background:var(--panel); padding:18px 20px; }
-.user-label { font-family:var(--mono); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
-.user-name { font-size:13.5px; font-weight:700; color:var(--text); margin-bottom:8px; }
-.user-block ul { padding-left:14px; display:flex; flex-direction:column; gap:3px; }
-.user-block li { font-size:12px; color:var(--muted); line-height:1.5; }
-
-/* cost grid */
-.cost-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:16px; }
+/* ── COST GRID ── */
+.cost-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; margin-bottom:18px; }
 .cost-cell { background:var(--raised); padding:18px 14px; text-align:center; }
-.cost-icon { font-size:18px; margin-bottom:6px; }
+.cost-icon { font-size:20px; margin-bottom:6px; }
 .cost-name { font-size:12px; font-weight:700; color:var(--text); margin-bottom:3px; }
 .cost-detail { font-size:11px; color:var(--muted); line-height:1.4; margin-bottom:6px; }
-.cost-val { font-family:var(--mono); font-size:14px; font-weight:700; color:var(--green); }
+.cost-val { font-family:var(--mono); font-size:15px; font-weight:700; color:var(--green); }
 
-/* next items */
-.next-grid { display:flex; flex-direction:column; gap:1px; background:var(--light); border:1px solid var(--light); border-radius:10px; overflow:hidden; }
-.next-block { background:var(--panel); padding:18px 20px; display:grid; grid-template-columns:28px 1fr; gap:14px; align-items:start; cursor:pointer; transition:background .12s; }
-.next-block:hover { background:var(--raised); }
-.next-n { font-family:var(--mono); font-size:20px; font-weight:700; color:rgba(42,126,245,.28); line-height:1; }
-.next-title { font-size:13.5px; font-weight:700; color:var(--text); margin-bottom:4px; display:flex; align-items:center; justify-content:space-between; }
+/* ── WHAT'S NEXT ── */
+.next-timeline { display:flex; flex-direction:column; position:relative; }
+.next-timeline::before { content:''; position:absolute; left:19px; top:0; bottom:0; width:2px; background:rgba(42,126,245,.15); }
+.next-card { display:flex; gap:20px; padding:0 0 28px; position:relative; cursor:pointer; }
+.next-card:last-child { padding-bottom:0; }
+.next-dot-col { display:flex; flex-direction:column; align-items:center; flex-shrink:0; width:40px; }
+.next-dot { width:40px; height:40px; border-radius:50%; background:var(--panel); border:2px solid var(--light); display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-size:13px; font-weight:700; color:var(--muted); transition:all .2s; flex-shrink:0; position:relative; z-index:1; }
+.next-card:hover .next-dot, .next-card.open .next-dot { border-color:var(--blue); color:var(--blue); background:rgba(42,126,245,.08); }
+.next-body { background:var(--panel); border:1px solid rgba(42,126,245,.12); border-radius:10px; flex:1; padding:18px 20px; transition:border-color .2s; }
+.next-card:hover .next-body, .next-card.open .next-body { border-color:rgba(42,126,245,.3); }
+.next-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.next-title { font-size:15px; font-weight:800; color:var(--text); }
+.next-badge { font-family:var(--mono); font-size:9px; letter-spacing:.1em; text-transform:uppercase; padding:3px 9px; border-radius:100px; border:1px solid; flex-shrink:0; }
+.badge-planned { color:var(--muted); border-color:var(--light); }
+.badge-design { color:var(--blue); border-color:rgba(42,126,245,.3); background:rgba(42,126,245,.07); }
+.badge-soon { color:var(--amber); border-color:rgba(240,160,32,.3); background:rgba(240,160,32,.06); }
+.next-desc { font-size:13px; color:var(--muted); line-height:1.7; margin-top:10px; display:none; }
+.next-card.open .next-desc { display:block; }
 .next-toggle { font-family:var(--mono); font-size:12px; color:var(--muted); transition:transform .2s; }
-.next-block.open .next-toggle { transform:rotate(180deg); }
-.next-desc { font-size:12.5px; color:var(--muted); line-height:1.65; display:none; margin-top:6px; }
-.next-block.open .next-desc { display:block; }
+.next-card.open .next-toggle { transform:rotate(180deg); }
 
 /* reveal */
 .reveal { opacity:0; transform:translateY(20px); transition:opacity .5s ease,transform .5s ease; }
@@ -174,345 +207,408 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
   body{flex-direction:column}
   .sidebar{position:relative;width:100%;height:auto;border-right:none;border-bottom:1px solid rgba(42,126,245,.12)}
   .main{margin-left:0;padding:28px 20px 80px}
-  .stats{grid-template-columns:1fr 1fr}
-  .user-grid{grid-template-columns:1fr}
+  .stats,.role-grid{grid-template-columns:1fr 1fr}
+}
+@media(max-width:500px){
+  .stats,.role-grid{grid-template-columns:1fr}
 }
 
 @keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 
+<!-- ── SIDEBAR ── -->
 <div class="sidebar">
   <div class="sb-brand">
     <div class="sb-eyebrow">Executive Overview · July 2026</div>
-    <div class="sb-title">Sky<b>care</b> YKF</div>
-    <div class="sb-sub">Ground Operations Platform</div>
+    <div class="sb-appname">XXXXXX</div>
+    <div class="sb-sub">Ground Operations Platform · CYKF</div>
   </div>
-  <span class="sb-sec">Contents</span>
-  <a class="nav-link active" href="#what"><span class="n">01</span>What Is Skycare</a>
-  <a class="nav-link" href="#problem"><span class="n">02</span>The Problem It Solves</a>
-  <a class="nav-link" href="#team"><span class="n">03</span>How the Team Uses It</a>
-  <a class="nav-link" href="#built"><span class="n">04</span>What We Built</a>
-  <a class="nav-link" href="#how"><span class="n">05</span>How It Works</a>
-  <a class="nav-link" href="#next"><span class="n">06</span>What's Next</a>
-  <div class="sb-footer">CYKF · Kitchener–Waterloo</div>
+  <span class="sb-sec-label">Contents</span>
+  <a class="nav-link active" href="#what"><span class="n">01</span>What Is the App</a>
+  <a class="nav-link" href="#built"><span class="n">02</span>What We Built</a>
+  <a class="nav-link" href="#problem"><span class="n">03</span>The Problem It Solves</a>
+  <a class="nav-link" href="#how"><span class="n">04</span>How It Works</a>
+  <a class="nav-link" href="#next"><span class="n">05</span>What's Next</a>
+  <div class="sb-footer">Skycare Aviation · CYKF<br>Kitchener–Waterloo, ON</div>
 </div>
 
+<!-- ── MAIN ── -->
 <div class="main">
 
-  <!-- 01 WHAT IS SKYCARE -->
-  <div class="section" id="what">
-    <span class="eyebrow">01 — Overview</span>
-    <h2 class="section-h">What Is Skycare</h2>
-    <p class="lead">Skycare is a mobile operations platform built specifically for the ground crew team at Kitchener–Waterloo Regional Airport. It replaces paper checklists, group texts, and verbal handoffs with a single app every team member runs on their phone — no installation, no accounts, no IT department required.</p>
-    <p class="lead">Built in-house and deployed directly on the floor, it is live and used by the team every day.</p>
+<!-- ══════════════════════════════════════════
+     01 — WHAT IS THE APP
+═══════════════════════════════════════════ -->
+<div class="section" id="what">
+  <div class="sec-eyebrow">01 — Overview</div>
+  <h2 class="sec-h">What Is the App</h2>
+  <p class="lead">XXXXXX is a mobile operations platform built specifically for the ground crew team at Skycare's Kitchener–Waterloo base. It replaces paper checklists, group texts, and verbal handoffs with a single app every team member runs on their phone — no installation, no accounts, no IT department required.</p>
+  <p class="lead">Built in-house and deployed directly on the floor, it is live and used by the Skycare team every shift.</p>
 
-    <div class="stats reveal">
-      <div class="stat"><div class="stat-val" data-target="29">0</div><div class="stat-label">Features in production</div></div>
-      <div class="stat"><div class="stat-val" data-target="8">0</div><div class="stat-label">Vehicles tracked</div></div>
-      <div class="stat"><div class="stat-val" data-target="10">0</div><div class="stat-label">Fleet aircraft tracked</div></div>
-    </div>
-
-    <div class="callout reveal">
-      <div class="callout-title">Built for this operation</div>
-      <ul>
-        <li>Task checklists, flight logs, crew car status, and supply management — all in one place</li>
-        <li>All data syncs in real time across every phone on the team</li>
-        <li>Works offline — no connectivity required on the ramp</li>
-        <li>Push notifications for shift reminders, fuel alerts, and fleet arrivals</li>
-      </ul>
-    </div>
+  <div class="stats reveal">
+    <div class="stat"><div class="stat-val" data-target="29">0</div><div class="stat-label">Features in production</div></div>
+    <div class="stat"><div class="stat-val" data-target="8">0</div><div class="stat-label">Vehicles tracked</div></div>
+    <div class="stat"><div class="stat-val" data-target="10">0</div><div class="stat-label">Fleet aircraft tracked</div></div>
   </div>
 
-  <!-- 02 THE PROBLEM -->
-  <div class="section" id="problem">
-    <span class="eyebrow">02 — Context</span>
-    <h2 class="section-h">The Problem It Solves</h2>
-    <p class="lead">Ground operations at a regional airport involve multiple roles, constant staff movement, and no margin for missed steps. Before Skycare, coordination depended on informal tools — group texts, printed checklists, and tribal knowledge passed between shifts.</p>
-    <div class="problem-grid reveal">
-      <div class="problem-block">
-        <div class="pb-num">01</div>
-        <div><div class="pb-title">High turnover, no loss of institutional knowledge</div><div class="pb-desc">Groomers turn over every 6 to 12 months. Skycare embeds procedures into the platform — a new hire on day one follows the same process as a veteran, because the steps live in the app, not in someone's memory.</div></div>
-      </div>
-      <div class="problem-block">
-        <div class="pb-num">02</div>
-        <div><div class="pb-title">Consistent work quality across the team</div><div class="pb-desc">Every groomer sees the same task lists, the same procedures, the same checklists — regardless of experience level. The quality of a shift no longer depends on who's working it.</div></div>
-      </div>
-      <div class="problem-block">
-        <div class="pb-num">03</div>
-        <div><div class="pb-title">A foundation for multi-base consistency</div><div class="pb-desc">Because the platform is cloud-based and configurable, the same processes used at CYKF can be replicated at any Skycare base — creating company-wide operational standards without rebuilding anything from scratch.</div></div>
-      </div>
-      <div class="problem-block">
-        <div class="pb-num">04</div>
-        <div><div class="pb-title">A live management layer, not just a task tool</div><div class="pb-desc">Skycare gives supervisors and management a live operational picture — task completion, fleet positions, vehicle status, supply levels, shift handoffs — all in one place, updated in real time. The team executes; the platform reports.</div></div>
-      </div>
-    </div>
+  <div class="callout reveal">
+    <div class="callout-title">Built for this operation, by someone inside it</div>
+    <ul>
+      <li>Every feature exists because Skycare's daily operations revealed the need — not assumptions</li>
+      <li>All data syncs in real time across every phone on the team</li>
+      <li>Works offline on the ramp — no connectivity required</li>
+      <li>Push notifications for shift reminders, fuel alerts, and fleet arrivals</li>
+    </ul>
   </div>
-
-  <!-- 03 HOW THE TEAM USES IT -->
-  <div class="section" id="team">
-    <span class="eyebrow">03 — Users</span>
-    <h2 class="section-h">How the Team Uses It</h2>
-    <p class="lead">Every role in the operation has a dedicated view. The demos below show the actual tools — click tasks to check them off, watch the fleet update live.</p>
-
-    <div class="user-grid reveal">
-      <div class="user-block"><div class="user-label">Primary users</div><div class="user-name">Groomers</div><ul><li>Check off daily and weekly tasks</li><li>Log arrivals, departures, groomings</li><li>Manage the shared shopping cart</li><li>Track crew car status</li><li>Receive shift notifications</li></ul></div>
-      <div class="user-block"><div class="user-label">Maintenance</div><div class="user-name">Mechanics</div><ul><li>Access aircraft reference documentation</li><li>Snag reporting planned — reference only</li><li>Will not replace official logbook entries</li></ul></div>
-      <div class="user-block"><div class="user-label">Operations</div><div class="user-name">Supervisor / Buyer</div><ul><li>Activate buying session mode</li><li>Review cart grouped by store</li><li>Monitor audit completion</li><li>Review shift handoff notes</li></ul></div>
-      <div class="user-block"><div class="user-label">Ramp access</div><div class="user-name">Ramp Crew</div><ul><li>Scan QR code on any vehicle</li><li>Update fuel, odometer, and notes instantly</li><li>No login or navigation required</li></ul></div>
-    </div>
-
-    <!-- Interactive: task checklist -->
-    <p class="lead" style="margin-bottom:12px">Live task checklist — click to check off:</p>
-    <div class="widget reveal">
-      <div class="wh"><div class="wh-title">Shift Tasks — Aircraft</div><div class="wh-meta" id="ceoTaskCount">0 / 6</div></div>
-      <div class="progress-track"><div class="progress-fill" id="ceoTaskBar" style="width:0%"></div></div>
-      <div class="task-list">
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Vacuum cabin — Metroliner IOC</div></div>
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Clean windows — exterior</div></div>
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Lavatory service</div></div>
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Catering restock — Charter</div></div>
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">O₂ check and fill-up</div></div>
-        <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Crew car fuel — Elantra</div></div>
-      </div>
-      <div class="wfooter"><span>Shift handoff at 18:00</span><span id="ceoTaskStatus" style="color:var(--muted)">Not started</span></div>
-    </div>
-  </div>
-
-  <!-- 04 WHAT WE BUILT -->
-  <div class="section" id="built">
-    <span class="eyebrow">04 — Product</span>
-    <h2 class="section-h">What We Built</h2>
-    <p class="lead">The platform covers six operational areas, all accessible from a single app on any phone. The demos below run live data.</p>
-
-    <!-- Fleet live widget -->
-    <p class="lead" style="margin-bottom:12px">Live fleet tracking — positions update every 2 seconds:</p>
-    <div class="widget reveal" style="margin-bottom:28px">
-      <div class="wh"><div class="wh-title">Fleet Status</div><div class="wh-live">Live</div></div>
-      <div class="fleet-rows" id="ceoFleetRows"></div>
-      <div class="fleet-alert" id="ceoFleetAlert" style="display:none">
-        <div class="fa-title">✈ IOC approaching — 60 nm alert</div>
-        <div class="fa-body" id="ceoFleetAlertBody"></div>
-      </div>
-    </div>
-
-    <!-- Vehicle fuel gauges -->
-    <p class="lead" style="margin-bottom:12px">Crew vehicle status — click any car for details:</p>
-    <div class="widget reveal" style="margin-bottom:28px">
-      <div class="wh"><div class="wh-title">Crew Vehicles</div><div class="wh-meta">3 vehicles</div></div>
-      <div class="veh-rows">
-        <div class="veh-row" onclick="ceoSelectVeh(this,100,'#20c060','Full','ok','Escape')">
-          <div class="veh-top"><div class="v-name">Ford Escape</div><div class="v-km">87,412 km</div></div>
-          <div class="gauge-track"><div class="gauge-fill" style="background:#20c060" data-pct="100"></div></div>
-          <div class="veh-bot"><div class="v-pct" style="color:#20c060">100%</div><div class="v-status" style="color:#20c060">Full</div></div>
-        </div>
-        <div class="veh-row" onclick="ceoSelectVeh(this,52,'#f0a020','Half tank','warn','Elantra')">
-          <div class="veh-top"><div class="v-name">Hyundai Elantra</div><div class="v-km">54,201 km</div></div>
-          <div class="gauge-track"><div class="gauge-fill" style="background:#f0a020" data-pct="52"></div></div>
-          <div class="veh-bot"><div class="v-pct" style="color:#f0a020">52%</div><div class="v-status" style="color:#f0a020">Half tank</div></div>
-        </div>
-        <div class="veh-row" onclick="ceoSelectVeh(this,18,'#e04040','Low — refuel','alert','Micra')">
-          <div class="veh-top"><div class="v-name">Nissan Micra</div><div class="v-km">31,055 km</div></div>
-          <div class="gauge-track"><div class="gauge-fill" style="background:#e04040" data-pct="18"></div></div>
-          <div class="veh-bot"><div class="v-pct" style="color:#e04040">18%</div><div class="v-status" style="color:#e04040">Low — refuel</div></div>
-        </div>
-      </div>
-      <div class="veh-alert" id="ceoVehAlert"><div class="va-title" id="ceoVehTitle"></div><div id="ceoVehBody" style="font-size:11.5px;color:var(--muted)"></div></div>
-    </div>
-
-    <!-- Notification feed -->
-    <p class="lead" style="margin-bottom:12px">Live notification feed — push alerts your team receives automatically:</p>
-    <div class="widget reveal" style="margin-bottom:28px">
-      <div class="wh"><div class="wh-title">Notification Feed</div><div class="wh-live">Live</div></div>
-      <div class="notif-feed" id="ceoNotifFeed"></div>
-    </div>
-
-    <!-- Feature groups -->
-    <div class="feat-group reveal">
-      <div class="fg-title">Task Management</div>
-      <div class="chips"><span class="chip">Daily shift checklist</span><span class="chip">7-day weekly view</span><span class="chip">Area-grouped tasks</span><span class="chip">Progress tracking</span><span class="chip">Real-time sync</span></div>
-    </div>
-    <!-- Supply Management Interactive Mockup -->
-    <div class="feat-group reveal">
-      <div class="fg-title">Supply Management</div>
-      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">This is more than a shopping list. It's a supply management system — the team flags what's needed by category and aircraft type, the supervisor activates a buying session, and the cart groups everything by store for efficient purchasing. Inventory notes keep quantities and usage tracked over time. Try it below.</p>
-    </div>
-
-    <div class="widget reveal" style="margin-bottom:28px" id="supplyWidget">
-      <div class="wh" style="gap:10px;flex-wrap:wrap">
-        <div class="wh-title">Supply Catalog</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap" id="supplyFilters">
-          <button class="sf-btn active" onclick="filterSupply('all',this)">All</button>
-          <button class="sf-btn" onclick="filterSupply('grooming',this)">Grooming</button>
-          <button class="sf-btn" onclick="filterSupply('catering',this)">Catering</button>
-          <button class="sf-btn" onclick="filterSupply('jets',this)">Jets</button>
-          <button class="sf-btn" onclick="filterSupply('metros',this)">Metros</button>
-          <button class="sf-btn" onclick="filterSupply('office',this)">Office</button>
-        </div>
-        <div class="wh-meta" id="cartCount" style="cursor:pointer;display:flex;align-items:center;gap:5px" onclick="toggleCart()">
-          🛒 <span id="cartNum">0</span> items
-        </div>
-      </div>
-
-      <!-- catalog items -->
-      <div id="supplyList" style="padding:6px;display:flex;flex-direction:column;gap:3px"></div>
-
-      <!-- cart view -->
-      <div id="cartView" style="display:none;border-top:1px solid rgba(42,126,245,0.12)">
-        <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
-          <span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)">Active Shopping Cart</span>
-          <button onclick="toggleCart()" style="font-family:var(--mono);font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer">← Back to catalog</button>
-        </div>
-        <div id="cartItems" style="padding:0 6px 6px;display:flex;flex-direction:column;gap:4px"></div>
-        <div id="cartEmpty" style="padding:14px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;display:none">Cart is empty — add items from the catalog</div>
-      </div>
-
-      <div class="wfooter">
-        <span id="supplyFooterLeft">Shared in real time across all phones</span>
-        <span id="buyingSessionBtn" onclick="toggleBuyingSession()" style="cursor:pointer;color:var(--muted)">Activate buying session</span>
-      </div>
-    </div>
-
-    <style>
-    .sf-btn{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid var(--light);color:var(--muted);background:transparent;cursor:pointer;transition:all .12s;}
-    .sf-btn:hover{border-color:var(--blue);color:var(--blue);}
-    .sf-btn.active{background:var(--blue);border-color:var(--blue);color:white;}
-    .supply-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;background:var(--panel);}
-    .supply-row.in-cart{background:rgba(42,126,245,0.07);}
-    .sr-info{display:flex;flex-direction:column;gap:2px;}
-    .sr-name{font-size:12.5px;color:var(--text);}
-    .sr-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
-    .sr-tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;background:var(--raised);border:1px solid var(--light);color:var(--muted);}
-    .sr-add{font-family:var(--mono);font-size:10px;font-weight:700;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--blue);color:var(--blue);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
-    .sr-add:hover{background:var(--blue);color:white;}
-    .sr-add.added{background:var(--blue);color:white;border-color:var(--blue);}
-    .cart-store{margin-bottom:8px;}
-    .cart-store-name{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);padding:6px 10px 4px;}
-    .cart-item-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:5px;background:var(--panel);margin-bottom:2px;}
-    .cart-item-name{font-size:12.5px;color:var(--text);}
-    .cart-item-remove{font-family:var(--mono);font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 6px;}
-    .cart-item-remove:hover{color:var(--red);}
-    .buying-active{background:rgba(32,192,96,.06)!important;border-color:rgba(32,192,96,.25)!important;}
-    </style>
-    <div class="feat-group reveal">
-      <div class="fg-title">SOPs and Procedures</div>
-      <div class="chips"><span class="chip">Step-by-step grooming procedures</span><span class="chip">Vendor and supplier contacts</span><span class="chip">Pilot study hub — PA-31 Navajo</span></div>
-    </div>
-  </div>
-
-  <!-- 05 HOW IT WORKS -->
-  <div class="section" id="how">
-    <span class="eyebrow">05 — Technology</span>
-    <h2 class="section-h">How It Works</h2>
-    <p class="lead">Built to be simple to maintain and cost nothing to run. Every team member opens the app in their phone browser — no app store, no account creation. Data lives in Google's Firebase, so all phones see the same information in real time.</p>
-    <div class="cost-grid reveal">
-      <div class="cost-cell"><div class="cost-icon">🌐</div><div class="cost-name">Hosting</div><div class="cost-detail">GitHub Pages — CDN + HTTPS</div><div class="cost-val">$0</div></div>
-      <div class="cost-cell"><div class="cost-icon">🔥</div><div class="cost-name">Database</div><div class="cost-detail">Firebase Firestore</div><div class="cost-val">$0</div></div>
-      <div class="cost-cell"><div class="cost-icon">⚙️</div><div class="cost-name">Notifications</div><div class="cost-detail">GitHub Actions</div><div class="cost-val">$0</div></div>
-      <div class="cost-cell"><div class="cost-icon">⏰</div><div class="cost-name">Scheduler</div><div class="cost-detail">cron-job.org</div><div class="cost-val">$0</div></div>
-      <div class="cost-cell"><div class="cost-icon">📡</div><div class="cost-name">Fleet Data</div><div class="cost-detail">OpenSky API</div><div class="cost-val">$0</div></div>
-    </div>
-    <div class="callout green reveal">
-      <div class="callout-title">Total infrastructure cost: $0/month</div>
-      <ul>
-        <li>All team members access via a URL on their phone — no app store, no account, no device enrollment</li>
-        <li>Open the link, tap "Add to Home Screen" — looks and works like a native app</li>
-        <li>Works offline on the ramp — no connectivity required</li>
-      </ul>
-    </div>
-  </div>
-
-  <!-- 06 WHAT'S NEXT -->
-  <div class="section" id="next">
-    <span class="eyebrow">06 — Roadmap</span>
-    <h2 class="section-h">What's Next</h2>
-    <p class="lead">Four improvements planned for the near term. Click each item to expand.</p>
-    <div class="next-grid reveal">
-      <div class="next-block" onclick="toggleNext(this)">
-        <div class="next-n">01</div>
-        <div>
-          <div class="next-title">Pilot / MX Snag Reporting <span class="next-toggle">▾</span></div>
-          <div class="next-desc">A digital reference log for recurring aircraft issues — pilots and mechanics can note observations from their phone with a photo and description. This is a planning and awareness tool only; it does not replace and will never replace official logbook snag entries, which remain the regulatory record.</div>
-        </div>
-      </div>
-      <div class="next-block" onclick="toggleNext(this)">
-        <div class="next-n">02</div>
-        <div>
-          <div class="next-title">NFC Tags on Crew Cars <span class="next-toggle">▾</span></div>
-          <div class="next-desc">Small stickers on each vehicle — tap with any phone and the car update form opens instantly. Faster than scanning a QR code, and no camera required.</div>
-        </div>
-      </div>
-      <div class="next-block" onclick="toggleNext(this)">
-        <div class="next-n">03</div>
-        <div>
-          <div class="next-title">Secure Login <span class="next-toggle">▾</span></div>
-          <div class="next-desc">Replace the shared PIN with individual accounts (email or Google login). Allows per-role access — groomers see the groomer view, mechanics see the MX view, supervisors see everything.</div>
-        </div>
-      </div>
-      <div class="next-block" onclick="toggleNext(this)">
-        <div class="next-n">04</div>
-        <div>
-          <div class="next-title">App Store Listing <span class="next-toggle">▾</span></div>
-          <div class="next-desc">Publish to the Apple App Store and Google Play. The app already works like a native app — this step packages it formally, enables system-style notification prompts, and ensures automatic updates to every phone without any action from the team.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
 </div>
+
+
+<!-- ══════════════════════════════════════════
+     02 — WHAT WE BUILT
+═══════════════════════════════════════════ -->
+<div class="section" id="built">
+  <div class="sec-eyebrow">02 — Product</div>
+  <h2 class="sec-h">What We Built</h2>
+  <p class="lead">Six operational areas — all accessible from a single link on any phone, real data, live every shift.</p>
+
+  <!-- Flight Operations -->
+  <div class="sub-h">Flight Operations</div>
+  <p class="lead" style="margin-bottom:12px">Live positions for every aircraft in the fleet. When a plane crosses within 60 nm of CYKF, every groomer's phone gets an automatic alert. The tracker below runs live — positions update every 2 seconds.</p>
+  <div class="widget reveal" style="margin-bottom:20px">
+    <div class="wh"><div class="wh-title">Fleet Status</div><div class="wh-live">Live</div></div>
+    <div class="fleet-rows" id="ceoFleetRows"></div>
+    <div class="fleet-alert" id="ceoFleetAlert" style="display:none">
+      <div class="fa-title">✈ IOC approaching — 60 nm alert</div>
+      <div class="fa-body" id="ceoFleetAlertBody"></div>
+    </div>
+  </div>
+  <div class="feat-block reveal">
+    <div class="feat-block-title"><span class="dot"></span>Flight features</div>
+    <div class="feat-chips">
+      <span class="chip">Flight log — arrivals, departures, groomings</span>
+      <span class="chip">Live fleet map — all 10 aircraft</span>
+      <span class="chip">Distance, altitude, speed, ETA per tail</span>
+      <span class="chip">60 nm arrival push alert</span>
+      <span class="chip">End-of-day shift handoff</span>
+    </div>
+  </div>
+
+  <!-- Crew Car Management -->
+  <div class="sub-h">Crew Car Management</div>
+  <p class="lead" style="margin-bottom:12px">Fuel level, odometer, service tracker, and monthly photo audit for every Skycare vehicle. Click any car below for its status.</p>
+  <div class="widget reveal" style="margin-bottom:20px">
+    <div class="wh"><div class="wh-title">Crew Vehicles</div><div class="wh-meta">3 of 8 shown</div></div>
+    <div class="veh-rows">
+      <div class="veh-row" onclick="ceoSelectVeh(this,100,'#20c060','Full','ok','Escape')">
+        <div class="veh-top"><div class="v-name">Ford Escape</div><div class="v-km">87,412 km</div></div>
+        <div class="gauge-track"><div class="gauge-fill" style="background:#20c060" data-pct="100"></div></div>
+        <div class="veh-bot"><div class="v-pct" style="color:#20c060">100%</div><div class="v-status" style="color:#20c060">Full</div></div>
+      </div>
+      <div class="veh-row" onclick="ceoSelectVeh(this,52,'#f0a020','Half tank','warn','Elantra')">
+        <div class="veh-top"><div class="v-name">Hyundai Elantra</div><div class="v-km">54,201 km</div></div>
+        <div class="gauge-track"><div class="gauge-fill" style="background:#f0a020" data-pct="52"></div></div>
+        <div class="veh-bot"><div class="v-pct" style="color:#f0a020">52%</div><div class="v-status" style="color:#f0a020">Half tank</div></div>
+      </div>
+      <div class="veh-row" onclick="ceoSelectVeh(this,18,'#e04040','Low — refuel','alert','Micra')">
+        <div class="veh-top"><div class="v-name">Nissan Micra</div><div class="v-km">31,055 km</div></div>
+        <div class="gauge-track"><div class="gauge-fill" style="background:#e04040" data-pct="18"></div></div>
+        <div class="veh-bot"><div class="v-pct" style="color:#e04040">18%</div><div class="v-status" style="color:#e04040">Low — refuel</div></div>
+      </div>
+    </div>
+    <div class="veh-alert" id="ceoVehAlert"><div class="va-title" id="ceoVehTitle"></div><div class="va-body" id="ceoVehBody"></div></div>
+  </div>
+  <div class="feat-block reveal">
+    <div class="feat-block-title"><span class="dot"></span>Vehicle features</div>
+    <div class="feat-chips">
+      <span class="chip">8 vehicles — fuel gauges and odometer</span>
+      <span class="chip">QR code per vehicle for instant updates</span>
+      <span class="chip">Monthly photo audits</span>
+      <span class="chip">Damage reports with photos</span>
+      <span class="chip">Fuel and service due alerts</span>
+    </div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="sub-h">Automated Notifications</div>
+  <p class="lead" style="margin-bottom:12px">The platform sends push notifications to the team's phones automatically — no one needs to remember to check anything. The feed below shows the types of alerts the Skycare team receives every day.</p>
+  <div class="widget reveal" style="margin-bottom:20px">
+    <div class="wh"><div class="wh-title">Notification Feed</div><div class="wh-live">Live</div></div>
+    <div class="notif-feed" id="ceoNotifFeed"></div>
+  </div>
+
+  <!-- SOPs -->
+  <div class="sub-h">SOPs and Procedures</div>
+  <div class="feat-block reveal">
+    <div class="feat-block-title"><span class="dot"></span>Reference material always on the phone</div>
+    <div class="feat-chips">
+      <span class="chip">Step-by-step grooming procedures</span>
+      <span class="chip">Vendor and supplier contacts</span>
+      <span class="chip">Pilot study hub — PA-31 Navajo reference</span>
+      <span class="chip">Works fully offline</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     03 — THE PROBLEM IT SOLVES
+═══════════════════════════════════════════ -->
+<div class="section" id="problem">
+  <div class="sec-eyebrow">03 — Context</div>
+  <h2 class="sec-h">The Problem It Solves</h2>
+  <p class="lead">Ground operations at a regional airport involve multiple roles, constant staff movement, and no margin for missed steps. Before XXXXXX, coordination at Skycare depended on informal tools — group texts, printed checklists, and tribal knowledge passed between shifts.</p>
+
+  <div class="problem-grid reveal">
+    <div class="problem-block">
+      <div class="pb-num">01</div>
+      <div><div class="pb-title">High turnover, no loss of institutional knowledge</div><div class="pb-desc">Skycare groomers turn over every 6 to 12 months. XXXXXX embeds procedures into the platform — a new hire on day one follows the same process as a veteran, because the steps live in the app, not in someone's memory.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num">02</div>
+      <div><div class="pb-title">Consistent work quality across the team</div><div class="pb-desc">Every groomer sees the same task lists, the same procedures, the same checklists — regardless of experience level. The quality of a shift no longer depends on who's working it.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num">03</div>
+      <div><div class="pb-title">A foundation for multi-base consistency</div><div class="pb-desc">Because the platform is cloud-based and configurable, the same processes used at CYKF can be replicated at any Skycare base — creating company-wide operational standards without rebuilding anything from scratch.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num">04</div>
+      <div><div class="pb-title">A live management layer, not just a task tool</div><div class="pb-desc">XXXXXX gives Skycare supervisors and management a live operational picture — task completion, fleet positions, vehicle status, supply levels, shift handoffs — all in one place, updated in real time. The team executes; the platform reports.</div></div>
+    </div>
+  </div>
+
+  <!-- How the Team Uses It -->
+  <div class="sub-h">How the Skycare Team Uses It</div>
+  <p class="lead" style="margin-bottom:16px">Each role sees only what's relevant to them. The demos below are live — try them.</p>
+
+  <div class="role-grid reveal">
+    <div class="role-block">
+      <div class="role-label">Primary users</div>
+      <div class="role-name">Groomers</div>
+      <ul>
+        <li>Check off daily and weekly tasks</li>
+        <li>Log arrivals, departures, groomings</li>
+        <li>Receive shift and fleet notifications</li>
+        <li>Update crew car status</li>
+      </ul>
+    </div>
+    <div class="role-block">
+      <div class="role-label">Maintenance</div>
+      <div class="role-name">Mechanics</div>
+      <ul>
+        <li>Access aircraft reference documentation</li>
+        <li>Snag reference log — planning stage only</li>
+        <li>Will not replace official logbook entries</li>
+      </ul>
+    </div>
+    <div class="role-block">
+      <div class="role-label">Ramp access</div>
+      <div class="role-name">Ramp Crew</div>
+      <ul>
+        <li>Scan QR code on any vehicle</li>
+        <li>Update fuel, odometer, and notes instantly</li>
+        <li>No login or navigation required</li>
+      </ul>
+    </div>
+    <div class="role-block">
+      <div class="role-label">Operations</div>
+      <div class="role-name">Shopping Inventory</div>
+      <ul>
+        <li>Activate buying session for the team</li>
+        <li>Cart grouped by store — one efficient trip</li>
+        <li>Filtered by aircraft type: Jets or Metros</li>
+        <li>Inventory notes per item</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Shift Task Demo -->
+  <div class="sub-h amber">Shift Tasks — Interactive Demo</div>
+  <p class="lead" style="margin-bottom:12px">Every groomer's shift starts with this checklist. Progress is shared in real time across all phones — when one person checks something off, everyone sees it. Click tasks below to try it.</p>
+  <div class="widget reveal" style="margin-bottom:32px">
+    <div class="wh"><div class="wh-title">Shift Tasks — Aircraft</div><div class="wh-meta" id="ceoTaskCount">0 / 6</div></div>
+    <div class="progress-track"><div class="progress-fill" id="ceoTaskBar" style="width:0%"></div></div>
+    <div class="task-list">
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Vacuum cabin — Metroliner IOC</div></div>
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Clean windows — exterior</div></div>
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Lavatory service</div></div>
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Catering restock — Charter</div></div>
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">O₂ check and fill-up</div></div>
+      <div class="task-row" onclick="ceoToggleTask(this)"><div class="t-cb"></div><div class="t-label">Crew car fuel — Elantra</div></div>
+    </div>
+    <div class="wfooter"><span>Shift handoff at 18:00</span><span id="ceoTaskStatus" style="color:var(--muted)">Not started</span></div>
+  </div>
+
+  <!-- Shopping Inventory Demo -->
+  <div class="sub-h amber">Shopping Inventory — Interactive Demo</div>
+  <p class="lead" style="margin-bottom:12px">More than a shopping list — a supply management system. Items are organized by aircraft type (Jets vs Metros) and category. The supervisor activates a buying session and the cart groups everything by store for one efficient trip. Try filtering and adding items, then view the cart.</p>
+  <div class="widget reveal" id="supplyWidget">
+    <div class="wh">
+      <div class="wh-title">Supply Catalog</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap" id="supplyFilters">
+        <button class="sf-btn active" onclick="filterSupply('all',this)">All</button>
+        <button class="sf-btn" onclick="filterSupply('grooming',this)">Grooming</button>
+        <button class="sf-btn" onclick="filterSupply('catering',this)">Catering</button>
+        <button class="sf-btn" onclick="filterSupply('jets',this)">Jets</button>
+        <button class="sf-btn" onclick="filterSupply('metros',this)">Metros</button>
+        <button class="sf-btn" onclick="filterSupply('office',this)">Office</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--blue);cursor:pointer;display:flex;align-items:center;gap:5px" onclick="toggleCart()">🛒 <span id="cartNum">0</span> items</div>
+    </div>
+    <div id="supplyList" style="padding:6px;display:flex;flex-direction:column;gap:3px"></div>
+    <div id="cartView" style="display:none;border-top:1px solid rgba(42,126,245,0.1)">
+      <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)">Shopping Cart — by store</span>
+        <button onclick="toggleCart()" style="font-family:var(--mono);font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer">← Back to catalog</button>
+      </div>
+      <div id="cartItems" style="padding:0 6px 6px;display:flex;flex-direction:column;gap:4px"></div>
+      <div id="cartEmpty" style="padding:16px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;display:none">Cart is empty — add items from the catalog</div>
+    </div>
+    <div class="wfooter">
+      <span id="supplyFooterLeft">Shared in real time across all phones</span>
+      <span id="buyingSessionBtn" onclick="toggleBuyingSession()" style="cursor:pointer;color:var(--muted)">Activate buying session</span>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     04 — HOW IT WORKS
+═══════════════════════════════════════════ -->
+<div class="section" id="how">
+  <div class="sec-eyebrow">04 — Technology</div>
+  <h2 class="sec-h">How It Works</h2>
+  <p class="lead">XXXXXX runs on the same infrastructure that powers large-scale web applications — but uses their free tiers. Every Skycare team member opens the app in their phone browser, installs it to their home screen, and it works like a native app. Data lives in Google Firebase, so all phones see the same information in real time.</p>
+
+  <div class="sub-h">Infrastructure Cost</div>
+  <div class="cost-grid reveal">
+    <div class="cost-cell"><div class="cost-icon">🌐</div><div class="cost-name">Hosting</div><div class="cost-detail">GitHub Pages — CDN + HTTPS</div><div class="cost-val">$0</div></div>
+    <div class="cost-cell"><div class="cost-icon">🔥</div><div class="cost-name">Database</div><div class="cost-detail">Firebase Firestore — real-time sync</div><div class="cost-val">$0</div></div>
+    <div class="cost-cell"><div class="cost-icon">⚙️</div><div class="cost-name">Notifications</div><div class="cost-detail">GitHub Actions — all push delivery</div><div class="cost-val">$0</div></div>
+    <div class="cost-cell"><div class="cost-icon">⏰</div><div class="cost-name">Scheduler</div><div class="cost-detail">cron-job.org — triggers every 5 min</div><div class="cost-val">$0</div></div>
+    <div class="cost-cell"><div class="cost-icon">📡</div><div class="cost-name">Fleet Data</div><div class="cost-detail">OpenSky API — live ADS-B positions</div><div class="cost-val">$0</div></div>
+  </div>
+
+  <div class="callout green reveal">
+    <div class="callout-title">Total infrastructure cost: $0 / month</div>
+    <ul>
+      <li>No app store required — the Skycare team opens a URL and taps "Add to Home Screen"</li>
+      <li>Works offline on the ramp — data cached on the phone, syncs when back in range</li>
+      <li>Any phone, any browser — iOS and Android, no enrollment, no MDM</li>
+    </ul>
+  </div>
+
+  <div class="sub-h">How the Team Gets Access</div>
+  <div class="problem-grid reveal">
+    <div class="problem-block">
+      <div class="pb-num" style="font-size:26px">①</div>
+      <div><div class="pb-title">Open the link on any phone</div><div class="pb-desc">No download. No app store. The Skycare team opens a URL — the app loads instantly in the phone browser.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num" style="font-size:26px">②</div>
+      <div><div class="pb-title">Enter the team PIN once</div><div class="pb-desc">A shared access code keeps the app secure without requiring individual accounts. Individual logins are on the roadmap.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num" style="font-size:26px">③</div>
+      <div><div class="pb-title">Install to Home Screen</div><div class="pb-desc">One tap — the app appears on the phone's home screen, looks and behaves exactly like a native app. Works offline from that point on.</div></div>
+    </div>
+    <div class="problem-block">
+      <div class="pb-num" style="font-size:26px">④</div>
+      <div><div class="pb-title">Live from the first shift</div><div class="pb-desc">The entire team sees the same data in real time. No training required — the interface is built around how ground crews already think about their day.</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     05 — WHAT'S NEXT
+═══════════════════════════════════════════ -->
+<div class="section" id="next">
+  <div class="sec-eyebrow">05 — Roadmap</div>
+  <h2 class="sec-h">What's Next</h2>
+  <p class="lead">Four improvements planned for the near term — each building directly on what's already in use by Skycare. Click any item to read more.</p>
+
+  <div class="next-timeline reveal">
+
+    <div class="next-card" onclick="toggleNext(this)">
+      <div class="next-dot-col"><div class="next-dot">01</div></div>
+      <div class="next-body">
+        <div class="next-top">
+          <div class="next-title">Pilot / MX Snag Reference Log</div>
+          <span class="next-badge badge-design">Design complete</span>
+          <span class="next-toggle">▾</span>
+        </div>
+        <div class="next-desc">A digital reference log for recurring aircraft observations — pilots and mechanics can note issues from their phone with a photo and description, organized by tail number. This is a planning and awareness tool for Skycare operations only. It does not replace and will never replace official logbook snag entries, which remain the regulatory record.</div>
+      </div>
+    </div>
+
+    <div class="next-card" onclick="toggleNext(this)">
+      <div class="next-dot-col"><div class="next-dot">02</div></div>
+      <div class="next-body">
+        <div class="next-top">
+          <div class="next-title">NFC Tags on Crew Cars</div>
+          <span class="next-badge badge-soon">Up next</span>
+          <span class="next-toggle">▾</span>
+        </div>
+        <div class="next-desc">Small stickers on each Skycare vehicle — tap with any phone and the car update form opens instantly. Faster than scanning a QR code, and no camera required. A two-second tap replaces a five-minute conversation at shift handoff.</div>
+      </div>
+    </div>
+
+    <div class="next-card" onclick="toggleNext(this)">
+      <div class="next-dot-col"><div class="next-dot">03</div></div>
+      <div class="next-body">
+        <div class="next-top">
+          <div class="next-title">Individual Secure Login</div>
+          <span class="next-badge badge-planned">Planned</span>
+          <span class="next-toggle">▾</span>
+        </div>
+        <div class="next-desc">Replace the current shared PIN with individual accounts — email or Google login. Each Skycare team member gets access only to what their role requires: groomers see the groomer view, supervisors see everything. This also creates a clean activity log per person for accountability and shift reporting.</div>
+      </div>
+    </div>
+
+    <div class="next-card" onclick="toggleNext(this)">
+      <div class="next-dot-col"><div class="next-dot">04</div></div>
+      <div class="next-body">
+        <div class="next-top">
+          <div class="next-title">App Store Listing</div>
+          <span class="next-badge badge-planned">Planned</span>
+          <span class="next-toggle">▾</span>
+        </div>
+        <div class="next-desc">Publish XXXXXX to the Apple App Store and Google Play. The app already works like a native app — this step packages it formally so it appears in the store, enables proper push notification prompts (higher acceptance rate than browser prompts), and ensures automatic updates reach every Skycare team member's phone without any action on their part.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /main -->
 
 <script>
 // ── SCROLL SPY ──
-var secs = document.querySelectorAll('.section');
-var links = document.querySelectorAll('.nav-link');
-new IntersectionObserver(function(entries){
-  entries.forEach(function(e){
-    if(e.isIntersecting){
-      links.forEach(function(l){l.classList.remove('active')});
-      var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');
-      if(a) a.classList.add('active');
-    }
-  });
-},{threshold:0.25}).observe && secs.forEach(function(s){
+document.querySelectorAll('.section').forEach(function(s){
   new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if(e.isIntersecting){
-        links.forEach(function(l){l.classList.remove('active')});
+        document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('active');});
         var a=document.querySelector('.nav-link[href="#'+e.target.id+'"]');
         if(a) a.classList.add('active');
       }
     });
-  },{threshold:0.25}).observe(s);
+  },{threshold:0.2}).observe(s);
 });
 
-// ── SCROLL REVEAL + STAT COUNTER ──
-function countUp(el){
-  var target=parseInt(el.getAttribute('data-target'));
-  var dur=900, step=16, inc=target/(dur/step), cur=0;
-  var t=setInterval(function(){
-    cur=Math.min(cur+inc,target);
-    el.textContent=Math.round(cur);
-    if(cur>=target) clearInterval(t);
-  },step);
-}
-var gaugesDone=false;
-var notifStarted=false;
-new IntersectionObserver(function(entries){
-  entries.forEach(function(e){
-    if(e.isIntersecting){
-      e.target.classList.add('in');
-      e.target.querySelectorAll('[data-target]').forEach(countUp);
-      if(e.target.closest('#built') && !gaugesDone){gaugesDone=true; setTimeout(animateGauges,600);}
-      if(e.target.closest('#built') && !notifStarted){notifStarted=true; setTimeout(startNotifFeed,1200);}
-    }
-  });
-},{threshold:0.08}).observe && document.querySelectorAll('.reveal').forEach(function(el){
+// ── REVEAL + COUNTERS ──
+var gaugesDone=false, notifDone=false;
+document.querySelectorAll('.reveal').forEach(function(el){
   new IntersectionObserver(function(entries){
     entries.forEach(function(e){
       if(e.isIntersecting){
         e.target.classList.add('in');
-        e.target.querySelectorAll('[data-target]').forEach(countUp);
-        if(!gaugesDone && e.target.querySelector('.gauge-fill')){gaugesDone=true;setTimeout(animateGauges,600);}
-        if(!notifStarted && document.getElementById('ceoNotifFeed') && e.target.contains(document.getElementById('ceoNotifFeed'))){notifStarted=true;setTimeout(startNotifFeed,400);}
+        e.target.querySelectorAll('[data-target]').forEach(function(n){
+          var target=parseInt(n.getAttribute('data-target')),cur=0,inc=target/56;
+          var t=setInterval(function(){cur=Math.min(cur+inc,target);n.textContent=Math.round(cur);if(cur>=target)clearInterval(t);},16);
+        });
+        if(!gaugesDone && e.target.querySelector('.gauge-fill')){gaugesDone=true;setTimeout(function(){document.querySelectorAll('.gauge-fill').forEach(function(f){f.style.width=f.getAttribute('data-pct')+'%';});},400);}
+        if(!notifDone && e.target.querySelector('.notif-feed')){notifDone=true;setTimeout(startNotifFeed,300);}
       }
     });
   },{threshold:0.08}).observe(el);
@@ -522,15 +618,13 @@ new IntersectionObserver(function(entries){
 function ceoToggleTask(el){
   el.classList.toggle('done');
   el.querySelector('.t-cb').textContent=el.classList.contains('done')?'✓':'';
-  var items=document.querySelectorAll('#what .task-row, #team .task-row');
-  // find parent list
-  var list=el.closest('.task-list').querySelectorAll('.task-row');
-  var done=0; list.forEach(function(r){if(r.classList.contains('done'))done++;});
-  var total=list.length;
-  document.getElementById('ceoTaskBar').style.width=Math.round(done/total*100)+'%';
-  document.getElementById('ceoTaskCount').textContent=done+' / '+total;
+  var rows=el.closest('.task-list').querySelectorAll('.task-row');
+  var done=0; rows.forEach(function(r){if(r.classList.contains('done'))done++;});
+  var pct=Math.round(done/rows.length*100);
+  document.getElementById('ceoTaskBar').style.width=pct+'%';
+  document.getElementById('ceoTaskCount').textContent=done+' / '+rows.length;
   var st=document.getElementById('ceoTaskStatus');
-  if(done===total){st.textContent='Complete ✓';st.style.color='var(--green)';}
+  if(done===rows.length){st.textContent='Complete ✓';st.style.color='var(--green)';}
   else if(done>0){st.textContent='In progress';st.style.color='var(--blue)';}
   else{st.textContent='Not started';st.style.color='var(--muted)';}
 }
@@ -541,37 +635,30 @@ var fleetData=[
   {tail:'XAW',type:'Westwind',nm:312,ft:28000,kts:420,ground:false},
   {tail:'DAX',type:'Astra',nm:0,ft:0,kts:0,ground:true},
 ];
-function etaStr(nm,kts){var min=Math.round(nm/kts*60);return min<60?min+' min':Math.floor(min/60)+'h '+(min%60)+'m';}
-function renderCeoFleet(){
-  var el=document.getElementById('ceoFleetRows'); el.innerHTML='';
+function etaStr(nm,kts){var m=Math.round(nm/kts*60);return m<60?m+' min':Math.floor(m/60)+'h '+(m%60)+'m';}
+function renderFleet(){
+  var el=document.getElementById('ceoFleetRows');el.innerHTML='';
   fleetData.forEach(function(f){
-    var row=document.createElement('div'); row.className='fleet-row';
+    var row=document.createElement('div');row.className='fleet-row';
     if(f.ground){row.innerHTML='<div class="f-tail">'+f.tail+'</div><div class="f-info"><b>'+f.type+'</b> · On ground</div><div class="f-eta down">Landed</div>';}
     else{var eta=etaStr(f.nm,f.kts);var cls=f.nm<60?'close':'live';row.innerHTML='<div class="f-tail">'+f.tail+'</div><div class="f-info"><b>'+f.type+'</b> · '+Math.round(f.nm)+' nm · '+f.ft.toLocaleString()+' ft</div><div class="f-eta '+cls+'">ETA '+eta+'</div>';}
     el.appendChild(row);
   });
-  var al=document.getElementById('ceoFleetAlert');
-  var ioc=fleetData[0];
-  if(ioc.nm<60){al.style.display='block';document.getElementById('ceoFleetAlertBody').textContent=Math.round(ioc.nm)+' nm · '+ioc.ft.toLocaleString()+' ft · '+ioc.kts+' KTS · ETA '+etaStr(ioc.nm,ioc.kts);}
+  var al=document.getElementById('ceoFleetAlert'),ioc=fleetData[0];
+  if(ioc.nm<60){al.style.display='block';document.getElementById('ceoFleetAlertBody').textContent=Math.round(ioc.nm)+' nm · '+ioc.kts+' KTS · ETA '+etaStr(ioc.nm,ioc.kts);}
 }
-renderCeoFleet();
-setInterval(function(){fleetData.forEach(function(f){if(!f.ground&&f.nm>2)f.nm=Math.max(2,f.nm-f.kts/720);});renderCeoFleet();},2000);
+renderFleet();
+setInterval(function(){fleetData.forEach(function(f){if(!f.ground&&f.nm>2)f.nm=Math.max(2,f.nm-f.kts/720);});renderFleet();},2000);
 
 // ── VEHICLE GAUGES ──
-function animateGauges(){
-  document.querySelectorAll('.gauge-fill').forEach(function(f){f.style.width=f.getAttribute('data-pct')+'%';});
-}
-
 function ceoSelectVeh(row,pct,color,label,type,name){
   document.querySelectorAll('.veh-row').forEach(function(r){r.style.background='';});
   row.style.background='var(--lift)';
-  var notif=document.getElementById('ceoVehAlert');
-  var title=document.getElementById('ceoVehTitle');
-  var body=document.getElementById('ceoVehBody');
+  var notif=document.getElementById('ceoVehAlert'),t=document.getElementById('ceoVehTitle'),b=document.getElementById('ceoVehBody');
   notif.style.display='block';
-  if(type==='alert'){notif.style.background='#180a0a';notif.style.border='1px solid rgba(224,64,64,.25)';title.style.color='var(--red)';title.textContent='⚠ '+name+' — low fuel alert';body.textContent='Tank at '+pct+'% — refuel before next shift.';}
-  else if(type==='warn'){notif.style.background='#180e00';notif.style.border='1px solid rgba(240,160,32,.25)';title.style.color='var(--amber)';title.textContent='⛽ '+name+' — monitor fuel';body.textContent='Tank at '+pct+'%. Consider refueling tonight.';}
-  else{notif.style.background='#061810';notif.style.border='1px solid rgba(32,192,96,.25)';title.style.color='var(--green)';title.textContent='✓ '+name+' — good to go';body.textContent='Tank at '+pct+'%. Vehicle ready. Last updated today at 06:42.';}
+  if(type==='alert'){notif.style.cssText='display:block;margin:3px 6px 6px;border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.55;background:#180a0a;border:1px solid rgba(224,64,64,.25)';t.style.color='var(--red)';t.textContent='⚠ '+name+' — low fuel alert';b.textContent='Tank at '+pct+'% — refuel before next shift.';}
+  else if(type==='warn'){notif.style.cssText='display:block;margin:3px 6px 6px;border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.55;background:#180e00;border:1px solid rgba(240,160,32,.25)';t.style.color='var(--amber)';t.textContent='⛽ '+name+' — monitor fuel';b.textContent='Tank at '+pct+'%. Consider refueling tonight.';}
+  else{notif.style.cssText='display:block;margin:3px 6px 6px;border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:11px;line-height:1.55;background:#061810;border:1px solid rgba(32,192,96,.25)';t.style.color='var(--green)';t.textContent='✓ '+name+' — good to go';b.textContent='Tank at '+pct+'%. Last updated today at 06:42.';}
 }
 
 // ── NOTIFICATION FEED ──
@@ -583,22 +670,16 @@ var notifItems=[
   {type:'fleet',title:'✈ XAW on ground',body:'Westwind XAW landed CYKF · Turnaround ready for grooming'},
 ];
 function startNotifFeed(){
-  var feed=document.getElementById('ceoNotifFeed');
-  feed.innerHTML='';
+  var feed=document.getElementById('ceoNotifFeed');feed.innerHTML='';
   notifItems.forEach(function(n,i){
-    var div=document.createElement('div');
-    div.className='notif-item '+n.type;
+    var div=document.createElement('div');div.className='notif-item '+n.type;
     div.innerHTML='<div class="nt">'+n.title+'</div><div class="nb">'+n.body+'</div>';
-    feed.appendChild(div);
-    setTimeout(function(){div.classList.add('in');},i*600);
+    feed.appendChild(div);setTimeout(function(){div.classList.add('in');},i*600);
   });
 }
 
-// ── ROADMAP TOGGLES ──
-function toggleNext(el){el.classList.toggle('open');}
-
 // ── SUPPLY MANAGEMENT ──
-var supplyItems = [
+var supplyItems=[
   {name:'Fantastik All-Purpose Cleaner',store:'Costco',cat:'grooming',ac:'both',note:'Case of 4 — low stock'},
   {name:'Microfibre Cloths (48 pk)',store:'Costco',cat:'grooming',ac:'both',note:'Replace monthly'},
   {name:'Leather Conditioning Wipes',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jets only — cabin seats'},
@@ -614,139 +695,61 @@ var supplyItems = [
   {name:'Dry Shampoo / Upholstery Foam',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jet interior detail'},
   {name:'Crew House Dish Soap',store:'Walmart',cat:'office',ac:'both',note:'Crew house kitchen'},
 ];
+var cart={},currentFilter='all',showingCart=false,buyingActive=false;
 
-var cart = {}; // name → item
-var currentFilter = 'all';
-var showingCart = false;
-var buyingActive = false;
+function catMatch(item,f){if(f==='all')return true;if(f==='grooming')return item.cat==='grooming';if(f==='catering')return item.cat==='catering';if(f==='office')return item.cat==='office';if(f==='jets')return item.ac==='jets'||item.ac==='both';if(f==='metros')return item.ac==='metros'||item.ac==='both';return true;}
+function acLabel(ac){if(ac==='jets')return 'Jets';if(ac==='metros')return 'Metros';return 'All';}
 
-function catMatch(item, filter) {
-  if (filter === 'all') return true;
-  if (filter === 'grooming') return item.cat === 'grooming';
-  if (filter === 'catering') return item.cat === 'catering';
-  if (filter === 'office') return item.cat === 'office';
-  if (filter === 'jets') return item.ac === 'jets' || item.ac === 'both';
-  if (filter === 'metros') return item.ac === 'metros' || item.ac === 'both';
-  return true;
-}
-
-function acLabel(ac) {
-  if (ac === 'jets') return 'Jets';
-  if (ac === 'metros') return 'Metros';
-  return 'All aircraft';
-}
-
-function renderSupply() {
-  var list = document.getElementById('supplyList');
-  list.innerHTML = '';
-  var visible = supplyItems.filter(function(i){ return catMatch(i, currentFilter); });
-  visible.forEach(function(item) {
-    var inCart = !!cart[item.name];
-    var row = document.createElement('div');
-    row.className = 'supply-row' + (inCart ? ' in-cart' : '');
-    row.innerHTML =
-      '<div class="sr-info">' +
-        '<div class="sr-name">' + item.name + '</div>' +
-        '<div class="sr-meta">' + item.store +
-          (item.note ? ' · ' + item.note : '') +
-        '</div>' +
-      '</div>' +
-      '<span class="sr-tag">' + acLabel(item.ac) + '</span>' +
-      '<button class="sr-add' + (inCart ? ' added' : '') + '" onclick="toggleCartItem(\'' + item.name.replace(/'/g,"\\'")+'\',this)">' +
-        (inCart ? '✓' : '+') +
-      '</button>';
+function renderSupply(){
+  var list=document.getElementById('supplyList');list.innerHTML='';
+  supplyItems.filter(function(i){return catMatch(i,currentFilter);}).forEach(function(item){
+    var inCart=!!cart[item.name];
+    var row=document.createElement('div');row.className='supply-row'+(inCart?' in-cart':'');
+    row.innerHTML='<div class="sr-info"><div class="sr-name">'+item.name+'</div><div class="sr-meta">'+item.store+(item.note?' · '+item.note:'')+'</div></div><span class="sr-tag">'+acLabel(item.ac)+'</span><button class="sr-add'+(inCart?' added':'')+'" onclick="toggleCartItem(\''+item.name.replace(/'/g,"\\'")+'\',this)">'+(inCart?'✓':'+')+'</button>';
     list.appendChild(row);
   });
 }
 
-function toggleCartItem(name, btn) {
-  var item = supplyItems.find(function(i){ return i.name === name; });
-  if (!item) return;
-  if (cart[name]) {
-    delete cart[name];
-  } else {
-    cart[name] = item;
-  }
-  updateCartCount();
-  renderSupply();
+function toggleCartItem(name){var item=supplyItems.find(function(i){return i.name===name;});if(!item)return;if(cart[name])delete cart[name];else cart[name]=item;document.getElementById('cartNum').textContent=Object.keys(cart).length;renderSupply();}
+
+function filterSupply(cat,btn){currentFilter=cat;document.querySelectorAll('.sf-btn').forEach(function(b){b.classList.remove('active');});btn.classList.add('active');renderSupply();}
+
+function toggleCart(){
+  showingCart=!showingCart;
+  document.getElementById('supplyList').style.display=showingCart?'none':'';
+  document.getElementById('supplyFilters').style.display=showingCart?'none':'';
+  document.getElementById('cartView').style.display=showingCart?'block':'none';
+  if(showingCart)renderCartView();
 }
 
-function updateCartCount() {
-  var n = Object.keys(cart).length;
-  document.getElementById('cartNum').textContent = n;
-}
-
-function filterSupply(cat, btn) {
-  currentFilter = cat;
-  document.querySelectorAll('.sf-btn').forEach(function(b){ b.classList.remove('active'); });
-  btn.classList.add('active');
-  renderSupply();
-}
-
-function toggleCart() {
-  showingCart = !showingCart;
-  document.getElementById('supplyList').style.display = showingCart ? 'none' : '';
-  document.getElementById('supplyFilters').style.display = showingCart ? 'none' : '';
-  document.getElementById('cartView').style.display = showingCart ? 'block' : 'none';
-  if (showingCart) renderCartView();
-}
-
-function renderCartView() {
-  var stores = {};
-  Object.values(cart).forEach(function(item) {
-    if (!stores[item.store]) stores[item.store] = [];
-    stores[item.store].push(item);
-  });
-  var container = document.getElementById('cartItems');
-  var empty = document.getElementById('cartEmpty');
-  container.innerHTML = '';
-  if (Object.keys(stores).length === 0) {
-    empty.style.display = 'block';
-    return;
-  }
-  empty.style.display = 'none';
-  Object.keys(stores).sort().forEach(function(store) {
-    var group = document.createElement('div');
-    group.className = 'cart-store';
-    var header = document.createElement('div');
-    header.className = 'cart-store-name';
-    header.textContent = store + ' (' + stores[store].length + ')';
-    group.appendChild(header);
-    stores[store].forEach(function(item) {
-      var row = document.createElement('div');
-      row.className = 'cart-item-row';
-      row.innerHTML =
-        '<span class="cart-item-name">' + item.name + '</span>' +
-        '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.name.replace(/'/g,"\\'") + '\')">✕</button>';
-      group.appendChild(row);
+function renderCartView(){
+  var stores={};Object.values(cart).forEach(function(item){if(!stores[item.store])stores[item.store]=[];stores[item.store].push(item);});
+  var c=document.getElementById('cartItems'),e=document.getElementById('cartEmpty');c.innerHTML='';
+  if(!Object.keys(stores).length){e.style.display='block';return;}e.style.display='none';
+  Object.keys(stores).sort().forEach(function(store){
+    var g=document.createElement('div');
+    g.innerHTML='<div class="cart-store-name">'+store+' ('+stores[store].length+')</div>';
+    stores[store].forEach(function(item){
+      var row=document.createElement('div');row.className='cart-item-row';
+      row.innerHTML='<span class="cart-item-name">'+item.name+'</span><button class="cart-item-remove" onclick="removeFromCart(\''+item.name.replace(/'/g,"\\'")+'\')" >✕</button>';
+      g.appendChild(row);
     });
-    container.appendChild(group);
+    c.appendChild(g);
   });
 }
 
-function removeFromCart(name) {
-  delete cart[name];
-  updateCartCount();
-  renderCartView();
+function removeFromCart(name){delete cart[name];document.getElementById('cartNum').textContent=Object.keys(cart).length;renderCartView();}
+
+function toggleBuyingSession(){
+  buyingActive=!buyingActive;
+  var btn=document.getElementById('buyingSessionBtn');
+  document.getElementById('supplyWidget').style.borderColor=buyingActive?'rgba(32,192,96,.3)':'';
+  if(buyingActive){btn.textContent='● Buying session active';btn.style.color='var(--green)';document.getElementById('supplyFooterLeft').textContent='Supervisor buying mode — grouped by store';}
+  else{btn.textContent='Activate buying session';btn.style.color='var(--muted)';document.getElementById('supplyFooterLeft').textContent='Shared in real time across all phones';}
 }
 
-function toggleBuyingSession() {
-  buyingActive = !buyingActive;
-  var btn = document.getElementById('buyingSessionBtn');
-  var widget = document.getElementById('supplyWidget');
-  if (buyingActive) {
-    btn.textContent = '● Buying session active';
-    btn.style.color = 'var(--green)';
-    widget.classList.add('buying-active');
-    document.getElementById('supplyFooterLeft').textContent = 'Supervisor buying mode — cart grouped by store';
-  } else {
-    btn.textContent = 'Activate buying session';
-    btn.style.color = 'var(--muted)';
-    widget.classList.remove('buying-active');
-    document.getElementById('supplyFooterLeft').textContent = 'Shared in real time across all phones';
-  }
-}
-
-// init supply widget on load
 renderSupply();
+
+// ── ROADMAP EXPAND ──
+function toggleNext(el){el.classList.toggle('open');}
 </script>
