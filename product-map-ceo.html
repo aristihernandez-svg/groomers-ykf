@@ -1,0 +1,639 @@
+<title>Skycare YKF — Executive Overview</title>
+<style>
+  :root {
+    --bg: #080f1a;
+    --surface: #0d1b2e;
+    --surface2: #102236;
+    --border: #1a3350;
+    --blue: #2d7dd2;
+    --blue-bright: #5aa3f5;
+    --amber: #e8a000;
+    --text: #ddeeff;
+    --muted: #7090b0;
+    --success: #22c97a;
+    --radius: 10px;
+    --nav-width: 220px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--nav-width);
+    flex-shrink: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 32px 0 24px;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 0 24px 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .sidebar-logo .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .sidebar-logo h1 {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar-logo .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .nav-label {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 700;
+    padding: 0 24px;
+    margin-bottom: 6px;
+    margin-top: 16px;
+  }
+
+  .nav-link {
+    display: block;
+    padding: 9px 24px;
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+    background: rgba(45,125,210,0.06);
+  }
+
+  .nav-link.active {
+    color: var(--blue-bright);
+    border-left-color: var(--blue-bright);
+    background: rgba(45,125,210,0.08);
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 20px 24px 0;
+    border-top: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── Main content ── */
+  .main {
+    margin-left: var(--nav-width);
+    flex: 1;
+    padding: 48px 52px 80px;
+    max-width: 800px;
+  }
+
+  /* ── Sections ── */
+  .section {
+    margin-bottom: 64px;
+    scroll-margin-top: 32px;
+  }
+
+  .section-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .section h2 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  .lead {
+    font-size: 15px;
+    color: var(--muted);
+    line-height: 1.75;
+    margin-bottom: 24px;
+    max-width: 640px;
+  }
+
+  /* ── Stat row ── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--amber);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    margin-bottom: 14px;
+  }
+
+  .card-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── Problem list ── */
+  .problem-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .problem-item {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .problem-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(232,160,0,0.12);
+    border: 1px solid rgba(232,160,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .problem-body strong {
+    display: block;
+    font-size: 14px;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .problem-body p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.65;
+  }
+
+  /* ── User grid ── */
+  .user-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    border-left: 3px solid var(--blue);
+  }
+
+  .user-card.amber { border-left-color: var(--amber); }
+  .user-card.purple { border-left-color: #a855f7; }
+  .user-card.teal { border-left-color: #06b6d4; }
+
+  .user-name { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .user-role { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+
+  ul.blist {
+    padding-left: 16px;
+    color: var(--muted);
+    font-size: 12.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  /* ── Feature groups ── */
+  .feat-group {
+    margin-bottom: 20px;
+  }
+
+  .feat-group-title {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--blue-bright);
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .feat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .chip {
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  /* ── Next steps ── */
+  .next-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+    align-items: start;
+  }
+
+  .next-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .next-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .next-desc { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+
+  /* ── Divider ── */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar { position: relative; width: 100%; height: auto; flex-direction: row; flex-wrap: wrap; padding: 16px; }
+    .main { margin-left: 0; padding: 24px 20px 60px; }
+    .stats { grid-template-columns: 1fr 1fr; }
+    .user-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="eyebrow">Executive Overview</div>
+    <h1>Skycare YKF</h1>
+    <div class="sub">Ground Operations Platform</div>
+  </div>
+
+  <div class="nav-label">Contents</div>
+  <a class="nav-link active" href="#what">What Is Skycare</a>
+  <a class="nav-link" href="#problem">The Problem It Solves</a>
+  <a class="nav-link" href="#team">How the Team Uses It</a>
+  <a class="nav-link" href="#built">What We Built</a>
+  <a class="nav-link" href="#how">How It Works</a>
+  <a class="nav-link" href="#next">What's Next</a>
+
+  <div class="sidebar-footer">
+    July 2026 · CYKF
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- WHAT IS SKYCARE -->
+  <div class="section" id="what">
+    <div class="section-eyebrow">Overview</div>
+    <h2>What Is Skycare</h2>
+    <p class="lead">Skycare is a mobile operations platform built specifically for the ground crew team at Kitchener Waterloo Regional Airport. It replaces paper checklists, group texts, and verbal handoffs with a single app every team member runs on their phone — no installation, no accounts, no IT department required.</p>
+    <p class="lead">Built in-house and deployed directly on the floor, it is live and used by the team every day.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-val">29</div><div class="stat-label">Features in production</div></div>
+      <div class="stat"><div class="stat-val">8</div><div class="stat-label">Vehicles tracked</div></div>
+      <div class="stat"><div class="stat-val">10</div><div class="stat-label">Fleet aircraft tracked</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✈ Built for this operation</div>
+      <ul class="blist">
+        <li>Task checklists, flight logs, crew car status, and supply management — all in one place</li>
+        <li>All data syncs in real time across every phone on the team</li>
+        <li>Works offline — no connectivity required on the ramp</li>
+        <li>Push notifications for shift reminders, fuel alerts, and fleet arrivals</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- THE PROBLEM -->
+  <div class="section" id="problem">
+    <div class="section-eyebrow">Context</div>
+    <h2>The Problem It Solves</h2>
+    <p class="lead">Ground operations at a regional airport involve multiple roles, constant staff movement, and no margin for missed steps. Before Skycare, coordination depended on informal tools — group texts, printed checklists, and tribal knowledge passed between shifts.</p>
+
+    <div class="problem-list">
+      <div class="problem-item">
+        <div class="problem-num">1</div>
+        <div class="problem-body">
+          <strong>High turnover, no loss of institutional knowledge</strong>
+          <p>Groomers turn over every 6 to 12 months. Skycare embeds the procedures into the platform — a new hire on day one follows the same process as someone who has been here for years, because the steps live in the app, not in someone's memory.</p>
+        </div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">2</div>
+        <div class="problem-body">
+          <strong>Consistent work quality across the team</strong>
+          <p>Every groomer sees the same task lists, the same procedures, the same checklists — regardless of experience level. The quality of a shift no longer depends on who's working it.</p>
+        </div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">3</div>
+        <div class="problem-body">
+          <strong>A foundation for multi-base consistency</strong>
+          <p>Because the platform is cloud-based and configurable, the same processes used at CYKF can be replicated at any Skycare base — creating company-wide operational standards without rebuilding anything from scratch.</p>
+        </div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-num">4</div>
+        <div class="problem-body">
+          <strong>A live management layer, not just a task tool</strong>
+          <p>Skycare is not just about cleaning planes. It gives supervisors and management a live operational picture — task completion, fleet positions, vehicle status, supply levels, shift handoffs — all in one place, updated in real time. The team executes; the platform reports. Management stays informed without having to ask.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW THE TEAM USES IT -->
+  <div class="section" id="team">
+    <div class="section-eyebrow">Users</div>
+    <h2>How the Team Uses It</h2>
+    <p class="lead">Every role in the operation has a dedicated view — groomers, mechanics, pilots, buyers, and ramp crew each interact with only what's relevant to them.</p>
+
+    <div class="user-grid">
+      <div class="user-card">
+        <div class="user-role">Primary users</div>
+        <div class="user-name">🧹 Groomers</div>
+        <ul class="blist">
+          <li>Check off daily and weekly tasks</li>
+          <li>Log arrivals, departures, groomings</li>
+          <li>Manage the shared shopping cart</li>
+          <li>Track crew car status</li>
+          <li>Receive shift notifications</li>
+        </ul>
+      </div>
+      <div class="user-card amber">
+        <div class="user-role">Maintenance</div>
+        <div class="user-name">🔧 Mechanics</div>
+        <ul class="blist">
+          <li>Manage parts and supplies catalog</li>
+          <li>Mark items as ordered</li>
+          <li>Get notified when groomers flag a need</li>
+        </ul>
+      </div>
+      <div class="user-card purple">
+        <div class="user-role">Operations</div>
+        <div class="user-name">🛒 Supervisor / Buyer</div>
+        <ul class="blist">
+          <li>Activate buying session mode</li>
+          <li>Review cart grouped by store</li>
+          <li>Monitor audit completion</li>
+          <li>Review shift handoff notes</li>
+        </ul>
+      </div>
+      <div class="user-card teal">
+        <div class="user-role">Ramp access</div>
+        <div class="user-name">🚗 Ramp Crew</div>
+        <ul class="blist">
+          <li>Scan QR code on any vehicle</li>
+          <li>Update fuel, odometer, and notes instantly</li>
+          <li>No login or navigation required</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- WHAT WE BUILT -->
+  <div class="section" id="built">
+    <div class="section-eyebrow">Product</div>
+    <h2>What We Built</h2>
+    <p class="lead">The platform covers six operational areas, all accessible from a single app on any phone.</p>
+
+    <div class="feat-group">
+      <div class="feat-group-title">Task Management</div>
+      <div class="feat-chips">
+        <span class="chip">Daily shift checklist</span>
+        <span class="chip">7-day weekly view</span>
+        <span class="chip">Area-grouped tasks</span>
+        <span class="chip">Progress tracking</span>
+        <span class="chip">Real-time sync across all phones</span>
+      </div>
+    </div>
+
+    <div class="feat-group">
+      <div class="feat-group-title">Flight Operations</div>
+      <div class="feat-chips">
+        <span class="chip">Flight log — arrivals, departures, groomings</span>
+        <span class="chip">Live fleet map — all 10 aircraft</span>
+        <span class="chip">Distance, altitude, speed, ETA per aircraft</span>
+        <span class="chip">60 nm arrival alert</span>
+        <span class="chip">End-of-day shift handoff</span>
+      </div>
+    </div>
+
+    <div class="feat-group">
+      <div class="feat-group-title">Crew Car Management</div>
+      <div class="feat-chips">
+        <span class="chip">8 vehicles with fuel gauges</span>
+        <span class="chip">Odometer and service tracking</span>
+        <span class="chip">QR code per vehicle</span>
+        <span class="chip">Monthly photo audits</span>
+        <span class="chip">Damage reports with photos</span>
+        <span class="chip">Fuel and service alerts</span>
+      </div>
+    </div>
+
+    <div class="feat-group">
+      <div class="feat-group-title">Supply Management</div>
+      <div class="feat-chips">
+        <span class="chip">Full supply catalog with store filters</span>
+        <span class="chip">Shared cart across all devices</span>
+        <span class="chip">MX parts catalog</span>
+        <span class="chip">Crew house shopping list</span>
+      </div>
+    </div>
+
+    <div class="feat-group">
+      <div class="feat-group-title">SOPs and Procedures</div>
+      <div class="feat-chips">
+        <span class="chip">Step-by-step grooming procedures</span>
+        <span class="chip">Vendor and supplier contacts</span>
+        <span class="chip">Pilot study hub — PA-31 Navajo reference</span>
+      </div>
+    </div>
+
+    <div class="feat-group">
+      <div class="feat-group-title">Notifications</div>
+      <div class="feat-chips">
+        <span class="chip">Coffee and shift reminders</span>
+        <span class="chip">Evening lockup reminder</span>
+        <span class="chip">Fleet arrival alerts</span>
+        <span class="chip">Fuel and service due alerts</span>
+        <span class="chip">MX parts notifications</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div class="section" id="how">
+    <div class="section-eyebrow">Technology</div>
+    <h2>How It Works</h2>
+    <p class="lead">Built to be simple to maintain and cost nothing to run. Every team member opens the app in their phone browser — no app store, no account creation. Data lives in Google's Firebase, so all phones see the same information in real time.</p>
+
+    <div class="card">
+      <div class="card-title">💰 Infrastructure cost</div>
+      <ul class="blist">
+        <li>Hosting — GitHub Pages (free)</li>
+        <li>Database — Firebase Firestore (free tier)</li>
+        <li>Notifications backend — GitHub Actions (free on public repos)</li>
+        <li>Scheduled jobs — cron-job.org (free)</li>
+        <li><strong style="color:var(--success)">Total: $0/month</strong></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 How team members access it</div>
+      <ul class="blist">
+        <li>Open the URL on any phone browser</li>
+        <li>Enter the team PIN once</li>
+        <li>Install to home screen — looks and works like a native app</li>
+        <li>Works offline on the ramp — no connectivity required</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- WHAT'S NEXT -->
+  <div class="section" id="next">
+    <div class="section-eyebrow">Roadmap</div>
+    <h2>What's Next</h2>
+    <p class="lead">Four improvements planned for the near term, each building directly on what's already in use.</p>
+
+    <div class="next-item">
+      <div class="next-dot">1</div>
+      <div>
+        <div class="next-title">Pilot / MX Snag Reporting</div>
+        <div class="next-desc">Pilots and mechanics report aircraft defects directly from their phone — photo, description, severity. MX gets notified within minutes. Full snag history per aircraft, accessible from the cockpit via a QR sticker.</div>
+      </div>
+    </div>
+
+    <div class="next-item">
+      <div class="next-dot">2</div>
+      <div>
+        <div class="next-title">NFC Tags on Crew Cars</div>
+        <div class="next-desc">Small stickers on each vehicle — tap with any phone and the car update form opens instantly. Faster than scanning a QR code, and no camera required.</div>
+      </div>
+    </div>
+
+    <div class="next-item">
+      <div class="next-dot">3</div>
+      <div>
+        <div class="next-title">Secure Login</div>
+        <div class="next-desc">Replace the shared PIN with individual accounts (email or Google login). Allows per-role access — groomers see the groomer view, mechanics see the MX view, supervisors see everything.</div>
+      </div>
+    </div>
+
+    <div class="next-item">
+      <div class="next-dot">4</div>
+      <div>
+        <div class="next-title">App Store Listing</div>
+        <div class="next-desc">Publish to the Apple App Store and Google Play. The app already works like a native app — this step packages it formally so it appears in the store, enables system-style notification prompts, and ensures automatic updates to every phone without any action from the team.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('.section');
+  const links = document.querySelectorAll('.nav-link');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const id = entry.target.id;
+        const active = document.querySelector(`.nav-link[href="#${id}"]`);
+        if(active) active.classList.add('active');
+      }
+    });
+  }, { threshold: 0.3 });
+
+  sections.forEach(s => observer.observe(s));
+</script>
