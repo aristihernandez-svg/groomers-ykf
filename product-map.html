@@ -1,0 +1,1005 @@
+<title>Skycare YKF — Product Map</title>
+<style>
+  :root {
+    --bg: #07111f;
+    --surface: #0d1f38;
+    --surface2: #112743;
+    --border: #1a3d6e;
+    --blue: #2d7dd2;
+    --blue-bright: #4d9ef5;
+    --amber: #f0a500;
+    --amber-dim: #c47f00;
+    --text: #e8f0fe;
+    --muted: #7a9cc0;
+    --success: #22c97a;
+    --warn: #f0a500;
+    --danger: #e05252;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    overflow: hidden;
+    padding: 56px 32px 48px;
+    text-align: center;
+    background: radial-gradient(ellipse at 50% 0%, #0d2a50 0%, var(--bg) 70%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .radar-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.18;
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 600;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+    color: var(--text);
+    position: relative;
+  }
+
+  .hero h1 span { color: var(--blue-bright); }
+
+  .hero-sub {
+    margin-top: 12px;
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+  }
+
+  .hero-badges {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 24px;
+    position: relative;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    border: 1px solid;
+  }
+
+  .badge-blue { background: rgba(45,125,210,0.15); border-color: var(--blue); color: var(--blue-bright); }
+  .badge-amber { background: rgba(240,165,0,0.12); border-color: var(--amber); color: var(--amber); }
+  .badge-green { background: rgba(34,201,122,0.12); border-color: var(--success); color: var(--success); }
+
+  /* ── Instruments row ── */
+  .instruments {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .inst {
+    background: var(--surface);
+    padding: 20px 16px;
+    text-align: center;
+  }
+
+  .inst-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--amber);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .inst-label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+
+  /* ── Tabs ── */
+  .tabs-wrap {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .tabs-wrap::-webkit-scrollbar { display: none; }
+
+  .tabs {
+    display: flex;
+    min-width: max-content;
+    padding: 0 16px;
+  }
+
+  .tab-btn {
+    padding: 14px 18px;
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--blue-bright); border-bottom-color: var(--blue-bright); }
+
+  /* ── Content ── */
+  .content { max-width: 960px; margin: 0 auto; padding: 32px 20px 64px; }
+
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .section-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card p { color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+  @media (max-width: 640px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; margin-bottom: 24px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+
+  thead tr { border-bottom: 2px solid var(--border); }
+
+  th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 14px;
+    color: var(--text);
+    border-bottom: 1px solid rgba(26,61,110,0.5);
+    vertical-align: top;
+  }
+
+  tr:last-child td { border-bottom: none; }
+
+  tbody tr:hover { background: rgba(45,125,210,0.04); }
+
+  td code {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 11px;
+    background: rgba(45,125,210,0.15);
+    color: var(--blue-bright);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  /* ── Feature chips ── */
+  .feature-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .feat-chip {
+    font-size: 11.5px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+  }
+
+  .feat-chip.done { border-color: rgba(34,201,122,0.3); color: var(--success); background: rgba(34,201,122,0.06); }
+  .feat-chip.planned { border-color: rgba(240,165,0,0.3); color: var(--amber); background: rgba(240,165,0,0.06); }
+
+  /* ── User cards ── */
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    border-top: 3px solid var(--blue);
+  }
+
+  .user-card.pilot { border-top-color: var(--amber); }
+  .user-card.mx { border-top-color: #a855f7; }
+  .user-card.buyer { border-top-color: var(--success); }
+  .user-card.ramp { border-top-color: #06b6d4; }
+  .user-card.crew { border-top-color: #f43f5e; }
+
+  .user-icon { font-size: 24px; margin-bottom: 8px; }
+  .user-role { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .user-name { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+  .user-desc { font-size: 12.5px; color: var(--muted); line-height: 1.6; }
+
+  /* ── Notif cards ── */
+  .notif-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 40px 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .notif-icon { font-size: 22px; line-height: 1; padding-top: 2px; }
+  .notif-title { font-size: 13px; font-weight: 700; color: var(--text); }
+  .notif-when { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+  .notif-trigger { font-size: 10px; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 100px; background: rgba(45,125,210,0.15); color: var(--blue-bright); border: 1px solid var(--blue); white-space: nowrap; align-self: start; }
+
+  /* ── Stack pills ── */
+  .stack-group { margin-bottom: 24px; }
+  .stack-label { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--amber); font-weight: 700; margin-bottom: 10px; }
+  .stack-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-size: 12px;
+    padding: 6px 14px;
+    border-radius: 7px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 500;
+  }
+  .pill em { color: var(--muted); font-style: normal; font-size: 11px; }
+
+  /* ── Roadmap ── */
+  .roadmap-item {
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    gap: 14px;
+    margin-bottom: 20px;
+    align-items: start;
+  }
+
+  .roadmap-step {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--surface2);
+    border: 2px solid var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--blue-bright);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .roadmap-body { }
+  .roadmap-title { font-size: 14px; font-weight: 700; color: var(--text); }
+  .roadmap-desc { font-size: 12.5px; color: var(--muted); margin-top: 4px; line-height: 1.6; }
+  .roadmap-eta { font-size: 10px; letter-spacing: 0.1em; color: var(--amber); font-weight: 600; margin-top: 6px; text-transform: uppercase; }
+
+  /* ── Infra row ── */
+  .infra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+
+  .infra-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .infra-icon { font-size: 20px; margin-bottom: 8px; }
+  .infra-name { font-size: 12px; font-weight: 700; color: var(--text); }
+  .infra-detail { font-size: 11.5px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .infra-cost { font-size: 11px; font-weight: 700; color: var(--success); margin-top: 6px; }
+
+  .highlight-box {
+    background: rgba(240,165,0,0.06);
+    border: 1px solid rgba(240,165,0,0.25);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+
+  .highlight-box strong { color: var(--amber); }
+  .highlight-box p { color: var(--text); font-size: 13px; line-height: 1.7; }
+</style>
+
+<!-- Hero -->
+<div class="hero">
+  <canvas class="radar-canvas" id="radarCanvas"></canvas>
+  <div class="hero-eyebrow">Product Technical Map · July 2026</div>
+  <h1>Skycare <span>YKF</span></h1>
+  <p class="hero-sub">An aviation ground crew operations platform — built in-house, deployed at Kitchener Waterloo Regional Airport (CYKF), powering real shifts every day.</p>
+  <div class="hero-badges">
+    <span class="badge badge-blue">✈ Progressive Web App</span>
+    <span class="badge badge-amber">⚡ $0/month infrastructure</span>
+    <span class="badge badge-green">● Live in production</span>
+    <span class="badge badge-blue">🔔 Push notifications</span>
+    <span class="badge badge-amber">📡 Real-time fleet tracking</span>
+  </div>
+</div>
+
+<!-- Instruments -->
+<div class="instruments">
+  <div class="inst"><div class="inst-value">8</div><div class="inst-label">Nav Tabs</div></div>
+  <div class="inst"><div class="inst-value">29</div><div class="inst-label">Features Built</div></div>
+  <div class="inst"><div class="inst-value">24</div><div class="inst-label">Firestore Collections</div></div>
+  <div class="inst"><div class="inst-value">10</div><div class="inst-label">Fleet Aircraft</div></div>
+  <div class="inst"><div class="inst-value">7</div><div class="inst-label">Notification Types</div></div>
+  <div class="inst"><div class="inst-value">$0</div><div class="inst-label">Monthly Cost</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab-btn active" onclick="showTab('overview', this)">Overview</button>
+    <button class="tab-btn" onclick="showTab('users', this)">Users</button>
+    <button class="tab-btn" onclick="showTab('features', this)">Features</button>
+    <button class="tab-btn" onclick="showTab('screens', this)">Screens</button>
+    <button class="tab-btn" onclick="showTab('architecture', this)">Architecture</button>
+    <button class="tab-btn" onclick="showTab('data', this)">Data Model</button>
+    <button class="tab-btn" onclick="showTab('notifications', this)">Notifications</button>
+    <button class="tab-btn" onclick="showTab('roadmap', this)">Roadmap</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- OVERVIEW -->
+  <div id="panel-overview" class="panel active">
+    <div class="section-title">What is Skycare YKF</div>
+    <div class="highlight-box">
+      <p><strong>Skycare YKF</strong> is a mobile-first operations platform for the ground crew team at CYKF. It replaces paper checklists, group texts, and spreadsheets with a single app that every team member runs on their phone — no installation required. Built as a Progressive Web App, it works offline, sends push notifications, and tracks everything from daily cleaning tasks to live aircraft positions.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛠 The Problem It Solves</div>
+      <p>Ground crews at regional airports coordinate across multiple roles — groomers, mechanics, pilots, buyers — using informal tools that create gaps: missed tasks, forgotten supplies, unknown aircraft ETAs, and no paper trail. Skycare centralizes all of this into one real-time shared system accessible from any phone.</p>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">📍 Where It Runs</div>
+        <p>Hosted on GitHub Pages at a public URL. Any team member opens it in their phone browser, installs it to their home screen like a native app, and it's ready. No app store. No accounts. No IT department needed.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">⚡ How It Was Built</div>
+        <p>Built from scratch as a single HTML file with vanilla JavaScript and Firebase. No frameworks, no build pipeline. Every feature added iteratively in direct response to real crew needs — what the team asked for, what daily use revealed.</p>
+      </div>
+    </div>
+
+    <div class="section-title">Creative Process</div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title">Phase 1 — Foundation</div>
+        <p>Started with a daily task checklist for groomers. Seeded task data from Google Sheets, then migrated to Firestore for real-time multi-device sync. Established the PWA shell, service worker, and 4-theme UI system.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 2 — Crew Operations</div>
+        <p>Added crew car tracking with fuel gauges, odometer logs, QR codes per vehicle. Monthly audit system with photo capture. Shopping list with per-store filtering and a shared cart. SOPs and procedure cards.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 3 — Notifications</div>
+        <p>Implemented Web Push via VAPID. Built a GitHub Actions serverless backend: coffee reminders, evening lockup alert, crew car fuel alerts, fleet arrival alerts via OpenSky API, MX parts queue notifications.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Phase 4 — Fleet Intelligence</div>
+        <p>Live Leaflet map with real aircraft positions. Fleet tracking for 10 aircraft across the company's fleet. ETA calculation, 60 nm alert radius, cooldown logic, position data cached to Firestore so browsers never call OpenSky directly.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="panel-users" class="panel">
+    <div class="section-title">User Types</div>
+    <div class="grid-3">
+      <div class="user-card">
+        <div class="user-icon">🧹</div>
+        <div class="user-role">Primary Users</div>
+        <div class="user-name">Groomers</div>
+        <div class="user-desc">Ground crew who clean and service aircraft between flights. Check off daily tasks, log flights, manage shopping cart, track crew cars, get push notifications for coffee, lockup, and fleet arrivals.</div>
+      </div>
+      <div class="user-card pilot">
+        <div class="user-icon">✈️</div>
+        <div class="user-role">Aviation</div>
+        <div class="user-name">Pilots</div>
+        <div class="user-desc">Access the Pilot Study Hub (PA-31 Navajo AFM, V-speeds, emergency procedures). Snag reporting feature designed for this group — not yet built. Will report aircraft defects directly from the cockpit.</div>
+      </div>
+      <div class="user-card mx">
+        <div class="user-icon">🔧</div>
+        <div class="user-role">Maintenance</div>
+        <div class="user-name">MX / Mechanics</div>
+        <div class="user-desc">Access the separate mechanics.html page. Browse and manage parts/supplies catalog. Mark items as ordered. Receive push notifications when groomers flag items needed from suppliers.</div>
+      </div>
+      <div class="user-card buyer">
+        <div class="user-icon">🛒</div>
+        <div class="user-role">Operations</div>
+        <div class="user-name">Buyer / Supervisor</div>
+        <div class="user-desc">Activates "Buyer Out" session when heading to stores. Reviews the shared cart grouped by store. Monitors audit completion and shift handoff notes on the Home tab.</div>
+      </div>
+      <div class="user-card ramp">
+        <div class="user-icon">🚗</div>
+        <div class="user-role">Ramp Access</div>
+        <div class="user-name">Ramp Crew</div>
+        <div class="user-desc">Uses crew-access.html via QR code sticker on each vehicle. Quick fuel level update, odometer entry, and crew note — no navigation, no auth, just the form for that specific car.</div>
+      </div>
+      <div class="user-card crew">
+        <div class="user-icon">🏠</div>
+        <div class="user-role">Accommodation</div>
+        <div class="user-name">Crew House</div>
+        <div class="user-desc">Access crewhouse.html — a filtered view of the shopping catalog showing only items for the crew house. Simple, purpose-built for residents to add household needs to the shared buy list.</div>
+      </div>
+    </div>
+
+    <div class="section-title">Access Control</div>
+    <div class="card">
+      <div class="card-title">🔐 Current Authentication</div>
+      <p>A 4-digit PIN (<strong>0704</strong>) is required on first visit and remembered in localStorage. There is no server-side authentication — Firestore rules are currently open. This is appropriate for a closed team in a trusted environment. The roadmap includes Firebase Authentication before any external client onboarding.</p>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <div id="panel-features" class="panel">
+    <div class="section-title">Working Features (29 total)</div>
+
+    <div class="card">
+      <div class="card-title">📋 Task Management</div>
+      <div class="feature-list">
+        <span class="feat-chip done">Daily shift checklist</span>
+        <span class="feat-chip done">7-day weekly view</span>
+        <span class="feat-chip done">Progress bar</span>
+        <span class="feat-chip done">Area-grouped tasks (Aircraft / Office / MX / Charter)</span>
+        <span class="feat-chip done">Recurring frequencies (Daily, Mon–Fri, specific days, Once)</span>
+        <span class="feat-chip done">One-off task auto-cleanup</span>
+        <span class="feat-chip done">Add / Edit / Delete tasks</span>
+        <span class="feat-chip done">Pull-to-refresh</span>
+        <span class="feat-chip done">Real-time cross-device sync</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">✈ Flight Operations</div>
+      <div class="feature-list">
+        <span class="feat-chip done">Flight log (arrivals, departures, groomings, O2)</span>
+        <span class="feat-chip done">Live fleet map (Leaflet + OpenStreetMap)</span>
+        <span class="feat-chip done">10-aircraft fleet tracker</span>
+        <span class="feat-chip done">Distance / altitude / speed / ETA per aircraft</span>
+        <span class="feat-chip done">60 nm arrival alert notification</span>
+        <span class="feat-chip done">End-of-day shift handoff notes</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🚗 Crew Car Management</div>
+      <div class="feature-list">
+        <span class="feat-chip done">8-vehicle roster with fuel gauges</span>
+        <span class="feat-chip done">Odometer + next service KM tracker</span>
+        <span class="feat-chip done">Wash log</span>
+        <span class="feat-chip done">Oil tracker</span>
+        <span class="feat-chip done">Crew notes per vehicle</span>
+        <span class="feat-chip done">Damage reports with photo upload</span>
+        <span class="feat-chip done">Monthly photo audits (Good/Fair/Poor rating)</span>
+        <span class="feat-chip done">QR codes per car → quick update form</span>
+        <span class="feat-chip done">Fuel & service KM push alerts</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛒 Supply & Shopping</div>
+      <div class="feature-list">
+        <span class="feat-chip done">Full supply catalog with store/location filters</span>
+        <span class="feat-chip done">Shared cart — real-time across all devices</span>
+        <span class="feat-chip done">Cart view grouped by store</span>
+        <span class="feat-chip done">Buyer Out session mode</span>
+        <span class="feat-chip done">MX parts catalog (mechanics.html)</span>
+        <span class="feat-chip done">Crew house shopping list (crewhouse.html)</span>
+        <span class="feat-chip done">MX / shopping push notifications</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📱 App Experience</div>
+      <div class="feature-list">
+        <span class="feat-chip done">Installable PWA (no app store)</span>
+        <span class="feat-chip done">Offline support via service worker</span>
+        <span class="feat-chip done">4 UI themes (Premium / Standard × Night / Day)</span>
+        <span class="feat-chip done">Day-specific splash screens</span>
+        <span class="feat-chip done">Animated crew portrait (Wednesdays)</span>
+        <span class="feat-chip done">Draggable bottom nav</span>
+        <span class="feat-chip done">SOPs / procedure cards</span>
+        <span class="feat-chip done">Contacts directory</span>
+        <span class="feat-chip done">Pilot Study Hub — PA-31 Navajo reference</span>
+      </div>
+    </div>
+
+    <div class="section-title">Planned Features</div>
+    <div class="card">
+      <div class="feature-list">
+        <span class="feat-chip planned">Pilot / MX snag reporting</span>
+        <span class="feat-chip planned">Voice-to-text snag entry</span>
+        <span class="feat-chip planned">PDF snag export</span>
+        <span class="feat-chip planned">Recurring snag detection</span>
+        <span class="feat-chip planned">QR code per aircraft (cockpit sticker)</span>
+        <span class="feat-chip planned">Firebase Authentication</span>
+        <span class="feat-chip planned">Custom domain</span>
+        <span class="feat-chip planned">NFC tags per crew car</span>
+        <span class="feat-chip planned">Multi-tenant SaaS onboarding</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREENS -->
+  <div id="panel-screens" class="panel">
+    <div class="section-title">Main App — 8 Tabs (index.html)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tab</th><th>Label</th><th>What it shows</th><th>Primary user</th></tr></thead>
+        <tbody>
+          <tr><td>🏠</td><td><strong>Home</strong></td><td>Dashboard tiles, day-specific aircraft splash, handoff notes from last shift</td><td>All crew</td></tr>
+          <tr><td>✅</td><td><strong>Today</strong></td><td>Today's task checklist grouped by area, progress bar, flight log, FAB to add task, EOD button</td><td>Groomers</td></tr>
+          <tr><td>📅</td><td><strong>Week</strong></td><td>7-day overview with task counts; drill into any day's full list</td><td>Supervisors</td></tr>
+          <tr><td>🛒</td><td><strong>Shopping</strong></td><td>Filterable supply catalog, shared cart, Buyer Out mode, store-grouped cart view</td><td>Groomers / Buyer</td></tr>
+          <tr><td>📋</td><td><strong>Procedures</strong></td><td>SOPs accordion + Crew Cars Hub → vehicle list → car detail → audits</td><td>Groomers</td></tr>
+          <tr><td>📞</td><td><strong>Contacts</strong></td><td>Vendor and supplier directory with phone, address, Maps deep-link</td><td>All crew</td></tr>
+          <tr><td>📡</td><td><strong>Fleet</strong></td><td>Live Leaflet map + roster cards with distance, altitude, speed, ETA for all 10 aircraft</td><td>Managers / Groomers</td></tr>
+          <tr><td>💤</td><td><strong>Bored</strong></td><td>Downtime ideas checklist. Easter egg on one item.</td><td>All crew</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Standalone Pages</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>File</th><th>URL path</th><th>Purpose</th><th>User</th></tr></thead>
+        <tbody>
+          <tr><td><code>mechanics.html</code></td><td><code>/mechanics.html</code></td><td>MX parts & supplies catalog — browse, mark ordered, adjust quantities, get notified</td><td>Mechanics</td></tr>
+          <tr><td><code>crew-access.html</code></td><td><code>/crew-access.html?car=KEY</code></td><td>QR-linked quick car update — fuel, KM, crew note. One form per vehicle, no nav.</td><td>Ramp crew</td></tr>
+          <tr><td><code>crewhouse.html</code></td><td><code>/crewhouse.html</code></td><td>Crew house shopping list — filtered view of catalog for cabin=Crew House items</td><td>Crew house</td></tr>
+          <tr><td><code>pilot.html</code></td><td><code>/pilot.html</code></td><td>Pilot Study Hub — PA-31 Navajo AFM, V-speeds, emergencies, procedures. Desktop-friendly.</td><td>Pilots</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE -->
+  <div id="panel-architecture" class="panel">
+    <div class="section-title">Tech Stack</div>
+
+    <div class="stack-group">
+      <div class="stack-label">Frontend</div>
+      <div class="stack-pills">
+        <div class="pill">Vanilla HTML / CSS / JS <em>— no framework, no build step</em></div>
+        <div class="pill">Progressive Web App <em>— installable, offline-capable</em></div>
+        <div class="pill">Service Worker v107 <em>— network-first caching</em></div>
+        <div class="pill">Web Push API <em>— VAPID push notifications</em></div>
+        <div class="pill">Leaflet 1.9.4 <em>— interactive fleet map</em></div>
+        <div class="pill">4 CSS Themes <em>— Premium/Standard × Night/Day</em></div>
+      </div>
+    </div>
+
+    <div class="stack-group">
+      <div class="stack-label">Backend (Firebase)</div>
+      <div class="stack-pills">
+        <div class="pill">Firestore <em>— all app data, real-time sync</em></div>
+        <div class="pill">Firebase Storage <em>— audit photos, Blaze plan</em></div>
+        <div class="pill">No Firebase Auth <em>— PIN-gated, open Firestore rules</em></div>
+      </div>
+    </div>
+
+    <div class="stack-group">
+      <div class="stack-label">Serverless Backend (GitHub Actions)</div>
+      <div class="stack-pills">
+        <div class="pill">Node.js 20 <em>— all notification scripts</em></div>
+        <div class="pill">web-push npm <em>— VAPID push delivery</em></div>
+        <div class="pill">firebase-admin npm <em>— Firestore access from Actions</em></div>
+        <div class="pill">cron-job.org <em>— external 5-min tick via workflow_dispatch</em></div>
+        <div class="pill">OpenSky Network API <em>— ADS-B position data, authenticated</em></div>
+      </div>
+    </div>
+
+    <div class="stack-group">
+      <div class="stack-label">Infrastructure</div>
+      <div class="stack-pills">
+        <div class="pill">GitHub Pages <em>— hosting, free, public repo</em></div>
+        <div class="pill">GitHub Actions <em>— 7 workflows, free on public repo</em></div>
+        <div class="pill">OpenStreetMap <em>— map tiles via Leaflet CDN</em></div>
+      </div>
+    </div>
+
+    <div class="section-title">Infrastructure Cost</div>
+    <div class="infra-grid">
+      <div class="infra-card">
+        <div class="infra-icon">🌐</div>
+        <div class="infra-name">GitHub Pages</div>
+        <div class="infra-detail">Static hosting, CDN, HTTPS. Public repo.</div>
+        <div class="infra-cost">$0 / month</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">🔥</div>
+        <div class="infra-name">Firebase Firestore</div>
+        <div class="infra-detail">50k reads/day, 20k writes/day on Spark free tier.</div>
+        <div class="infra-cost">$0 / month</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">📦</div>
+        <div class="infra-name">Firebase Storage</div>
+        <div class="infra-detail">Blaze plan, pay-as-you-go. Audit photos auto-deleted after 30 days.</div>
+        <div class="infra-cost">~$0 / month</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">⚙️</div>
+        <div class="infra-name">GitHub Actions</div>
+        <div class="infra-detail">7 workflows. Public repos get unlimited free minutes.</div>
+        <div class="infra-cost">$0 / month</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">⏰</div>
+        <div class="infra-name">cron-job.org</div>
+        <div class="infra-detail">External cron trigger service. Fires workflow_dispatch every 5 min.</div>
+        <div class="infra-cost">$0 / month</div>
+      </div>
+      <div class="infra-card">
+        <div class="infra-icon">📡</div>
+        <div class="infra-name">OpenSky Network</div>
+        <div class="infra-detail">ADS-B data, authenticated account. 4,000 credits/day.</div>
+        <div class="infra-cost">$0 / month</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DATA MODEL -->
+  <div id="panel-data" class="panel">
+    <div class="section-title">Firestore Collections (24 active)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Collection</th><th>Document ID</th><th>Key fields</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>tasks</code></td><td>Day name e.g. <code>1️⃣ Monday</code></td><td>tasks[], migrated</td><td>Task list per weekday</td></tr>
+          <tr><td><code>taskState</code></td><td>Day name</td><td>{taskKey: done, doneAt}</td><td>Per-device completion state</td></tr>
+          <tr><td><code>taskEdits</code></td><td>auto-ID</td><td>day, action, task, at</td><td>Audit log of task edits</td></tr>
+          <tr><td><code>shoppingCatalog</code></td><td>item+store key</td><td>item, cabinet, store, notes, url</td><td>Master supply catalog</td></tr>
+          <tr><td><code>shopState</code></td><td><code>state</code></td><td>{itemKey: checked, status, qty}</td><td>Shared cart state</td></tr>
+          <tr><td><code>shopSession</code></td><td><code>active</code></td><td>active, ts</td><td>Buyer Out session flag</td></tr>
+          <tr><td><code>shopNotifQueue</code></td><td>auto-ID</td><td>title, body, sent, sentAt</td><td>Shopping push queue</td></tr>
+          <tr><td><code>mxNotifQueue</code></td><td>auto-ID</td><td>title, body, sent, sentAt</td><td>MX parts push queue</td></tr>
+          <tr><td><code>crewCarData</code></td><td><code>all</code></td><td>{carKey: {fuel, km, nextServiceKm, washed, notes}}</td><td>All vehicle status</td></tr>
+          <tr><td><code>auditCars</code></td><td><code>{month}-{carKey}</code></td><td>photos[], comments, done, completedAt</td><td>Monthly car audits</td></tr>
+          <tr><td><code>auditArchive</code></td><td>month string</td><td>completedAt, cars[]</td><td>Audit history</td></tr>
+          <tr><td><code>damageReports</code></td><td>auto-ID</td><td>text, photo, ts, procKey</td><td>Vehicle damage log</td></tr>
+          <tr><td><code>handoffNotes</code></td><td>auto-ID</td><td>text, ts, resolved</td><td>EOD shift handoff</td></tr>
+          <tr><td><code>dayNotes</code></td><td>ISO date</td><td>text, completed</td><td>Daily sticky note</td></tr>
+          <tr><td><code>fleetPositions</code></td><td><code>live</code></td><td>{tail: {lat, lon, distNm, speedKts, altFt}}, fetchedAt</td><td>Live aircraft positions</td></tr>
+          <tr><td><code>fleetNotifications</code></td><td>tail code</td><td>notifiedAt, active, distNm, resetAt</td><td>Alert cooldown state</td></tr>
+          <tr><td><code>pushSubscriptions</code></td><td>sub ID</td><td>sub: {endpoint, keys}</td><td>Browser push subscriptions</td></tr>
+          <tr><td><code>coffeeNotifSent</code></td><td>date+hour+min</td><td>sentAt</td><td>Dedup guard for coffee alerts</td></tr>
+          <tr><td><code>contacts</code></td><td>name key</td><td>name, address, notes, phone, role</td><td>Vendor directory</td></tr>
+          <tr><td><code>procedures</code></td><td>procedure key</td><td>title, icon, steps[], warn, video</td><td>Grooming SOPs</td></tr>
+          <tr><td><code>boredState</code></td><td><code>state</code></td><td>{taskKey: bool}</td><td>Bored list checkmarks</td></tr>
+          <tr><td><code>notifications</code></td><td>auto-ID</td><td>ts, ...</td><td>In-app broadcast channel</td></tr>
+          <tr><td><code>teamData</code></td><td><code>trip</code></td><td>notes</td><td>Shared trip notes field</td></tr>
+          <tr><td><code>appConfig</code></td><td>various</td><td>source, custom, date, active</td><td>App-wide config flags</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-title">Firebase Storage</div>
+    <div class="card">
+      <div class="card-title">📸 Storage Paths</div>
+      <p>Bucket: <code>groomer-ykf.firebasestorage.app</code><br><br>
+      <code>audits/{month}-{carKey}/{timestamp}.jpg</code> — Car audit photos. Auto-deleted after 30 days by the cleanup GitHub Actions workflow.<br><br>
+      Future: <code>snags/{aircraftKey}/{snagId}/{timestamp}.jpg</code> — Planned for pilot snag photo uploads.</p>
+    </div>
+  </div>
+
+  <!-- NOTIFICATIONS -->
+  <div id="panel-notifications" class="panel">
+    <div class="section-title">Push Notification System</div>
+    <div class="card" style="margin-bottom:24px;">
+      <div class="card-title">🔔 How It Works</div>
+      <p>When a user taps the bell icon, their browser generates a push subscription (endpoint + encryption keys) using the Web Push API. This subscription is saved to Firestore under <code>pushSubscriptions</code>. GitHub Actions scripts read those subscriptions and deliver pushes using the <code>web-push</code> npm library and VAPID authentication. The service worker on each device receives the push event and shows the native OS notification — works on iOS 16.4+, Android, and desktop.</p>
+    </div>
+
+    <div class="section-title">Notification Types (7)</div>
+
+    <div class="notif-card">
+      <div class="notif-icon">☕</div>
+      <div>
+        <div class="notif-title">Coffee Reminder</div>
+        <div class="notif-when">9:40 AM · 11:40 AM · 3:40 PM Eastern — daily</div>
+      </div>
+      <div class="notif-trigger">Every 5 min</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">🔐</div>
+      <div>
+        <div class="notif-title">Evening Lockup Reminder</div>
+        <div class="notif-when">8:00 PM Eastern — daily · "Leave CC and phone on charge!"</div>
+      </div>
+      <div class="notif-trigger">Every 5 min</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">✈️</div>
+      <div>
+        <div class="notif-title">Fleet Arrival Alert</div>
+        <div class="notif-when">When any fleet aircraft crosses 60 nm from CYKF while airborne. Includes distance, altitude, speed, ETA. 2-hour cooldown per tail. Resets at 120 nm.</div>
+      </div>
+      <div class="notif-trigger">Every 5 min</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">⛽</div>
+      <div>
+        <div class="notif-title">Fuel Alert</div>
+        <div class="notif-when">11 AM + 4 PM Eastern daily — fires if any crew car is at Empty or ¼ tank</div>
+      </div>
+      <div class="notif-trigger">Daily cron</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">🔧</div>
+      <div>
+        <div class="notif-title">Service Due Alert</div>
+        <div class="notif-when">11 AM + 4 PM Eastern daily — fires if any car is within 500 km of next service interval</div>
+      </div>
+      <div class="notif-trigger">Daily cron</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">🔩</div>
+      <div>
+        <div class="notif-title">MX Parts Alert</div>
+        <div class="notif-when">Within 5 min of mechanic adding item to the parts queue in mechanics.html</div>
+      </div>
+      <div class="notif-trigger">Every 5 min</div>
+    </div>
+
+    <div class="notif-card">
+      <div class="notif-icon">🛒</div>
+      <div>
+        <div class="notif-title">Shopping Item Alert</div>
+        <div class="notif-when">Within 5 min of a supply item being flagged as needed in the shopping list</div>
+      </div>
+      <div class="notif-trigger">Every 5 min</div>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div id="panel-roadmap" class="panel">
+    <div class="section-title">Next Features</div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">1</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">Pilot / MX Snag Reporting</div>
+        <div class="roadmap-desc">Fully designed. Pilots and mechanics report aircraft defects directly from their phone — voice-to-text entry, photo upload, severity classification. MX gets push notification immediately. Snag history per aircraft. Recurring snag detection (GitHub Actions). QR sticker in each cockpit links to that aircraft's snag form.</div>
+        <div class="roadmap-eta">Design complete · Build est. ~2 weeks</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">2</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">Firebase Authentication</div>
+        <div class="roadmap-desc">Replace the client-side PIN with real Firebase Auth (email/password or Google SSO). Required before onboarding any external clients. Enables per-user roles (groomer vs. supervisor vs. pilot) and proper Firestore security rules.</div>
+        <div class="roadmap-eta">Prerequisite for SaaS launch</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">3</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">Custom Domain + Branding</div>
+        <div class="roadmap-desc">Move off the GitHub Pages subdomain to skycare.app or similar. GitHub Organization account for cleaner repo ownership. Enables white-labelling for external clients (client.skycare.app).</div>
+        <div class="roadmap-eta">~1 day · ~$15/year</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">4</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">App Store / Play Store</div>
+        <div class="roadmap-desc">Wrap the PWA using Capacitor to produce native iOS and Android builds. Enables App Store listing, which increases credibility and discoverability. Push notifications already implemented — the native wrapper is the only missing step.</div>
+        <div class="roadmap-eta">Est. 2 weeks with Capacitor</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">5</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">Multi-Tenant SaaS</div>
+        <div class="roadmap-desc">New Firebase project per client, config swap at deploy time, custom subdomain per location. Target markets: regional aviation teams, FBOs, hospitality (hotel housekeeping), facilities management. First client outside CYKF validates the model.</div>
+        <div class="roadmap-eta">Target: $50–$200/month per location</div>
+      </div>
+    </div>
+
+    <div class="roadmap-item">
+      <div class="roadmap-step">6</div>
+      <div class="roadmap-body">
+        <div class="roadmap-title">NFC Tags per Crew Car</div>
+        <div class="roadmap-desc">NTAG213/215 stickers affixed to each vehicle. Tap with phone → opens crew-access.html?car=KEY instantly. No QR scan required. Zero hardware cost beyond the stickers (~$0.30 each).</div>
+        <div class="roadmap-eta">Low effort · High UX improvement</div>
+      </div>
+    </div>
+
+    <div class="section-title">Business Case</div>
+    <div class="highlight-box">
+      <p><strong>$0/month</strong> infrastructure cost at current scale. Every component runs on free tiers — GitHub Pages, Firestore Spark, GitHub Actions on public repos, cron-job.org. The app reaches production quality at zero operating cost, which means the first paying customer is 100% margin above the cost of building it.</p>
+    </div>
+    <div class="card">
+      <div class="card-title">📈 Expansion Path</div>
+      <p>The platform is not aviation-specific. The core loop — shared task lists, vehicle tracking, supply management, push notifications, shift handoffs — applies directly to hotel housekeeping teams, airport ground handlers, facilities management, and fleet operations at any scale. Skycare YKF is the proof of concept. The product is the platform.</p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function showTab(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// Radar sweep animation
+(function() {
+  const canvas = document.getElementById('radarCanvas');
+  const ctx = canvas.getContext('2d');
+  let angle = 0;
+  let W, H, cx, cy, radius;
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    cx = W / 2;
+    cy = H / 2;
+    radius = Math.max(W, H) * 0.7;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Concentric rings
+    ctx.strokeStyle = 'rgba(45,125,210,0.35)';
+    ctx.lineWidth = 1;
+    for (let r = radius * 0.25; r <= radius; r += radius * 0.25) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Cross hairs
+    ctx.beginPath();
+    ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy);
+    ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius);
+    ctx.stroke();
+
+    // Sweep gradient
+    const sweep = ctx.createConicalGradient
+      ? null
+      : null; // fallback below
+    const grad = ctx.createLinearGradient(cx, cy, cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
+    grad.addColorStop(0, 'rgba(45,125,210,0.5)');
+    grad.addColorStop(1, 'rgba(45,125,210,0)');
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, -0.4, 0);
+    ctx.fillStyle = 'rgba(45,125,210,0.15)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(radius, 0);
+    ctx.strokeStyle = 'rgba(45,125,210,0.8)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    angle += 0.008;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+</script>
