@@ -350,7 +350,6 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
       <div style="display:flex;gap:4px;flex-wrap:wrap" id="supplyFilters">
         <button class="sf-btn active" onclick="filterSupply('all',this)">All</button>
         <button class="sf-btn" onclick="filterSupply('grooming',this)">Grooming</button>
-        <button class="sf-btn" onclick="filterSupply('catering',this)">Catering</button>
         <button class="sf-btn" onclick="filterSupply('jets',this)">Jets</button>
         <button class="sf-btn" onclick="filterSupply('metros',this)">Metros</button>
         <button class="sf-btn" onclick="filterSupply('office',this)">Office</button>
@@ -368,23 +367,21 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
     </div>
     <div class="wfooter">
       <span id="supplyFooterLeft">Shared in real time across all phones</span>
-      <span id="buyingSessionBtn" onclick="toggleBuyingSession()" style="cursor:pointer;color:var(--muted)">Activate buying session</span>
     </div>
   </div>
   <div class="feat-block reveal">
     <div class="feat-block-title"><span class="dot amber"></span>Inventory system features</div>
     <div class="feat-chips">
       <span class="chip">Catalog filtered by Jets or Metros</span>
-      <span class="chip">Category filters — grooming, catering, office</span>
+      <span class="chip">Category filters — grooming, office</span>
       <span class="chip">Cart grouped by store for one efficient run</span>
-      <span class="chip">Supervisor buying session mode</span>
       <span class="chip">Inventory notes per item</span>
       <span class="chip">Shared in real time across all phones</span>
     </div>
   </div>
 
   <!-- 3. FLIGHT OPERATIONS -->
-  <div class="sub-h">Flight Operations</div>
+  <div class="sub-h" style="position:relative">Flight Operations <span style="font-family:var(--mono);font-size:10px;font-weight:400;color:var(--amber);border:1px solid rgba(240,160,32,.3);background:rgba(240,160,32,.06);padding:3px 9px;border-radius:100px;letter-spacing:.08em;text-transform:uppercase;margin-left:4px">In development</span></div>
   <p class="lead" style="margin-bottom:12px">Live positions for every aircraft in the fleet. When a plane crosses within 60 nm of CYKF, every groomer's phone gets an automatic alert. The tracker below runs live — positions update every 2 seconds.</p>
   <div class="widget reveal" style="margin-bottom:20px">
     <div class="wh"><div class="wh-title">Fleet Status</div><div class="wh-live">Live</div></div>
@@ -500,7 +497,8 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
         <li>Check off daily and weekly tasks</li>
         <li>Log arrivals, departures, groomings</li>
         <li>Receive shift and fleet notifications</li>
-        <li>Update crew car status</li>
+        <li>Manage supply inventory</li>
+        <li>Maintain cleanliness of installations and planes</li>
       </ul>
     </div>
     <div class="role-block">
@@ -509,12 +507,12 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
       <ul>
         <li>Access aircraft reference documentation</li>
         <li>Snag reference log — planning stage only</li>
-        <li>Will not replace official logbook entries</li>
+        <li>Order shopping material from their own window — groomers receive a notification and items fall into the shared cart</li>
       </ul>
     </div>
     <div class="role-block">
-      <div class="role-label">Ramp access</div>
-      <div class="role-name">Ramp Crew</div>
+      <div class="role-label">Vehicle management</div>
+      <div class="role-name">Crew Cars Management</div>
       <ul>
         <li>Scan QR code on any vehicle</li>
         <li>Update fuel, odometer, and notes instantly</li>
@@ -525,7 +523,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
       <div class="role-label">Operations</div>
       <div class="role-name">Shopping Inventory</div>
       <ul>
-        <li>Activate buying session for the team</li>
+        <li>Shared cart visible to all groomers in real time</li>
         <li>Cart grouped by store — one efficient trip</li>
         <li>Filtered by aircraft type: Jets or Metros</li>
         <li>Inventory notes per item</li>
@@ -621,7 +619,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
     <div class="training-card">
       <div class="training-card-icon">✈️</div>
       <div class="training-card-title">Aircraft Reference Hub</div>
-      <div class="training-card-desc">PA-31 Navajo study guide available today — specs, diagrams, service notes, and safety reminders. Additional aircraft types to be added as the fleet grows. Available fully offline.</div>
+      <div class="training-card-desc">PA-31 Navajo study guide — live now. Covers specs, service notes, weight limits, fluid types, and safety reminders specific to the Navajo. Available fully offline on any phone.</div>
     </div>
   </div>
 
@@ -816,7 +814,7 @@ function ceoSelectVeh(row,pct,color,label,type,name){
 
 // ── NOTIFICATION FEED ──
 var notifItems=[
-  {type:'shift',title:'☀ Good morning — shift starts in 30 min',body:'Today: 6 aircraft tasks · 3 car checks · Weekly hangar clean'},
+  {type:'shift',title:'☕ Coffee break — 10:15',body:'15-minute break · Resume tasks at 10:30 · IOC turnaround at 11:00'},
   {type:'fleet',title:'✈ IOC approaching — 60 nm alert',body:'Metroliner IOC · 48 nm · 14,200 ft · 310 KTS · ETA 18 min'},
   {type:'fuel',title:'⛽ Micra — low fuel alert',body:'Tank at 18% — refuel before next shift'},
   {type:'shift',title:'🔒 Lockup reminder — 21:30',body:'Check hangar doors, office, and ramp gate before leaving'},
@@ -838,9 +836,6 @@ var supplyItems=[
   {name:'Leather Conditioning Wipes',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jets only — cabin seats'},
   {name:'Carpet Stain Remover',store:'Walmart',cat:'grooming',ac:'metros',note:'Metros — blue carpet'},
   {name:'Window & Glass Cleaner',store:'Costco',cat:'grooming',ac:'both',note:''},
-  {name:'Bottled Water (24 pk)',store:'Costco',cat:'catering',ac:'jets',note:'Charter flights'},
-  {name:'Coffee Pods — Dark Roast',store:'Costco',cat:'catering',ac:'jets',note:'Keurig compatible'},
-  {name:'Granola Bar Variety Pack',store:'Costco',cat:'catering',ac:'jets',note:'Crew snacks + charter'},
   {name:'Paper Towels (bulk)',store:'Costco',cat:'office',ac:'both',note:'Kitchen + hangars'},
   {name:'Garbage Bags 42 gal',store:'Costco',cat:'office',ac:'both',note:''},
   {name:'Lavatory Deodorizer Tabs',store:'Aviation Supplier',cat:'grooming',ac:'metros',note:'Metroliner lavatory only'},
@@ -848,7 +843,7 @@ var supplyItems=[
   {name:'Dry Shampoo / Upholstery Foam',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jet interior detail'},
   {name:'Crew House Dish Soap',store:'Walmart',cat:'office',ac:'both',note:'Crew house kitchen'},
 ];
-var cart={},currentFilter='all',showingCart=false,buyingActive=false;
+var cart={},currentFilter='all',showingCart=false;
 
 function catMatch(item,f){if(f==='all')return true;if(f==='grooming')return item.cat==='grooming';if(f==='catering')return item.cat==='catering';if(f==='office')return item.cat==='office';if(f==='jets')return item.ac==='jets'||item.ac==='both';if(f==='metros')return item.ac==='metros'||item.ac==='both';return true;}
 function acLabel(ac){if(ac==='jets')return 'Jets';if(ac==='metros')return 'Metros';return 'All';}
@@ -892,14 +887,6 @@ function renderCartView(){
 }
 
 function removeFromCart(name){delete cart[name];document.getElementById('cartNum').textContent=Object.keys(cart).length;renderCartView();}
-
-function toggleBuyingSession(){
-  buyingActive=!buyingActive;
-  var btn=document.getElementById('buyingSessionBtn');
-  document.getElementById('supplyWidget').style.borderColor=buyingActive?'rgba(32,192,96,.3)':'';
-  if(buyingActive){btn.textContent='● Buying session active';btn.style.color='var(--green)';document.getElementById('supplyFooterLeft').textContent='Supervisor buying mode — grouped by store';}
-  else{btn.textContent='Activate buying session';btn.style.color='var(--muted)';document.getElementById('supplyFooterLeft').textContent='Shared in real time across all phones';}
-}
 
 renderSupply();
 
