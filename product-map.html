@@ -449,25 +449,35 @@
 
     <div class="card">
       <div class="card-title">🛠 The Problem It Solves</div>
-      <p>Ground crews at regional airports coordinate across multiple roles — groomers, mechanics, pilots, buyers — using informal tools that create gaps: missed tasks, forgotten supplies, unknown aircraft ETAs, and no paper trail. Skycare centralizes all of this into one real-time shared system accessible from any phone.</p>
-      <br>
-      <p><strong style="color:var(--text)">High turnover, solved by design.</strong> The grooming industry sees constant staff rotation. Skycare embeds the institutional knowledge into the platform — a new groomer on day one follows the same steps as a five-year veteran, because the process lives in the app, not in someone's head.</p>
-      <br>
-      <p><strong style="color:var(--text)">Uniform work across the team.</strong> Every groomer — new or experienced — sees the same task lists, the same procedures, the same checklists. The quality of a shift no longer depends on who's working it.</p>
-      <br>
-      <p><strong style="color:var(--text)">A foundation for multi-base standardization.</strong> Because the platform is cloud-based and configurable, the same processes deployed at CYKF can be rolled out to any Skycare base — creating company-wide operational consistency without rewriting anything.</p>
-      <br>
-      <p><strong style="color:var(--text)">A passive management layer.</strong> Beyond task execution, Skycare gives supervisors and management a live window into ground and flight operations — who's done what, which cars need fuel, which aircraft are inbound, what supplies are running low — without anyone having to pick up a phone or send a message.</p>
+      <p style="margin-bottom:14px">Ground crews at regional airports coordinate across multiple roles — groomers, mechanics, pilots, buyers — using informal tools that create gaps: missed tasks, forgotten supplies, unknown aircraft ETAs, and no paper trail. Skycare centralizes all of this into one real-time shared system accessible from any phone.</p>
+      <ul style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px">
+        <li>
+          <strong style="color:var(--text)">High turnover, solved by design.</strong>
+          <p style="margin-top:4px">Groomers turn over every 6 to 12 months. Skycare embeds the institutional knowledge into the platform — a new hire on day one follows the same process as someone who has been here for years, because the procedures live in the app, not in someone's memory.</p>
+        </li>
+        <li>
+          <strong style="color:var(--text)">Uniform work across the team.</strong>
+          <p style="margin-top:4px">Every groomer sees the same task lists, the same procedures, the same checklists — regardless of experience level. The quality of a shift no longer depends on who's working it.</p>
+        </li>
+        <li>
+          <strong style="color:var(--text)">A foundation for multi-base consistency.</strong>
+          <p style="margin-top:4px">Because the platform is cloud-based and configurable, the same processes deployed at CYKF can be replicated at any Skycare base — creating company-wide operational standards without rebuilding anything from scratch.</p>
+        </li>
+        <li>
+          <strong style="color:var(--text)">More than a task tool — a management layer.</strong>
+          <p style="margin-top:4px">Skycare is not just about cleaning planes. It gives supervisors and management a live operational picture — task completion, fleet positions, vehicle status, supply levels, shift handoffs — all in one place, updated in real time. The team executes; the platform reports. Management stays informed without having to ask.</p>
+        </li>
+      </ul>
     </div>
 
     <div class="grid-2">
       <div class="card">
         <div class="card-title">📍 Where It Runs</div>
-        <p>Hosted on GitHub Pages at a public URL. Any team member opens it in their phone browser, installs it to their home screen like a native app, and it's ready. No app store. No accounts. No IT department needed.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Hosted on GitHub Pages — no server to maintain</li><li>Opens in any phone browser, installs to home screen like a native app</li><li>No app store approval, no user accounts, no IT department needed</li></ul>
       </div>
       <div class="card">
         <div class="card-title">⚡ How It Was Built</div>
-        <p>Built from scratch as a single HTML file with vanilla JavaScript and Firebase. No frameworks, no build pipeline. Every feature added iteratively in direct response to real crew needs — what the team asked for, what daily use revealed.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Single HTML file — no frameworks, no build pipeline</li><li>Firebase for real-time data sync across all devices</li><li>Every feature added in direct response to real crew needs</li><li>Built iteratively — what the team asked for, what daily use revealed</li></ul>
       </div>
     </div>
 
@@ -475,19 +485,19 @@
     <div class="grid-2">
       <div class="card">
         <div class="card-title">Phase 1 — Foundation</div>
-        <p>Started with a daily task checklist for groomers. Seeded task data from Google Sheets, then migrated to Firestore for real-time multi-device sync. Established the PWA shell, service worker, and 4-theme UI system.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Daily task checklist for groomers</li><li>Task data seeded from Google Sheets, migrated to Firestore</li><li>PWA shell, service worker, offline support</li><li>4-theme UI system</li></ul>
       </div>
       <div class="card">
         <div class="card-title">Phase 2 — Crew Operations</div>
-        <p>Added crew car tracking with fuel gauges, odometer logs, QR codes per vehicle. Monthly audit system with photo capture. Shopping list with per-store filtering and a shared cart. SOPs and procedure cards.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Crew car tracking — fuel gauges, odometer, QR codes per vehicle</li><li>Monthly audit system with photo capture</li><li>Shopping list with per-store filtering and shared cart</li><li>SOPs and procedure cards</li></ul>
       </div>
       <div class="card">
         <div class="card-title">Phase 3 — Notifications</div>
-        <p>Implemented Web Push via VAPID. Built a GitHub Actions serverless backend: coffee reminders, evening lockup alert, crew car fuel alerts, fleet arrival alerts via OpenSky API, MX parts queue notifications.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Web Push notifications via VAPID — works on iOS, Android, desktop</li><li>GitHub Actions serverless backend for all notification delivery</li><li>Coffee reminders, evening lockup, fuel alerts, MX parts queue</li></ul>
       </div>
       <div class="card">
         <div class="card-title">Phase 4 — Fleet Intelligence</div>
-        <p>Live Leaflet map with real aircraft positions. Fleet tracking for 10 aircraft across the company's fleet. ETA calculation, 60 nm alert radius, cooldown logic, position data cached to Firestore so browsers never call OpenSky directly.</p>
+        <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px"><li>Live map tracking all 10 fleet aircraft in real time</li><li>Distance, altitude, speed, and ETA per aircraft</li><li>60 nm arrival alert with 2-hour cooldown per tail</li><li>Position data cached to Firestore — no direct API calls from the browser</li></ul>
       </div>
     </div>
   </div>
@@ -500,44 +510,48 @@
         <div class="user-icon">🧹</div>
         <div class="user-role">Primary Users</div>
         <div class="user-name">Groomers</div>
-        <div class="user-desc">Ground crew who clean and service aircraft between flights. Check off daily tasks, log flights, manage shopping cart, track crew cars, get push notifications for coffee, lockup, and fleet arrivals.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Clean and service aircraft between flights</li><li>Check off daily and weekly tasks</li><li>Log arrivals, departures, and groomings</li><li>Manage the shared shopping cart</li><li>Track crew car status</li><li>Receive push notifications</li></ul></div>
       </div>
       <div class="user-card pilot">
         <div class="user-icon">✈️</div>
         <div class="user-role">Aviation</div>
         <div class="user-name">Pilots</div>
-        <div class="user-desc">Access the Pilot Study Hub (PA-31 Navajo AFM, V-speeds, emergency procedures). Snag reporting feature designed for this group — not yet built. Will report aircraft defects directly from the cockpit.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Access PA-31 Navajo AFM, V-speeds, and emergency procedures</li><li>Snag reporting feature designed for this group (not yet built)</li><li>Will report aircraft defects directly from the cockpit</li></ul></div>
       </div>
       <div class="user-card mx">
         <div class="user-icon">🔧</div>
         <div class="user-role">Maintenance</div>
         <div class="user-name">MX / Mechanics</div>
-        <div class="user-desc">Access the separate mechanics.html page. Browse and manage parts/supplies catalog. Mark items as ordered. Receive push notifications when groomers flag items needed from suppliers.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Browse and manage the parts & supplies catalog</li><li>Mark items as ordered</li><li>Adjust quantities</li><li>Receive push notifications when groomers flag items needed</li></ul></div>
       </div>
       <div class="user-card buyer">
         <div class="user-icon">🛒</div>
         <div class="user-role">Operations</div>
         <div class="user-name">Buyer / Supervisor</div>
-        <div class="user-desc">Activates "Buyer Out" session when heading to stores. Reviews the shared cart grouped by store. Monitors audit completion and shift handoff notes on the Home tab.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Activates "Buyer Out" session when heading to stores</li><li>Reviews the shared cart grouped by store</li><li>Monitors audit completion</li><li>Reviews shift handoff notes on the Home tab</li></ul></div>
       </div>
       <div class="user-card ramp">
         <div class="user-icon">🚗</div>
         <div class="user-role">Ramp Access</div>
         <div class="user-name">Ramp Crew</div>
-        <div class="user-desc">Uses crew-access.html via QR code sticker on each vehicle. Quick fuel level update, odometer entry, and crew note — no navigation, no auth, just the form for that specific car.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Scans QR code sticker on the vehicle</li><li>Updates fuel level, odometer, and crew note</li><li>No login, no navigation — just the form for that car</li></ul></div>
       </div>
       <div class="user-card crew">
         <div class="user-icon">🏠</div>
         <div class="user-role">Accommodation</div>
         <div class="user-name">Crew House</div>
-        <div class="user-desc">Access crewhouse.html — a filtered view of the shopping catalog showing only items for the crew house. Simple, purpose-built for residents to add household needs to the shared buy list.</div>
+        <div class="user-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Filtered view of the catalog — crew house items only</li><li>Add household needs to the shared buy list</li><li>No access to the main groomer app</li></ul></div>
       </div>
     </div>
 
     <div class="section-title">Access Control</div>
     <div class="card">
       <div class="card-title">🔐 Current Authentication</div>
-      <p>A 4-digit PIN (<strong>0704</strong>) is required on first visit and remembered in localStorage. There is no server-side authentication — Firestore rules are currently open. This is appropriate for a closed team in a trusted environment. The roadmap includes Firebase Authentication before any external client onboarding.</p>
+      <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px">
+        <li>4-digit PIN required on first visit, remembered in the browser</li>
+        <li>No server-side authentication — appropriate for a closed, trusted team</li>
+        <li>Firebase Authentication is planned before any external client onboarding</li>
+      </ul>
     </div>
   </div>
 
@@ -799,7 +813,13 @@
     <div class="section-title">Push Notification System</div>
     <div class="card" style="margin-bottom:24px;">
       <div class="card-title">🔔 How It Works</div>
-      <p>When a user taps the bell icon, their browser generates a push subscription (endpoint + encryption keys) using the Web Push API. This subscription is saved to Firestore under <code>pushSubscriptions</code>. GitHub Actions scripts read those subscriptions and deliver pushes using the <code>web-push</code> npm library and VAPID authentication. The service worker on each device receives the push event and shows the native OS notification — works on iOS 16.4+, Android, and desktop.</p>
+      <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px">
+        <li>User taps the bell icon → browser generates a push subscription and saves it to Firestore</li>
+        <li>GitHub Actions scripts read all subscriptions and deliver pushes via the <code>web-push</code> library</li>
+        <li>The service worker on each device receives the push and shows the native OS notification</li>
+        <li>Works on iOS 16.4+, Android, and desktop</li>
+        <li>Expired subscriptions are automatically removed after each send batch</li>
+      </ul>
     </div>
 
     <div class="section-title">Notification Types (7)</div>
@@ -876,7 +896,7 @@
       <div class="roadmap-step">1</div>
       <div class="roadmap-body">
         <div class="roadmap-title">Pilot / MX Snag Reporting</div>
-        <div class="roadmap-desc">Fully designed. Pilots and mechanics report aircraft defects directly from their phone — voice-to-text entry, photo upload, severity classification. MX gets push notification immediately. Snag history per aircraft. Recurring snag detection (GitHub Actions). QR sticker in each cockpit links to that aircraft's snag form.</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Pilots and mechanics report aircraft defects from their phone</li><li>Voice-to-text entry, photo upload, severity classification</li><li>MX receives a push notification within minutes</li><li>Snag history per aircraft, recurring snag detection</li><li>QR sticker in each cockpit links directly to that aircraft's snag form</li></ul></div>
         <div class="roadmap-eta">Design complete · Build est. ~2 weeks</div>
       </div>
     </div>
@@ -885,7 +905,7 @@
       <div class="roadmap-step">2</div>
       <div class="roadmap-body">
         <div class="roadmap-title">Firebase Authentication</div>
-        <div class="roadmap-desc">Replace the client-side PIN with real Firebase Auth (email/password or Google SSO). Required before onboarding any external clients. Enables per-user roles (groomer vs. supervisor vs. pilot) and proper Firestore security rules.</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Replace the client-side PIN with Firebase Auth (email or Google SSO)</li><li>Enable per-user roles — groomer, supervisor, pilot, mechanic</li><li>Required before onboarding any external clients</li><li>Enables proper Firestore security rules</li></ul></div>
         <div class="roadmap-eta">Prerequisite for SaaS launch</div>
       </div>
     </div>
@@ -894,7 +914,7 @@
       <div class="roadmap-step">3</div>
       <div class="roadmap-body">
         <div class="roadmap-title">Custom Domain + Branding</div>
-        <div class="roadmap-desc">Move off the GitHub Pages subdomain to skycare.app or similar. GitHub Organization account for cleaner repo ownership. Enables white-labelling for external clients (client.skycare.app).</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Move off the GitHub Pages subdomain to skycare.app or similar</li><li>GitHub Organization account for cleaner repo ownership</li><li>Enables white-labelling for external clients (client.skycare.app)</li></ul></div>
         <div class="roadmap-eta">~1 day · ~$15/year</div>
       </div>
     </div>
@@ -903,7 +923,7 @@
       <div class="roadmap-step">4</div>
       <div class="roadmap-body">
         <div class="roadmap-title">App Store / Play Store</div>
-        <div class="roadmap-desc">Wrap the PWA using Capacitor to produce native iOS and Android builds. Enables App Store listing, which increases credibility and discoverability. Push notifications already implemented — the native wrapper is the only missing step.</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Wrap the PWA using Capacitor for native iOS and Android builds</li><li>Enables App Store listing — increases credibility and discoverability</li><li>Push notifications already implemented — the wrapper is the only missing step</li></ul></div>
         <div class="roadmap-eta">Est. 2 weeks with Capacitor</div>
       </div>
     </div>
@@ -912,7 +932,7 @@
       <div class="roadmap-step">5</div>
       <div class="roadmap-body">
         <div class="roadmap-title">Multi-Tenant SaaS</div>
-        <div class="roadmap-desc">New Firebase project per client, config swap at deploy time, custom subdomain per location. Target markets: regional aviation teams, FBOs, hospitality (hotel housekeeping), facilities management. First client outside CYKF validates the model.</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>New Firebase project per client, custom subdomain per location</li><li>Target markets: regional aviation teams, FBOs, hotel housekeeping, facilities management</li><li>First client outside CYKF validates the model</li></ul></div>
         <div class="roadmap-eta">Target: $50–$200/month per location</div>
       </div>
     </div>
@@ -921,18 +941,32 @@
       <div class="roadmap-step">6</div>
       <div class="roadmap-body">
         <div class="roadmap-title">NFC Tags per Crew Car</div>
-        <div class="roadmap-desc">NTAG213/215 stickers affixed to each vehicle. Tap with phone → opens crew-access.html?car=KEY instantly. No QR scan required. Zero hardware cost beyond the stickers (~$0.30 each).</div>
+        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>NFC stickers affixed to each vehicle</li><li>Tap with phone → opens the car update form instantly</li><li>No QR scan required</li><li>~$0.30 per sticker — near-zero hardware cost</li></ul></div>
         <div class="roadmap-eta">Low effort · High UX improvement</div>
       </div>
     </div>
 
     <div class="section-title">Business Case</div>
     <div class="highlight-box">
-      <p><strong>$0/month</strong> infrastructure cost at current scale. Every component runs on free tiers — GitHub Pages, Firestore Spark, GitHub Actions on public repos, cron-job.org. The app reaches production quality at zero operating cost, which means the first paying customer is 100% margin above the cost of building it.</p>
+      <p><strong>$0/month</strong> infrastructure cost at current scale:</p>
+      <ul style="padding-left:16px;margin:8px 0 0;color:var(--text);font-size:13px;display:flex;flex-direction:column;gap:3px">
+        <li>GitHub Pages — hosting</li>
+        <li>Firestore Spark — database</li>
+        <li>GitHub Actions on public repo — serverless backend</li>
+        <li>cron-job.org — scheduled triggers</li>
+      </ul>
+      <p style="margin-top:10px">The app runs in production at zero operating cost. The first paying customer is 100% margin above the cost of building it.</p>
     </div>
     <div class="card">
       <div class="card-title">📈 Expansion Path</div>
-      <p>The platform is not aviation-specific. The core loop — shared task lists, vehicle tracking, supply management, push notifications, shift handoffs — applies directly to hotel housekeeping teams, airport ground handlers, facilities management, and fleet operations at any scale. Skycare YKF is the proof of concept. The product is the platform.</p>
+      <p style="margin-bottom:10px">The platform is not aviation-specific. The core loop applies to any team managing tasks, vehicles, supplies, and shift handoffs:</p>
+      <ul style="padding-left:16px;margin:0;color:var(--muted);font-size:13px;display:flex;flex-direction:column;gap:4px">
+        <li>Regional aviation teams and FBOs</li>
+        <li>Hotel housekeeping operations</li>
+        <li>Airport ground handlers</li>
+        <li>Facilities and fleet management</li>
+      </ul>
+      <p style="margin-top:10px;color:var(--muted);font-size:13px">Skycare YKF is the proof of concept. The product is the platform.</p>
     </div>
   </div>
 
