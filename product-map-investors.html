@@ -3,256 +3,192 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:       #05101e;
-  --panel:    #0b1d35;
-  --raised:   #102540;
-  --lift:     #163050;
-  --blue:     #2a7ef5;
-  --amber:    #f0a020;
-  --green:    #20c060;
-  --purple:   #a855f7;
-  --red:      #e04040;
-  --text:     #ddeeff;
-  --muted:    #6a9ac0;
-  --light:    #3a6080;
-  --mono:     'Courier New', Courier, monospace;
-  --sans:     -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+  --bg:#05101e; --panel:#0b1d35; --raised:#102540; --lift:#163050;
+  --blue:#2a7ef5; --amber:#f0a020; --green:#20c060; --purple:#a855f7; --red:#e04040;
+  --text:#ddeeff; --muted:#6a9ac0; --light:#3a6080;
+  --mono:'Courier New',Courier,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+}
+:root[data-theme="light"]{
+  --bg:#f0f4f8;--panel:#fff;--raised:#e8f0f8;--lift:#dceaf8;
+  --blue:#1a5ab8;--amber:#a06010;--green:#0a8040;--purple:#7c3aed;
+  --text:#0a1828;--muted:#4060a0;--light:#80a0c0;
 }
 
-:root[data-theme="light"] {
-  --bg: #f0f4f8; --panel: #ffffff; --raised: #e8f0f8; --lift: #dceaf8;
-  --blue: #1a5ab8; --amber: #a06010; --green: #0a8040; --purple: #7c3aed;
-  --text: #0a1828; --muted: #4060a0; --light: #80a0c0;
-}
-
-body {
-  background: var(--bg); color: var(--text);
-  font-family: var(--sans); font-size: 14px; line-height: 1.7;
-}
-
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--light); border-radius: 2px; }
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.7;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--light);border-radius:2px}
 
 /* ── HERO ── */
-.hero {
-  min-height: 52vh;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 72px 24px 60px;
-  position: relative; overflow: hidden; text-align: center;
-  background: radial-gradient(ellipse 80% 60% at 50% 20%, #0d2a50 0%, var(--bg) 70%);
-}
-
-.hero-radar {
-  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-  width: min(700px, 110vw); height: min(700px, 110vw);
-  opacity: 0.1; pointer-events: none;
-}
-
-.hero-content { position: relative; max-width: 680px; }
-
-.hero-eyebrow {
-  font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em;
-  text-transform: uppercase; color: var(--amber); margin-bottom: 18px; display: block;
-}
-
-.hero h1 {
-  font-size: clamp(44px, 8vw, 76px); font-weight: 900;
-  letter-spacing: -0.04em; line-height: 1.0; color: var(--text); margin-bottom: 16px;
-}
-
-.hero h1 span { color: var(--blue); }
-
-.hero-tagline {
-  font-size: 16px; color: var(--muted); line-height: 1.7;
-  max-width: 520px; margin: 0 auto 28px;
-}
-
-.hero-badges {
-  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-}
-
-.badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 14px; border-radius: 100px;
-  font-family: var(--mono); font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
-  border: 1px solid;
-}
-
-.badge-green { background: rgba(32,192,96,0.1); border-color: rgba(32,192,96,0.3); color: var(--green); }
-.badge-amber { background: rgba(240,160,32,0.1); border-color: rgba(240,160,32,0.3); color: var(--amber); }
-.badge-blue  { background: rgba(42,126,245,0.1); border-color: rgba(42,126,245,0.3); color: #7ab8ff; }
+.hero{min-height:52vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:72px 24px 60px;position:relative;overflow:hidden;text-align:center;background:radial-gradient(ellipse 80% 60% at 50% 20%,#0d2a50 0%,var(--bg) 70%);}
+.hero-radar{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(700px,110vw);height:min(700px,110vw);opacity:.1;pointer-events:none;}
+.hero-content{position:relative;max-width:680px;}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin-bottom:18px;display:block;}
+.hero h1{font-size:clamp(44px,8vw,76px);font-weight:900;letter-spacing:-.04em;line-height:1;color:var(--text);margin-bottom:16px;}
+.hero h1 span{color:var(--blue);}
+.hero-tagline{font-size:16px;color:var(--muted);line-height:1.7;max-width:520px;margin:0 auto 28px;}
+.hero-badges{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:100px;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.08em;border:1px solid;}
+.badge-green{background:rgba(32,192,96,.1);border-color:rgba(32,192,96,.3);color:var(--green);}
+.badge-amber{background:rgba(240,160,32,.1);border-color:rgba(240,160,32,.3);color:var(--amber);}
+.badge-blue{background:rgba(42,126,245,.1);border-color:rgba(42,126,245,.3);color:#7ab8ff;}
 
 /* ── TABS ── */
-.tabs-wrap {
-  position: sticky; top: 0; z-index: 10;
-  background: var(--panel);
-  border-bottom: 1px solid rgba(42,126,245,0.12);
-  overflow-x: auto; scrollbar-width: none;
-}
-.tabs-wrap::-webkit-scrollbar { display: none; }
-
-.tabs {
-  display: flex; min-width: max-content;
-  padding: 0 28px; max-width: 1040px; margin: 0 auto;
-}
-
-.tab-btn {
-  padding: 14px 20px; background: none; border: none;
-  color: var(--muted); font-family: var(--mono); font-size: 10px; font-weight: 700;
-  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
-  border-bottom: 2px solid transparent;
-  transition: color 0.15s, border-color 0.15s; white-space: nowrap;
-}
-.tab-btn:hover { color: var(--text); }
-.tab-btn.active { color: var(--blue); border-bottom-color: var(--blue); }
+.tabs-wrap{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid rgba(42,126,245,.12);overflow-x:auto;scrollbar-width:none;}
+.tabs-wrap::-webkit-scrollbar{display:none;}
+.tabs{display:flex;min-width:max-content;padding:0 28px;max-width:1040px;margin:0 auto;}
+.tab-btn{padding:14px 20px;background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;}
+.tab-btn:hover{color:var(--text);}
+.tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
 
 /* ── CONTENT ── */
-.content { max-width: 1000px; margin: 0 auto; padding: 44px 28px 100px; }
-.panel { display: none; }
-.panel.active { display: block; }
+.content{max-width:1000px;margin:0 auto;padding:44px 28px 100px;}
+.panel{display:none;}
+.panel.active{display:block;}
 
 /* ── SHARED ── */
-.eyebrow {
-  font-family: var(--mono); font-size: 9px; letter-spacing: 0.22em;
-  text-transform: uppercase; color: var(--amber);
-  display: flex; align-items: center; gap: 10px; margin-bottom: 22px;
-}
-.eyebrow::after { content: ''; flex: 1; height: 1px; background: rgba(42,126,245,0.12); }
-
-.section-h {
-  font-size: clamp(20px, 3vw, 28px); font-weight: 900;
-  letter-spacing: -0.03em; line-height: 1.15; color: var(--text); margin-bottom: 12px;
-}
+.eyebrow{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.eyebrow::after{content:'';flex:1;height:1px;background:rgba(42,126,245,.12);}
+.section-h{font-size:clamp(20px,3vw,28px);font-weight:900;letter-spacing:-.03em;line-height:1.15;color:var(--text);margin-bottom:12px;}
+.lead{font-size:14px;color:var(--muted);line-height:1.8;margin-bottom:18px;}
 
 /* ── CALLOUT ── */
-.callout {
-  background: var(--raised); border: 1px solid rgba(42,126,245,0.18);
-  border-left: 3px solid var(--blue); border-radius: 8px;
-  padding: 16px 20px; margin-bottom: 20px;
-}
-.callout p, .callout li { font-size: 13.5px; color: var(--muted); line-height: 1.75; }
-.callout ul { padding-left: 16px; display: flex; flex-direction: column; gap: 5px; }
-.callout strong { color: var(--text); }
-.callout.amber { border-left-color: var(--amber); background: rgba(240,160,32,0.04); }
-.callout.green  { border-left-color: var(--green);  background: rgba(32,192,96,0.04);  }
+.callout{background:var(--raised);border:1px solid rgba(42,126,245,.18);border-left:3px solid var(--blue);border-radius:8px;padding:16px 20px;margin-bottom:20px;}
+.callout p,.callout li{font-size:13.5px;color:var(--muted);line-height:1.75;}
+.callout ul{padding-left:16px;display:flex;flex-direction:column;gap:5px;}
+.callout strong{color:var(--text);}
+.callout.amber{border-left-color:var(--amber);background:rgba(240,160,32,.04);}
+.callout.green{border-left-color:var(--green);background:rgba(32,192,96,.04);}
 
-/* ── STATS / METRICS ── */
-.metrics {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: 1px; background: var(--light);
-  border: 1px solid var(--light); border-radius: 10px;
-  overflow: hidden; margin-bottom: 28px;
-}
-.metric { background: var(--raised); padding: 20px 14px; text-align: center; }
-.metric-val { font-family: var(--mono); font-size: 32px; font-weight: 700; color: var(--amber); line-height: 1; }
-.metric-label { font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+/* ── METRICS ── */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:1px;background:var(--light);border:1px solid var(--light);border-radius:10px;overflow:hidden;margin-bottom:28px;}
+.metric{background:var(--raised);padding:20px 14px;text-align:center;}
+.metric-val{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--amber);line-height:1;}
+.metric-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:6px;}
 
-/* ── GRID CARDS ── */
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--light); border: 1px solid var(--light); border-radius: 10px; overflow: hidden; margin-bottom: 24px; }
-.grid-2-gap { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
-@media (max-width: 640px) { .grid-2, .grid-2-gap { grid-template-columns: 1fr; } }
-
-.card { background: var(--panel); padding: 20px 22px; }
-.card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-.card ul { padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
-.card li { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
-
-/* standalone card */
-.scard {
-  background: var(--panel); border: 1px solid rgba(42,126,245,0.15);
-  border-radius: 10px; padding: 20px 22px; margin-bottom: 14px;
-}
-.scard .card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-.scard ul { padding-left: 16px; display: flex; flex-direction: column; gap: 4px; }
-.scard li { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
-.scard p { font-size: 13px; color: var(--muted); line-height: 1.75; }
+/* ── GRIDS ── */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--light);border:1px solid var(--light);border-radius:10px;overflow:hidden;margin-bottom:24px;}
+@media(max-width:640px){.grid-2{grid-template-columns:1fr;}}
+.card{background:var(--panel);padding:20px 22px;}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.card ul{padding-left:16px;display:flex;flex-direction:column;gap:4px;}
+.card li{font-size:12.5px;color:var(--muted);line-height:1.65;}
+.scard{background:var(--panel);border:1px solid rgba(42,126,245,.15);border-radius:10px;padding:20px 22px;margin-bottom:14px;}
+.scard .card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.scard ul{padding-left:16px;display:flex;flex-direction:column;gap:4px;}
+.scard li{font-size:12.5px;color:var(--muted);line-height:1.65;}
+.scard p{font-size:13px;color:var(--muted);line-height:1.75;}
 
 /* ── MARKET GRID ── */
-.market-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
-  background: var(--light); border: 1px solid var(--light);
-  border-radius: 10px; overflow: hidden; margin-bottom: 22px;
-}
-@media (max-width: 600px) { .market-grid { grid-template-columns: 1fr; } }
-
-.market-block { background: var(--panel); padding: 20px 22px; border-top: 2px solid var(--blue); }
-.market-block.amber  { border-top-color: var(--amber); }
-.market-block.green  { border-top-color: var(--green); }
-.market-block.purple { border-top-color: var(--purple); }
-.market-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 7px; }
-.market-desc { font-size: 12.5px; color: var(--muted); line-height: 1.65; }
+.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--light);border:1px solid var(--light);border-radius:10px;overflow:hidden;margin-bottom:22px;}
+@media(max-width:600px){.market-grid{grid-template-columns:1fr;}}
+.market-block{background:var(--panel);padding:20px 22px;border-top:2px solid var(--blue);}
+.market-block.amber{border-top-color:var(--amber);}
+.market-block.green{border-top-color:var(--green);}
+.market-block.purple{border-top-color:var(--purple);}
+.market-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:7px;}
+.market-desc{font-size:12.5px;color:var(--muted);line-height:1.65;}
 
 /* ── INFRA GRID ── */
-.infra-grid {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 1px; background: var(--light);
-  border: 1px solid var(--light); border-radius: 10px;
-  overflow: hidden; margin-bottom: 18px;
-}
-.infra-cell { background: var(--raised); padding: 18px 14px; text-align: center; }
-.infra-icon { font-size: 18px; margin-bottom: 6px; }
-.infra-name { font-size: 12px; font-weight: 700; color: var(--text); }
-.infra-detail { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.4; }
-.infra-cost { font-family: var(--mono); font-size: 14px; font-weight: 700; color: var(--green); margin-top: 7px; }
-
-/* ── ROADMAP ── */
-.road-grid {
-  display: flex; flex-direction: column; gap: 1px;
-  background: var(--light); border: 1px solid var(--light);
-  border-radius: 10px; overflow: hidden;
-}
-.road-block { background: var(--panel); padding: 20px 22px; display: grid; grid-template-columns: 28px 1fr; gap: 16px; align-items: start; }
-.road-n { font-family: var(--mono); font-size: 20px; font-weight: 700; color: rgba(42,126,245,0.28); line-height: 1; }
-.road-title { font-size: 13.5px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
-.road-desc { font-size: 12.5px; color: var(--muted); line-height: 1.65; margin-bottom: 4px; }
-.road-desc ul { padding-left: 14px; display: flex; flex-direction: column; gap: 3px; }
-.road-desc li { font-size: 12px; color: var(--muted); }
-.road-eta { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--amber); text-transform: uppercase; margin-top: 6px; }
+.infra-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--light);border:1px solid var(--light);border-radius:10px;overflow:hidden;margin-bottom:18px;}
+.infra-cell{background:var(--raised);padding:18px 14px;text-align:center;}
+.infra-icon{font-size:18px;margin-bottom:6px;}
+.infra-name{font-size:12px;font-weight:700;color:var(--text);}
+.infra-detail{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.infra-cost{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--green);margin-top:7px;}
 
 /* ── TABLE ── */
-.table-wrap { overflow-x: auto; margin-bottom: 22px; }
-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-thead tr { border-bottom: 2px solid rgba(42,126,245,0.15); }
-th { text-align: left; padding: 10px 14px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted); font-weight: 600; white-space: nowrap; }
-td { padding: 10px 14px; color: var(--text); border-bottom: 1px solid rgba(42,126,245,0.08); vertical-align: top; }
-tr:last-child td { border-bottom: none; }
-td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; padding: 2px 6px; border-radius: 4px; font-family: var(--mono); }
+.table-wrap{overflow-x:auto;margin-bottom:22px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead tr{border-bottom:2px solid rgba(42,126,245,.15);}
+th{text-align:left;padding:10px 14px;font-family:var(--mono);font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap;}
+td{padding:10px 14px;color:var(--text);border-bottom:1px solid rgba(42,126,245,.08);vertical-align:top;}
+tr:last-child td{border-bottom:none;}
+td code{font-size:11px;background:rgba(42,126,245,.12);color:#7ab8ff;padding:2px 6px;border-radius:4px;font-family:var(--mono);}
 
-/* ── CHIPS ── */
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.chip { font-size: 12px; padding: 4px 11px; border-radius: 5px; background: var(--raised); border: 1px solid rgba(42,126,245,0.12); color: var(--text); }
-.chip.done { border-color: rgba(32,192,96,0.25); color: var(--green); background: rgba(32,192,96,0.05); }
+/* ── TRACTION FEED ── */
+.traction-feed{display:flex;flex-direction:column;gap:3px;padding:6px;min-height:200px;}
+.traction-item{padding:10px 14px;border-radius:6px;background:var(--panel);font-size:12.5px;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;}
+.traction-item.in{opacity:1;transform:translateY(0);}
+.traction-item .ti-label{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.traction-item .ti-val{color:var(--text);font-weight:600;}
+.traction-item .ti-sub{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.traction-item.good .ti-val{color:var(--green);}
+.traction-item.live .ti-val{color:var(--blue);}
 
-@keyframes sweep { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-@keyframes ping-r { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2.5); opacity: 0; } }
-@keyframes pulse-dot { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+/* ── MRR CALCULATOR ── */
+.mrr-calc{background:var(--raised);border:1px solid rgba(42,126,245,.2);border-radius:10px;padding:24px;margin-bottom:20px;}
+.mrr-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:18px;}
+.calc-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+@media(max-width:500px){.calc-row{grid-template-columns:1fr;}}
+.calc-field label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:8px;}
+.calc-field input[type=range]{width:100%;accent-color:var(--blue);cursor:pointer;}
+.calc-field .val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--blue);margin-top:6px;}
+.mrr-result{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--light);border:1px solid var(--light);border-radius:8px;overflow:hidden;}
+.mrr-cell{background:var(--panel);padding:16px 14px;text-align:center;}
+.mrr-cell-val{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--amber);line-height:1;}
+.mrr-cell-label{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:5px;}
+
+/* ── ROADMAP ── */
+.road-grid{display:flex;flex-direction:column;gap:1px;background:var(--light);border:1px solid var(--light);border-radius:10px;overflow:hidden;}
+.road-block{background:var(--panel);padding:18px 22px;display:grid;grid-template-columns:36px 1fr;gap:16px;align-items:start;cursor:pointer;transition:background .12s;user-select:none;}
+.road-block:hover{background:var(--raised);}
+.road-block.done{background:rgba(32,192,96,.04);}
+.road-n-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:2px;}
+.road-n{font-family:var(--mono);font-size:13px;font-weight:700;color:rgba(42,126,245,.35);line-height:1;}
+.road-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--light);display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .2s;}
+.road-block.done .road-check{background:var(--green);border-color:var(--green);color:white;}
+.road-block.done .road-n{color:var(--green);}
+.road-title{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;}
+.road-toggle{font-family:var(--mono);font-size:11px;color:var(--muted);transition:transform .2s;}
+.road-block.open .road-toggle{transform:rotate(180deg);}
+.road-desc{font-size:12.5px;color:var(--muted);line-height:1.65;margin-top:6px;display:none;}
+.road-desc ul{padding-left:14px;display:flex;flex-direction:column;gap:3px;}
+.road-desc li{font-size:12px;color:var(--muted);}
+.road-block.open .road-desc{display:block;}
+.road-eta{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--amber);text-transform:uppercase;margin-top:6px;}
+.road-progress{margin-top:16px;background:var(--raised);border:1px solid rgba(42,126,245,.12);border-radius:8px;padding:14px 18px;}
+.road-progress-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.road-progress-bar{height:4px;background:var(--light);border-radius:2px;overflow:hidden;}
+.road-progress-fill{height:100%;background:var(--blue);border-radius:2px;transition:width .5s ease;}
+.road-progress-text{font-family:var(--mono);font-size:11px;color:var(--blue);margin-top:6px;}
+
+/* ── COST SIM ── */
+.cost-sim{background:var(--raised);border:1px solid rgba(42,126,245,.2);border-radius:10px;padding:20px;margin-bottom:18px;}
+.cost-sim-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.cost-sim-clients{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.add-client-btn{background:var(--blue);color:white;border:none;font-family:var(--mono);font-size:11px;font-weight:700;padding:7px 16px;border-radius:5px;cursor:pointer;transition:background .15s;}
+.add-client-btn:hover{background:#3a8eff;}
+.reset-btn{background:transparent;color:var(--muted);border:1px solid var(--light);font-family:var(--mono);font-size:11px;padding:7px 16px;border-radius:5px;cursor:pointer;transition:border-color .15s,color .15s;}
+.reset-btn:hover{border-color:var(--blue);color:var(--blue);}
+.cost-sim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--light);border:1px solid var(--light);border-radius:8px;overflow:hidden;}
+.cost-sim-cell{background:var(--panel);padding:14px;text-align:center;}
+.cs-val{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--amber);line-height:1;}
+.cs-label{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:4px;}
+.client-dots{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px;min-height:20px;}
+.client-dot{width:10px;height:10px;border-radius:50%;background:var(--blue);opacity:.8;animation:pop-in .25s ease;}
+@keyframes pop-in{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:.8}}
+
+@keyframes sweep{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes ping-r{0%{transform:scale(1);opacity:.8}100%{transform:scale(2.5);opacity:0}}
+@keyframes pulse-dot{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 
 <!-- HERO -->
 <div class="hero">
   <svg class="hero-radar" viewBox="0 0 700 700" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <radialGradient id="rg2" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" stop-color="#2a7ef5" stop-opacity="0.2"/>
-        <stop offset="100%" stop-color="#2a7ef5" stop-opacity="0"/>
-      </radialGradient>
-    </defs>
-    <circle cx="350" cy="350" r="330" fill="none" stroke="#2a7ef5" stroke-width="0.5" opacity="0.35"/>
-    <circle cx="350" cy="350" r="220" fill="none" stroke="#2a7ef5" stroke-width="0.5" opacity="0.25"/>
-    <circle cx="350" cy="350" r="110" fill="none" stroke="#2a7ef5" stroke-width="0.5" opacity="0.18"/>
-    <line x1="350" y1="20" x2="350" y2="680" stroke="#2a7ef5" stroke-width="0.4" opacity="0.18"/>
-    <line x1="20" y1="350" x2="680" y2="350" stroke="#2a7ef5" stroke-width="0.4" opacity="0.18"/>
-    <g transform-origin="350 350" style="animation: sweep 5s linear infinite;">
-      <path d="M350 350 L350 20 A330 330 0 0 1 680 350 Z" fill="url(#rg2)"/>
-    </g>
-    <circle cx="480" cy="210" r="4" fill="#2a7ef5" opacity="0.9"/>
-    <circle cx="480" cy="210" r="9" fill="none" stroke="#2a7ef5" stroke-width="1" opacity="0.4" style="animation:ping-r 2s infinite 0.3s"/>
-    <circle cx="255" cy="445" r="4" fill="#f0a020" opacity="0.9"/>
-    <circle cx="255" cy="445" r="9" fill="none" stroke="#f0a020" stroke-width="1" opacity="0.4" style="animation:ping-r 2s infinite 1s"/>
-    <circle cx="545" cy="390" r="3" fill="#2a7ef5" opacity="0.4"/>
+    <defs><radialGradient id="rg2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#2a7ef5" stop-opacity=".2"/><stop offset="100%" stop-color="#2a7ef5" stop-opacity="0"/></radialGradient></defs>
+    <circle cx="350" cy="350" r="330" fill="none" stroke="#2a7ef5" stroke-width=".5" opacity=".35"/>
+    <circle cx="350" cy="350" r="220" fill="none" stroke="#2a7ef5" stroke-width=".5" opacity=".25"/>
+    <circle cx="350" cy="350" r="110" fill="none" stroke="#2a7ef5" stroke-width=".5" opacity=".18"/>
+    <line x1="350" y1="20" x2="350" y2="680" stroke="#2a7ef5" stroke-width=".4" opacity=".18"/>
+    <line x1="20" y1="350" x2="680" y2="350" stroke="#2a7ef5" stroke-width=".4" opacity=".18"/>
+    <g transform-origin="350 350" style="animation:sweep 5s linear infinite"><path d="M350 350 L350 20 A330 330 0 0 1 680 350 Z" fill="url(#rg2)"/></g>
+    <circle cx="480" cy="210" r="4" fill="#2a7ef5" opacity=".9"/>
+    <circle cx="480" cy="210" r="9" fill="none" stroke="#2a7ef5" stroke-width="1" opacity=".4" style="animation:ping-r 2s infinite .3s"/>
+    <circle cx="255" cy="445" r="4" fill="#f0a020" opacity=".9"/>
+    <circle cx="255" cy="445" r="9" fill="none" stroke="#f0a020" stroke-width="1" opacity=".4" style="animation:ping-r 2s infinite 1s"/>
+    <circle cx="545" cy="390" r="3" fill="#2a7ef5" opacity=".4"/>
   </svg>
-
   <div class="hero-content">
     <span class="hero-eyebrow">Investor Overview · July 2026</span>
     <h1>Sky<span>care</span></h1>
@@ -283,34 +219,20 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
   <div id="panel-opportunity" class="panel active">
     <div class="eyebrow">The Problem</div>
     <div class="callout amber">
-      <p>Ground crews at regional airports — the people who clean, service, and turn around aircraft between flights — coordinate using <strong>group texts, printed checklists, and verbal handoffs</strong>. There is no shared system. Tasks get missed. Supplies run out without warning. Shift changes leave the next crew uninformed. And when staff turns over every 6 to 12 months, institutional knowledge walks out the door with them.</p>
+      <p>Ground crews at regional airports coordinate using <strong>group texts, printed checklists, and verbal handoffs</strong>. There is no shared system. Tasks get missed. Supplies run out without warning. When staff turns over every 6 to 12 months, institutional knowledge walks out the door with them.</p>
     </div>
-
     <div class="eyebrow">The Market</div>
     <div class="market-grid">
-      <div class="market-block">
-        <div class="market-title">✈ Regional Aviation</div>
-        <div class="market-desc">Hundreds of regional airports across North America, each with ground crews managing aircraft turns, crew cars, and supply chains. No dominant software player serves this segment.</div>
-      </div>
-      <div class="market-block amber">
-        <div class="market-title">🏨 Hospitality</div>
-        <div class="market-desc">Hotel housekeeping teams face identical problems — task checklists, room turnover tracking, supply management, shift handoffs. The core product translates directly.</div>
-      </div>
-      <div class="market-block green">
-        <div class="market-title">🏗 Facilities Management</div>
-        <div class="market-desc">Facilities teams managing buildings, vehicles, and maintenance schedules share the same coordination gaps. Same platform, different skin.</div>
-      </div>
-      <div class="market-block purple">
-        <div class="market-title">🛫 FBOs & Ground Handlers</div>
-        <div class="market-desc">Fixed-base operators and commercial ground handling companies manage large ramp crews across multiple gates. High-value, high-volume target segment.</div>
-      </div>
+      <div class="market-block"><div class="market-title">✈ Regional Aviation</div><div class="market-desc">Hundreds of regional airports across North America, each with ground crews managing aircraft turns, crew cars, and supply chains. No dominant software player serves this segment.</div></div>
+      <div class="market-block amber"><div class="market-title">🏨 Hospitality</div><div class="market-desc">Hotel housekeeping teams face identical problems — task checklists, room turnover tracking, supply management, shift handoffs. The core product translates directly.</div></div>
+      <div class="market-block green"><div class="market-title">🏗 Facilities Management</div><div class="market-desc">Facilities teams managing buildings, vehicles, and maintenance schedules share the same coordination gaps. Same platform, different skin.</div></div>
+      <div class="market-block purple"><div class="market-title">🛫 FBOs & Ground Handlers</div><div class="market-desc">Fixed-base operators and commercial ground handling companies manage large ramp crews across multiple gates. High-value, high-volume target segment.</div></div>
     </div>
-
     <div class="eyebrow">The Insight</div>
     <div class="scard">
       <div class="card-title">Why now, why this</div>
       <ul>
-        <li>The tools these teams use today — paper, WhatsApp, spreadsheets — are not being replaced by enterprise software because enterprise software is too expensive, too complex, and not built for shift workers on a ramp</li>
+        <li>The tools these teams use today — paper, WhatsApp, spreadsheets — aren't being replaced by enterprise software because enterprise software is too expensive, too complex, and not built for shift workers on a ramp</li>
         <li>A mobile-first, zero-friction app that installs like a website and costs $50–$200/month per location sits exactly in the gap between "nothing" and "enterprise"</li>
         <li>Skycare was built from the inside — by someone who works this operation — which means the product is grounded in real daily use, not assumptions</li>
         <li>It is already live. It already works. The proof of concept is not a prototype — it is a production system used every day at CYKF</li>
@@ -324,55 +246,20 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
     <div class="callout">
       <p>Skycare is a <strong>mobile-first operations platform</strong> for ground crews. It replaces paper checklists, group texts, and verbal handoffs with a single app every team member runs on their phone — no installation, no accounts, no IT department required. It works offline, sends push notifications, and tracks everything from daily tasks to live aircraft positions.</p>
     </div>
-
-    <div class="metrics">
-      <div class="metric"><div class="metric-val">29</div><div class="metric-label">Features built</div></div>
-      <div class="metric"><div class="metric-val">8</div><div class="metric-label">Vehicles tracked</div></div>
-      <div class="metric"><div class="metric-val">10</div><div class="metric-label">Aircraft tracked</div></div>
-      <div class="metric"><div class="metric-val">7</div><div class="metric-label">Notification types</div></div>
-      <div class="metric"><div class="metric-val">24</div><div class="metric-label">Live data collections</div></div>
+    <div class="metrics" id="productMetrics">
+      <div class="metric"><div class="metric-val" data-target="29">0</div><div class="metric-label">Features built</div></div>
+      <div class="metric"><div class="metric-val" data-target="8">0</div><div class="metric-label">Vehicles tracked</div></div>
+      <div class="metric"><div class="metric-val" data-target="10">0</div><div class="metric-label">Aircraft tracked</div></div>
+      <div class="metric"><div class="metric-val" data-target="7">0</div><div class="metric-label">Notification types</div></div>
+      <div class="metric"><div class="metric-val" data-target="24">0</div><div class="metric-label">Live data collections</div></div>
     </div>
-
     <div class="eyebrow">Core Feature Areas</div>
     <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Task Management</div>
-        <ul>
-          <li>Daily and weekly task checklists</li>
-          <li>Area-grouped tasks with progress tracking</li>
-          <li>Real-time sync across all devices</li>
-          <li>Recurring and one-off task support</li>
-        </ul>
-      </div>
-      <div class="card">
-        <div class="card-title">Flight Operations</div>
-        <ul>
-          <li>Flight log — arrivals, departures, groomings</li>
-          <li>Live fleet map for all 10 aircraft</li>
-          <li>Distance, altitude, speed, ETA per tail</li>
-          <li>60 nm arrival push notification</li>
-        </ul>
-      </div>
-      <div class="card">
-        <div class="card-title">Vehicle Management</div>
-        <ul>
-          <li>8 crew cars with fuel gauges and odometer</li>
-          <li>QR code per vehicle for quick updates</li>
-          <li>Monthly photo audits per car</li>
-          <li>Fuel and service due push alerts</li>
-        </ul>
-      </div>
-      <div class="card">
-        <div class="card-title">Supply Chain</div>
-        <ul>
-          <li>Full supply catalog with store filters</li>
-          <li>Shared cart synced across all phones</li>
-          <li>MX parts catalog for mechanics</li>
-          <li>Push notifications when items are needed</li>
-        </ul>
-      </div>
+      <div class="card"><div class="card-title">Task Management</div><ul><li>Daily and weekly task checklists</li><li>Area-grouped tasks with progress tracking</li><li>Real-time sync across all devices</li><li>Recurring and one-off task support</li></ul></div>
+      <div class="card"><div class="card-title">Flight Operations</div><ul><li>Flight log — arrivals, departures, groomings</li><li>Live fleet map for all 10 aircraft</li><li>Distance, altitude, speed, ETA per tail</li><li>60 nm arrival push notification</li></ul></div>
+      <div class="card"><div class="card-title">Vehicle Management</div><ul><li>8 crew cars with fuel gauges and odometer</li><li>QR code per vehicle for quick updates</li><li>Monthly photo audits per car</li><li>Fuel and service due push alerts</li></ul></div>
+      <div class="card"><div class="card-title">Supply Chain</div><ul><li>Full supply catalog with store filters</li><li>Shared cart synced across all phones</li><li>MX parts catalog for mechanics</li><li>Push notifications when items are needed</li></ul></div>
     </div>
-
     <div class="eyebrow">User Types</div>
     <div class="table-wrap">
       <table>
@@ -383,7 +270,7 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
           <tr><td>Pilots</td><td><code>pilot.html</code> + snag form</td><td>Aircraft reference docs, snag reporting (planned)</td></tr>
           <tr><td>Supervisor / Buyer</td><td>Main app</td><td>Shopping sessions, audit oversight, shift handoffs</td></tr>
           <tr><td>Ramp crew</td><td><code>crew-access.html</code> via QR</td><td>Quick car updates — no login, no navigation</td></tr>
-          <tr><td>Crew house</td><td><code>crewhouse.html</code></td><td>Household supply list, separate from groomer catalog</td></tr>
+          <tr><td>Crew house</td><td><code>crewhouse.html</code></td><td>Household supply list, separate catalog</td></tr>
         </tbody>
       </table>
     </div>
@@ -396,30 +283,14 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
       <p>Skycare is not a pitch deck. It is a <strong>live production system</strong> used by a real ground crew team at CYKF every day. Every feature listed in this document has been built, tested, and is in active use.</p>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-title">What is live today</div>
-        <ul>
-          <li>Daily and weekly task checklists in use every shift</li>
-          <li>Flight log capturing real arrivals and departures</li>
-          <li>8 crew cars tracked with fuel, odometer, and audits</li>
-          <li>Live fleet map showing real aircraft positions</li>
-          <li>Push notifications firing on schedule every day</li>
-          <li>Supply catalog managing real purchases</li>
-          <li>MX parts catalog in use by the mechanics team</li>
-        </ul>
+    <div class="eyebrow">Live Validation Feed</div>
+    <p class="lead">Each item below represents something that has been tested and proven in production — not a hypothesis:</p>
+    <div style="background:var(--raised);border:1px solid rgba(42,126,245,.15);border-radius:10px;overflow:hidden;margin-bottom:24px;">
+      <div style="background:var(--lift);border-bottom:1px solid rgba(42,126,245,.12);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase">Production Validation</span>
+        <span style="font-family:var(--mono);font-size:10px;color:var(--green);display:flex;align-items:center;gap:5px"><span style="width:5px;height:5px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse-dot 1.5s infinite"></span>Live</span>
       </div>
-      <div class="card">
-        <div class="card-title">What was validated</div>
-        <ul>
-          <li>Mobile-first PWA installs and runs reliably on iOS and Android</li>
-          <li>Real-time Firestore sync works across multiple phones simultaneously</li>
-          <li>Push notifications deliver consistently via GitHub Actions backend</li>
-          <li>Offline service worker handles ramp connectivity gaps</li>
-          <li>$0/month infrastructure holds at real usage scale</li>
-          <li>Non-technical users adopt the app without training</li>
-        </ul>
-      </div>
+      <div class="traction-feed" id="tractionFeed"></div>
     </div>
 
     <div class="eyebrow">Built From the Inside</div>
@@ -438,41 +309,36 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
   <div id="panel-technology" class="panel">
     <div class="eyebrow">Stack</div>
     <div class="grid-2">
-      <div class="card">
-        <div class="card-title">Frontend</div>
-        <ul>
-          <li>Vanilla HTML / CSS / JavaScript — no framework, no build pipeline</li>
-          <li>Progressive Web App — installable, offline-capable</li>
-          <li>Service worker — network-first caching, push receiver</li>
-          <li>Leaflet 1.9.4 — interactive fleet map</li>
-          <li>4 UI themes — Premium and Standard × Night and Day</li>
-        </ul>
+      <div class="card"><div class="card-title">Frontend</div><ul><li>Vanilla HTML / CSS / JavaScript — no framework, no build pipeline</li><li>Progressive Web App — installable, offline-capable</li><li>Service worker — network-first caching, push receiver</li><li>Leaflet 1.9.4 — interactive fleet map</li><li>4 UI themes — Premium and Standard × Night and Day</li></ul></div>
+      <div class="card"><div class="card-title">Backend</div><ul><li>Firebase Firestore — all application data, real-time sync</li><li>Firebase Storage — audit photos</li><li>Node.js on GitHub Actions — all notification delivery</li><li>web-push + VAPID — cross-platform push notifications</li><li>OpenSky Network API — live ADS-B aircraft position data</li><li>cron-job.org — scheduled workflow triggers every 5 minutes</li></ul></div>
+    </div>
+
+    <div class="eyebrow">Infrastructure Cost — Try Adding Clients</div>
+    <p class="lead">Click "Add Client" to simulate onboarding new locations. Watch what happens to the monthly infrastructure cost.</p>
+    <div class="cost-sim">
+      <div class="cost-sim-title">Cost simulator — each client is an isolated Firebase project</div>
+      <div class="client-dots" id="clientDots"></div>
+      <div class="cost-sim-clients">
+        <button class="add-client-btn" onclick="addClient()">+ Add Client</button>
+        <button class="reset-btn" onclick="resetClients()">Reset</button>
       </div>
-      <div class="card">
-        <div class="card-title">Backend</div>
-        <ul>
-          <li>Firebase Firestore — all application data, real-time sync</li>
-          <li>Firebase Storage — audit photos</li>
-          <li>Node.js on GitHub Actions — all notification delivery</li>
-          <li>web-push + VAPID — cross-platform push notifications</li>
-          <li>OpenSky Network API — live ADS-B aircraft position data</li>
-          <li>cron-job.org — scheduled workflow triggers every 5 minutes</li>
-        </ul>
+      <div class="cost-sim-grid">
+        <div class="cost-sim-cell"><div class="cs-val" id="simClients">0</div><div class="cs-label">Clients</div></div>
+        <div class="cost-sim-cell"><div class="cs-val" id="simMRR">$0</div><div class="cs-label">MRR @ $100/mo</div></div>
+        <div class="cost-sim-cell"><div class="cs-val" id="simCost" style="color:var(--green)">$0</div><div class="cs-label">Infra cost / mo</div></div>
       </div>
     </div>
 
-    <div class="eyebrow">Infrastructure Cost</div>
     <div class="infra-grid">
       <div class="infra-cell"><div class="infra-icon">🌐</div><div class="infra-name">GitHub Pages</div><div class="infra-detail">Hosting, CDN, HTTPS</div><div class="infra-cost">$0</div></div>
       <div class="infra-cell"><div class="infra-icon">🔥</div><div class="infra-name">Firestore</div><div class="infra-detail">50k reads / 20k writes per day free</div><div class="infra-cost">$0</div></div>
       <div class="infra-cell"><div class="infra-icon">⚙️</div><div class="infra-name">GitHub Actions</div><div class="infra-detail">Unlimited minutes on public repos</div><div class="infra-cost">$0</div></div>
-      <div class="infra-cell"><div class="infra-icon">⏰</div><div class="infra-name">cron-job.org</div><div class="infra-detail">External cron trigger service</div><div class="infra-cost">$0</div></div>
-      <div class="infra-cell"><div class="infra-icon">📡</div><div class="infra-name">OpenSky API</div><div class="infra-detail">ADS-B data, authenticated account</div><div class="infra-cost">$0</div></div>
+      <div class="infra-cell"><div class="infra-icon">⏰</div><div class="infra-name">cron-job.org</div><div class="infra-detail">External cron trigger</div><div class="infra-cost">$0</div></div>
+      <div class="infra-cell"><div class="infra-icon">📡</div><div class="infra-name">OpenSky API</div><div class="infra-detail">ADS-B data, authenticated</div><div class="infra-cost">$0</div></div>
       <div class="infra-cell"><div class="infra-icon">📦</div><div class="infra-name">Firebase Storage</div><div class="infra-detail">Audit photos, pay-as-you-go</div><div class="infra-cost">~$0</div></div>
     </div>
-
     <div class="callout green">
-      <p><strong>Total infrastructure cost: $0/month.</strong> The first paying customer is 100% margin above the cost of running the platform. As usage scales, Firebase and GitHub Actions offer graduated paid tiers — but the free tier is sufficient well beyond the first dozen clients.</p>
+      <p><strong>Total infrastructure cost: $0/month.</strong> The first paying customer is 100% margin above the cost of running the platform. This holds well beyond the first dozen clients.</p>
     </div>
   </div>
 
@@ -486,122 +352,196 @@ td code { font-size: 11px; background: rgba(42,126,245,0.12); color: #7ab8ff; pa
         <li>New Firebase project per client — isolated data, configurable per operation</li>
         <li>Custom subdomain per location (client.skycare.app)</li>
         <li>White-labelled branding available at higher tiers</li>
-        <li>Enterprise distribution via Apple Business Manager or Google Workspace for corporate clients</li>
+        <li>Enterprise distribution via Apple Business Manager or Google Workspace</li>
       </ul>
+    </div>
+
+    <div class="eyebrow">MRR Calculator — Adjust the sliders</div>
+    <div class="mrr-calc">
+      <div class="mrr-title">Projected Monthly Recurring Revenue</div>
+      <div class="calc-row">
+        <div class="calc-field">
+          <label>Number of locations</label>
+          <input type="range" min="1" max="200" value="50" id="locSlider" oninput="updateMRR()">
+          <div class="val" id="locVal">50 locations</div>
+        </div>
+        <div class="calc-field">
+          <label>Price per location / month</label>
+          <input type="range" min="50" max="200" step="25" value="100" id="priceSlider" oninput="updateMRR()">
+          <div class="val" id="priceVal">$100 / mo</div>
+        </div>
+      </div>
+      <div class="mrr-result">
+        <div class="mrr-cell"><div class="mrr-cell-val" id="mrrTotal">$5,000</div><div class="mrr-cell-label">MRR</div></div>
+        <div class="mrr-cell"><div class="mrr-cell-val" id="arrTotal">$60,000</div><div class="mrr-cell-label">ARR</div></div>
+        <div class="mrr-cell"><div class="mrr-cell-val" id="marginVal" style="color:var(--green)">90%+</div><div class="mrr-cell-label">Net Margin</div></div>
+      </div>
     </div>
 
     <div class="eyebrow">Target Markets</div>
     <div class="market-grid">
-      <div class="market-block">
-        <div class="market-title">✈ Regional Airports & FBOs</div>
-        <div class="market-desc">Direct match to the current product. Ground crews, aircraft turns, crew cars, supply management. Same problems, same solution. Canada and the US have hundreds of regional airports in this profile.</div>
-      </div>
-      <div class="market-block amber">
-        <div class="market-title">🏨 Hotel Housekeeping</div>
-        <div class="market-desc">Room turnover checklists, supply management, shift handoffs, vehicle tracking (hotel shuttles). The core platform translates with minimal customization.</div>
-      </div>
-      <div class="market-block green">
-        <div class="market-title">🏗 Facilities Management</div>
-        <div class="market-desc">Building maintenance teams managing work orders, vehicles, and cleaning schedules. High turnover, same coordination gaps, identical need for standardization.</div>
-      </div>
-      <div class="market-block purple">
-        <div class="market-title">✈ Ground Handling Companies</div>
-        <div class="market-desc">Commercial ramp agents across multiple airlines and gates. More complex, higher volume, higher willingness to pay for a tool that actually fits their workflow.</div>
-      </div>
+      <div class="market-block"><div class="market-title">✈ Regional Airports & FBOs</div><div class="market-desc">Direct match to the current product. Canada and the US have hundreds of regional airports in this profile. Same problems, same solution.</div></div>
+      <div class="market-block amber"><div class="market-title">🏨 Hotel Housekeeping</div><div class="market-desc">Room turnover checklists, supply management, shift handoffs, vehicle tracking. The core platform translates with minimal customization.</div></div>
+      <div class="market-block green"><div class="market-title">🏗 Facilities Management</div><div class="market-desc">Building maintenance teams managing work orders, vehicles, and cleaning schedules. High turnover, identical need for standardization.</div></div>
+      <div class="market-block purple"><div class="market-title">✈ Ground Handling Companies</div><div class="market-desc">Commercial ramp agents across multiple airlines and gates. Higher volume, higher willingness to pay for a tool that actually fits their workflow.</div></div>
     </div>
 
-    <div class="eyebrow">The Margin Story</div>
     <div class="callout green">
-      <p>The platform runs at <strong>$0/month</strong> today on free infrastructure tiers. Adding a paying client requires creating a new Firebase project and deploying a config file — no new servers, no new engineers, no marginal cost. Revenue from client one is almost entirely profit. This scales until Firebase paid tiers kick in, well beyond the first 20–30 clients.</p>
-    </div>
-
-    <div class="scard">
-      <div class="card-title">What $100/month × 50 locations looks like</div>
-      <ul>
-        <li>$5,000 MRR at 50 locations — achievable within 18–24 months targeting regional aviation alone</li>
-        <li>Infrastructure cost at that scale: still well under $500/month</li>
-        <li>Net margin: 90%+</li>
-        <li>No sales force required at early stage — direct outreach to airport operations managers</li>
-      </ul>
+      <p>Adding a paying client requires creating a new Firebase project and deploying a config file — <strong>no new servers, no new engineers, no marginal cost.</strong> Revenue from client one is almost entirely profit.</p>
     </div>
   </div>
 
   <!-- ROADMAP -->
   <div id="panel-roadmap" class="panel">
-    <div class="eyebrow">Product Roadmap</div>
-    <div class="road-grid">
-      <div class="road-block">
-        <div class="road-n">01</div>
+    <div class="eyebrow">Product Roadmap — Click each step to expand or mark complete</div>
+    <div class="road-grid" id="roadGrid">
+      <div class="road-block" onclick="toggleRoad(this)">
+        <div class="road-n-wrap"><div class="road-n">01</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">Pilot / MX Snag Reporting</div>
-          <div class="road-desc"><ul>
-            <li>Pilots and mechanics report aircraft defects from their phone — voice-to-text, photo, severity</li>
-            <li>MX notified within minutes via push</li>
-            <li>Full snag history per aircraft, recurring snag detection</li>
-            <li>QR sticker in each cockpit links to that aircraft's snag form</li>
-          </ul></div>
-          <div class="road-eta">Design complete · Build est. ~2 weeks</div>
+          <div class="road-title">Pilot / MX Snag Reporting <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>Pilots and mechanics report aircraft defects from their phone — voice-to-text, photo, severity</li><li>MX notified within minutes via push</li><li>Full snag history per aircraft, recurring snag detection</li><li>QR sticker in each cockpit links to that aircraft's snag form</li></ul><div class="road-eta">Design complete · Build est. ~2 weeks</div></div>
         </div>
       </div>
-      <div class="road-block">
-        <div class="road-n">02</div>
+      <div class="road-block" onclick="toggleRoad(this)">
+        <div class="road-n-wrap"><div class="road-n">02</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">Firebase Authentication</div>
-          <div class="road-desc"><ul>
-            <li>Replace shared PIN with individual accounts — email or Google SSO</li>
-            <li>Per-role access: groomer, supervisor, pilot, mechanic</li>
-            <li>Required before onboarding any external client</li>
-          </ul></div>
-          <div class="road-eta">Prerequisite for SaaS launch</div>
+          <div class="road-title">Firebase Authentication <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>Replace shared PIN with individual accounts — email or Google SSO</li><li>Per-role access: groomer, supervisor, pilot, mechanic</li><li>Required before onboarding any external client</li></ul><div class="road-eta">Prerequisite for SaaS launch</div></div>
         </div>
       </div>
-      <div class="road-block">
-        <div class="road-n">03</div>
+      <div class="road-block" onclick="toggleRoad(this)">
+        <div class="road-n-wrap"><div class="road-n">03</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">Custom Domain + Multi-Tenant Architecture</div>
-          <div class="road-desc"><ul>
-            <li>Move to skycare.app — GitHub Organization account</li>
-            <li>New Firebase project per client, custom subdomain per location</li>
-            <li>White-labelling for enterprise clients</li>
-          </ul></div>
-          <div class="road-eta">~1 day setup · ~$15/year per domain</div>
+          <div class="road-title">Custom Domain + Multi-Tenant <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>Move to skycare.app — GitHub Organization account</li><li>New Firebase project per client, custom subdomain per location</li><li>White-labelling for enterprise clients</li></ul><div class="road-eta">~1 day setup · ~$15/year per domain</div></div>
         </div>
       </div>
-      <div class="road-block">
-        <div class="road-n">04</div>
+      <div class="road-block" onclick="toggleRoad(this)">
+        <div class="road-n-wrap"><div class="road-n">04</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">App Store & Google Play</div>
-          <div class="road-desc"><ul>
-            <li>Wrap PWA with Capacitor — no code rewrite</li>
-            <li>App Store listing increases credibility and discoverability</li>
-            <li>Enables enterprise distribution via Apple Business Manager</li>
-            <li>Better notification adoption — system prompt vs. browser prompt</li>
-          </ul></div>
-          <div class="road-eta">Est. 2 weeks · $99/year Apple · $25 one-time Google</div>
+          <div class="road-title">App Store & Google Play <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>Wrap PWA with Capacitor — no code rewrite</li><li>App Store listing increases credibility and discoverability</li><li>Enables enterprise distribution via Apple Business Manager</li><li>Better notification adoption — system prompt vs. browser prompt</li></ul><div class="road-eta">Est. 2 weeks · $99/year Apple · $25 one-time Google</div></div>
         </div>
       </div>
-      <div class="road-block">
-        <div class="road-n">05</div>
+      <div class="road-block" onclick="toggleRoad(this)">
+        <div class="road-n-wrap"><div class="road-n">05</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">First External Client</div>
-          <div class="road-desc"><ul>
-            <li>Target: a regional airport or FBO with a similar crew profile</li>
-            <li>Validates the onboarding process, pricing, and product-market fit outside CYKF</li>
-            <li>Becomes the case study for all subsequent sales conversations</li>
-          </ul></div>
-          <div class="road-eta">Target: within 12 months of Auth launch</div>
+          <div class="road-title">First External Client <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>Target: a regional airport or FBO with a similar crew profile</li><li>Validates the onboarding process, pricing, and product-market fit outside CYKF</li><li>Becomes the case study for all subsequent sales conversations</li></ul><div class="road-eta">Target: within 12 months of Auth launch</div></div>
         </div>
       </div>
+    </div>
+    <div class="road-progress" id="roadProgress">
+      <div class="road-progress-label">Roadmap Progress</div>
+      <div class="road-progress-bar"><div class="road-progress-fill" id="roadFill" style="width:0%"></div></div>
+      <div class="road-progress-text" id="roadText">0 of 5 milestones complete</div>
     </div>
   </div>
 
 </div>
 
 <script>
+// ── TABS ──
+var productMetricsDone = false;
+var tractionDone = false;
+
 function showTab(id, btn) {
-  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
-  document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
-  document.getElementById('panel-' + id).classList.add('active');
+  document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('panel-'+id).classList.add('active');
   btn.classList.add('active');
+  if (id==='product' && !productMetricsDone) { productMetricsDone=true; setTimeout(function(){countUpAll(document.getElementById('productMetrics'));},200); }
+  if (id==='traction' && !tractionDone) { tractionDone=true; setTimeout(startTractionFeed,300); }
+}
+
+// ── COUNTER ──
+function countUp(el) {
+  var target=parseInt(el.getAttribute('data-target'));
+  var dur=900, step=16, inc=target/(dur/step), cur=0;
+  var t=setInterval(function(){
+    cur=Math.min(cur+inc,target);
+    el.textContent=Math.round(cur);
+    if(cur>=target)clearInterval(t);
+  },step);
+}
+function countUpAll(container) {
+  container.querySelectorAll('[data-target]').forEach(countUp);
+}
+
+// ── TRACTION FEED ──
+var tractionItems = [
+  {type:'good',label:'Task management',val:'Daily checklists in use every shift',sub:'Groomers check off tasks in real time across all phones'},
+  {type:'live',label:'Flight operations',val:'Flight log capturing real arrivals',sub:'Arrivals, departures, and grooming turns logged for every flight'},
+  {type:'good',label:'Vehicle tracking',val:'8 crew cars tracked continuously',sub:'Fuel, odometer, service dates, and monthly audits in production'},
+  {type:'live',label:'Fleet monitoring',val:'Live fleet map — 10 aircraft tracked',sub:'Real ADS-B positions updated every 5 minutes via OpenSky API'},
+  {type:'good',label:'Push notifications',val:'7 notification types firing daily',sub:'Shift reminders, fuel alerts, fleet arrivals — all delivered on schedule'},
+  {type:'good',label:'Supply chain',val:'Real purchases managed in the app',sub:'Supply catalog and shared cart used by the full team every week'},
+  {type:'live',label:'Infrastructure cost',val:'$0 / month at production scale',sub:'Free tier holds at real usage — first paying client is 100% margin'},
+];
+function startTractionFeed() {
+  var feed=document.getElementById('tractionFeed');
+  feed.innerHTML='';
+  tractionItems.forEach(function(item,i){
+    var div=document.createElement('div');
+    div.className='traction-item '+item.type;
+    div.innerHTML='<div class="ti-label">'+item.label+'</div><div class="ti-val">'+item.val+'</div><div class="ti-sub">'+item.sub+'</div>';
+    feed.appendChild(div);
+    setTimeout(function(){div.classList.add('in');},i*220);
+  });
+}
+
+// ── COST SIMULATOR ──
+var clientCount=0;
+function addClient(){
+  clientCount++;
+  var dots=document.getElementById('clientDots');
+  var dot=document.createElement('div'); dot.className='client-dot'; dots.appendChild(dot);
+  document.getElementById('simClients').textContent=clientCount;
+  document.getElementById('simMRR').textContent='$'+clientCount*100;
+  // cost stays $0 up to ~20 clients, then shows small amount
+  var cost = clientCount < 20 ? '$0' : '$'+(Math.floor((clientCount-20)*2));
+  document.getElementById('simCost').textContent=cost;
+}
+function resetClients(){
+  clientCount=0;
+  document.getElementById('clientDots').innerHTML='';
+  document.getElementById('simClients').textContent='0';
+  document.getElementById('simMRR').textContent='$0';
+  document.getElementById('simCost').textContent='$0';
+}
+
+// ── MRR CALCULATOR ──
+function updateMRR(){
+  var locs=parseInt(document.getElementById('locSlider').value);
+  var price=parseInt(document.getElementById('priceSlider').value);
+  var mrr=locs*price;
+  var arr=mrr*12;
+  document.getElementById('locVal').textContent=locs+' locations';
+  document.getElementById('priceVal').textContent='$'+price+' / mo';
+  document.getElementById('mrrTotal').textContent='$'+mrr.toLocaleString();
+  document.getElementById('arrTotal').textContent='$'+arr.toLocaleString();
+  // margin is always high since infra is near $0
+  document.getElementById('marginVal').textContent=locs<20?'90%+':locs<50?'88%+':'85%+';
+}
+
+// ── ROADMAP ──
+function toggleRoad(el){
+  var wasOpen=el.classList.contains('open');
+  el.classList.toggle('open');
+  // second click marks done
+  if (!wasOpen && !el.classList.contains('done')) {
+    // first click: just expand
+  } else if (wasOpen) {
+    el.classList.toggle('done');
+    el.querySelector('.road-check').textContent=el.classList.contains('done')?'✓':'';
+    updateRoadProgress();
+  }
+}
+function updateRoadProgress(){
+  var done=document.querySelectorAll('.road-block.done').length;
+  var total=document.querySelectorAll('.road-block').length;
+  var pct=Math.round(done/total*100);
+  document.getElementById('roadFill').style.width=pct+'%';
+  document.getElementById('roadText').textContent=done+' of '+total+' milestones complete';
 }
 </script>
