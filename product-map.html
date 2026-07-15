@@ -923,8 +923,31 @@
       <div class="roadmap-step">4</div>
       <div class="roadmap-body">
         <div class="roadmap-title">App Store / Play Store</div>
-        <div class="roadmap-desc"><ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px"><li>Wrap the PWA using Capacitor for native iOS and Android builds</li><li>Enables App Store listing — increases credibility and discoverability</li><li>Push notifications already implemented — the wrapper is the only missing step</li></ul></div>
-        <div class="roadmap-eta">Est. 2 weeks with Capacitor</div>
+        <div class="roadmap-desc">
+          <p style="margin-bottom:10px;font-size:13px;color:var(--muted)">The app already works like a native app — it installs to your home screen, works offline, and sends push notifications. The next step is making it available through the App Store and Google Play, which changes how the world perceives it.</p>
+          <p style="margin-bottom:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);font-weight:700">What Capacitor Does</p>
+          <ul style="padding-left:16px;margin:0 0 14px;display:flex;flex-direction:column;gap:3px">
+            <li>Capacitor is an open-source tool that wraps the existing web app in a native iOS and Android shell — no rewrite, no new codebase</li>
+            <li>The app stays exactly as it is; Capacitor just packages it as a native binary that Apple and Google accept</li>
+            <li>Push notifications, offline support, and camera access are already in place — the hardest parts are done</li>
+          </ul>
+          <p style="margin-bottom:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);font-weight:700">Why It Matters for Credibility</p>
+          <ul style="padding-left:16px;margin:0 0 14px;display:flex;flex-direction:column;gap:3px">
+            <li>An App Store listing signals legitimacy — to clients, partners, and investors — in a way a web link does not</li>
+            <li>It removes the "install from browser" friction for new users who are not tech-savvy</li>
+            <li>Makes Skycare searchable on the App Store and Google Play — passive discoverability</li>
+            <li>Required by some corporate IT policies that only allow apps from official stores</li>
+          </ul>
+          <p style="margin-bottom:8px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);font-weight:700">What It Takes to Get There</p>
+          <ul style="padding-left:16px;margin:0;display:flex;flex-direction:column;gap:3px">
+            <li>Apple Developer account — $99/year — required to publish on the App Store</li>
+            <li>Google Play Developer account — one-time $25 fee</li>
+            <li>Capacitor setup and native build — estimated 1–2 weeks of development</li>
+            <li>App Store review process — typically 1–3 days for Apple, hours for Google</li>
+            <li>Firebase Authentication must be in place first (App Store requires proper login for apps handling team data)</li>
+          </ul>
+        </div>
+        <div class="roadmap-eta">Est. 2 weeks of dev · $99/year Apple · $25 one-time Google</div>
       </div>
     </div>
 
