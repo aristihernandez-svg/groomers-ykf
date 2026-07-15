@@ -59,7 +59,8 @@ function etaStr(distNm, speedKts) {
 function fetchOpenSky() {
   return new Promise((resolve, reject) => {
     const url = 'https://opensky-network.org/api/states/all?lamin=41.0&lomin=-95.0&lamax=50.0&lomax=-60.0';
-    https.get(url, { headers: { 'User-Agent': 'SkycarYKF-FleetAlert/1.0' } }, res => {
+    const auth = 'Basic ' + Buffer.from(`aristihernandez@gmail.com:${process.env.OPENSKY_PASSWORD}`).toString('base64');
+    https.get(url, { headers: { 'User-Agent': 'SkycarYKF-FleetAlert/1.0', 'Authorization': auth } }, res => {
       let body = '';
       res.on('data', d => body += d);
       res.on('end', () => {
