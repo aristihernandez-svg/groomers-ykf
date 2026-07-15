@@ -258,7 +258,7 @@ td code{font-size:11px;background:rgba(42,126,245,.12);color:#7ab8ff;padding:2px
       <div class="card"><div class="card-title">Task Management</div><ul><li>Daily and weekly task checklists</li><li>Area-grouped tasks with progress tracking</li><li>Real-time sync across all devices</li><li>Recurring and one-off task support</li></ul></div>
       <div class="card"><div class="card-title">Flight Operations</div><ul><li>Flight log — arrivals, departures, groomings</li><li>Live fleet map for all 10 aircraft</li><li>Distance, altitude, speed, ETA per tail</li><li>60 nm arrival push notification</li></ul></div>
       <div class="card"><div class="card-title">Vehicle Management</div><ul><li>8 crew cars with fuel gauges and odometer</li><li>QR code per vehicle for quick updates</li><li>Monthly photo audits per car</li><li>Fuel and service due push alerts</li></ul></div>
-      <div class="card"><div class="card-title">Supply Chain</div><ul><li>Full supply catalog with store filters</li><li>Shared cart synced across all phones</li><li>MX parts catalog for mechanics</li><li>Push notifications when items are needed</li></ul></div>
+      <div class="card"><div class="card-title">Supply Chain</div><ul><li>Full supply catalog filtered by aircraft type (Jets / Metros) and category</li><li>Shared cart synced across all phones, grouped by store for efficient buying</li><li>Supervisor buying session mode — one list, no duplicates</li><li>Inventory notes and usage tracking per item</li></ul></div>
     </div>
     <div class="eyebrow">User Types</div>
     <div class="table-wrap">
@@ -266,7 +266,7 @@ td code{font-size:11px;background:rgba(42,126,245,.12);color:#7ab8ff;padding:2px
         <thead><tr><th>Role</th><th>Interface</th><th>What they do</th></tr></thead>
         <tbody>
           <tr><td>Groomers</td><td><code>index.html</code></td><td>Tasks, flight log, shopping, crew cars, notifications</td></tr>
-          <tr><td>Mechanics</td><td><code>mechanics.html</code></td><td>Parts catalog, order tracking, notifications</td></tr>
+          <tr><td>Mechanics</td><td><code>mechanics.html</code></td><td>Aircraft reference docs; snag reference log planned (reference only — does not replace logbook)</td></tr>
           <tr><td>Pilots</td><td><code>pilot.html</code> + snag form</td><td>Aircraft reference docs, snag reporting (planned)</td></tr>
           <tr><td>Supervisor / Buyer</td><td>Main app</td><td>Shopping sessions, audit oversight, shift handoffs</td></tr>
           <tr><td>Ramp crew</td><td><code>crew-access.html</code> via QR</td><td>Quick car updates — no login, no navigation</td></tr>
@@ -398,8 +398,8 @@ td code{font-size:11px;background:rgba(42,126,245,.12);color:#7ab8ff;padding:2px
       <div class="road-block" onclick="toggleRoad(this)">
         <div class="road-n-wrap"><div class="road-n">01</div><div class="road-check"></div></div>
         <div>
-          <div class="road-title">Pilot / MX Snag Reporting <span class="road-toggle">▾</span></div>
-          <div class="road-desc"><ul><li>Pilots and mechanics report aircraft defects from their phone — voice-to-text, photo, severity</li><li>MX notified within minutes via push</li><li>Full snag history per aircraft, recurring snag detection</li><li>QR sticker in each cockpit links to that aircraft's snag form</li></ul><div class="road-eta">Design complete · Build est. ~2 weeks</div></div>
+          <div class="road-title">Pilot / MX Snag Reference Log <span class="road-toggle">▾</span></div>
+          <div class="road-desc"><ul><li>A digital reference log for recurring aircraft observations — photo, description, aircraft tail</li><li>Planning and awareness tool for the operations team</li><li>Does not replace and will never replace official logbook snag entries, which remain the regulatory record</li><li>QR sticker in each cockpit links to that aircraft's reference form</li></ul><div class="road-eta">Design complete · Build est. ~2 weeks</div></div>
         </div>
       </div>
       <div class="road-block" onclick="toggleRoad(this)">

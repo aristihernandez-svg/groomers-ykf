@@ -256,7 +256,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
 
     <div class="user-grid reveal">
       <div class="user-block"><div class="user-label">Primary users</div><div class="user-name">Groomers</div><ul><li>Check off daily and weekly tasks</li><li>Log arrivals, departures, groomings</li><li>Manage the shared shopping cart</li><li>Track crew car status</li><li>Receive shift notifications</li></ul></div>
-      <div class="user-block"><div class="user-label">Maintenance</div><div class="user-name">Mechanics</div><ul><li>Manage parts and supplies catalog</li><li>Mark items as ordered</li><li>Get notified when groomers flag a need</li></ul></div>
+      <div class="user-block"><div class="user-label">Maintenance</div><div class="user-name">Mechanics</div><ul><li>Access aircraft reference documentation</li><li>Snag reporting planned — reference only</li><li>Will not replace official logbook entries</li></ul></div>
       <div class="user-block"><div class="user-label">Operations</div><div class="user-name">Supervisor / Buyer</div><ul><li>Activate buying session mode</li><li>Review cart grouped by store</li><li>Monitor audit completion</li><li>Review shift handoff notes</li></ul></div>
       <div class="user-block"><div class="user-label">Ramp access</div><div class="user-name">Ramp Crew</div><ul><li>Scan QR code on any vehicle</li><li>Update fuel, odometer, and notes instantly</li><li>No login or navigation required</li></ul></div>
     </div>
@@ -331,10 +331,68 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
       <div class="fg-title">Task Management</div>
       <div class="chips"><span class="chip">Daily shift checklist</span><span class="chip">7-day weekly view</span><span class="chip">Area-grouped tasks</span><span class="chip">Progress tracking</span><span class="chip">Real-time sync</span></div>
     </div>
+    <!-- Supply Management Interactive Mockup -->
     <div class="feat-group reveal">
       <div class="fg-title">Supply Management</div>
-      <div class="chips"><span class="chip">Full supply catalog</span><span class="chip">Shared cart across all devices</span><span class="chip">MX parts catalog</span><span class="chip">Crew house shopping list</span></div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px">This is more than a shopping list. It's a supply management system — the team flags what's needed by category and aircraft type, the supervisor activates a buying session, and the cart groups everything by store for efficient purchasing. Inventory notes keep quantities and usage tracked over time. Try it below.</p>
     </div>
+
+    <div class="widget reveal" style="margin-bottom:28px" id="supplyWidget">
+      <div class="wh" style="gap:10px;flex-wrap:wrap">
+        <div class="wh-title">Supply Catalog</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap" id="supplyFilters">
+          <button class="sf-btn active" onclick="filterSupply('all',this)">All</button>
+          <button class="sf-btn" onclick="filterSupply('grooming',this)">Grooming</button>
+          <button class="sf-btn" onclick="filterSupply('catering',this)">Catering</button>
+          <button class="sf-btn" onclick="filterSupply('jets',this)">Jets</button>
+          <button class="sf-btn" onclick="filterSupply('metros',this)">Metros</button>
+          <button class="sf-btn" onclick="filterSupply('office',this)">Office</button>
+        </div>
+        <div class="wh-meta" id="cartCount" style="cursor:pointer;display:flex;align-items:center;gap:5px" onclick="toggleCart()">
+          🛒 <span id="cartNum">0</span> items
+        </div>
+      </div>
+
+      <!-- catalog items -->
+      <div id="supplyList" style="padding:6px;display:flex;flex-direction:column;gap:3px"></div>
+
+      <!-- cart view -->
+      <div id="cartView" style="display:none;border-top:1px solid rgba(42,126,245,0.12)">
+        <div style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+          <span style="font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)">Active Shopping Cart</span>
+          <button onclick="toggleCart()" style="font-family:var(--mono);font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer">← Back to catalog</button>
+        </div>
+        <div id="cartItems" style="padding:0 6px 6px;display:flex;flex-direction:column;gap:4px"></div>
+        <div id="cartEmpty" style="padding:14px 16px;font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;display:none">Cart is empty — add items from the catalog</div>
+      </div>
+
+      <div class="wfooter">
+        <span id="supplyFooterLeft">Shared in real time across all phones</span>
+        <span id="buyingSessionBtn" onclick="toggleBuyingSession()" style="cursor:pointer;color:var(--muted)">Activate buying session</span>
+      </div>
+    </div>
+
+    <style>
+    .sf-btn{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:4px;border:1px solid var(--light);color:var(--muted);background:transparent;cursor:pointer;transition:all .12s;}
+    .sf-btn:hover{border-color:var(--blue);color:var(--blue);}
+    .sf-btn.active{background:var(--blue);border-color:var(--blue);color:white;}
+    .supply-row{display:grid;grid-template-columns:1fr auto auto;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;background:var(--panel);}
+    .supply-row.in-cart{background:rgba(42,126,245,0.07);}
+    .sr-info{display:flex;flex-direction:column;gap:2px;}
+    .sr-name{font-size:12.5px;color:var(--text);}
+    .sr-meta{font-family:var(--mono);font-size:10px;color:var(--muted);}
+    .sr-tag{font-family:var(--mono);font-size:9px;padding:2px 7px;border-radius:3px;background:var(--raised);border:1px solid var(--light);color:var(--muted);}
+    .sr-add{font-family:var(--mono);font-size:10px;font-weight:700;width:28px;height:28px;border-radius:50%;border:1.5px solid var(--blue);color:var(--blue);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+    .sr-add:hover{background:var(--blue);color:white;}
+    .sr-add.added{background:var(--blue);color:white;border-color:var(--blue);}
+    .cart-store{margin-bottom:8px;}
+    .cart-store-name{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);padding:6px 10px 4px;}
+    .cart-item-row{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-radius:5px;background:var(--panel);margin-bottom:2px;}
+    .cart-item-name{font-size:12.5px;color:var(--text);}
+    .cart-item-remove{font-family:var(--mono);font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;padding:2px 6px;}
+    .cart-item-remove:hover{color:var(--red);}
+    .buying-active{background:rgba(32,192,96,.06)!important;border-color:rgba(32,192,96,.25)!important;}
+    </style>
     <div class="feat-group reveal">
       <div class="fg-title">SOPs and Procedures</div>
       <div class="chips"><span class="chip">Step-by-step grooming procedures</span><span class="chip">Vendor and supplier contacts</span><span class="chip">Pilot study hub — PA-31 Navajo</span></div>
@@ -373,7 +431,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--sans); font-si
         <div class="next-n">01</div>
         <div>
           <div class="next-title">Pilot / MX Snag Reporting <span class="next-toggle">▾</span></div>
-          <div class="next-desc">Pilots and mechanics report aircraft defects directly from their phone — photo, description, severity. MX gets notified within minutes. Full snag history per aircraft, accessible from the cockpit via a QR sticker.</div>
+          <div class="next-desc">A digital reference log for recurring aircraft issues — pilots and mechanics can note observations from their phone with a photo and description. This is a planning and awareness tool only; it does not replace and will never replace official logbook snag entries, which remain the regulatory record.</div>
         </div>
       </div>
       <div class="next-block" onclick="toggleNext(this)">
@@ -538,4 +596,157 @@ function startNotifFeed(){
 
 // ── ROADMAP TOGGLES ──
 function toggleNext(el){el.classList.toggle('open');}
+
+// ── SUPPLY MANAGEMENT ──
+var supplyItems = [
+  {name:'Fantastik All-Purpose Cleaner',store:'Costco',cat:'grooming',ac:'both',note:'Case of 4 — low stock'},
+  {name:'Microfibre Cloths (48 pk)',store:'Costco',cat:'grooming',ac:'both',note:'Replace monthly'},
+  {name:'Leather Conditioning Wipes',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jets only — cabin seats'},
+  {name:'Carpet Stain Remover',store:'Walmart',cat:'grooming',ac:'metros',note:'Metros — blue carpet'},
+  {name:'Window & Glass Cleaner',store:'Costco',cat:'grooming',ac:'both',note:''},
+  {name:'Bottled Water (24 pk)',store:'Costco',cat:'catering',ac:'jets',note:'Charter flights'},
+  {name:'Coffee Pods — Dark Roast',store:'Costco',cat:'catering',ac:'jets',note:'Keurig compatible'},
+  {name:'Granola Bar Variety Pack',store:'Costco',cat:'catering',ac:'jets',note:'Crew snacks + charter'},
+  {name:'Paper Towels (bulk)',store:'Costco',cat:'office',ac:'both',note:'Kitchen + hangars'},
+  {name:'Garbage Bags 42 gal',store:'Costco',cat:'office',ac:'both',note:''},
+  {name:'Lavatory Deodorizer Tabs',store:'Aviation Supplier',cat:'grooming',ac:'metros',note:'Metroliner lavatory only'},
+  {name:'Blue Nitrile Gloves (L)',store:'Canadian Tire',cat:'grooming',ac:'both',note:''},
+  {name:'Dry Shampoo / Upholstery Foam',store:'Canadian Tire',cat:'grooming',ac:'jets',note:'Jet interior detail'},
+  {name:'Crew House Dish Soap',store:'Walmart',cat:'office',ac:'both',note:'Crew house kitchen'},
+];
+
+var cart = {}; // name → item
+var currentFilter = 'all';
+var showingCart = false;
+var buyingActive = false;
+
+function catMatch(item, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'grooming') return item.cat === 'grooming';
+  if (filter === 'catering') return item.cat === 'catering';
+  if (filter === 'office') return item.cat === 'office';
+  if (filter === 'jets') return item.ac === 'jets' || item.ac === 'both';
+  if (filter === 'metros') return item.ac === 'metros' || item.ac === 'both';
+  return true;
+}
+
+function acLabel(ac) {
+  if (ac === 'jets') return 'Jets';
+  if (ac === 'metros') return 'Metros';
+  return 'All aircraft';
+}
+
+function renderSupply() {
+  var list = document.getElementById('supplyList');
+  list.innerHTML = '';
+  var visible = supplyItems.filter(function(i){ return catMatch(i, currentFilter); });
+  visible.forEach(function(item) {
+    var inCart = !!cart[item.name];
+    var row = document.createElement('div');
+    row.className = 'supply-row' + (inCart ? ' in-cart' : '');
+    row.innerHTML =
+      '<div class="sr-info">' +
+        '<div class="sr-name">' + item.name + '</div>' +
+        '<div class="sr-meta">' + item.store +
+          (item.note ? ' · ' + item.note : '') +
+        '</div>' +
+      '</div>' +
+      '<span class="sr-tag">' + acLabel(item.ac) + '</span>' +
+      '<button class="sr-add' + (inCart ? ' added' : '') + '" onclick="toggleCartItem(\'' + item.name.replace(/'/g,"\\'")+'\',this)">' +
+        (inCart ? '✓' : '+') +
+      '</button>';
+    list.appendChild(row);
+  });
+}
+
+function toggleCartItem(name, btn) {
+  var item = supplyItems.find(function(i){ return i.name === name; });
+  if (!item) return;
+  if (cart[name]) {
+    delete cart[name];
+  } else {
+    cart[name] = item;
+  }
+  updateCartCount();
+  renderSupply();
+}
+
+function updateCartCount() {
+  var n = Object.keys(cart).length;
+  document.getElementById('cartNum').textContent = n;
+}
+
+function filterSupply(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.sf-btn').forEach(function(b){ b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderSupply();
+}
+
+function toggleCart() {
+  showingCart = !showingCart;
+  document.getElementById('supplyList').style.display = showingCart ? 'none' : '';
+  document.getElementById('supplyFilters').style.display = showingCart ? 'none' : '';
+  document.getElementById('cartView').style.display = showingCart ? 'block' : 'none';
+  if (showingCart) renderCartView();
+}
+
+function renderCartView() {
+  var stores = {};
+  Object.values(cart).forEach(function(item) {
+    if (!stores[item.store]) stores[item.store] = [];
+    stores[item.store].push(item);
+  });
+  var container = document.getElementById('cartItems');
+  var empty = document.getElementById('cartEmpty');
+  container.innerHTML = '';
+  if (Object.keys(stores).length === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  Object.keys(stores).sort().forEach(function(store) {
+    var group = document.createElement('div');
+    group.className = 'cart-store';
+    var header = document.createElement('div');
+    header.className = 'cart-store-name';
+    header.textContent = store + ' (' + stores[store].length + ')';
+    group.appendChild(header);
+    stores[store].forEach(function(item) {
+      var row = document.createElement('div');
+      row.className = 'cart-item-row';
+      row.innerHTML =
+        '<span class="cart-item-name">' + item.name + '</span>' +
+        '<button class="cart-item-remove" onclick="removeFromCart(\'' + item.name.replace(/'/g,"\\'") + '\')">✕</button>';
+      group.appendChild(row);
+    });
+    container.appendChild(group);
+  });
+}
+
+function removeFromCart(name) {
+  delete cart[name];
+  updateCartCount();
+  renderCartView();
+}
+
+function toggleBuyingSession() {
+  buyingActive = !buyingActive;
+  var btn = document.getElementById('buyingSessionBtn');
+  var widget = document.getElementById('supplyWidget');
+  if (buyingActive) {
+    btn.textContent = '● Buying session active';
+    btn.style.color = 'var(--green)';
+    widget.classList.add('buying-active');
+    document.getElementById('supplyFooterLeft').textContent = 'Supervisor buying mode — cart grouped by store';
+  } else {
+    btn.textContent = 'Activate buying session';
+    btn.style.color = 'var(--muted)';
+    widget.classList.remove('buying-active');
+    document.getElementById('supplyFooterLeft').textContent = 'Shared in real time across all phones';
+  }
+}
+
+// init supply widget on load
+renderSupply();
 </script>
