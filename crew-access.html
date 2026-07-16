@@ -102,11 +102,14 @@ const FUEL_STOPS = [
 let carData = {};
 let view = 'list';
 let _gaugeValue = null;
+let _initialLoad = true;  // true until first snapshot arrives
 
 // ── Firestore sync ──
 db.collection('crewCarData').doc('all').onSnapshot(snap => {
   if(snap.exists) Object.assign(carData, snap.data());
-  if(view === 'list') render(); // don't rebuild gauge while user is editing
+  // Bug fix 1: on first load, always render so QR deep-links populate with real data
+  if(_initialLoad) { _initialLoad = false; render(); return; }
+  if(view === 'list') render();
 });
 
 // ── Helpers ──
@@ -242,6 +245,11 @@ function buildGauge(initVal) {
     <div class="gauge-hint">Drag the needle to set fuel level</div>`;
 
   // Attach drag
+  // Bug fix 4: use AbortController so window listeners are removed when a new gauge is built
+  if(window._gaugeAbort) window._gaugeAbort.abort();
+  window._gaugeAbort = new AbortController();
+  const {signal} = window._gaugeAbort;
+
   const svg=document.getElementById('gSvg');
   let dragging=false;
   function pctFromEv(e){
@@ -268,12 +276,12 @@ function buildGauge(initVal) {
     if(fill){stop.pct<=0?fill.setAttribute('d',''):fill.setAttribute('d',`M${tx0},${ty0} A${R},${R} 0 0,1 ${dx2},${dy2}`);}
     const ro=document.getElementById('fuelReadout'); if(ro)ro.textContent=stop.value;
   }
-  svg.addEventListener('touchstart',e=>{dragging=true;applyPct(pctFromEv(e));e.preventDefault();},{passive:false});
-  svg.addEventListener('touchmove',e=>{if(dragging){applyPct(pctFromEv(e));e.preventDefault();}},{passive:false});
-  svg.addEventListener('touchend',()=>{dragging=false;},{passive:true});
-  svg.addEventListener('mousedown',e=>{dragging=true;applyPct(pctFromEv(e));});
-  window.addEventListener('mousemove',e=>{if(dragging)applyPct(pctFromEv(e));});
-  window.addEventListener('mouseup',()=>{dragging=false;});
+  svg.addEventListener('touchstart',e=>{dragging=true;applyPct(pctFromEv(e));e.preventDefault();},{passive:false,signal});
+  svg.addEventListener('touchmove',e=>{if(dragging){applyPct(pctFromEv(e));e.preventDefault();}},{passive:false,signal});
+  svg.addEventListener('touchend',()=>{dragging=false;},{passive:true,signal});
+  svg.addEventListener('mousedown',e=>{dragging=true;applyPct(pctFromEv(e));},{signal});
+  window.addEventListener('mousemove',e=>{if(dragging)applyPct(pctFromEv(e));},{signal});
+  window.addEventListener('mouseup',()=>{dragging=false;},{signal});
 }
 
 // ── Save ──
@@ -284,12 +292,23 @@ async function saveDetail(key) {
   const d=carData[key];
   if(_gaugeValue){
     d.fuel=_gaugeValue;
-    const today=new Date().toISOString().split('T')[0];
-    const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+    // Bug fix 2: use local date, not UTC (toISOString is UTC and drifts after ~8 PM Eastern)
+    const now=new Date();
+    const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const logged=now.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
     if(!d.log)d.log=[];
     d.log.push({type:'fuel',value:_gaugeValue,date:today,logged});
+    // Bug fix 3: cap log at 60 entries so document never bloats again
+    if(d.log.length>60) d.log=d.log.slice(-60);
   }
-  if(ckm)d.currentKm=ckm;
+  // Bug fix 5: validate KM — must be a positive number and not less than current reading
+  if(ckm){
+    const newKm=parseFloat(ckm);
+    const prevKm=parseFloat(d.currentKm||0);
+    if(isNaN(newKm)||newKm<=0){toast('⚠️ Enter a valid odometer reading');return;}
+    if(newKm<prevKm){toast(`⚠️ KM can't be lower than current reading (${prevKm.toLocaleString()} km)`);return;}
+    d.currentKm=String(newKm);
+  }
   d.crewNote=note;
   try {
     await db.collection('crewCarData').doc('all').set({[key]: carData[key]}, {merge: true});

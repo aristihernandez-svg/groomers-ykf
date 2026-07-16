@@ -64,11 +64,40 @@ async function cleanAuditPhotos() {
   console.log(`auditPhotos: deleted ${ok} old file(s)`);
 }
 
+async function cleanCarLogs() {
+  const snap = await db.collection('crewCarData').doc('all').get();
+  if (!snap.exists) { console.log('crewCarData: document not found'); return; }
+
+  const data = snap.data();
+  const cutoff = new Date(Date.now() - THIRTY_DAYS_MS);
+  const updates = {};
+  let totalTrimmed = 0;
+
+  for (const [carKey, carData] of Object.entries(data)) {
+    if (!Array.isArray(carData?.log) || carData.log.length === 0) continue;
+    const before = carData.log.length;
+    const trimmed = carData.log.filter(entry => {
+      if (!entry?.date) return false; // drop malformed entries
+      return new Date(entry.date) >= cutoff;
+    });
+    if (trimmed.length < before) {
+      updates[`${carKey}.log`] = trimmed;
+      totalTrimmed += before - trimmed.length;
+      console.log(`crewCarData/${carKey}: trimmed ${before - trimmed.length} entries (${before} → ${trimmed.length})`);
+    }
+  }
+
+  if (!Object.keys(updates).length) { console.log('crewCarData: all logs within 30 days, nothing to trim'); return; }
+  await db.collection('crewCarData').doc('all').update(updates);
+  console.log(`crewCarData: total ${totalTrimmed} log entries removed`);
+}
+
 async function main() {
   await cleanQueue('mxNotifQueue');
   await cleanQueue('shopNotifQueue');
   await cleanCoffeeSent();
   await cleanAuditPhotos();
+  await cleanCarLogs();
   console.log('Cleanup done.');
 }
 
