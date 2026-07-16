@@ -2531,7 +2531,7 @@ function updateMainMargin() {
 window.addEventListener('resize', updateMainMargin);
 
 // ── AI CHAT ──────────────────────────────────────────────────────────────────
-const AI_KEY = () => localStorage.getItem('skycare_ai_key') || '';
+// API key lives in the Cloudflare Worker secret — not stored in the browser
 const AI_MODEL = 'claude-haiku-4-5-20251001';
 let aiHistory = [];
 let aiStreaming = false;
@@ -2808,16 +2808,13 @@ function aiKeyDown(e) {
 }
 
 function showKeyModal() {
-  const existing = localStorage.getItem('skycare_ai_key') || '';
-  const key = prompt('Enter your Anthropic API key (stored only in this browser):', existing);
-  if (key !== null) {
-    localStorage.setItem('skycare_ai_key', key.trim());
+  // No longer needed — key lives in Cloudflare Worker secret
+  if (false) {
   }
 }
 
 async function sendChat() {
   if (aiStreaming) return;
-  if (!AI_KEY()) { showKeyModal(); return; }
   const input = document.getElementById('aiInput');
   const text = input.value.trim();
   if (!text) return;
@@ -2844,7 +2841,7 @@ async function sendChat() {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        apiKey: AI_KEY(),
+
         model: AI_MODEL,
         max_tokens: 1024,
         system: getSystemPrompt(),
