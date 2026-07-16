@@ -2699,7 +2699,12 @@ You also know Canadian ATC phraseology and NAV CANADA communications procedures.
 let aiTopic = 'hub';
 
 function getSystemPrompt() {
-  return DOC_SYSTEM[aiTopic] || DOC_SYSTEM.hub;
+  const base = DOC_SYSTEM[aiTopic] || DOC_SYSTEM.hub;
+  const docEl = aiTopic && aiTopic !== 'hub' ? document.getElementById('view-' + aiTopic) : null;
+  if (!docEl) return base;
+  const docText = (docEl.innerText || '').trim();
+  if (!docText) return base;
+  return base + '\n\n--- FULL DOCUMENT TEXT (authoritative — use this for all specific values, steps, and limits) ---\n' + docText;
 }
 
 function getSuggestions() {
