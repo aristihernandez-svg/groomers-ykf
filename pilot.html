@@ -63,6 +63,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 .hub-tile.locked:hover{transform:none;box-shadow:none;border-color:rgba(255,255,255,0.08)}
 .hub-tile.locked::before{opacity:0}
 .hub-tile-icon{font-size:32px;margin-bottom:12px}
+.tile-tools~.hub-tile-icon{margin-top:36px}
 .hub-tile-tag{display:inline-block;background:var(--bg4);border-radius:4px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px}
 .hub-tile-tag.ready{background:rgba(34,197,94,0.1);color:var(--green)}
 .hub-tile-tag.coming{background:rgba(245,158,11,0.1);color:var(--amber)}
@@ -454,12 +455,11 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <div class="hub-tile-arrow">→</div>
     </div>
 
-    <div class="hub-tile locked" onclick="sopTap()" style="cursor:pointer;opacity:0.75">
+    <div class="hub-tile locked" style="cursor:default;opacity:0.6">
       <div class="hub-tile-icon">📖</div>
-      <div class="hub-tile-tag coming">ASK AI</div>
+      <div class="hub-tile-tag coming">COMING SOON</div>
       <div class="hub-tile-title">SOP</div>
-      <div class="hub-tile-desc">Standard Operating Procedures — normal and non-normal checklists for line operations. Ask the AI tutor.</div>
-      <div class="hub-tile-arrow">🧠</div>
+      <div class="hub-tile-desc">Standard Operating Procedures — normal and non-normal checklists for line operations.</div>
     </div>
 
     <div class="hub-tile" style="position:relative" onclick="openDoc('afm')">
