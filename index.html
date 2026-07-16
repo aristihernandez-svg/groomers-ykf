@@ -2736,6 +2736,8 @@ function renderCarDetail(el, key) {
   html+=auditSectionHTML(key);
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
+  // One-shot Firestore fetch so audit photos are always current (no loop — auditSectionHTML no longer re-schedules this)
+  setTimeout(()=>refreshAuditPhotos(key), 0);
 }
 
 // ── LOG ENTRY MODALS ──────────────────────────────────────────
@@ -3011,14 +3013,18 @@ function refreshAuditPhotos(key) {
     const data = snap.data();
     if(!S.carAudits[snap.id]) S.carAudits[snap.id]={photos:[],comments:'',done:false,completedAt:null};
     S.carAudits[snap.id] = {...S.carAudits[snap.id], ...data};
+    // Replace only the audit section DOM node — do NOT call auditSectionHTML here
+    // (that would re-schedule refreshAuditPhotos and create an infinite loop)
     const el=document.getElementById('auditSection_'+key);
-    if(el) el.outerHTML = auditSectionHTML(key);
+    if(el) {
+      const tmp=document.createElement('div');
+      tmp.innerHTML=auditSectionHTML(key);
+      el.replaceWith(tmp.firstElementChild);
+    }
   }).catch(()=>{});
 }
 
 function auditSectionHTML(key) {
-  // Kick off a fresh read from Firestore in the background so photos are always current
-  setTimeout(()=>refreshAuditPhotos(key), 0);
   const cd=carAuditData(key);
   const month=auditMonth();
   let h=`
