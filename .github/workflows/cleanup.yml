@@ -1,7 +1,9 @@
 name: Notification Queue Cleanup
 
 on:
-  workflow_dispatch:         # triggered by cron-job.org once daily
+  schedule:
+    - cron: '0 4 * * *'     # 4:00 AM UTC daily (midnight EDT / 11 PM EST)
+  workflow_dispatch:         # manual trigger
 
 jobs:
   cleanup:

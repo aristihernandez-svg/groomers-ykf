@@ -95,12 +95,35 @@ async function cleanCarLogs() {
   console.log(`crewCarData: total ${totalTrimmed} log entries removed`);
 }
 
+async function cleanOneOffTasks() {
+  const DAYS = [
+    '1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday','4️⃣ Thursday','5️⃣ Friday','🗓 Saturday',
+  ];
+  let totalRemoved = 0;
+  for (const day of DAYS) {
+    const snap = await db.collection('tasks').doc(day).get();
+    if (!snap.exists || !snap.data().migrated) continue;
+    const all = snap.data().tasks || [];
+    const filtered = all.filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
+    if (filtered.length === all.length) continue;
+    await db.collection('tasks').doc(day).set({ tasks: filtered, migrated: true });
+    const removed = all.length - filtered.length;
+    totalRemoved += removed;
+    console.log(`tasks/${day}: removed ${removed} one-off task(s)`);
+  }
+  if (!totalRemoved) { console.log('oneOffTasks: nothing to remove'); return; }
+  // Clear the client-side "already ran today" flag so the app doesn't skip cleanup on boot
+  await db.collection('appConfig').doc('oneOffCleaned').delete();
+  console.log(`oneOffTasks: total ${totalRemoved} removed, oneOffCleaned flag reset`);
+}
+
 async function main() {
   await cleanQueue('mxNotifQueue');
   await cleanQueue('shopNotifQueue');
   await cleanCoffeeSent();
   await cleanAuditPhotos();
   await cleanCarLogs();
+  await cleanOneOffTasks();
   console.log('Cleanup done.');
 }
 
