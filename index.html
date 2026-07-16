@@ -1776,17 +1776,15 @@ function renderGroups(tasks, tabName) {
 
 // ── WEEK ───────────────────────────────────────────────────────────
 function renderWeek(el) {
-  // If the app was left open overnight, clear done states for all previous days
-  const today = new Date().toDateString();
-  if(today !== _lastLoadedDate) {
-    _lastLoadedDate = today;
-    const todayTab = DAYS[getToday()];
-    DAYS.forEach(day => {
-      if(day !== todayTab && S.tasks[day]) {
-        S.tasks[day].forEach(t => { t.done = false; });
-      }
-    });
-  }
+  // Always clear done states for every day except today.
+  // localStorage caches done:true from previous days; without this they persist in the week view.
+  const todayTab = DAYS[getToday()];
+  DAYS.forEach(day => {
+    if(day !== todayTab && S.tasks[day]) {
+      S.tasks[day].forEach(t => { t.done = false; });
+    }
+  });
+  _lastLoadedDate = new Date().toDateString();
   setBarLogo();
   document.getElementById('fab').style.display='none';
   let html='<div class="week-list">';
