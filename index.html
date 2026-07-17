@@ -4907,8 +4907,8 @@ function openAddBored() {
       if(!task) return;
       S.bored.unshift({id:Date.now(),task,done:false});
       localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
-      await api({action:'addBored',task});
       closeModal(); renderBored(document.getElementById('content')); toast('Added ✓');
+      api({action:'addBored',task});
     });
 }
 
