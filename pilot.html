@@ -3823,6 +3823,18 @@ const QUIZ_DB = [
 
 // ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
 const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH'};
+const DOC_URLS = {
+  cheatsheet: 'NAVAJO/Pa31-350%20Chieftain%20study%20cheat%20sheet.pdf',
+  capgen:     'NAVAJO/CAP_GEN_en_20260319.pdf',
+  afm:        'NAVAJO/AJR_AFM.pdf',
+  qrh:        'NAVAJO/Emergency%20QRH%20Navajo.pdf',
+};
+function refLink(q) {
+  const url = DOC_URLS[q.doc];
+  return url
+    ? `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;opacity:0.85;cursor:pointer">📎 ${q.ref}</a>`
+    : '📎 ' + q.ref;
+}
 let quizSet=[], quizIdx=0, quizAnswerShown=false;
 let quizCurrentDoc='all', quizCurrentType='standard';
 
@@ -3923,7 +3935,7 @@ function renderQuiz(){
   document.getElementById('quizTypeTag').className='quiz-type-tag '+q.type;
   document.getElementById('quizDocTag').textContent=DOC_LABELS[q.doc]||q.doc;
   document.getElementById('quizQuestion').textContent=q.q;
-  document.getElementById('quizRef').textContent='📎 '+q.ref;
+  document.getElementById('quizRef').innerHTML=refLink(q);
   document.getElementById('quizAnswer').textContent=q.a;
   document.getElementById('quizAnswerWrap').classList.remove('visible');
   document.getElementById('quizShowBtn').style.display='flex';
@@ -3993,7 +4005,7 @@ function renderFlashcard(){
   document.getElementById('fcDocTag').textContent=DOC_LABELS[q.doc]||q.doc;
   document.getElementById('fcQuestion').textContent=q.q;
   document.getElementById('fcAnswer').textContent=q.a;
-  document.getElementById('fcRef').textContent='📎 '+q.ref;
+  document.getElementById('fcRef').innerHTML=refLink(q);
   document.getElementById('fcCard').classList.remove('flipped');
   fcFlipped=false;
   document.getElementById('fcRemaining').textContent=fcSet.length-fcIdx;
