@@ -2130,7 +2130,7 @@ function renderShopping(el) {
       <div class="search-inner">
         <span class="s-icon">🔍</span>
         <input class="search-inp" type="text" placeholder="Search items, stores, locations..."
-               value="${S.shopSearch}" oninput="S.shopSearch=this.value;renderShopping(document.getElementById('content'))" id="shopSrch">
+               value="${S.shopSearch}" oninput="S.shopSearch=this.value;var _p=this.selectionStart;renderShopping(document.getElementById('content'));var _i=document.getElementById('shopSrch');if(_i){_i.focus();_i.setSelectionRange(_p,_p)}" id="shopSrch">
         ${q?`<span class="s-clear" onclick="setSSearch('')">✕</span>`:''}
       </div>
     </div>
