@@ -404,7 +404,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
 <!-- TOP BAR -->
 <div class="topbar">
   <button class="menu-btn" id="menuBtn" onclick="toggleSidebar()">☰</button>
-  <button class="back-btn" id="backBtn" onclick="showHub()" style="display:none">‹ Hub</button>
+  <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">‹ Hub</button>
   <span class="topbar-logo">✈ Skycare</span>
   <span class="topbar-title" id="topbarTitle">Pilot Study Hub</span>
   <div class="search-wrap" id="searchWrap" style="display:none">
@@ -2415,6 +2415,8 @@ let currentDoc = null;
 
 // ── HUB / DOC SWITCHING ──────────────────────────────────────────────────────
 function showHub() {
+  _backTarget = null;
+  document.getElementById('backBtn').textContent = '‹ Hub';
   document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
   document.getElementById('view-hub').classList.add('active');
   document.getElementById('sidebar').style.display = 'none';
@@ -3823,7 +3825,29 @@ const QUIZ_DB = [
 
 // ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
 const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH'};
+let _backTarget = null;
+function goBack() {
+  if (_backTarget) {
+    const { viewId, title } = _backTarget;
+    _backTarget = null;
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    document.getElementById('topbarTitle').textContent = title;
+    document.getElementById('backBtn').textContent = '‹ Hub';
+    document.getElementById('sidebar').style.display = 'none';
+    document.getElementById('main').style.marginLeft = '0';
+    document.getElementById('searchWrap').style.display = 'none';
+  } else {
+    showHub();
+  }
+}
 function goToRef(docId, sectionId) {
+  const activeView = document.querySelector('.view.active');
+  if (activeView && activeView.id !== 'view-hub') {
+    const title = document.getElementById('topbarTitle').textContent;
+    _backTarget = { viewId: activeView.id, title };
+    document.getElementById('backBtn').textContent = '‹ ' + title;
+  }
   openDoc(docId);
   setTimeout(() => scrollToSection(sectionId), 150);
 }
