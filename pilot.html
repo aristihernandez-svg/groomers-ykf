@@ -3823,16 +3823,61 @@ const QUIZ_DB = [
 
 // ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
 const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH'};
-const DOC_URLS = {
-  cheatsheet: 'NAVAJO/Pa31-350%20Chieftain%20study%20cheat%20sheet.pdf',
-  capgen:     'NAVAJO/CAP_GEN_en_20260319.pdf',
-  qrh:        'NAVAJO/Emergency%20QRH%20Navajo.pdf',
-};
+function goToRef(docId, sectionId) {
+  openDoc(docId);
+  setTimeout(() => scrollToSection(sectionId), 150);
+}
 function refLink(q) {
-  const url = DOC_URLS[q.doc];
-  return url
-    ? `<a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;opacity:0.85;cursor:pointer">📎 ${q.ref}</a>`
-    : '📎 ' + q.ref;
+  const r = q.ref;
+  let docId, sectionId;
+  if (r.startsWith('Cheat Sheet')) {
+    docId = 'cheatsheet';
+    const CS = [
+      ['V-Speed','vspeeds'],['Fuel System','fuel'],['Oil System','oil'],
+      ['Weight','weight'],['BLR Modification','blr'],['Powerplant','powerplant'],
+      ['Engines','engines'],['Propeller','props'],['Flap','flaps'],
+      ['Landing Gear','gear'],['Brake','brakes'],['Hydraulic','hydraulic'],
+      ['Electrical','electrical'],['Pneumatic','pneumatic'],['De-Ice','deice'],
+      ['Heating','heat'],['Instrument','instruments'],['Flight Prep','preflight'],
+    ];
+    sectionId = (CS.find(([k]) => r.includes(k)) || [,'vspeeds'])[1];
+  } else if (r.startsWith('AFM')) {
+    docId = 'afm';
+    if (r.includes('Section II')) sectionId = 'afm-normal';
+    else if (r.includes('Section III')) sectionId = 'afm-emergency';
+    else if (r.includes('Section IV')) sectionId = 'afm-performance';
+    else if (r.includes('Section V')) sectionId = 'afm-supplements';
+    else sectionId = 'afm-limitations';
+  } else if (r.startsWith('CAP GEN')) {
+    docId = 'capgen';
+    const CG = [
+      ['Mountain','cg-mountains'],['Take-Off Minima','cg-takeoff'],['Approach Ban','cg-appban'],
+      ['Landing Minima','cg-landing'],['Alternate Minima','cg-alternate'],
+      ['BECMG / Alternate','cg-alternate'],['TAF / Alternate','cg-alternate'],
+      ['Cold Temp','cg-coldtemp'],['NADP','cg-noise'],['Noise','cg-noise'],
+      ['IAP Chart','cg-iap'],['Minima Box','cg-minima-box'],['Aircraft Categ','cg-minima-box'],
+      ['Gradient','cg-gradient'],['SID','cg-sid'],['STAR','cg-star'],
+      ['Operating Minima','cg-opmin'],['Definitions','cg-definitions'],
+    ];
+    sectionId = (CG.find(([k]) => r.includes(k)) || [,'cg-definitions'])[1];
+  } else if (r.startsWith('QRH')) {
+    docId = 'qrh';
+    const QRH_MAP = {
+      '1A':'qrh-1a','1B':'qrh-1b','1C':'qrh-rto',
+      '2A':'qrh-rto','2B':'qrh-2b','2C':'qrh-2c',
+      '3A':'qrh-3a','3B':'qrh-3b',
+      '4A':'qrh-4a','4B':'qrh-4b','4C':'qrh-rpm','4D':'qrh-rpm',
+      '5A':'qrh-5a','5B':'qrh-5b','5C':'qrh-5c',
+      '6A':'qrh-6a','6B':'qrh-6b','6C':'qrh-6c',
+      '7A':'qrh-7a','7B':'qrh-7b','8A':'qrh-8a','8B':'qrh-8b',
+    };
+    const m = r.match(/QRH\s*(\d+[A-D])/);
+    sectionId = m ? (QRH_MAP[m[1]] || 'qrh-speeds') : 'qrh-speeds';
+  }
+  if (docId && sectionId) {
+    return `<span style="cursor:pointer;color:var(--accent);text-decoration:underline;text-underline-offset:3px;opacity:0.85" onclick="goToRef('${docId}','${sectionId}')">📎 ${q.ref}</span>`;
+  }
+  return '📎 ' + q.ref;
 }
 let quizSet=[], quizIdx=0, quizAnswerShown=false;
 let quizCurrentDoc='all', quizCurrentType='standard';
