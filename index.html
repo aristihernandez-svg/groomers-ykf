@@ -1288,8 +1288,6 @@ async function fetchDay(tabName) {
   const prevDone = {}, prevHidden = {};
   if(isToday) {
     (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
-  } else {
-    (S.tasks[tabName]||[]).forEach(t => { prevHidden[fsKey(t.task)] = t.hidden; });
   }
 
   // ── Firestore path ───────────────────────────────────────────────
@@ -1298,10 +1296,10 @@ async function fetchDay(tabName) {
       const snap = await db.collection('tasks').doc(tabName).get();
       if(snap.exists && snap.data().migrated === true) {
         S.tasks[tabName] = (snap.data().tasks || []).map(t => ({...t, done: false}));
-        // Re-apply done states only for today; re-apply hidden for all days
+        // Re-apply done/hidden states only for today; non-today days always start fresh
         S.tasks[tabName].forEach(t => {
           if(isToday && fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
-          if(prevHidden[fsKey(t.task)]) t.hidden = true;
+          if(isToday && prevHidden[fsKey(t.task)]) t.hidden = true;
         });
         // Apply cached taskState only for today
         if(isToday && _cachedTaskState) {
@@ -5868,13 +5866,14 @@ function setupLiveSync() {
       db.collection('tasks').doc(tabName).onSnapshot(snap => {
         if(!snap.exists || !snap.data().migrated) return;
         const incoming = (snap.data().tasks || []).map(t => ({...t, done: false}));
-        // Preserve current done AND hidden states across the content refresh
+        // Preserve current done AND hidden states across the content refresh — today only
+        const isToday = tabName === DAYS[getToday()];
         const prevDone = {}, prevHidden = {};
-        (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; prevHidden[fsKey(t.task)] = t.hidden; });
+        (S.tasks[tabName]||[]).forEach(t => { prevDone[fsKey(t.task)] = t.done; if(isToday) prevHidden[fsKey(t.task)] = t.hidden; });
         S.tasks[tabName] = incoming;
         S.tasks[tabName].forEach(t => {
           if(fsKey(t.task) in prevDone) t.done = prevDone[fsKey(t.task)];
-          if(prevHidden[fsKey(t.task)]) t.hidden = true;
+          if(isToday && prevHidden[fsKey(t.task)]) t.hidden = true;
         });
         // Also apply cached taskState (handles race where state arrived before content)
         if(_cachedTaskState) {
