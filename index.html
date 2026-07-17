@@ -3967,6 +3967,7 @@ async function clearContaminatedTaskState() {
 async function cleanupOneOffTasks() {
   if(!db || S.tasksSource !== 'firestore') return;
   const today = new Date().toDateString();
+  const todayMs = new Date(today).getTime();
   try {
     const snap = await db.collection('appConfig').doc('oneOffCleaned').get();
     if(snap.exists && snap.data()?.date === today) return; // already ran today
@@ -3976,10 +3977,15 @@ async function cleanupOneOffTasks() {
       const docSnap = await db.collection('tasks').doc(day).get();
       if(!docSnap.exists || !docSnap.data().migrated) continue;
       const all = docSnap.data().tasks || [];
-      const filtered = all.filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
+      const filtered = all.filter(t => {
+        if(t.freq !== 'One-off' && t.freq !== 'Once') return true; // keep non-one-offs
+        // Keep one-offs that have a future onceDate (added for a day not yet arrived)
+        if(t.onceDate) return new Date(t.onceDate).getTime() >= todayMs;
+        return false; // no date stamp — legacy, safe to remove
+      });
       if(filtered.length === all.length) continue; // nothing to remove
       await db.collection('tasks').doc(day).set({tasks: filtered, migrated: true});
-      if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
+      if(S.tasks[day]) S.tasks[day] = S.tasks[day].filter(t => filtered.some(f => f.task === t.task && f.freq === t.freq));
     } catch(e) { console.log('cleanupOneOffTasks: failed to clean day', day, e); }
   }
   db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(e=>console.log('cleanupOneOffTasks: failed to mark done:', e));
@@ -4699,7 +4705,7 @@ function openAddTask(tabName,area='') {
       else if(_fpMode==='once') targetDays=[tabName];
       else targetDays=[..._fpDays].sort((a,b)=>a-b).map(i=>DAYS[i]);
       const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
-      const taskObj = {task, freq, area:areaVal, done:false};
+      const taskObj = {task, freq, area:areaVal, done:false, ...(freq==='Once'?{onceDate:new Date().toDateString()}:{})};
       // Disable save button to prevent double-tap (R2)
       const saveBtn=document.getElementById('mSave');
       if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Saving…'; }
