@@ -4169,26 +4169,62 @@ function openEditTask(tabName,idx) {
       const newKey=fsKey(task);
       const nameChanged=oldKey!==newKey;
       const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
-      // Update in every loaded day that has this task
-      DAYS.forEach(day=>{
-        if(!S.tasks[day]) return;
-        const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===oldKey);
-        if(mi<0) return;
-        const wasHidden=S.tasks[day][mi].hidden;
-        S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area,hidden:wasHidden};
-        fsSaveTaskContent(day);
-        if(nameChanged && wasHidden && db) {
-          const patch={_date:new Date().toDateString()};
-          patch[oldKey+'_hidden']=firebase.firestore.FieldValue.delete();
-          patch[newKey+'_hidden']=true;
-          db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
-        }
-      });
-      if(db) db.collection('taskEdits').add({
-        day:tabName, action:'edit', task, freq, area, at:firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(()=>{});
-      closeModal(); render();
-      toast('Task updated ✓');
+      // Which days the task should live on after this edit
+      const targetSet = _fpMode==='daily' ? new Set(DAYS)
+        : _fpMode==='once' ? new Set([tabName])
+        : new Set([..._fpDays].map(i=>DAYS[i]));
+      const saveBtn=document.getElementById('mSave');
+      if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving…';}
+      try {
+        await Promise.all(DAYS.map(async day=>{
+          const shouldHave=targetSet.has(day);
+          if(S.tasks[day]!==undefined){
+            // Day loaded in memory — update array then write full doc
+            const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===oldKey);
+            if(shouldHave){
+              if(mi>=0){
+                const wasHidden=S.tasks[day][mi].hidden;
+                S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area,hidden:wasHidden};
+                if(nameChanged && wasHidden && db){
+                  const patch={_date:new Date().toDateString()};
+                  patch[oldKey+'_hidden']=firebase.firestore.FieldValue.delete();
+                  patch[newKey+'_hidden']=true;
+                  db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
+                }
+              } else {
+                S.tasks[day].push({task,freq,area,done:false});
+              }
+            } else {
+              if(mi>=0) S.tasks[day].splice(mi,1);
+            }
+            fsSaveTaskContent(day);
+          } else if(db){
+            // Day not in memory — fetch, patch, write back to Firestore
+            const docRef=db.collection('tasks').doc(day);
+            const snap=await docRef.get();
+            const existing=snap.exists?(snap.data().tasks||[]):[];
+            const mi=existing.findIndex(x=>fsKey(x.task)===oldKey);
+            const updated=[...existing];
+            if(shouldHave){
+              if(mi>=0) updated[mi]={...existing[mi],task,freq,area};
+              else updated.push({task,freq,area,done:false});
+            } else {
+              if(mi<0) return;
+              updated.splice(mi,1);
+            }
+            await docRef.set({tasks:updated,migrated:true},{merge:true});
+          }
+        }));
+        if(db) db.collection('taskEdits').add({
+          day:tabName,action:'edit',task,freq,area,at:firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(()=>{});
+        closeModal(); render();
+        toast('Task updated ✓');
+      } catch(e){
+        console.error('openEditTask save failed:',e);
+        if(saveBtn){saveBtn.disabled=false;saveBtn.textContent='Save';}
+        toast('Save failed — try again');
+      }
     });
 }
 function resetDay() {
