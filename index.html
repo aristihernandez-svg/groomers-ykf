@@ -796,8 +796,7 @@ body::before{
     <span style="font-size:22px;cursor:pointer;color:var(--gold)" id="planeIcon" onclick="planeIconTap()">✈</span>
     <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer"><img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare"></span>
     <span class="bar-pill" id="barDay"></span>
-    <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable coffee notifications" style="font-size:20px">🔕</button>
-    <button class="bar-btn" id="testPushBtn" onclick="sendTestPush()" title="Send test notification" style="font-size:14px;display:none;padding:0 6px;border:1px solid var(--gold);border-radius:6px;color:var(--gold)">TEST</button>
+    <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" onpointerdown="_notifPressStart()" onpointerup="_notifPressEnd()" onpointerleave="_notifPressEnd()" title="Enable notifications — hold to test" style="font-size:20px">🔕</button>
     <button class="bar-btn" id="themeToggleBtn" onclick="toggleDayNight()" title="Toggle day/night" style="font-size:20px">🌙</button>
     <button class="bar-btn" onclick="syncAll()" title="Sync" style="font-size:18px">↻</button>
   </div>
@@ -6724,12 +6723,22 @@ async function disableNotifications() {
 
 function updateNotifBtn() {
   const btn = document.getElementById('notifBtn');
-  const testBtn = document.getElementById('testPushBtn');
   if (!btn) return;
   const enabled = localStorage.getItem('notifications_enabled') === '1';
   btn.textContent = enabled ? '🔔' : '🔕';
-  btn.title = enabled ? 'Notifications ON — tap to disable' : 'Enable coffee notifications';
-  if (testBtn) testBtn.style.display = enabled ? 'inline-flex' : 'none';
+  btn.title = enabled ? 'Notifications ON — hold to test' : 'Enable notifications';
+}
+
+let _notifPressTimer = null;
+function _notifPressStart() {
+  _notifPressTimer = setTimeout(() => {
+    _notifPressTimer = null;
+    haptic('medium');
+    sendTestPush();
+  }, 800);
+}
+function _notifPressEnd() {
+  if (_notifPressTimer) { clearTimeout(_notifPressTimer); _notifPressTimer = null; }
 }
 
 async function sendTestPush() {
