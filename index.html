@@ -1773,11 +1773,11 @@ function renderGroups(tasks, tabName) {
 
 // ── WEEK ───────────────────────────────────────────────────────────
 function renderWeek(el) {
-  // Always clear done states for every day except today.
-  // localStorage caches done:true from previous days; without this they persist in the week view.
-  const todayTab = DAYS[getToday()];
-  DAYS.forEach(day => {
-    if(day !== todayTab && S.tasks[day]) {
+  // Clear done states for non-today days, except the last 2 calendar days (yesterday + day before).
+  const todayIdx = getToday();
+  const todayTab = DAYS[todayIdx];
+  DAYS.forEach((day, i) => {
+    if(day !== todayTab && S.tasks[day] && !isRecentDay(i)) {
       S.tasks[day].forEach(t => { t.done = false; });
     }
   });
@@ -1836,7 +1836,20 @@ async function showDay(idx) {
   // Pull latest flight log from Firestore for non-today days (today uses onSnapshot)
   if(idx!==getToday() && db) {
     db.collection('taskState').doc(tabName).get()
-      .then(snap=>{ if(snap.exists){ flightLogFromFirestore(tabName,snap.data()); renderDayDetail(document.getElementById('content')); }})
+      .then(snap=>{
+        if(snap.exists){
+          const data = snap.data();
+          flightLogFromFirestore(tabName, data);
+          // For yesterday and day-before: restore which tasks were completed
+          if(isRecentDay(idx) && data._date === recentDayExpectedDate(idx)) {
+            (S.tasks[tabName]||[]).forEach(t => {
+              const v = data[fsKey(t.task)];
+              if(v !== undefined) t.done = v;
+            });
+          }
+          renderDayDetail(document.getElementById('content'));
+        }
+      })
       .catch(()=>{});
   }
   renderDayDetail(document.getElementById('content'));
@@ -3822,6 +3835,22 @@ function toggleBoredById(id) {
   localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
   renderBored(document.getElementById('content'));
   toast(S.bored[idx].done?'✓ Done!':'Unchecked');
+}
+
+// ── RECENT DAY HELPERS ──────────────────────────────────────────────
+// Returns true if dayIdx fell on yesterday or the day before today
+function isRecentDay(dayIdx) {
+  let diff = getToday() - dayIdx;
+  if(diff <= 0) diff += 7;
+  return diff === 1 || diff === 2;
+}
+// Returns the toDateString() for the date that dayIdx fell on this week
+function recentDayExpectedDate(dayIdx) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  let diff = getToday() - dayIdx;
+  if(diff <= 0) diff += 7;
+  const d = new Date(today); d.setDate(today.getDate() - diff);
+  return d.toDateString();
 }
 
 // ── TOGGLE ACTIONS ─────────────────────────────────────────────────
