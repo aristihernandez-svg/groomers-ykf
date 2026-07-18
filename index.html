@@ -4891,9 +4891,31 @@ function stepsToText(steps) {
   return (steps||[]).map(s=>s.n ? `${s.t} | ${s.n}` : s.t).join('\n');
 }
 
+const PROC_EMOJIS = ['✈','🛫','🚁','🛩','🧹','🧴','🧽','🪣','🧻','🧼','🔧','🛠','🔩','⚙️','🪜','🚿','💧','🫁','🩺','📋','📝','✅','⭐','🔑','🚗','🚌','🏁','⚠️','🔴','🟢'];
+function emojiPickerHtml(selected) {
+  const grid = PROC_EMOJIS.map(e =>
+    `<button type="button" onclick="pickProcEmoji(this,'${e}')" style="
+      font-size:22px;width:44px;height:44px;border-radius:10px;border:2px solid ${e===selected?'var(--accent)':'transparent'};
+      background:${e===selected?'rgba(37,99,235,0.15)':'var(--glass2)'};cursor:pointer;
+      transition:border-color .1s,background .1s;-webkit-tap-highlight-color:transparent"
+    >${e}</button>`
+  ).join('');
+  return `<label>Icon</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${grid}</div>
+    <input id="pIcon" value="${selected}" placeholder="or type any emoji…" style="margin-bottom:10px">`;
+}
+function pickProcEmoji(btn, emoji) {
+  document.querySelectorAll('#mFields button[onclick^="pickProcEmoji"]').forEach(b => {
+    b.style.borderColor = 'transparent';
+    b.style.background = 'var(--glass2)';
+  });
+  btn.style.borderColor = 'var(--accent)';
+  btn.style.background = 'rgba(37,99,235,0.15)';
+  document.getElementById('pIcon').value = emoji;
+}
 function openAddProcedure() {
   openModal('Add Procedure',
-    `<label>Icon (emoji)</label><input id="pIcon" value="✈" placeholder="✈">
+    `${emojiPickerHtml('✈')}
      <label>Title</label><input id="pTitle" placeholder="Procedure name...">
      <label>Warning (optional)</label><input id="pWarn" placeholder="⚠ Safety note shown at the top...">
      <label>Video URL (optional)</label><input id="pVideo" placeholder="https://...">
@@ -4933,7 +4955,7 @@ function editProcedure(key) {
   const p = S.procs[key];
   if(!p) return;
   openModal('✏️ Edit Procedure',
-    `<label>Icon (emoji)</label><input id="pIcon" value="${p.icon}">
+    `${emojiPickerHtml(p.icon||'✈')}
      <label>Title</label><input id="pTitle" value="${p.title}">
      <label>Warning (optional)</label><input id="pWarn" value="${p.warn||''}">
      <label>Video URL (optional)</label><input id="pVideo" value="${p.video||''}">
