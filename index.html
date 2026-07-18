@@ -3449,6 +3449,9 @@ function renderProcs(el) {
     } else if(p.isCrewCarsHub) {
       iconHtml=`<img src="${PROC_IMAGES.crewcars}" alt="Crew Cars"
         style="width:100%;height:100%;object-fit:cover;object-position:center">`;
+    } else if(p.iconImg) {
+      iconHtml=`<img src="${p.iconImg}" alt="${p.title}"
+        style="width:100%;height:100%;object-fit:cover">`;
     } else if(img) {
       iconHtml=`<img src="${img}" alt="${p.title}"
         style="width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.4))">`;
@@ -3535,7 +3538,7 @@ function renderProcDetail(el, key) {
 
     <!-- Procedure hero -->
     <div style="background:var(--glass2);border-bottom:1px solid var(--border);padding:20px 18px 16px;display:flex;align-items:center;gap:16px">
-      <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">${p.icon}</div>
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden">${p.iconImg?`<img src="${p.iconImg}" style="width:100%;height:100%;object-fit:cover">`:p.icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:17px;font-weight:800;color:var(--t1)">${p.title}</div>
       </div>
@@ -4437,6 +4440,15 @@ function applyCapturedPhoto(src) {
     saveCarAudit(key);
     render();
     toast('Photo added ✓');
+  } else if(S.photoCtx==='proc') {
+    S.pendingProcPhoto = src;
+    const preview = document.getElementById('procPhotoPreview');
+    if(preview) preview.innerHTML = `<img src="${src}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--accent)"><button type="button" onclick="removeProcPhoto()" style="margin-left:8px;background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--t2);font-size:12px">Remove</button>`;
+    // Clear emoji selection visually
+    document.querySelectorAll('#mFields button[onclick^="pickProcEmoji"]').forEach(b => {
+      b.style.borderColor = 'transparent';
+      b.style.background = 'var(--glass2)';
+    });
   }
 }
 // Camera photos can be several MB as base64, which blows through
@@ -4462,7 +4474,8 @@ function setupPhotoInput() {
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
     reader.onload=async ev=>{
-      const compressed=await compressImage(ev.target.result);
+      const maxDim = S.photoCtx==='proc' ? 200 : 1280;
+      const compressed=await compressImage(ev.target.result, maxDim);
       if(S.photoCtx==='audit' && auditPhotoTarget && storage) {
         await uploadAuditPhoto(compressed, auditPhotoTarget);
       } else {
@@ -4892,7 +4905,8 @@ function stepsToText(steps) {
 }
 
 const PROC_EMOJIS = ['✈','🛫','🚁','🛩','🧹','🧴','🧽','🪣','🧻','🧼','🔧','🛠','🔩','⚙️','🪜','🚿','💧','🫁','🩺','📋','📝','✅','⭐','🔑','🚗','🚌','🏁','⚠️','🔴','🟢'];
-function emojiPickerHtml(selected) {
+function emojiPickerHtml(selected, existingImg) {
+  S.pendingProcPhoto = existingImg || null;
   const grid = PROC_EMOJIS.map(e =>
     `<button type="button" onclick="pickProcEmoji(this,'${e}')" style="
       font-size:22px;width:44px;height:44px;border-radius:10px;border:2px solid ${e===selected?'var(--accent)':'transparent'};
@@ -4900,9 +4914,16 @@ function emojiPickerHtml(selected) {
       transition:border-color .1s,background .1s;-webkit-tap-highlight-color:transparent"
     >${e}</button>`
   ).join('');
+  const imgPreview = existingImg
+    ? `<div id="procPhotoPreview" style="margin-bottom:8px"><img src="${existingImg}" style="width:64px;height:64px;border-radius:12px;object-fit:cover;border:2px solid var(--accent)"><button type="button" onclick="removeProcPhoto()" style="margin-left:8px;background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:4px 10px;cursor:pointer;color:var(--t2);font-size:12px">Remove</button></div>`
+    : `<div id="procPhotoPreview" style="margin-bottom:8px"></div>`;
   return `<label>Icon</label>
+    ${imgPreview}
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">${grid}</div>
-    <input id="pIcon" value="${selected}" placeholder="or type any emoji…" style="margin-bottom:10px">`;
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <input id="pIcon" value="${selected}" placeholder="or type any emoji…" style="flex:1;margin-bottom:0">
+      <button type="button" onclick="triggerProcPhoto()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:8px 14px;cursor:pointer;color:var(--t1);font-size:14px;white-space:nowrap;-webkit-tap-highlight-color:transparent">📷 Photo</button>
+    </div>`;
 }
 function pickProcEmoji(btn, emoji) {
   document.querySelectorAll('#mFields button[onclick^="pickProcEmoji"]').forEach(b => {
@@ -4912,6 +4933,17 @@ function pickProcEmoji(btn, emoji) {
   btn.style.borderColor = 'var(--accent)';
   btn.style.background = 'rgba(37,99,235,0.15)';
   document.getElementById('pIcon').value = emoji;
+  // Selecting an emoji clears the photo
+  S.pendingProcPhoto = null;
+  document.getElementById('procPhotoPreview').innerHTML = '';
+}
+function triggerProcPhoto() {
+  S.photoCtx = 'proc';
+  document.getElementById('photoInput').click();
+}
+function removeProcPhoto() {
+  S.pendingProcPhoto = null;
+  document.getElementById('procPhotoPreview').innerHTML = '';
 }
 function openAddProcedure() {
   openModal('Add Procedure',
@@ -4930,11 +4962,15 @@ Tighten fittings"></textarea>`,
       const warn=document.getElementById('pWarn').value.trim();
       const video=document.getElementById('pVideo').value.trim();
       const steps=parseStepsText(document.getElementById('pSteps').value);
+      const iconImg = S.pendingProcPhoto || null;
+      S.pendingProcPhoto = null;
       const key=fsDocId(title.toLowerCase());
-      S.procs[key]={title,icon,warn,video,steps,open:false,done:[]};
+      S.procs[key]={title,icon,warn,video,steps,iconImg,open:false,done:[]};
       closeModal(); render(); toast('Procedure added ✓');
       if(db) {
-        db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
+        const data={title,icon,warn,video,steps};
+        if(iconImg) data.iconImg=iconImg;
+        db.collection('procedures').doc(key).set(data)
           .catch(e => console.log('Add procedure Firestore write failed:', e));
       }
     });
@@ -4955,7 +4991,7 @@ function editProcedure(key) {
   const p = S.procs[key];
   if(!p) return;
   openModal('✏️ Edit Procedure',
-    `${emojiPickerHtml(p.icon||'✈')}
+    `${emojiPickerHtml(p.icon||'✈', p.iconImg||null)}
      <label>Title</label><input id="pTitle" value="${p.title}">
      <label>Warning (optional)</label><input id="pWarn" value="${p.warn||''}">
      <label>Video URL (optional)</label><input id="pVideo" value="${p.video||''}">
@@ -4968,10 +5004,14 @@ function editProcedure(key) {
       const warn=document.getElementById('pWarn').value.trim();
       const video=document.getElementById('pVideo').value.trim();
       const steps=parseStepsText(document.getElementById('pSteps').value);
-      S.procs[key]={...p,title,icon,warn,video,steps};
+      const iconImg = S.pendingProcPhoto !== undefined ? S.pendingProcPhoto : (p.iconImg || null);
+      S.pendingProcPhoto = null;
+      S.procs[key]={...p,title,icon,warn,video,steps,iconImg};
       closeModal(); render(); toast('Procedure updated ✓');
       if(db) {
-        db.collection('procedures').doc(key).set({title,icon,warn,video,steps})
+        const data={title,icon,warn,video,steps,iconImg:iconImg||firebase.firestore.FieldValue.delete()};
+        if(iconImg) data.iconImg=iconImg; else delete data.iconImg;
+        db.collection('procedures').doc(key).set(data)
           .catch(e => console.log('Edit procedure Firestore write failed:', e));
       }
     });
@@ -6100,7 +6140,8 @@ function setupLiveSync() {
         const isCrewCarsHub= v.isCrewCarsHub|| existing?.isCrewCarsHub|| false;
         const isAuditsHub  = v.isAuditsHub  || existing?.isAuditsHub  || false;
         procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
-          steps:v.steps||[], open:existing?.open||false, done:existing?.done||[],
+          steps:v.steps||[], iconImg:v.iconImg||null,
+          open:existing?.open||false, done:existing?.done||[],
           isCrewCar, isCrewCarsHub, isAuditsHub};
       });
       // Always ensure audits hub is present
