@@ -932,6 +932,8 @@ const S = {
   flightLog: {},        // {tabName: {arr:[], dep:[], date:''}}
   flightDropdown: null, // null | {tabName, type:'arr'|'dep'}
   auditsView: false,    // true = inside Audits hub
+  auditTiles: {},       // {key: {title, icon, iconImg}} — custom audit categories
+  auditTileView: null,  // key of custom audit tile being viewed
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1121,6 +1123,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
+  S.auditTileView=null;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1162,6 +1165,7 @@ function render() {
       if(S.crewCarsView==='list') renderCrewCarsList(el);
       else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
+      else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
       else renderAuditsLanding(el);
       break;
     case 'contacts':   renderContacts(el); break;
@@ -1186,6 +1190,7 @@ function slideBack(fn) {
 function handleSwipeBack() {
   if(S.pastAuditView !== null) { slideBack(()=>{ S.pastAuditView=null; S.crewCarsView='list'; render(); }); return true; }
   if(S.crewCarsView && S.crewCarsView !== 'list') { slideBack(backToCarList); return true; }
+  if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
   if(S.procView !== null) { slideBack(()=>{ S.procView=null; render(); }); return true; }
   if(S.inDay) { slideBack(backWeek); return true; }
@@ -3490,10 +3495,26 @@ function renderAuditsHub(el) { renderAuditsLanding(el); }
 
 function renderAuditsLanding(el) {
   setBarLogo();
-  document.getElementById('fab').style.display='none';
+  showFab(openAddAudit);
   const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
+
+  const customTiles=Object.entries(S.auditTiles).map(([key,t])=>{
+    const iconHtml=t.iconImg
+      ?`<img src="${t.iconImg}" style="width:100%;height:100%;object-fit:cover">`
+      :`<span style="font-size:38px">${t.icon||'📋'}</span>`;
+    return `
+      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative" onclick="S.auditTileView='${key}';render()">
+        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--border)">${iconHtml}</div>
+        <div style="padding:10px 12px 12px;display:flex;align-items:center;gap:6px">
+          <div style="font-size:13px;font-weight:800;color:var(--t1);flex:1">${t.title}</div>
+          <span onclick="event.stopPropagation();editAuditTile('${key}')" style="font-size:13px;color:var(--t3);cursor:pointer;padding:4px 6px">✏️</span>
+          <span onclick="event.stopPropagation();deleteAuditTile('${key}')" style="font-size:14px;color:var(--t3);cursor:pointer;padding:4px 6px">🗑</span>
+        </div>
+      </div>`;
+  }).join('');
+
   el.innerHTML=`
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div onclick="openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
@@ -3506,8 +3527,98 @@ function renderAuditsLanding(el) {
           <div style="font-size:11px;color:var(--t3);margin-top:3px">${CREW_CARS.length} vehicles · tap to manage</div>
         </div>
       </div>
+      ${customTiles}
     </div>
     <div style="height:80px"></div>`;
+}
+
+function renderAuditTileView(el, key) {
+  const t=S.auditTiles[key];
+  if(!t){S.auditTileView=null;render();return;}
+  setBarLogo();
+  document.getElementById('fab').style.display='none';
+  const iconHtml=t.iconImg
+    ?`<img src="${t.iconImg}" style="width:100%;height:100%;object-fit:cover;border-radius:14px">`
+    :`<span style="font-size:28px">${t.icon||'📋'}</span>`;
+  el.innerHTML=`
+    <div class="car-detail-bar" style="cursor:pointer" onclick="S.auditTileView=null;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${t.title}</span>
+    </div>
+    <div style="background:var(--glass2);border-bottom:1px solid var(--border);padding:20px 18px 16px;display:flex;align-items:center;gap:16px">
+      <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${iconHtml}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:17px;font-weight:800;color:var(--t1)">${t.title}</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;gap:12px;color:var(--t3);text-align:center">
+      <div style="font-size:48px">🔧</div>
+      <div style="font-size:15px;font-weight:600;color:var(--t2)">Coming soon</div>
+      <div style="font-size:13px">Audit flow for <strong>${t.title}</strong> will be built here.</div>
+    </div>
+    <div style="display:flex;gap:10px;padding:0 14px">
+      <button class="proc-act-btn" onclick="editAuditTile('${key}')" style="flex:1">✏️ Edit</button>
+      <button class="proc-act-btn" onclick="deleteAuditTile('${key}')" style="flex:1;background:rgba(232,64,64,0.12);border-color:var(--red);color:var(--red)">🗑 Delete</button>
+    </div>`;
+}
+
+function openAddAudit() {
+  S.pendingProcPhoto=null;
+  openModal('Add Audit',
+    `${emojiPickerHtml('📋')}
+     <label>Title</label><input id="aTitle" placeholder="e.g. Planes, Hangar…">`,
+    ()=>{
+      const title=document.getElementById('aTitle').value.trim();
+      if(!title){toast('Add a title first');return;}
+      const icon=document.getElementById('pIcon').value.trim()||'📋';
+      const iconImg=S.pendingProcPhoto||null;
+      S.pendingProcPhoto=null;
+      const key=fsDocId(title.toLowerCase());
+      S.auditTiles[key]={title,icon,iconImg};
+      closeModal(); render(); toast('Audit added ✓');
+      if(db){
+        const data={title,icon};
+        if(iconImg) data.iconImg=iconImg;
+        db.collection('auditTiles').doc(key).set(data)
+          .catch(e=>console.log('Add audit Firestore write failed:',e));
+      }
+    });
+}
+
+function editAuditTile(key) {
+  if(!checkAdminPin('edit this audit')) return;
+  const t=S.auditTiles[key];
+  if(!t) return;
+  openModal('✏️ Edit Audit',
+    `${emojiPickerHtml(t.icon||'📋', t.iconImg||null)}
+     <label>Title</label><input id="aTitle" value="${t.title}">`,
+    ()=>{
+      const title=document.getElementById('aTitle').value.trim();
+      if(!title){toast('Add a title first');return;}
+      const icon=document.getElementById('pIcon').value.trim()||'📋';
+      const iconImg=S.pendingProcPhoto!==undefined?S.pendingProcPhoto:(t.iconImg||null);
+      S.pendingProcPhoto=null;
+      S.auditTiles[key]={...t,title,icon,iconImg};
+      closeModal(); render(); toast('Audit updated ✓');
+      if(db){
+        const data={title,icon,iconImg:iconImg||firebase.firestore.FieldValue.delete()};
+        if(iconImg) data.iconImg=iconImg; else delete data.iconImg;
+        db.collection('auditTiles').doc(key).set(data)
+          .catch(e=>console.log('Edit audit Firestore write failed:',e));
+      }
+    });
+}
+
+function deleteAuditTile(key) {
+  if(!checkAdminPin('delete this audit')) return;
+  const t=S.auditTiles[key];
+  if(!t) return;
+  if(!confirm(`Delete "${t.title}"? This can't be undone.`)) return;
+  delete S.auditTiles[key];
+  S.auditTileView=null;
+  render(); toast('Audit deleted');
+  if(db) db.collection('auditTiles').doc(key).delete()
+    .catch(e=>console.log('Delete audit Firestore write failed:',e));
 }
 
 function renderProcDetail(el, key) {
@@ -6144,6 +6255,13 @@ function setupLiveSync() {
       S.procs = procs;
       if(S.tab==='procedures') render();
     }, e => console.log('procedures listener error:', e));
+
+    db.collection('auditTiles').onSnapshot(snap => {
+      const tiles={};
+      snap.forEach(d=>{ const v=d.data(); tiles[d.id]={title:v.title,icon:v.icon||'📋',iconImg:v.iconImg||null}; });
+      S.auditTiles=tiles;
+      if(S.tab==='audits') render();
+    }, e=>console.log('auditTiles listener error:',e));
 
     // Shift handoff notes — sticky notes left at end-of-day for the next
     // shift. Single-field orderBy (no composite index needed); unresolved
