@@ -951,6 +951,7 @@ const NAV_ITEMS = [
   {id:'week',        icon:'🗓', label:'Week'},
   {id:'shopping',    icon:'🛒', label:'Shopping'},
   {id:'procedures',  icon:'📋', label:'Procs'},
+  {id:'audits',      icon:'📒', label:'Audits'},
   {id:'contacts',    icon:'📞', label:'Contacts'},
   {id:'fleet',       icon:'✈️',  label:'Fleet'},
   {id:'bored',       icon:'💡', label:'Bored'},
@@ -1114,7 +1115,8 @@ function buildNav() {
     procedures: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`,
     contacts:   `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M3 14h2a2 2 0 012 2v2a2 2 0 01-2 2H3v-6z"/><path d="M21 14h-2a2 2 0 00-2 2v2a2 2 0 002 2h2v-6z"/><path d="M3 16V12a9 9 0 0118 0v4"/><path d="M12 19v3M10 22h4"/></svg>`,
     bored:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 017 7c0 2.5-1 4.5-3 6l-1 2H9l-1-2C6 13.5 5 11.5 5 9a7 7 0 017-7z"/></svg>`,
-    fleet:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M22 16.5L13 8V3a1 1 0 00-2 0v5L2 16.5l2.5.5 4.5-3v3.5l-2 1.5 1.5.5H12h3.5l1.5-.5-2-1.5V14l4.5 3 2.5-.5z"/></svg>`
+    fleet:      `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M22 16.5L13 8V3a1 1 0 00-2 0v5L2 16.5l2.5.5 4.5-3v3.5l-2 1.5 1.5.5H12h3.5l1.5-.5-2-1.5V14l4.5 3 2.5-.5z"/></svg>`,
+    audits:     `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>`
   };
   document.getElementById('nav').innerHTML = NAV_ITEMS.map(n=>`
     <div class="nb ${n.id==='home'?'on':''}" id="nb-${n.id}" onclick="goTab('${n.id}')">
@@ -1162,12 +1164,14 @@ function render() {
     case 'week':       S.inDay?renderDayDetail(el):renderWeek(el); break;
     case 'shopping':   renderShopping(el); break;
     case 'procedures':
+      if(S.procView) renderProcDetail(el,S.procView);
+      else renderProcs(el);
+      break;
+    case 'audits':
       if(S.crewCarsView==='list') renderCrewCarsList(el);
       else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarDetail(el,S.crewCarsView);
-      else if(S.auditsView) renderAuditsHub(el);
-      else if(S.procView) renderProcDetail(el,S.procView);
-      else renderProcs(el);
+      else renderAuditsLanding(el);
       break;
     case 'contacts':   renderContacts(el); break;
     case 'bored':        renderBored(el); break;
@@ -1192,7 +1196,6 @@ function handleSwipeBack() {
   if(S.pastAuditView !== null) { slideBack(()=>{ S.pastAuditView=null; S.crewCarsView='list'; render(); }); return true; }
   if(S.crewCarsView && S.crewCarsView !== 'list') { slideBack(backToCarList); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
-  if(S.auditsView) { slideBack(()=>{ S.auditsView=false; render(); }); return true; }
   if(S.procView !== null) { slideBack(()=>{ S.procView=null; render(); }); return true; }
   if(S.inDay) { slideBack(backWeek); return true; }
   if(S.shopView === 'cart') { slideBack(()=>{ S.shopView='list'; renderShopping(document.getElementById('content')); }); return true; }
@@ -1622,7 +1625,8 @@ async function renderHome(el) {
     {id:'shopping',   svg:ICONS.shopping,   label:'Shopping'},
     {id:'fleet',      svg:ICONS.fleet,      label:'Fleet'},
     {id:'contacts',   svg:ICONS.contacts,   label:'Contacts'},
-    {id:'procedures', svg:ICONS.procedures, label:'Audits'},
+    {id:'procedures', svg:ICONS.procedures, label:'Procs'},
+    {id:'audits',     svg:ICONS.audits,     label:'Audits'},
     {id:'week',       svg:ICONS.week,       label:'Week'},
   ];
 
@@ -2496,7 +2500,6 @@ function openCarDetail(key) {
 function backToCarList() { S.crewCarsView='list'; render(); }
 function backToProcs() {
   S.crewCarsView=null;
-  if(S.crewCarsFromAudits) { S.auditsView=true; S.crewCarsFromAudits=false; }
   render();
 }
 
@@ -3427,7 +3430,7 @@ function renderProcs(el) {
   setBarLogo();
   showFab(openAddProcedure);
 
-  const entries=Object.entries(S.procs).filter(([k])=>k!=='crewcar1'&&k!=='crewcar2');
+  const entries=Object.entries(S.procs).filter(([k,p])=>k!=='crewcar1'&&k!=='crewcar2'&&!p.isCrewCarsHub&&!p.isAuditsHub);
 
   const tiles=entries.map(([key,p])=>{
     const done=p.done.length;
@@ -3495,19 +3498,17 @@ function renderProcs(el) {
   el.innerHTML=html;
 }
 
-function renderAuditsHub(el) {
+function renderAuditsHub(el) { renderAuditsLanding(el); }
+
+function renderAuditsLanding(el) {
   setBarLogo();
   document.getElementById('fab').style.display='none';
   const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
   el.innerHTML=`
-    <div class="dbar" style="background:var(--navy2,#0d1f3c);cursor:pointer" onclick="S.auditsView=false;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600">Audits</span>
-    </div>
-    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px">
-      <div onclick="S.crewCarsFromAudits=true;openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
+    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div onclick="openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
         <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
         <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:10px;border-bottom:1px solid var(--border)">
           ${CREW_CARS.map(c=>`<img src="${c.img}" alt="${c.label}" style="width:38px;height:28px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.5))">`).join('')}
