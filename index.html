@@ -739,17 +739,8 @@ body::before{
   const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
   const hero=document.getElementById('spHero');
   if(day===3){
-    // Wednesday — Emerson's living portrait
     hero.innerHTML=`<div class="hp-portrait-wrap">
-      <div class="hp-portrait">
-        <img class="hp-f1" src="Emerson/web/IMG_0464.jpg" alt="Emerson">
-        <img class="hp-f2" src="Emerson/web/IMG_0457.jpg" alt="Emerson">
-        <img class="hp-f3" src="Emerson/web/IMG_0460.jpg" alt="Emerson">
-        <img class="hp-f4" src="Emerson/web/IMG_0461.jpg" alt="Emerson">
-        <img class="hp-f5" src="Emerson/web/IMG_0462.jpg" alt="Emerson">
-        <img class="hp-f6" src="Emerson/web/IMG_0463.jpg" alt="Emerson">
-        <img class="hp-f7" src="Emerson/web/IMG_0456.jpg" alt="Emerson">
-      </div>
+      <img src="Emerson/emerson.gif" alt="Emerson" style="width:160px;height:160px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,168,75,0.4)">
       <div class="hp-nameplate">Emerson</div>
     </div>`;
   } else if(planes[day]){
