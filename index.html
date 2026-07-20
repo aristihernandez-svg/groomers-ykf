@@ -2554,10 +2554,14 @@ function renderCrewCarsList(el) {
       </div>
       ${overdue&&!allDone?`<div style="margin-top:8px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — audits were due the 10th</div>`:''}
       ${urgent&&!overdue&&!allDone?`<div style="margin-top:8px;padding:6px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);font-size:12px;font-weight:600;color:#E74C3C;text-align:center">⚠️ Due the 10th — ${daysLeft} day${daysLeft===1?'':'s'} left</div>`:''}
-      <div style="display:flex;gap:8px;margin-top:8px">
-        <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">📧 Email</button>
-        <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button>
-      </div>
+      <button onclick="generateAuditPDF('${month}')" style="width:100%;margin-top:10px;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
+        <span style="font-size:26px;line-height:1;flex-shrink:0">📄</span>
+        <span style="flex:1">
+          <span style="display:block;font-size:13px;font-weight:700;color:var(--accent)">Generate Audit Report</span>
+          <span style="display:block;font-size:11px;color:var(--t2);margin-top:2px">${month} &nbsp;·&nbsp; ${auditDone} of ${CREW_CARS.length} cars complete</span>
+        </span>
+        <span style="color:var(--accent);font-size:20px;opacity:0.7">›</span>
+      </button>
       ${allDone&&!alreadyArchived?`<button onclick="archiveAudit()" style="width:100%;margin-top:8px;padding:10px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;font-size:13px;font-weight:700;border:none;cursor:pointer">✅ Save Audit to Records</button>`:''}
       ${alreadyArchived?`<div style="font-size:11px;color:var(--green);font-weight:600;margin-top:6px;text-align:center">✅ ${month} audit saved to records</div>`:''}
     </div>`;
@@ -3188,38 +3192,6 @@ async function archiveAudit() {
 }
 
 // ── SEND AUDIT BY EMAIL ───────────────────────────────────────
-function openSendAuditEmail(month) {
-  const cars=CREW_CARS.map(c=>{
-    const d=S.carAudits[month+'-'+c.key]||{};
-    let s=`${c.name.toUpperCase()}\n`;
-    s+=`Photos: ${(d.photos||[]).length}\n`;
-    (d.photos||[]).forEach((p,i)=>{ s+=`  Photo ${i+1}: ${p.rating||'—'}${p.note?' — '+p.note:''}\n`; });
-    if(d.comments) s+=`Comments: ${d.comments}\n`;
-    if(d.groomer) s+=`Audited by: ${d.groomer}\n`;
-    return s;
-  }).join('\n');
-  const groomer=S.auditGroomer||'Team';
-  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-  const body=`CREW CAR MONTHLY AUDIT REPORT\nDate: ${now}\nPeriod: ${month}\nGroomer: ${groomer}\n${'─'.repeat(40)}\n\n${cars}\n${'─'.repeat(40)}\nSent from Skycare · YKF`;
-  const sub=encodeURIComponent(`Crew Car Audit — ${month} — ${groomer}`);
-  const enc=encodeURIComponent(body);
-  openModal('📧 Send Audit Report',
-    `<label>Recipient email</label>
-     <input id="rptEmail" type="email" placeholder="manager@example.com" style="margin-bottom:14px">
-     <div style="display:flex;flex-direction:column;gap:10px">
-       <button onclick="doSendReport('gmail',\`${sub}\`,\`${enc}\`)" style="padding:12px;border-radius:var(--radius-sm);background:#D44638;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer">✉️ Open in Gmail</button>
-       <button onclick="doSendReport('outlook',\`${sub}\`,\`${enc}\`)" style="padding:12px;border-radius:var(--radius-sm);background:#0072C6;color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer">✉️ Open in Outlook</button>
-     </div>`, null);
-  document.getElementById('mSave').style.display='none';
-}
-function doSendReport(method,sub,enc) {
-  const to=encodeURIComponent(document.getElementById('rptEmail')?.value||'');
-  const url=method==='gmail'
-    ? `https://mail.google.com/mail/?view=cm&fs=1&to=${to}&su=${sub}&body=${enc}`
-    : `https://outlook.live.com/mail/0/deeplink/compose?to=${to}&subject=${sub}&body=${enc}`;
-  window.open(url,'_blank'); closeModal();
-  toast('📧 Email app opened');
-}
 
 // ── GENERATE PDF ──────────────────────────────────────────────
 function generateAuditPDF(month) {
@@ -3302,9 +3274,12 @@ function renderPastAuditView(el, month) {
       <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${month}</span>
     </div>
     <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer">📧 Email</button>
-      <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:600;cursor:pointer">📄 PDF</button>
-      <button onclick="deleteAuditMonth('${month}')" style="padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:13px;font-weight:600;cursor:pointer">🗑 Delete</button>
+      <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left">
+        <span style="font-size:22px;line-height:1;flex-shrink:0">📄</span>
+        <span style="flex:1;font-size:13px;font-weight:700;color:var(--accent)">Generate PDF Report</span>
+        <span style="color:var(--accent);font-size:18px;opacity:0.7">›</span>
+      </button>
+      <button onclick="deleteAuditMonth('${month}')" style="padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:13px;font-weight:600;cursor:pointer">🗑</button>
     </div>`;
 
   CREW_CARS.forEach(car=>{
