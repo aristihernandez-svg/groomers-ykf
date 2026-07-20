@@ -1049,6 +1049,7 @@ async function bootApp() {
     setupPullToRefresh();
     setupSwipeBack();
     setupPhotoInput();
+    loadAuditTilesLocal(); // show tiles instantly before Firestore responds
     initFirebase(); // best-effort; app works locally even if this fails
   } catch(e) {
     console.log('Boot setup error:', e);
@@ -3618,6 +3619,16 @@ function showAuditTileActions(key) {
     null);
 }
 
+function saveAuditTilesLocal() {
+  try { localStorage.setItem('gykf_auditTiles', JSON.stringify(S.auditTiles)); } catch(e) {}
+}
+function loadAuditTilesLocal() {
+  try {
+    const raw=localStorage.getItem('gykf_auditTiles');
+    if(raw) S.auditTiles=JSON.parse(raw);
+  } catch(e) {}
+}
+
 function openAddAudit() {
   S.pendingProcPhoto=null;
   openModal('Add Audit',
@@ -3631,12 +3642,14 @@ function openAddAudit() {
       S.pendingProcPhoto=null;
       const key=fsDocId(title.toLowerCase());
       S.auditTiles[key]={title,icon,iconImg};
+      saveAuditTilesLocal();
       closeModal(); render(); toast('Audit added ✓');
       if(db){
         const data={title,icon};
         if(iconImg) data.iconImg=iconImg;
         db.collection('auditTiles').doc(key).set(data)
-          .catch(e=>console.log('Add audit Firestore write failed:',e));
+          .then(()=>saveAuditTilesLocal())
+          .catch(e=>{ console.log('Add audit Firestore write failed:',e); toast('⚠️ Tile saved locally – sync failed'); });
       }
     });
 }
@@ -3655,12 +3668,14 @@ function editAuditTile(key) {
       const iconImg=S.pendingProcPhoto!==undefined?S.pendingProcPhoto:(t.iconImg||null);
       S.pendingProcPhoto=null;
       S.auditTiles[key]={...t,title,icon,iconImg};
+      saveAuditTilesLocal();
       closeModal(); render(); toast('Audit updated ✓');
       if(db){
         const data={title,icon,iconImg:iconImg||firebase.firestore.FieldValue.delete()};
         if(iconImg) data.iconImg=iconImg; else delete data.iconImg;
         db.collection('auditTiles').doc(key).set(data)
-          .catch(e=>console.log('Edit audit Firestore write failed:',e));
+          .then(()=>saveAuditTilesLocal())
+          .catch(e=>{ console.log('Edit audit Firestore write failed:',e); toast('⚠️ Update saved locally – sync failed'); });
       }
     });
 }
@@ -3671,6 +3686,7 @@ function deleteAuditTile(key) {
   if(!t) return;
   if(!confirm(`Delete "${t.title}"? This can't be undone.`)) return;
   delete S.auditTiles[key];
+  saveAuditTilesLocal();
   S.auditTileView=null;
   render(); toast('Audit deleted');
   if(db) db.collection('auditTiles').doc(key).delete()
@@ -6316,6 +6332,7 @@ function setupLiveSync() {
       const tiles={};
       snap.forEach(d=>{ const v=d.data(); tiles[d.id]={title:v.title,icon:v.icon||'📋',iconImg:v.iconImg||null}; });
       S.auditTiles=tiles;
+      saveAuditTilesLocal();
       if(S.tab==='audits') render();
     }, e=>console.log('auditTiles listener error:',e));
 
