@@ -2612,18 +2612,18 @@ function renderCrewCarsList(el) {
           <div style="display:flex;align-items:center;gap:5px">
             <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
             ${car.plate?`<span style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
-            <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
-            <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
+            ${isCarsTab?`<span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
+            <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>`:''}
           </div>
           <!-- Status dropdown chip -->
           <div style="margin-top:8px">${stChip}</div>
-          <!-- Fuel bar -->
+          ${isCarsTab?`<!-- Fuel bar -->
           <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
             <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
               <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
             </div>
             <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
-          </div>
+          </div>`:''}
         </div>
         <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
       </div>`;
