@@ -294,6 +294,8 @@ body::before{
 .slide-in-left{animation:slideInLeft 0.18s ease both}
 @keyframes oilFlash{0%,100%{opacity:1}50%{opacity:0.08}}
 .oil-flash-icon{animation:oilFlash 0.75s infinite}
+@keyframes tileWobble{0%,100%{transform:rotate(-1.8deg) scale(1)}50%{transform:rotate(1.8deg) scale(1)}}
+.tile-wobble{animation:tileWobble 0.32s ease-in-out infinite;transform-origin:center;cursor:grab}
 @keyframes auditBlink{0%,100%{border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.06)}50%{border-color:rgba(231,76,60,0.85);background:rgba(231,76,60,0.18)}}
 .audit-blink{animation:auditBlink 1.4s ease-in-out infinite}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
@@ -1661,17 +1663,15 @@ async function renderHome(el) {
     ${renderHandoffNotesHtml()}
 
     <div style="padding:16px 14px 28px">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-        ${HOME_TILES.map((t,i)=>`
-          <div class="home-tile tile-anim" onclick="goTab('${t.id}')" style="animation-delay:${i*55}ms">
-            <div style="color:var(--t1);margin-bottom:10px;display:flex;justify-content:center;opacity:0.85">${t.svg}</div>
-            <div style="font-size:11px;font-weight:700;color:var(--t1);letter-spacing:0.8px;text-transform:uppercase">${t.label}</div>
-          </div>`).join('')}
-      </div>
+      <div id="homeTileWrap"></div>
       <div style="text-align:center;padding:8px 0 4px">
         <span id="appVerChip" style="font-size:10px;color:var(--t4);font-weight:600;letter-spacing:0.5px;cursor:default;user-select:none" ontouchstart="startVerPress()" ontouchend="cancelVerPress()" onmousedown="startVerPress()" onmouseup="cancelVerPress()" onmouseleave="cancelVerPress()">Skycare ${APP_VERSION} · Tasks: <span id="tasksSourceBadge">${S.tasksSource==='firestore'?'🟢 Firestore':'📋 Sheets'}</span></span>
       </div>
     </div>`;
+
+  // Tile order
+  if(!_tileEditMode) _tileOrder = getOrderedHomeTiles(HOME_TILES);
+  _refreshTileGrid();
 
   // Cinematic slideshow
   let _hIdx = 0;
@@ -3673,6 +3673,120 @@ function updateAuditBadge() {
   } else if (badge) {
     badge.remove();
   }
+}
+
+// ── HOME TILE DRAG-TO-REORDER ───────────────────────────────────────
+let _tileOrder   = null;   // live ordered array of tile objects
+let _tileEditMode= false;
+let _tileLPTimer = null;
+let _dragId      = null;
+let _dragClone   = null;
+let _dragOffX    = 0, _dragOffY = 0;
+
+function getOrderedHomeTiles(base) {
+  try {
+    const saved = JSON.parse(localStorage.getItem('gykf_tileOrder')||'null');
+    if(Array.isArray(saved)) {
+      const map = Object.fromEntries(base.map(t=>[t.id,t]));
+      const ordered = saved.filter(id=>map[id]).map(id=>map[id]);
+      const extra   = base.filter(t=>!saved.includes(t.id));
+      return [...ordered,...extra];
+    }
+  } catch(e) {}
+  return [...base];
+}
+function saveTileOrder() {
+  try { localStorage.setItem('gykf_tileOrder', JSON.stringify(_tileOrder.map(t=>t.id))); } catch(e) {}
+}
+function enterTileEditMode() {
+  if(_tileEditMode) return;
+  _tileEditMode = true;
+  haptic('medium');
+  _refreshTileGrid();
+}
+function exitTileEditMode() {
+  _tileEditMode = false;
+  saveTileOrder();
+  _refreshTileGrid();
+}
+function _refreshTileGrid() {
+  const wrap = document.getElementById('homeTileWrap');
+  if(!wrap) return;
+  wrap.innerHTML = _buildTileGridHtml();
+}
+function _buildTileGridHtml() {
+  const doneBtn = _tileEditMode
+    ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
+        <button onclick="exitTileEditMode()" style="padding:7px 20px;border-radius:20px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Done</button>
+       </div>` : '';
+  const tiles = (_tileOrder||[]).map((t,i)=>`
+    <div class="home-tile${_tileEditMode?' tile-wobble':' tile-anim'}"
+         id="ht-${t.id}" data-tile-id="${t.id}"
+         style="${_tileEditMode?`animation-delay:${i*40}ms`:`animation-delay:${i*55}ms`};touch-action:none;position:relative"
+         ${_tileEditMode
+           ? `ontouchstart="tileTouchStart(event,'${t.id}')" ontouchend="tileTouchEnd(event)"`
+           : `onclick="goTab('${t.id}')" onpointerdown="tileLPStart('${t.id}')" onpointerup="tileLPCancel()" onpointerleave="tileLPCancel()"`}>
+      <div style="color:var(--t1);margin-bottom:10px;display:flex;justify-content:center;opacity:0.85">${t.svg}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--t1);letter-spacing:0.8px;text-transform:uppercase">${t.label}</div>
+    </div>`).join('');
+  return `${doneBtn}<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">${tiles}</div>`;
+}
+function tileLPStart(id) {
+  tileLPCancel();
+  _tileLPTimer = setTimeout(()=>{ _tileLPTimer=null; enterTileEditMode(); }, 650);
+}
+function tileLPCancel() {
+  if(_tileLPTimer){ clearTimeout(_tileLPTimer); _tileLPTimer=null; }
+}
+function tileTouchStart(e, id) {
+  e.preventDefault();
+  _dragId = id;
+  const touch = e.touches[0];
+  const tileEl = document.getElementById('ht-'+id);
+  const rect = tileEl.getBoundingClientRect();
+  _dragOffX = touch.clientX - rect.left;
+  _dragOffY = touch.clientY - rect.top;
+  _dragClone = tileEl.cloneNode(true);
+  Object.assign(_dragClone.style, {
+    position:'fixed', left:rect.left+'px', top:rect.top+'px',
+    width:rect.width+'px', height:rect.height+'px',
+    zIndex:'9999', opacity:'0.9', pointerEvents:'none',
+    transform:'scale(1.1)', boxShadow:'0 8px 28px rgba(0,0,0,0.45)',
+    transition:'none', animation:'none'
+  });
+  document.body.appendChild(_dragClone);
+  tileEl.style.opacity = '0.25';
+  document.addEventListener('touchmove', _tileDragMove, {passive:false});
+  document.addEventListener('touchend',  _tileDragEnd,  {passive:false});
+}
+function tileTouchEnd(e) {}
+function _tileDragMove(e) {
+  e.preventDefault();
+  if(!_dragClone || !_dragId) return;
+  const touch = e.touches[0];
+  _dragClone.style.left = (touch.clientX - _dragOffX) + 'px';
+  _dragClone.style.top  = (touch.clientY - _dragOffY) + 'px';
+  const under = document.elementFromPoint(touch.clientX, touch.clientY);
+  const target = under?.closest('[data-tile-id]');
+  const toId = target?.dataset?.tileId;
+  if(toId && toId !== _dragId) {
+    const fi = _tileOrder.findIndex(t=>t.id===_dragId);
+    const ti = _tileOrder.findIndex(t=>t.id===toId);
+    if(fi>=0 && ti>=0) {
+      [_tileOrder[fi], _tileOrder[ti]] = [_tileOrder[ti], _tileOrder[fi]];
+      _refreshTileGrid();
+      const el = document.getElementById('ht-'+_dragId);
+      if(el) el.style.opacity = '0.25';
+    }
+  }
+}
+function _tileDragEnd(e) {
+  document.removeEventListener('touchmove', _tileDragMove);
+  document.removeEventListener('touchend',  _tileDragEnd);
+  if(_dragClone){ _dragClone.remove(); _dragClone=null; }
+  const el = document.getElementById('ht-'+_dragId);
+  if(el) el.style.opacity = '';
+  _dragId = null;
 }
 
 function saveAuditTilesLocal() {
