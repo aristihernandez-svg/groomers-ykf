@@ -2596,37 +2596,58 @@ function renderCrewCarsList(el) {
       : `<button onclick="event.stopPropagation();openStatusDrop('${car.key}',this)"
            style="padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border2);
                   background:transparent;color:var(--t3);font-size:11px;font-weight:600;cursor:pointer">Status ▾</button>`;
-    html+=`
-      <div onclick="openCarDetail('${car.key}')" style="
-        display:flex;align-items:flex-start;gap:13px;padding:16px 14px 14px;
-        border-bottom:2px solid ${anyAlert?'rgba(231,76,60,0.25)':'var(--border)'};
-        cursor:pointer;transition:background 0.15s;
-        background:${anyAlert?'rgba(231,76,60,0.11)':'var(--glass)'};
-        ${anyAlert?'border-left:4px solid var(--red)':'border-left:4px solid transparent'}">
-        <div style="position:relative;flex-shrink:0;margin-top:2px">
-          ${carSquareIcon(car,58,12)}
-          ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:15px;height:15px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px">✓</div>`:''}
-        </div>
-        <div style="flex:1;min-width:0">
-          <!-- Name + icons -->
-          <div style="display:flex;align-items:center;gap:5px">
-            <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
-            ${car.plate?`<span style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
-            ${isCarsTab?`<span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
-            <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>`:''}
+    if(isCarsTab) {
+      html+=`
+        <div onclick="openCarDetail('${car.key}')" style="
+          display:flex;align-items:flex-start;gap:13px;padding:16px 14px 14px;
+          border-bottom:2px solid ${anyAlert?'rgba(231,76,60,0.25)':'var(--border)'};
+          cursor:pointer;transition:background 0.15s;
+          background:${anyAlert?'rgba(231,76,60,0.11)':'var(--glass)'};
+          ${anyAlert?'border-left:4px solid var(--red)':'border-left:4px solid transparent'}">
+          <div style="position:relative;flex-shrink:0;margin-top:2px">
+            ${carSquareIcon(car,58,12)}
+            ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:15px;height:15px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px">✓</div>`:''}
           </div>
-          <!-- Status dropdown chip -->
-          <div style="margin-top:8px">${stChip}</div>
-          ${isCarsTab?`<!-- Fuel bar -->
-          <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
-            <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
-              <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:5px">
+              <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
+              ${car.plate?`<span style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
+              <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
+              <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
             </div>
-            <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
-          </div>`:''}
-        </div>
-        <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
-      </div>`;
+            <div style="margin-top:8px">${stChip}</div>
+            <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
+              <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
+                <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
+              </div>
+              <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
+            </div>
+          </div>
+          <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
+        </div>`;
+    } else {
+      const auditCol=auditCD.done?'#27AE60':'#E8A000';
+      const auditBg=auditCD.done?'rgba(39,174,96,0.12)':'rgba(232,160,0,0.12)';
+      html+=`
+        <div onclick="openCarDetail('${car.key}')" style="
+          display:flex;align-items:center;gap:13px;padding:14px 14px;
+          border-bottom:1px solid var(--border);cursor:pointer;
+          transition:background 0.15s;background:var(--glass)">
+          <div style="flex-shrink:0">${carSquareIcon(car,54,12)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}</span>
+              ${car.plate?`<span style="font-size:9px;font-weight:800;letter-spacing:1px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
+            <div style="width:36px;height:36px;border-radius:50%;background:${auditBg};border:2px solid ${auditCol};display:flex;align-items:center;justify-content:center;font-size:16px;color:${auditCol};font-weight:700">
+              ${auditCD.done?'✓':'—'}
+            </div>
+            <span style="font-size:9px;font-weight:700;color:${auditCol}">${auditCD.done?'Done':'Pending'}</span>
+          </div>
+        </div>`;
+    }
   });
 
   html+=`<div style="padding:10px 16px 4px">
