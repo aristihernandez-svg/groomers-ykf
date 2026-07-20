@@ -1,0 +1,30 @@
+name: Crew Car Audit Alert
+
+on:
+  schedule:
+    - cron: '0 14 8-10 * *'   # 14:00 UTC on the 8th, 9th, and 10th of every month
+  workflow_dispatch:            # manual trigger for testing
+
+jobs:
+  send-alert:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: notif/package.json
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: notif
+
+      - name: Send audit deadline alert
+        run: node audit-alert.js
+        working-directory: notif
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          VAPID_PUBLIC_KEY: "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU"
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}

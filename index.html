@@ -294,6 +294,8 @@ body::before{
 .slide-in-left{animation:slideInLeft 0.18s ease both}
 @keyframes oilFlash{0%,100%{opacity:1}50%{opacity:0.08}}
 .oil-flash-icon{animation:oilFlash 0.75s infinite}
+@keyframes auditBlink{0%,100%{border-color:rgba(231,76,60,0.3);background:rgba(231,76,60,0.06)}50%{border-color:rgba(231,76,60,0.85);background:rgba(231,76,60,0.18)}}
+.audit-blink{animation:auditBlink 1.4s ease-in-out infinite}
 @keyframes bob2{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 
@@ -2349,12 +2351,14 @@ function loadCarAudits() {
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
     snap.docs.forEach(d=>{ S.carAudits[d.id]={...S.carAudits[d.id],...d.data()}; });
     try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+    updateAuditBadge();
     render();
   }, e=>console.log('loadCarAudits Firestore failed:',e));
 }
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
   try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
+  updateAuditBadge();
   if(!db) return;
   const month=auditMonth();
   const data={...S.carAudits[auditDocKey(carKey)], month, carKey};
@@ -2533,6 +2537,7 @@ function renderCrewCarsList(el) {
 
   // ── Monthly audit progress (audits tab only) ──
   const month=auditMonth();
+  const { urgent, overdue, daysLeft } = auditDeadlineStatus();
   if(!isCarsTab) {
   const auditDone=CREW_CARS.filter(c=>carAuditData(c.key).done).length;
   const allDone=auditDone===CREW_CARS.length;
@@ -2545,8 +2550,10 @@ function renderCrewCarsList(el) {
         <span style="font-size:12px;font-weight:700;color:${allDone?'var(--green)':'var(--t1)'}">${auditDone}/${CREW_CARS.length} done</span>
       </div>
       <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:${allDone&&!alreadyArchived?'10px':'0'}">
-        <div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
+        <div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':urgent?'#E74C3C':'linear-gradient(90deg,var(--accent),var(--accent2))'};border-radius:2px;transition:width 0.4s"></div>
       </div>
+      ${overdue&&!allDone?`<div style="margin-top:8px;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — audits were due the 10th</div>`:''}
+      ${urgent&&!overdue&&!allDone?`<div style="margin-top:8px;padding:6px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);font-size:12px;font-weight:600;color:#E74C3C;text-align:center">⚠️ Due the 10th — ${daysLeft} day${daysLeft===1?'':'s'} left</div>`:''}
       <div style="display:flex;gap:8px;margin-top:8px">
         <button onclick="openSendAuditEmail('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">📧 Email</button>
         <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:9px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:600;cursor:pointer">📄 PDF</button>
@@ -2626,13 +2633,16 @@ function renderCrewCarsList(el) {
           <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
         </div>`;
     } else {
-      const auditCol=auditCD.done?'#27AE60':'#E8A000';
-      const auditBg=auditCD.done?'rgba(39,174,96,0.12)':'rgba(232,160,0,0.12)';
+      const pendingUrgent = !auditCD.done && urgent;
+      const auditCol = auditCD.done ? '#27AE60' : pendingUrgent ? '#E74C3C' : '#E8A000';
+      const auditBg  = auditCD.done ? 'rgba(39,174,96,0.12)' : pendingUrgent ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
       html+=`
-        <div onclick="openCarDetail('${car.key}')" style="
+        <div onclick="openCarDetail('${car.key}')" class="${pendingUrgent?'audit-blink':''}" style="
           display:flex;align-items:center;gap:13px;padding:14px 14px;
-          border-bottom:1px solid var(--border);cursor:pointer;
-          transition:background 0.15s;background:var(--glass)">
+          border:1px solid ${pendingUrgent?'rgba(231,76,60,0.3)':'var(--border)'};
+          border-left-width:${pendingUrgent?'4px':'1px'};
+          border-left-color:${pendingUrgent?'#E74C3C':'var(--border)'};
+          cursor:pointer;background:var(--glass);margin-bottom:-1px">
           <div style="flex-shrink:0">${carSquareIcon(car,54,12)}</div>
           <div style="flex:1;min-width:0">
             <div style="display:flex;align-items:center;gap:6px">
@@ -2644,7 +2654,7 @@ function renderCrewCarsList(el) {
             <div style="width:36px;height:36px;border-radius:50%;background:${auditBg};border:2px solid ${auditCol};display:flex;align-items:center;justify-content:center;font-size:16px;color:${auditCol};font-weight:700">
               ${auditCD.done?'✓':'—'}
             </div>
-            <span style="font-size:9px;font-weight:700;color:${auditCol}">${auditCD.done?'Done':'Pending'}</span>
+            <span style="font-size:9px;font-weight:700;color:${auditCol}">${auditCD.done?'Done':pendingUrgent?overdue?'Overdue':'Urgent':'Pending'}</span>
           </div>
         </div>`;
     }
@@ -3638,6 +3648,31 @@ function showAuditTileActions(key) {
       <button type="button" onclick="closeModal();deleteAuditTile('${key}')" style="width:100%;padding:14px;border-radius:12px;border:1px solid var(--red);background:rgba(232,64,64,0.08);color:var(--red);font-size:15px;cursor:pointer;text-align:left">🗑 &nbsp;Delete</button>
     </div>`,
     null);
+}
+
+function auditDeadlineStatus() {
+  const d = new Date().getDate();
+  return { urgent: d >= 8, overdue: d > 10, daysLeft: Math.max(0, 10 - d) };
+}
+
+function updateAuditBadge() {
+  const el = document.getElementById('nb-audits');
+  if (!el) return;
+  const pending = CREW_CARS.filter(c => !carAuditData(c.key).done).length;
+  const { urgent } = auditDeadlineStatus();
+  let badge = el.querySelector('.audit-badge');
+  if (urgent && pending > 0) {
+    if (!badge) {
+      badge = document.createElement('span');
+      badge.className = 'audit-badge';
+      badge.style.cssText = 'position:absolute;top:2px;right:6px;background:#E74C3C;color:#fff;font-size:9px;font-weight:700;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center;pointer-events:none';
+      el.style.position = 'relative';
+      el.appendChild(badge);
+    }
+    badge.textContent = pending;
+  } else if (badge) {
+    badge.remove();
+  }
 }
 
 function saveAuditTilesLocal() {
