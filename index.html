@@ -793,7 +793,7 @@ body::before{
     <span class="bar-pill" id="barDay"></span>
     <button class="bar-btn" id="notifBtn" onclick="toggleNotifications()" onpointerdown="_notifPressStart()" onpointerup="_notifPressEnd()" onpointerleave="_notifPressEnd()" title="Enable notifications — hold to test" style="font-size:20px">🔕</button>
     <button class="bar-btn" id="themeToggleBtn" onclick="toggleDayNight()" title="Toggle day/night" style="font-size:20px">🌙</button>
-    <button class="bar-btn" onclick="syncAll()" title="Sync" style="font-size:18px">↻</button>
+    <button class="bar-btn" id="syncBtn" onclick="syncAll()" title="Sync" style="font-size:18px">↻</button>
   </div>
   <div class="ptr" id="ptr"><div class="ptr-spin"></div></div>
   <div class="content" id="content"></div>
@@ -850,6 +850,9 @@ const PROC_TAILS  = {
 
 function setBarLogo() {
   document.getElementById('planeIcon').style.display = 'none';
+  document.getElementById('notifBtn').style.display = 'none';
+  document.getElementById('themeToggleBtn').style.display = 'none';
+  document.getElementById('syncBtn').style.display = 'none';
   const bt = document.getElementById('barTitle');
   bt.style.flex = '0 0 auto';
   bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
@@ -857,6 +860,9 @@ function setBarLogo() {
 }
 function setBarHome() {
   document.getElementById('planeIcon').style.display = '';
+  document.getElementById('notifBtn').style.display = '';
+  document.getElementById('themeToggleBtn').style.display = '';
+  document.getElementById('syncBtn').style.display = '';
   const bt = document.getElementById('barTitle');
   bt.style.flex = '1';
   bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
@@ -2706,6 +2712,7 @@ function renderCrewCarsList(el) {
     return alertA-alertB;
   });
 
+  const auditGridCards = [];
   sortedCars.forEach(car=>{
     const d=carData(car.key);
     const auditCD=carAuditData(car.key);
@@ -2716,8 +2723,8 @@ function renderCrewCarsList(el) {
     const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
     const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
     const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const fuelPct=fs?fs.pct:null;
-    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;   // red bg at ½
-    const fuelFlash=fuelPct!==null&&fuelPct<=0.25;  // ⛽ flashes at ¼
+    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;
+    const fuelFlash=fuelPct!==null&&fuelPct<=0.25;
     const anyAlert=oilWarn||fuelAlert||docAlert;
     const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.25?'#E74C3C':fuelPct<0.5?'#F1C40F':fuelPct<0.75?'#82E06A':'#27AE60';
     const SC={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
@@ -2763,29 +2770,25 @@ function renderCrewCarsList(el) {
       const pendingUrgent = !auditCD.done && urgent;
       const auditCol = auditCD.done ? '#27AE60' : pendingUrgent ? '#E74C3C' : '#E8A000';
       const auditBg  = auditCD.done ? 'rgba(39,174,96,0.12)' : pendingUrgent ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
-      html+=`
-        <div onclick="openCarDetail('${car.key}')" class="${pendingUrgent?'audit-blink':''}" style="
-          display:flex;align-items:center;gap:13px;padding:14px 14px;
-          border:1px solid ${pendingUrgent?'rgba(231,76,60,0.3)':'var(--border)'};
-          border-left-width:${pendingUrgent?'4px':'1px'};
-          border-left-color:${pendingUrgent?'#E74C3C':'var(--border)'};
-          cursor:pointer;background:var(--glass);margin-bottom:-1px">
-          <div style="flex-shrink:0">${carSquareIcon(car,54,12)}</div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:6px">
-              <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}</span>
-              ${car.plate?`<span style="font-size:9px;font-weight:800;letter-spacing:1px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
-            </div>
+      const statusLabel = auditCD.done ? 'Completed' : pendingUrgent ? (overdue?'Overdue':'Urgent') : 'Pending';
+      const dotCol = auditCD.done ? '#27AE60' : pendingUrgent ? '#E74C3C' : '#9CA3AF';
+      auditGridCards.push(`
+        <div onclick="openCarDetail('${car.key}')" class="${pendingUrgent?'audit-blink':''}"
+          style="background:var(--glass2);border:1px solid ${pendingUrgent?'rgba(231,76,60,0.35)':'var(--border2)'};
+                 border-radius:12px;padding:14px 12px;cursor:pointer;
+                 ${pendingUrgent?'border-left:3px solid #E74C3C;':''}">
+          <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:2px">${car.name}${docBadge}</div>
+          <div style="font-size:11px;color:var(--t3);margin-bottom:8px">${car.label||'Crew Car'}</div>
+          <div style="display:flex;align-items:center;gap:5px">
+            <div style="width:7px;height:7px;border-radius:50%;background:${dotCol};flex-shrink:0"></div>
+            <span style="font-size:11px;font-weight:600;color:${auditCol}">${statusLabel}</span>
           </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex-shrink:0">
-            <div style="width:36px;height:36px;border-radius:50%;background:${auditBg};border:2px solid ${auditCol};display:flex;align-items:center;justify-content:center;font-size:16px;color:${auditCol};font-weight:700">
-              ${auditCD.done?'✓':'—'}
-            </div>
-            <span style="font-size:9px;font-weight:700;color:${auditCol}">${auditCD.done?'Done':pendingUrgent?overdue?'Overdue':'Urgent':'Pending'}</span>
-          </div>
-        </div>`;
+        </div>`);
     }
   });
+  if(!isCarsTab && auditGridCards.length) {
+    html+=`<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${auditGridCards.join('')}</div>`;
+  }
 
   html+=`<div style="padding:10px 16px 4px">
     <div style="font-size:11px;color:var(--t3);line-height:1.8">🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged</div>
