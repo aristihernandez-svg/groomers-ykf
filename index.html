@@ -849,8 +849,18 @@ const PROC_TAILS  = {
 };
 
 function setBarLogo() {
-  document.getElementById('barTitle').innerHTML =
-    '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
+  document.getElementById('planeIcon').style.display = 'none';
+  const bt = document.getElementById('barTitle');
+  bt.style.flex = '0 0 auto';
+  bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
+  document.getElementById('barDay').style.marginLeft = 'auto';
+}
+function setBarHome() {
+  document.getElementById('planeIcon').style.display = '';
+  const bt = document.getElementById('barTitle');
+  bt.style.flex = '1';
+  bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
+  document.getElementById('barDay').style.marginLeft = '';
 }
 
 const AREA_COLORS = {
@@ -1044,6 +1054,7 @@ const S = {
   acAuditReg: null,    // registration being viewed
   acAuditType: null,   // 'metro' | 'westwind'
   acPastAudits: [],    // [{month, reg, type, completedAt}]
+  acCustomAircraft: {metro:[], westwind:[]}, // user-added registrations per type
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1205,6 +1216,7 @@ async function bootApp() {
         ).catch(()=>{});
         loadPastAudits();
         loadAcAudits();
+        loadAcCustomAircraft();
       })
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
@@ -1720,7 +1732,7 @@ const ICONS = {
 let _heroSlideTimer = null;
 
 async function renderHome(el) {
-  setBarLogo();
+  setBarHome();
   document.getElementById('eodFab').classList.remove('show');
   document.getElementById('fab').style.display = 'none';
 
@@ -3770,6 +3782,70 @@ function acIsComplete(reg, type) {
   return acAnsweredCount(reg, type) === acTotalCount(type);
 }
 
+function loadAcCustomAircraft() {
+  try { S.acCustomAircraft = JSON.parse(localStorage.getItem('gykf_accustom')||'{"metro":[],"westwind":[]}'); } catch(e){ S.acCustomAircraft={metro:[],westwind:[]}; }
+  if(!db) return;
+  db.collection('appConfig').doc('acCustomAircraft').get()
+    .then(snap=>{ if(snap.exists){ S.acCustomAircraft={metro:[],westwind:[],...snap.data()}; try{localStorage.setItem('gykf_accustom',JSON.stringify(S.acCustomAircraft));}catch(e){} render(); }})
+    .catch(()=>{});
+}
+function saveAcCustomAircraft() {
+  try { localStorage.setItem('gykf_accustom', JSON.stringify(S.acCustomAircraft)); } catch(e){}
+  if(db) db.collection('appConfig').doc('acCustomAircraft').set(S.acCustomAircraft,{merge:true}).catch(()=>{});
+}
+function openAddAircraftModal(type) {
+  const label = type==='metro' ? 'Metro SW3/SW4' : 'Westwind WW24';
+  openModal(`Add Aircraft — ${label}`,
+    `<div style="display:flex;flex-direction:column;gap:12px;padding:4px 0">
+      <div style="font-size:13px;color:var(--t2)">Enter the aircraft registration. It will get the full ${label} checklist automatically.</div>
+      <input id="acNewReg" type="text" placeholder="e.g. XBQ" maxlength="6"
+        style="width:100%;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:18px;font-weight:700;text-transform:uppercase;text-align:center;letter-spacing:3px"
+        oninput="this.value=this.value.toUpperCase()">
+      <button onclick="confirmAddAircraft('${type}')"
+        style="width:100%;padding:13px;border-radius:var(--radius-sm);background:var(--accent);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Add Aircraft</button>
+    </div>`,
+    null);
+  setTimeout(()=>document.getElementById('acNewReg')?.focus(),100);
+}
+function confirmAddAircraft(type) {
+  const reg = (document.getElementById('acNewReg')?.value||'').trim().toUpperCase();
+  if(!reg){ toast('Enter a registration'); return; }
+  const all = [...AIRCRAFT_METRO,...AIRCRAFT_WESTWIND,...(S.acCustomAircraft.metro||[]),...(S.acCustomAircraft.westwind||[])];
+  if(all.includes(reg)){ toast(`${reg} already exists`); return; }
+  if(!S.acCustomAircraft[type]) S.acCustomAircraft[type]=[];
+  S.acCustomAircraft[type].push(reg);
+  saveAcCustomAircraft();
+  closeModal();
+  toast(`✅ ${reg} added to ${type==='metro'?'Metro':'Westwind'}`);
+  render();
+}
+function removeCustomAircraft(type, reg) {
+  openModal(`Remove ${reg}?`,
+    `<div style="display:flex;flex-direction:column;gap:10px;padding:4px 0">
+      <div style="font-size:13px;color:var(--t2)">This will remove ${reg} from the ${type==='metro'?'Metro SW3/SW4':'Westwind WW24'} folder. Audit data for this aircraft is kept.</div>
+      <button onclick="doRemoveCustomAircraft('${type}','${reg}')"
+        style="width:100%;padding:13px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid var(--red);color:var(--red);font-size:14px;font-weight:700;cursor:pointer">Remove</button>
+      <button onclick="closeModal()" style="width:100%;padding:13px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;cursor:pointer">Cancel</button>
+    </div>`, null);
+}
+function doRemoveCustomAircraft(type, reg) {
+  S.acCustomAircraft[type] = (S.acCustomAircraft[type]||[]).filter(r=>r!==reg);
+  saveAcCustomAircraft();
+  closeModal();
+  render();
+}
+let _acFolderLongPressTimer = null;
+function acFolderLongPress(e, type, reg) {
+  _acFolderLongPressTimer = setTimeout(()=>{
+    _acFolderLongPressTimer = null;
+    haptic('medium');
+    removeCustomAircraft(type, reg);
+  }, 650);
+}
+function acFolderCancelPress() {
+  if(_acFolderLongPressTimer){ clearTimeout(_acFolderLongPressTimer); _acFolderLongPressTimer=null; }
+}
+
 function loadAcAudits() {
   try { S.acAudits = JSON.parse(localStorage.getItem('gykf_acaudits')||'{}'); } catch(e){ S.acAudits={}; }
   if(!db) return;
@@ -3879,12 +3955,15 @@ function renderAircraftLandingSection() {
 function renderAircraftFolder(el, type) {
   setBarLogo();
   document.getElementById('fab').style.display='none';
-  const regs   = type==='metro' ? AIRCRAFT_METRO : AIRCRAFT_WESTWIND;
+  const baseRegs = type==='metro' ? AIRCRAFT_METRO : AIRCRAFT_WESTWIND;
+  const customRegs = (S.acCustomAircraft[type]||[]);
+  const regs   = [...baseRegs, ...customRegs];
   const label  = type==='metro' ? 'Metro SW3/SW4' : 'Westwind WW24';
   const month  = acAuditMonthKey();
   const { urgent, overdue } = auditDeadlineStatus();
 
   const cards = regs.map(reg => {
+    const isCustom = customRegs.includes(reg);
     const done    = acIsComplete(reg, type);
     const answered= acAnsweredCount(reg, type);
     const total   = acTotalCount(type);
@@ -3892,15 +3971,17 @@ function renderAircraftFolder(el, type) {
     const col     = done ? '#27AE60' : pending ? '#E74C3C' : '#E8A000';
     const bg      = done ? 'rgba(39,174,96,0.12)' : pending ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
     const statusLabel = done ? 'Done' : pending ? (overdue?'Overdue':'Urgent') : 'Pending';
+    const customBadge = isCustom ? `<span style="font-size:9px;font-weight:700;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:5px;padding:1px 5px;margin-left:4px">Custom</span>` : '';
+    const longPress = isCustom ? `onpointerdown="acFolderLongPress(event,'${type}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"` : '';
     return `
-      <div onclick="openAircraftChecklist('${reg}','${type}')" class="${pending?'audit-blink':''}"
+      <div onclick="openAircraftChecklist('${reg}','${type}')" ${longPress} class="${pending?'audit-blink':''}"
         style="background:var(--glass);border:1px solid ${pending?'rgba(231,76,60,0.35)':'var(--border)'};
                ${pending?'border-left:4px solid #E74C3C;':''}
                border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:-1px">
-        <div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${col};flex-shrink:0">${reg}</div>
+        <div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${col};flex-shrink:0">${reg}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${reg}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px">${answered}/${total} items answered</div>
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${reg}${customBadge}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${label} · ${answered}/${total} answered</div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
           <span style="font-size:10px;font-weight:700;color:${col}">${statusLabel}</span>
@@ -3944,7 +4025,13 @@ function renderAircraftFolder(el, type) {
       <span style="font-size:12px;color:var(--t3)">${month}</span>
     </div>
     ${deadlineBanner}
-    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:0">${cards}</div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">${cards}</div>
+    <div style="padding:0 14px 14px">
+      <button onclick="openAddAircraftModal('${type}')"
+        style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:20px;line-height:1">+</span> Add aircraft
+      </button>
+    </div>
     ${pastSection}
     <div style="height:80px"></div>`;
 }
