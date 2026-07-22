@@ -788,6 +788,7 @@ body::before{
 
 <div id="app">
   <div class="bar">
+    <span id="barBack" style="display:none;cursor:pointer;align-items:center;gap:2px;flex-shrink:0" onclick="_barBackClick()"><span style="color:var(--accent);font-size:24px;line-height:1">‹</span><span id="barBackLabel" style="font-size:13px;font-weight:600;color:var(--accent)"></span></span>
     <span style="font-size:22px;cursor:pointer;color:var(--gold)" id="planeIcon" onclick="planeIconTap()">✈</span>
     <span class="bar-title" id="barTitle" onclick="goTab('home')" style="cursor:pointer"><img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare"></span>
     <span class="bar-pill" id="barDay"></span>
@@ -848,26 +849,59 @@ const PROC_TAILS  = {
   astra:    ['DAX'],
 };
 
-function setBarLogo() {
-  document.getElementById('planeIcon').style.display = 'none';
-  document.getElementById('notifBtn').style.display = 'none';
-  document.getElementById('themeToggleBtn').style.display = 'none';
-  document.getElementById('syncBtn').style.display = 'none';
-  const bt = document.getElementById('barTitle');
-  bt.style.flex = '0 0 auto';
-  bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
-  document.getElementById('barDay').style.marginLeft = 'auto';
+let _barBackFn = null;
+function _barBackClick() { if(_barBackFn) _barBackFn(); }
+
+function setBar(config = {}) {
+  const { home, title, back, backFn } = config;
+  const barEl = document.querySelector('.bar');
+  const barBack = document.getElementById('barBack');
+  const barTitle = document.getElementById('barTitle');
+  const barDay = document.getElementById('barDay');
+  const planeIcon = document.getElementById('planeIcon');
+  const notifBtn = document.getElementById('notifBtn');
+  const themeBtn = document.getElementById('themeToggleBtn');
+  const syncBtn = document.getElementById('syncBtn');
+
+  if (home) {
+    barEl.style.background = '';
+    planeIcon.style.display = '';
+    barBack.style.display = 'none';
+    barTitle.style.flex = '1';
+    barTitle.style.textAlign = '';
+    barTitle.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
+    barTitle.onclick = () => goTab('home');
+    barDay.style.marginLeft = '';
+    notifBtn.style.display = '';
+    themeBtn.style.display = '';
+    syncBtn.style.display = '';
+    _barBackFn = null;
+  } else {
+    barEl.style.background = 'var(--bg2)';
+    planeIcon.style.display = 'none';
+    notifBtn.style.display = 'none';
+    themeBtn.style.display = 'none';
+    syncBtn.style.display = 'none';
+    barDay.style.marginLeft = 'auto';
+
+    if (back) {
+      barBack.style.display = 'flex';
+      document.getElementById('barBackLabel').textContent = back;
+      _barBackFn = backFn || null;
+    } else {
+      barBack.style.display = 'none';
+      _barBackFn = null;
+    }
+
+    barTitle.style.flex = '1';
+    barTitle.style.textAlign = 'center';
+    barTitle.innerHTML = `<span style="font-size:15px;font-weight:700;color:var(--t1)">${title || ''}</span>`;
+    barTitle.onclick = null;
+  }
 }
-function setBarHome() {
-  document.getElementById('planeIcon').style.display = '';
-  document.getElementById('notifBtn').style.display = '';
-  document.getElementById('themeToggleBtn').style.display = '';
-  document.getElementById('syncBtn').style.display = '';
-  const bt = document.getElementById('barTitle');
-  bt.style.flex = '1';
-  bt.innerHTML = '<img src="cars/Skycare_logo-removebg-preview.png" style="height:26px;vertical-align:middle;filter:brightness(0) invert(1)" alt="SkyCare">';
-  document.getElementById('barDay').style.marginLeft = '';
-}
+
+function setBarLogo(title = '') { setBar({ title }); }
+function setBarHome() { setBar({ home: true }); }
 
 const AREA_COLORS = {
   'AIRCRAFT':'#1A4A5C',"CR GROOMERS' CORNER":'#1A3A5C',
@@ -1817,7 +1851,7 @@ async function renderHome(el) {
 
 // ── TODAY ──────────────────────────────────────────────────────────
 function renderToday(el) {
-  setBarLogo();
+  setBar({title:'Today'});
   document.getElementById('eodFab').classList.add('show');
   const _today=getToday();
   showFab(()=>openAddTask(DAYS[_today]));
@@ -1919,7 +1953,7 @@ function renderWeek(el) {
     }
   });
   _lastLoadedDate = new Date().toDateString();
-  setBarLogo();
+  setBar({title:'Week'});
   document.getElementById('fab').style.display='none';
   let html='<div class="week-list">';
   DAYS.forEach((day,i)=>{
@@ -2126,7 +2160,7 @@ function renderDayDetail(el) {
   const tasks=S.tasks[tabName]||[];
   const done=tasks.filter(t=>t.done).length;
   const pct=tasks.length?Math.round(done/tasks.length*100):0;
-  setBarLogo();
+  setBar({title: DAY_NAMES[idx], back: 'Week', backFn: backWeek});
   showFab(()=>openAddTask(tabName));
   let html=`
     <div class="dbar" style="background:${DAY_COLORS[idx]};cursor:pointer" onclick="backWeek()">
@@ -2181,7 +2215,7 @@ function backWeek() {
 
 // ── SHOPPING ───────────────────────────────────────────────────────
 function renderShopping(el) {
-  setBarLogo();
+  setBar({title:'Shopping'});
   showFab(openAddShopItem);
   const scrollTop = el ? el.scrollTop : 0;
   const items=S.shopping;
@@ -2343,7 +2377,7 @@ function renderShopping(el) {
 }
 
 function renderCart(el, items) {
-  setBarLogo();
+  setBar({title:'Cart'});
   const toBuy=items.filter(i=>i.checked);
   const byStore={};
   toBuy.forEach(i=>{ (byStore[i.store]=byStore[i.store]||[]).push(i); });
@@ -2649,20 +2683,16 @@ function carSquareIcon(car, size=48, radius=10) {
 
 function renderCrewCarsList(el) {
   const isCarsTab = S.tab === 'cars';
-  setBarLogo();
+  if(isCarsTab) {
+    setBar({title:'Crew Cars'});
+  } else {
+    setBar({title:'Crew Cars', back:'Audits', backFn: backToProcs});
+  }
   document.getElementById('fab').style.display='none';
-  let html = isCarsTab
-    ? `<div class="car-detail-bar" style="background:var(--bg2)">
-        <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
-        <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
-          style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
-      </div>`
-    : `<div class="car-detail-bar" style="background:var(--bg2);cursor:pointer" onclick="backToProcs()">
-        <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-        <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Crew Cars</span>
-        <button onclick="event.stopPropagation();openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
-          style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 10px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
-      </div>`;
+  let html = `<div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 14px 4px">
+    <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
+      style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
+  </div>`;
 
   // ── Monthly audit progress (audits tab only) ──
   const month=auditMonth();
@@ -2823,18 +2853,13 @@ function renderCarDetail(el, key) {
   const car=CREW_CARS.find(c=>c.key===key);
   if(!car){backToCarList();return;}
   const d=carData(key);
-  setBarLogo();
+  setBar({title: car.name, back:'Crew Cars', backFn: backToCarList});
   document.getElementById('fab').style.display='none';
   const fuelLog=d.log.filter(l=>l.type==='fuel').slice(-1)[0];
   const oilLog=d.log.filter(l=>l.type==='oil').slice(-1)[0];
   const washLog=d.log.filter(l=>l.type==='wash').slice(-1)[0];
 
   let html=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="backToCarList()">
-      <span style="color:#fff;font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:#fff;flex:1">${car.name}</span>
-    </div>
-
     <!-- Car hero banner -->
     <div style="position:relative;height:180px;overflow:hidden;background:linear-gradient(160deg,${car.color},${car.color2})">
       <img src="${car.img}" alt="${car.name}"
@@ -2923,14 +2948,9 @@ function renderCarDetail(el, key) {
 function renderCarAudit(el, key) {
   const car=CREW_CARS.find(c=>c.key===key);
   if(!car){backToCarList();return;}
-  setBarLogo();
+  setBar({title: car.name, back:'Crew Cars', backFn: backToCarList});
   document.getElementById('fab').style.display='none';
-  let html=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="backToCarList()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      ${carSquareIcon(car,36,8)}
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${car.name}</span>
-    </div>`;
+  let html=``;
   html+=auditSectionHTML(key);
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
@@ -3392,13 +3412,9 @@ function generateAuditPDF(month) {
 // ── PAST AUDIT VIEW ───────────────────────────────────────────
 function renderPastAuditView(el, month) {
   if(!month){backToCarList();return;}
-  setBarLogo();
+  setBar({title: month, back:'Audits', backFn:()=>{S.crewCarsView='list';S.pastAuditView=null;render();}});
   document.getElementById('fab').style.display='none';
-  let html=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="S.crewCarsView='list';S.pastAuditView=null;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">Audit · ${month}</span>
-    </div>
+  let html=``;
     <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left">
         <span style="font-size:22px;line-height:1;flex-shrink:0">📄</span>
@@ -3584,7 +3600,7 @@ const PROC_IMAGES = {
 };
 
 function renderProcs(el) {
-  setBarLogo();
+  setBar({title:'Procedures'});
   showFab(openAddProcedure);
 
   const entries=Object.entries(S.procs).filter(([k,p])=>k!=='crewcar1'&&k!=='crewcar2'&&!p.isCrewCarsHub&&!p.isAuditsHub);
@@ -3658,7 +3674,7 @@ function renderProcs(el) {
 function renderAuditsHub(el) { renderAuditsLanding(el); }
 
 function renderAuditsLanding(el) {
-  setBarLogo();
+  setBar({title:'Audits'});
   showFab(openAddAudit);
   const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
@@ -3682,6 +3698,13 @@ function renderAuditsLanding(el) {
       </div>`;
   }).join('');
 
+  const _metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])];
+  const _wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])];
+  const _carsDone  = CREW_CARS.every(c=>carAuditData(c.key).done);
+  const _metroDone = _metroRegs.every(r=>acIsComplete(r,'metro'));
+  const _wwDone    = _wwRegs.every(r=>acIsComplete(r,'westwind'));
+  const _allDone   = _carsDone && _metroDone && _wwDone;
+
   el.innerHTML=`
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div onclick="openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
@@ -3697,22 +3720,29 @@ function renderAuditsLanding(el) {
       ${customTiles}
     </div>
     ${renderAircraftLandingSection()}
+    <div style="padding:0 14px 14px">
+      <button onclick="generateAllAuditPDFs()"
+        style="width:100%;padding:14px 16px;border-radius:var(--radius);border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06))':'var(--glass2)'};cursor:${_allDone?'pointer':'default'};display:flex;align-items:center;gap:13px;text-align:left;opacity:${_allDone?'1':'0.5'}">
+        <span style="font-size:24px;line-height:1;flex-shrink:0">📦</span>
+        <span style="flex:1">
+          <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Generate All PDFs</span>
+          <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate':'Complete all audits to enable'}</span>
+        </span>
+        <span style="color:${_allDone?'var(--accent)':'var(--border2)'};font-size:20px;opacity:0.7">›</span>
+      </button>
+    </div>
     <div style="height:80px"></div>`;
 }
 
 function renderAuditTileView(el, key) {
   const t=S.auditTiles[key];
   if(!t){S.auditTileView=null;render();return;}
-  setBarLogo();
+  setBar({title: t.title, back:'Audits', backFn:()=>{S.auditTileView=null;render();}});
   document.getElementById('fab').style.display='none';
   const iconHtml=t.iconImg
     ?`<img src="${t.iconImg}" style="width:100%;height:100%;object-fit:cover;border-radius:14px">`
     :`<span style="font-size:28px">${t.icon||'📋'}</span>`;
   el.innerHTML=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="S.auditTileView=null;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${t.title}</span>
-    </div>
     <div style="background:var(--glass2);border-bottom:1px solid var(--border);padding:20px 18px 16px;display:flex;align-items:center;gap:16px">
       <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${iconHtml}</div>
       <div style="flex:1;min-width:0">
@@ -3956,14 +3986,15 @@ function renderAircraftLandingSection() {
 }
 
 function renderAircraftFolder(el, type) {
-  setBarLogo();
   document.getElementById('fab').style.display='none';
   const baseRegs = type==='metro' ? AIRCRAFT_METRO : AIRCRAFT_WESTWIND;
   const customRegs = (S.acCustomAircraft[type]||[]);
   const regs   = [...baseRegs, ...customRegs];
   const label  = type==='metro' ? 'Metro SW3/SW4' : 'Westwind WW24';
+  const shortLabel = type==='metro' ? 'Metro' : 'Westwind';
   const month  = acAuditMonthKey();
   const { urgent, overdue } = auditDeadlineStatus();
+  setBar({title: label, back:'Audits', backFn:()=>{S.acAuditView=null;render();}});
 
   const cards = regs.map(reg => {
     const isCustom = customRegs.includes(reg);
@@ -3974,24 +4005,22 @@ function renderAircraftFolder(el, type) {
     const col     = done ? '#27AE60' : pending ? '#E74C3C' : '#E8A000';
     const bg      = done ? 'rgba(39,174,96,0.12)' : pending ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
     const statusLabel = done ? 'Done' : pending ? (overdue?'Overdue':'Urgent') : 'Pending';
-    const customBadge = isCustom ? `<span style="font-size:9px;font-weight:700;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:5px;padding:1px 5px;margin-left:4px">Custom</span>` : '';
+    const customBadge = isCustom ? `<div style="font-size:9px;font-weight:700;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:5px;padding:1px 5px;margin-top:3px;display:inline-block">Custom</div>` : '';
     const longPress = isCustom ? `onpointerdown="acFolderLongPress(event,'${type}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"` : '';
     return `
       <div onclick="openAircraftChecklist('${reg}','${type}')" ${longPress} class="${pending?'audit-blink':''}"
-        style="background:var(--glass);border:1px solid ${pending?'rgba(231,76,60,0.35)':'var(--border)'};
-               ${pending?'border-left:4px solid #E74C3C;':''}
-               border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:-1px">
-        <div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${col};flex-shrink:0">${reg}</div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:700;color:var(--t1)">${reg}${customBadge}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:2px">${label} · ${answered}/${total} answered</div>
+        style="background:var(--glass2);border:1px solid ${pending?'rgba(231,76,60,0.45)':'var(--border2)'};
+               ${pending?'border-top:3px solid #E74C3C;':''}
+               border-radius:14px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${col}">${reg}</div>
+        <div style="min-width:0;width:100%">
+          <div style="font-size:13px;font-weight:700;color:var(--t1)">${reg}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">${answered}/${total}</div>
+          ${customBadge}
         </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
-          <span style="font-size:10px;font-weight:700;color:${col}">${statusLabel}</span>
-        </div>
-        <div style="color:var(--border2);font-size:20px">›</div>
+        <span style="font-size:11px;font-weight:700;color:${col};background:${bg};border:1px solid ${col}44;border-radius:20px;padding:3px 10px">${statusLabel}</span>
       </div>`;
-  }).join('');
+  });
 
   const deadlineBanner = overdue
     ? `<div style="margin:10px 14px 0;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — aircraft audits were due the 10th</div>`
@@ -4022,13 +4051,8 @@ function renderAircraftFolder(el, type) {
     }).join('')}` : '';
 
   el.innerHTML=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="S.acAuditView=null;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${label}</span>
-      <span style="font-size:12px;color:var(--t3)">${month}</span>
-    </div>
     ${deadlineBanner}
-    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">${cards}</div>
+    <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${cards.join('')}</div>
     <div style="padding:0 14px 14px">
       <button onclick="openAddAircraftModal('${type}')"
         style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
@@ -4046,7 +4070,7 @@ function openAcPastMonth(type, month) {
 }
 
 function renderAircraftChecklist(el, reg, type) {
-  setBarLogo();
+  const _folderLabel = type==='metro'?'Metro':'Westwind';
   document.getElementById('fab').style.display='none';
   const month   = acAuditMonthKey();
   const d       = acAuditData(reg);
@@ -4111,12 +4135,8 @@ function renderAircraftChecklist(el, reg, type) {
          Complete all ${total} items to generate PDF &nbsp;·&nbsp; ${answered}/${total} done
        </div>`;
 
+  setBar({title:`${reg} · ${answered}/${total}`, back: _folderLabel, backFn:()=>{S.acAuditReg=null;render();}});
   el.innerHTML=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="S.acAuditReg=null;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${reg} · ${type==='metro'?'Metro SW3/SW4':'Westwind WW24'}</span>
-      <span style="font-size:12px;color:var(--t3)">${answered}/${total}</span>
-    </div>
     ${deadlineBanner}
     <div style="height:4px;background:var(--border);margin:0"><div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':urgent?'#E74C3C':'linear-gradient(90deg,var(--accent),var(--accent2))'};transition:width 0.4s"></div></div>
     <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">
@@ -4148,6 +4168,29 @@ function renderAircraftChecklist(el, reg, type) {
       ${pdfBtn}
     </div>
     <div style="height:80px"></div>`;
+}
+
+function generateAllAuditPDFs() {
+  const month   = auditMonth();
+  const acMonth = acAuditMonthKey();
+  const metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])];
+  const wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])];
+  const pending = [];
+  CREW_CARS.forEach(c=>{ if(!carAuditData(c.key).done) pending.push('Crew Car: '+c.name); });
+  metroRegs.forEach(r=>{ if(!acIsComplete(r,'metro')) pending.push('Metro: '+r); });
+  wwRegs.forEach(r=>{ if(!acIsComplete(r,'westwind')) pending.push('Westwind: '+r); });
+  if(pending.length) {
+    openModal('Pending Audits',
+      `<div style="padding:4px 0">
+        <p style="font-size:13px;color:var(--t2);margin-bottom:10px">Complete these before generating all PDFs:</p>
+        ${pending.map(p=>`<div style="padding:8px 12px;border-radius:8px;background:var(--glass2);border:1px solid var(--border);margin-bottom:6px;font-size:13px;color:var(--t1)">${p}</div>`).join('')}
+      </div>`, null);
+    return;
+  }
+  generateAuditPDF(month);
+  let delay = 600;
+  metroRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'metro',acMonth), delay); delay+=600; });
+  wwRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'westwind',acMonth), delay); delay+=600; });
 }
 
 function generateAircraftPDF(reg, type, month) {
@@ -4427,18 +4470,13 @@ function deleteAuditTile(key) {
 function renderProcDetail(el, key) {
   const p=S.procs[key];
   if(!p){S.procView=null;render();return;}
-  setBarLogo();
+  setBar({title: p.title, back:'Procedures', backFn:()=>{S.procView=null;render();}});
   document.getElementById('fab').style.display='none';
   const dmg=S.dmgReports[key]||[];
   const done=p.done.length;
   const total=p.steps.length;
   const pct=total?Math.round(done/total*100):0;
   let html=`
-    <div class="car-detail-bar" style="cursor:pointer" onclick="S.procView=null;render()">
-      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
-      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${p.title}</span>
-    </div>
-
     <!-- Procedure hero -->
     <div style="background:var(--glass2);border-bottom:1px solid var(--border);padding:20px 18px 16px;display:flex;align-items:center;gap:16px">
       <div style="width:56px;height:56px;border-radius:14px;background:var(--glass);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0;overflow:hidden">${p.iconImg?`<img src="${p.iconImg}" style="width:100%;height:100%;object-fit:cover">`:p.icon}</div>
@@ -4501,7 +4539,7 @@ function renderProcDetail(el, key) {
 
 // ── CONTACTS ─────────────────────────────────────────────────
 function renderContacts(el) {
-  setBarLogo();
+  setBar({title:'Contacts'});
   showFab(openAddContact);
 
   // Search state
@@ -4678,7 +4716,7 @@ function renderContactsList(q) {
 
 // ── FLIGHTAWARE IN-APP ───────────────────────────────────────
 function renderBored(el) {
-  setBarLogo();
+  setBar({title:'Activity'});
   showFab(openAddBored);
   if(!S.bored.length) {
     el.innerHTML=`<div class="empty"><div class="empty-icon">💡</div>
@@ -7287,7 +7325,7 @@ function flipEta(etaMins) {
 }
 
 function renderFleet(el) {
-  setBarLogo();
+  setBar({title:'Fleet'});
   document.getElementById('fab').style.display='none';
   clearTimeout(_fleetTimer);
 
