@@ -3414,7 +3414,7 @@ function renderPastAuditView(el, month) {
   if(!month){backToCarList();return;}
   setBar({title: month, back:'Audits', backFn:()=>{S.crewCarsView='list';S.pastAuditView=null;render();}});
   document.getElementById('fab').style.display='none';
-  let html=``;
+  let html=`
     <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="generateAuditPDF('${month}')" style="flex:1;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:12px;text-align:left">
         <span style="font-size:22px;line-height:1;flex-shrink:0">📄</span>
