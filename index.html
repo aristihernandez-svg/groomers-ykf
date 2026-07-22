@@ -5674,7 +5674,6 @@ function showEOD() {
   const dateStr=now.toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
   const timeStr=now.toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
   let msg=`✈ *SKYCARE — END OF DAY REPORT*\n📅 ${dateStr} · ${timeStr}\n${'─'.repeat(30)}\n\n`;
-  msg+=`📊 *${done.length}/${tasks.length} tasks completed (${pct}%)*\n\n`;
 
   // Flight log
   const flog=S.flightLog[tabName]||{};
@@ -5691,13 +5690,6 @@ function showEOD() {
     msg+=`✅ *Completed:*\n${done.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
   }
 
-  // Show incomplete tasks if any
-  if(missed.length>0) {
-    msg+=`⚠️ *Incomplete:*\n${missed.map(t=>`  • ${t.task}`).join('\n')}\n\n`;
-  } else {
-    msg+=`🎯 All daily tasks completed!\n\n`;
-  }
-
   // Closure section
   if(clDone.length===closure.length&&closure.length) {
     msg+=`🔐 *Closure: ✅ Complete*\n${clDone.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
@@ -5707,12 +5699,6 @@ function showEOD() {
     if(clComplete.length) msg+=`🔐 *Closure — done:*\n${clComplete.map(t=>`  ✓ ${t.task}`).join('\n')}\n`;
     if(clMissed.length) msg+=`🔐 *Closure — pending:*\n${clMissed.map(t=>`  ❌ ${t.task}`).join('\n')}\n`;
     msg+='\n';
-  }
-
-  // Shopping summary
-  const toBuyItems=S.shopping.filter(i=>i.checked);
-  if(toBuyItems.length>0) {
-    msg+=`🛒 *Shopping needed (${toBuyItems.length} items):*\n${toBuyItems.map(i=>`  • ${i.item} — ${i.store}`).join('\n')}\n\n`;
   }
 
   // Damage reports filed today
