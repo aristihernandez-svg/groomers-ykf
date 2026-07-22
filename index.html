@@ -903,6 +903,107 @@ const CREW_CARS = [
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
+const AIRCRAFT_METRO    = ['CPX','TIM','IOC','IOB','IOJ','IOA','IOH','KKC'];
+const AIRCRAFT_WESTWIND = ['IAW','XDP','XAW'];
+
+const AIRCRAFT_CHECKLIST = {
+  metro: [
+    { section:'Located with the Journey Log Book', items:[
+      {key:'cert_insurance',    label:'Certificate of Insurance'},
+      {key:'cert_registration', label:'Certificate of Registration'},
+      {key:'cert_airworthiness',label:'Certificate of Airworthiness'},
+      {key:'radio_license',     label:'Radio License'},
+      {key:'dtops_receipt',     label:'DTOPs Receipt (Current Year)'},
+    ]},
+    { section:'Located in the Documents Bag & AFM Binder', items:[
+      {key:'afm',    label:'Aircraft Flight Manual', sub:'CPX – Rev B-33 11/14/14 | TIM – Rev A-43 11/14/14 | IOC/IOB – Rev B-10 5/28/08 | IOJ/IOA – Rev A-15 07/27/20 | IOH – Rev A-14 05/28/08 | KKC – Rex A-44 07/27/20'},
+      {key:'wb_ofp', label:'Weight and Balance & OFP Version', sub:'CPX – Aug 29 2025 V5.55 | KKC – May 22 2025 V5.53 | IOC – Nov 27 2024 V8.48 | TIM – Oct 21 2025 V5.56 | IOB – Jun 2 2025 V2.1 | IOA – May 5 2025 V13.2 | IOJ – Aug 2 2024 V8.47 | IOH – Aug 2 2024 V8.47'},
+      {key:'canada_fs', label:'Canada Flight Supplement'},
+      {key:'vfr_ifr',   label:'VFR/IFR Charts', sub:'Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen'},
+    ]},
+    { section:'Located in the Aircraft Binder', items:[
+      {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
+      {key:'tm',           label:'Training Manual (TM)', sub:'Edition 1, Revision #4'},
+      {key:'aoc',          label:'Air Operator\'s Certificate (AOC)', sub:'Located in COM Chapter 1 · August 22, 2025'},
+      {key:'foc',          label:'Foreign Operators Certificate (FOC)', sub:'Located in COM Chapter 1'},
+      {key:'agip',         label:'Aircraft Ground Icing Program (AGIP)', sub:'Edition 1, Revision #1, with 2025-2026 TC HOT Guidelines at end of Annex'},
+      {key:'crm',          label:'Company Routes Manual', sub:'October 2, 2007'},
+      {key:'rcap',         label:'RCAP'},
+      {key:'dg_list',      label:'List of Dangerous Goods likely to be carried'},
+      {key:'msds',         label:'MSDS', sub:'Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid'},
+      {key:'mel',          label:'Minimum Equipment List (MEL) Metro III Only'},
+      {key:'sop',          label:'Standard Operating Procedures – SW3/SW4', sub:'Edition 3, Revision Original – May 30, 2025'},
+      {key:'dg_emergency', label:'DG – Emergency Response'},
+    ]},
+    { section:'Located in the Aircraft', items:[
+      {key:'checklist_normal', label:'Checklist Normal SW3/SW4', sub:'Version 1.2 – May 20, 2025'},
+      {key:'qrh',              label:'Quick Reference Handbook', sub:'Revision 8 – May 20, 2025'},
+      {key:'pbs',              label:'Passenger Safety Briefing Script', sub:'Version 1.0 – May 30, 2025'},
+      {key:'dtops_sticker',    label:'DTOPs Sticker Affixed Ext. of A/C by Door (Current Year)'},
+      {key:'baggage_tiedown',  label:'Baggage Tie-down Equipment'},
+      {key:'baggage_scale',    label:'Baggage Scale Co-pilot seat back pouch'},
+      {key:'seatbelt_ext',     label:'Seatbelt Extender Co-pilot seat back pouch'},
+      {key:'first_aid',        label:'First Aid Kit & Workplace Injury Log', sub:'If log used, send picture to healthandsafety@skycare.ca'},
+      {key:'fire_ext',         label:'Fire Extinguisher'},
+      {key:'survival',         label:'Survival Equipment'},
+      {key:'life_jackets',     label:'Life Jackets', sub:'1 for Each seat, including stretchers & pilot seats'},
+      {key:'headset_adaptors', label:'Aircraft Headset Adaptors', sub:'In pouch, in closet'},
+      {key:'smoke_goggles',    label:'Smoke Goggles'},
+      {key:'o2_cockpit',       label:'O2 Masks, Cockpit', sub:'PIC and SIC Seats'},
+      {key:'o2_cabin',         label:'O2 Mask, Cabin', sub:'1 as depicted on SBC'},
+      {key:'needle_kit',       label:'Needle Pick Up Kit', sub:'Container, Tongs, Wipes, Gloves'},
+      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct', sub:'CPX, TIM, KKC – Metro II – January 2024 R6 | IOC, IOB, IOJ, IOH, IOA – Metro III – January 2024 R3'},
+    ]},
+  ],
+  westwind: [
+    { section:'Located with the Journey Log Book', items:[
+      {key:'cert_insurance',    label:'Certificate of Insurance'},
+      {key:'cert_registration', label:'Certificate of Registration'},
+      {key:'cert_airworthiness',label:'Certificate of Airworthiness'},
+      {key:'radio_license',     label:'Radio License'},
+      {key:'dtops_receipt',     label:'DTOPs Receipt (Current Year)'},
+    ]},
+    { section:'Located in the Documents Bag & AFM Binder', items:[
+      {key:'afm',    label:'Aircraft Flight Manual', sub:'IAW – AFM Rev 13, 10 Aug 1990 | XDP – AFM Rev 4, 23 Jun 1998 | XAW –'},
+      {key:'wb_ofp', label:'Weight and Balance & Blank OFP', sub:'IAW – October 22, 2022 – V9.1 | XDP – August 11, 2021 – V9.1 | XAW –'},
+      {key:'canada_fs', label:'Canada Flight Supplement'},
+      {key:'vfr_ifr',   label:'VFR/IFR Charts', sub:'Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen'},
+    ]},
+    { section:'Located in the Aircraft Binder', items:[
+      {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
+      {key:'tm',           label:'Training Manual (TM)', sub:'Edition 1, Revision #5'},
+      {key:'aoc',          label:'Air Operator\'s Certificate (AOC)', sub:'Located in COM Chapter 1 · August 22, 2025'},
+      {key:'foc',          label:'Foreign Operators Certificate (FOC)', sub:'Located in COM Chapter 1'},
+      {key:'agip',         label:'Aircraft Ground Icing Program (AGIP)', sub:'Edition 1, Revision #1, with 2025-2026 TC HOT Guidelines at end of Annex'},
+      {key:'crm',          label:'Company Routes Manual', sub:'October 2, 2007'},
+      {key:'rcap',         label:'RCAP'},
+      {key:'dg_list',      label:'List of Dangerous Goods likely to be carried'},
+      {key:'msds',         label:'MSDS', sub:'Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid'},
+      {key:'sop',          label:'Standard Operating Procedures – WW24', sub:'Edition 3, Revision 1 – June 18, 2025'},
+      {key:'mel',          label:'MEL – WW24', sub:'Edition 1, Revision Original – January 20, 2020'},
+      {key:'dg_emergency', label:'DG – Emergency Response'},
+    ]},
+    { section:'Located in the Aircraft', items:[
+      {key:'checklist_normal', label:'Checklist Normal', sub:'WW24 – Version 1.2 – June 1, 2025'},
+      {key:'pbs',              label:'Passenger Briefing Script', sub:'WW24 – Version 1.0 – May 30, 2025'},
+      {key:'qrh',              label:'Quick Reference Handbook', sub:'WW24 Edition 1, Revision Original – August 4, 2017'},
+      {key:'dtops_sticker',    label:'DTOPs Sticker Affixed Ext. of A/C by Door (Current Year)'},
+      {key:'baggage_tiedown',  label:'Baggage Tie-down Equipment'},
+      {key:'baggage_scale',    label:'Baggage Scale Co-pilot seat back pouch'},
+      {key:'seatbelt_ext',     label:'Seatbelt Extender Co-pilot seat back pouch'},
+      {key:'first_aid',        label:'First Aid Kit & Workplace Injury Log', sub:'If log used, send picture to healthandsafety@skycare.ca'},
+      {key:'fire_ext',         label:'Fire Extinguisher'},
+      {key:'survival',         label:'Survival Equipment'},
+      {key:'life_jackets',     label:'Life Jackets', sub:'1 for Each seat, including stretchers & pilot seats'},
+      {key:'headset_adaptors', label:'Aircraft Headset Adaptors', sub:'In pouch, in closet'},
+      {key:'smoke_goggles',    label:'Smoke Goggles'},
+      {key:'o2_cockpit',       label:'O2 Masks, Cockpit', sub:'PIC and SIC Seats'},
+      {key:'o2_cabin',         label:'O2 Mask, Cabin', sub:'1 as depicted on SBC'},
+      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct', sub:'WW24 – Revision 3, September 2022'},
+    ]},
+  ],
+};
+
 // Per-car oil specifications — add more cars as info becomes available
 const CAR_OIL_INFO = {
   elantra: {oil:'5W-20', capacity:'4L'},
@@ -938,6 +1039,11 @@ const S = {
   auditsView: false,    // true = inside Audits hub
   auditTiles: {},       // {key: {title, icon, iconImg}} — custom audit categories
   auditTileView: null,  // key of custom audit tile being viewed
+  acAudits: {},        // {'{month}_{reg}': {items:{}, configuration:'', date:'', auditorName:'', completedAt:null}}
+  acAuditView: null,   // null | 'metro' | 'westwind'
+  acAuditReg: null,    // registration being viewed
+  acAuditType: null,   // 'metro' | 'westwind'
+  acPastAudits: [],    // [{month, reg, type, completedAt}]
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1098,6 +1204,7 @@ async function bootApp() {
           {merge:true}
         ).catch(()=>{});
         loadPastAudits();
+        loadAcAudits();
       })
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
@@ -1130,7 +1237,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
-  S.auditTileView=null;
+  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1173,6 +1280,8 @@ function render() {
       else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarAudit(el,S.crewCarsView);
       else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
+      else if(S.acAuditReg) renderAircraftChecklist(el,S.acAuditReg,S.acAuditType);
+      else if(S.acAuditView) renderAircraftFolder(el,S.acAuditView);
       else renderAuditsLanding(el);
       break;
     case 'cars':
@@ -1203,6 +1312,8 @@ function handleSwipeBack() {
   if(S.crewCarsView && S.crewCarsView !== 'list') { slideBack(backToCarList); return true; }
   if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
+  if(S.acAuditReg) { slideBack(()=>{ S.acAuditReg=null; render(); }); return true; }
+  if(S.acAuditView) { slideBack(()=>{ S.acAuditView=null; render(); }); return true; }
   if(S.procView !== null) { slideBack(()=>{ S.procView=null; render(); }); return true; }
   if(S.inDay) { slideBack(backWeek); return true; }
   if(S.shopView === 'cart') { slideBack(()=>{ S.shopView='list'; renderShopping(document.getElementById('content')); }); return true; }
@@ -3570,6 +3681,7 @@ function renderAuditsLanding(el) {
       </div>
       ${customTiles}
     </div>
+    ${renderAircraftLandingSection()}
     <div style="height:80px"></div>`;
 }
 
@@ -3628,6 +3740,390 @@ function showAuditTileActions(key) {
 function auditDeadlineStatus() {
   const d = new Date().getDate();
   return { urgent: d >= 8, overdue: d > 10, daysLeft: Math.max(0, 10 - d) };
+}
+
+// ── AIRCRAFT AUDITS ──────────────────────────────────────────────
+
+function acAuditMonthKey() {
+  return new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
+}
+function acAuditDocKey(reg) { return acAuditMonthKey()+'-ac-'+reg; }
+
+function acAuditData(reg) {
+  const k = acAuditDocKey(reg);
+  if(!S.acAudits[k]) S.acAudits[k] = {items:{}, configuration:'', date:'', auditorName:'', completedAt:null};
+  return S.acAudits[k];
+}
+
+function acAllItems(type) {
+  return AIRCRAFT_CHECKLIST[type].flatMap(s => s.items);
+}
+
+function acAnsweredCount(reg, type) {
+  const d = acAuditData(reg);
+  return acAllItems(type).filter(i => d.items[i.key] && (d.items[i.key].yes || d.items[i.key].no)).length;
+}
+
+function acTotalCount(type) { return acAllItems(type).length; }
+
+function acIsComplete(reg, type) {
+  return acAnsweredCount(reg, type) === acTotalCount(type);
+}
+
+function loadAcAudits() {
+  try { S.acAudits = JSON.parse(localStorage.getItem('gykf_acaudits')||'{}'); } catch(e){ S.acAudits={}; }
+  if(!db) return;
+  const month = acAuditMonthKey();
+  db.collection('auditAircraft').where('month','==',month).onSnapshot(snap=>{
+    snap.docs.forEach(d=>{ S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
+    try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
+    render();
+  }, e=>console.log('loadAcAudits failed:',e));
+}
+
+function saveAcAudit(reg) {
+  try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
+  if(!db) return;
+  const month = acAuditMonthKey();
+  const type = S.acAuditType || (AIRCRAFT_WESTWIND.includes(reg)?'westwind':'metro');
+  const data = {...acAuditData(reg), month, reg, type};
+  db.collection('auditAircraft').doc(acAuditDocKey(reg)).set(data, {merge:true})
+    .catch(e=>console.log('saveAcAudit failed:',e));
+}
+
+let _acSaveTimer = {};
+function saveAcAuditDebounced(reg) {
+  clearTimeout(_acSaveTimer[reg]);
+  _acSaveTimer[reg] = setTimeout(()=>saveAcAudit(reg), 800);
+}
+
+function openAircraftFolder(type) {
+  S.acAuditView = type; S.acAuditReg = null;
+  render();
+}
+
+function openAircraftChecklist(reg, type) {
+  S.acAuditReg = reg; S.acAuditType = type;
+  render();
+}
+
+function toggleAcItem(reg, key, val) {
+  const d = acAuditData(reg);
+  if(!d.items[key]) d.items[key] = {yes:false, no:false, expires:'', comments:''};
+  d.items[key].yes = val==='yes';
+  d.items[key].no  = val==='no';
+  saveAcAuditDebounced(reg);
+  render();
+}
+
+function setAcField(reg, key, field, value) {
+  const d = acAuditData(reg);
+  if(!d.items[key]) d.items[key] = {yes:false, no:false, expires:'', comments:''};
+  d.items[key][field] = value;
+  saveAcAuditDebounced(reg);
+}
+
+function setAcHeader(reg, field, value) {
+  const d = acAuditData(reg);
+  d[field] = value;
+  saveAcAuditDebounced(reg);
+}
+
+function openAcCommentModal(reg, key, currentVal) {
+  openModal('Comments / Action Required',
+    `<textarea id="acCommentTA" style="width:100%;height:100px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${currentVal||''}</textarea>
+     <button onclick="saveAcComment('${reg}','${key}')" style="margin-top:10px;width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--accent);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Save</button>`,
+    null);
+}
+
+function saveAcComment(reg, key) {
+  const val = document.getElementById('acCommentTA')?.value || '';
+  setAcField(reg, key, 'comments', val);
+  closeModal();
+  render();
+}
+
+function renderAircraftLandingSection() {
+  const month = acAuditMonthKey();
+  const { urgent, overdue, daysLeft } = auditDeadlineStatus();
+
+  const folderCard = (type, regs, label, icon) => {
+    const done   = regs.filter(r => acIsComplete(r, type)).length;
+    const total  = regs.length;
+    const allDone= done === total;
+    const anyPending = done < total;
+    const dot    = allDone ? 'var(--green)' : (urgent && anyPending) ? '#E74C3C' : '#E8A000';
+    const urgentBadge = urgent && anyPending
+      ? `<span style="font-size:10px;font-weight:700;color:${overdue?'#E74C3C':'#E8A000'};margin-left:4px">${overdue?'OVERDUE':'DUE 10th'}</span>` : '';
+    return `
+      <div onclick="openAircraftFolder('${type}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
+        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
+        <div style="height:100px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
+          <span style="font-size:42px">${icon}</span>
+        </div>
+        <div style="padding:10px 12px 12px">
+          <div style="font-size:13px;font-weight:800;color:var(--t1)">${label}${urgentBadge}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">${done}/${total} audited · ${month}</div>
+        </div>
+      </div>`;
+  };
+
+  return `
+    <div style="padding:0 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px">Aircraft</div>
+    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      ${folderCard('metro',    AIRCRAFT_METRO,    'Metro SW3/SW4', '✈️')}
+      ${folderCard('westwind', AIRCRAFT_WESTWIND, 'Westwind WW24', '🛩️')}
+    </div>`;
+}
+
+function renderAircraftFolder(el, type) {
+  setBarLogo();
+  document.getElementById('fab').style.display='none';
+  const regs   = type==='metro' ? AIRCRAFT_METRO : AIRCRAFT_WESTWIND;
+  const label  = type==='metro' ? 'Metro SW3/SW4' : 'Westwind WW24';
+  const month  = acAuditMonthKey();
+  const { urgent, overdue } = auditDeadlineStatus();
+
+  const cards = regs.map(reg => {
+    const done    = acIsComplete(reg, type);
+    const answered= acAnsweredCount(reg, type);
+    const total   = acTotalCount(type);
+    const pending = !done && urgent;
+    const col     = done ? '#27AE60' : pending ? '#E74C3C' : '#E8A000';
+    const bg      = done ? 'rgba(39,174,96,0.12)' : pending ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
+    const statusLabel = done ? 'Done' : pending ? (overdue?'Overdue':'Urgent') : 'Pending';
+    return `
+      <div onclick="openAircraftChecklist('${reg}','${type}')" class="${pending?'audit-blink':''}"
+        style="background:var(--glass);border:1px solid ${pending?'rgba(231,76,60,0.35)':'var(--border)'};
+               ${pending?'border-left:4px solid #E74C3C;':''}
+               border-radius:12px;padding:14px;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:-1px">
+        <div style="width:44px;height:44px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:${col};flex-shrink:0">${reg}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${reg}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:2px">${answered}/${total} items answered</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0">
+          <span style="font-size:10px;font-weight:700;color:${col}">${statusLabel}</span>
+        </div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+  }).join('');
+
+  const deadlineBanner = overdue
+    ? `<div style="margin:10px 14px 0;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — aircraft audits were due the 10th</div>`
+    : urgent ? `<div style="margin:10px 14px 0;padding:6px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);font-size:12px;font-weight:600;color:#E74C3C;text-align:center">⚠️ Due the 10th — ${auditDeadlineStatus().daysLeft} day${auditDeadlineStatus().daysLeft===1?'':'s'} left</div>` : '';
+
+  const pastMonths = [...new Set(
+    Object.keys(S.acAudits)
+      .filter(k => k.includes('-ac-') && regs.some(r=>k.endsWith('-ac-'+r)) && !k.startsWith(month))
+      .map(k => k.replace(/-ac-.+$/,''))
+  )].sort().reverse();
+
+  const pastSection = pastMonths.length ? `
+    <div style="padding:16px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;border-top:1px solid var(--border);margin-top:12px">Past Audits</div>
+    ${pastMonths.map(m=>{
+      const mDone = regs.filter(r=>{
+        const d = S.acAudits[m+'-ac-'+r];
+        return d && d.completedAt;
+      }).length;
+      return `<div style="display:flex;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);gap:12px;cursor:pointer"
+                   onclick="openAcPastMonth('${type}','${m}')">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">📋</div>
+        <div style="flex:1">
+          <div style="font-size:14px;font-weight:700;color:var(--t1)">${m}</div>
+          <div style="font-size:12px;color:var(--t3);margin-top:2px">${mDone}/${regs.length} completed</div>
+        </div>
+        <div style="color:var(--border2);font-size:20px">›</div>
+      </div>`;
+    }).join('')}` : '';
+
+  el.innerHTML=`
+    <div class="car-detail-bar" style="cursor:pointer" onclick="S.acAuditView=null;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${label}</span>
+      <span style="font-size:12px;color:var(--t3)">${month}</span>
+    </div>
+    ${deadlineBanner}
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:0">${cards}</div>
+    ${pastSection}
+    <div style="height:80px"></div>`;
+}
+
+function openAcPastMonth(type, month) {
+  S.acPastMonthView = month;
+  S.acPastMonthType = type;
+  render();
+}
+
+function renderAircraftChecklist(el, reg, type) {
+  setBarLogo();
+  document.getElementById('fab').style.display='none';
+  const month   = acAuditMonthKey();
+  const d       = acAuditData(reg);
+  const sections = AIRCRAFT_CHECKLIST[type];
+  const total   = acTotalCount(type);
+  const answered= acAnsweredCount(reg, type);
+  const allDone = answered === total;
+  const pct     = Math.round(answered/total*100);
+  const { urgent, overdue, daysLeft } = auditDeadlineStatus();
+
+  const deadlineBanner = overdue && !allDone
+    ? `<div style="margin:10px 14px 0;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — was due the 10th</div>`
+    : urgent && !allDone ? `<div style="margin:10px 14px 0;padding:6px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);font-size:12px;font-weight:600;color:#E74C3C;text-align:center">⚠️ Due the 10th — ${daysLeft} day${daysLeft===1?'':'s'} left</div>` : '';
+
+  const sectionHtml = sections.map(sec=>`
+    <div style="margin-bottom:6px">
+      <div style="padding:7px 14px;background:var(--accent-dim);border-top:1px solid var(--accent-border);border-bottom:1px solid var(--accent-border);font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;text-transform:uppercase">${sec.section}</div>
+      ${sec.items.map(item=>{
+        const it = d.items[item.key]||{};
+        const hasYes = it.yes;
+        const hasNo  = it.no;
+        const hasComment = it.comments && it.comments.trim();
+        return `
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border);background:var(--glass)">
+          <div style="display:flex;align-items:flex-start;gap:10px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;font-weight:600;color:var(--t1);line-height:1.3">${item.label}</div>
+              ${item.sub?`<div style="font-size:10px;color:var(--t3);margin-top:2px;line-height:1.4">${item.sub}</div>`:''}
+              ${hasComment?`<div style="font-size:11px;color:var(--t2);margin-top:4px;font-style:italic;background:var(--glass2);padding:4px 8px;border-radius:6px;border-left:3px solid var(--accent)">${it.comments}</div>`:''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0">
+              <div style="display:flex;gap:4px">
+                <button onclick="toggleAcItem('${reg}','${item.key}','yes')"
+                  style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid ${hasYes?'#27AE60':'var(--border2)'};background:${hasYes?'rgba(39,174,96,0.18)':'var(--glass2)'};color:${hasYes?'#27AE60':'var(--t3)'}">YES</button>
+                <button onclick="toggleAcItem('${reg}','${item.key}','no')"
+                  style="padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid ${hasNo?'#E74C3C':'var(--border2)'};background:${hasNo?'rgba(231,76,60,0.18)':'var(--glass2)'};color:${hasNo?'#E74C3C':'var(--t3)'}">NO</button>
+              </div>
+              <div style="display:flex;gap:4px;align-items:center">
+                <input type="text" placeholder="Expires" value="${it.expires||''}"
+                  oninput="setAcField('${reg}','${item.key}','expires',this.value)"
+                  style="width:76px;padding:3px 7px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:11px">
+                <button onclick="openAcCommentModal('${reg}','${item.key}','${(it.comments||'').replace(/'/g,'&#39;')}')"
+                  style="padding:3px 7px;border-radius:6px;border:1px solid ${hasComment?'var(--accent-border)':'var(--border2)'};background:${hasComment?'var(--accent-dim)':'var(--glass2)'};color:${hasComment?'var(--accent)':'var(--t3)'};font-size:13px;cursor:pointer" title="Add comment">💬</button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  const pdfBtn = allDone
+    ? `<button onclick="generateAircraftPDF('${reg}','${type}','${month}')"
+         style="width:100%;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
+         <span style="font-size:26px;line-height:1;flex-shrink:0">📄</span>
+         <span style="flex:1">
+           <span style="display:block;font-size:13px;font-weight:700;color:var(--accent)">Generate Audit Report</span>
+           <span style="display:block;font-size:11px;color:var(--t2);margin-top:2px">${reg} · ${month}</span>
+         </span>
+         <span style="color:var(--accent);font-size:20px;opacity:0.7">›</span>
+       </button>`
+    : `<div style="padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--glass2);text-align:center;font-size:12px;color:var(--t3)">
+         Complete all ${total} items to generate PDF &nbsp;·&nbsp; ${answered}/${total} done
+       </div>`;
+
+  el.innerHTML=`
+    <div class="car-detail-bar" style="cursor:pointer" onclick="S.acAuditReg=null;render()">
+      <span style="color:var(--accent);font-size:24px;line-height:1;padding:0 4px">‹</span>
+      <span style="font-size:15px;font-weight:600;color:var(--t1);flex:1">${reg} · ${type==='metro'?'Metro SW3/SW4':'Westwind WW24'}</span>
+      <span style="font-size:12px;color:var(--t3)">${answered}/${total}</span>
+    </div>
+    ${deadlineBanner}
+    <div style="height:4px;background:var(--border);margin:0"><div style="height:100%;width:${pct}%;background:${allDone?'var(--green)':urgent?'#E74C3C':'linear-gradient(90deg,var(--accent),var(--accent2))'};transition:width 0.4s"></div></div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:8px">
+      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;overflow:hidden">
+        <div style="display:flex;gap:0">
+          <div style="flex:1;padding:10px 12px;border-right:1px solid var(--border)">
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Configuration</div>
+            <input type="text" value="${d.configuration||''}" placeholder="e.g. SW3"
+              oninput="setAcHeader('${reg}','configuration',this.value)"
+              style="width:100%;background:transparent;border:none;color:var(--t1);font-size:13px;font-weight:600;outline:none">
+          </div>
+          <div style="flex:1;padding:10px 12px">
+            <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Date</div>
+            <input type="date" value="${d.date||new Date().toLocaleDateString('en-CA')}"
+              oninput="setAcHeader('${reg}','date',this.value)"
+              style="width:100%;background:transparent;border:none;color:var(--t1);font-size:13px;font-weight:600;outline:none">
+          </div>
+        </div>
+      </div>
+    </div>
+    ${sectionHtml}
+    <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:12px;color:var(--t3);flex-shrink:0">Auditor</span>
+        <input type="text" value="${d.auditorName||''}" placeholder="Your name"
+          oninput="setAcHeader('${reg}','auditorName',this.value)"
+          style="flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px">
+      </div>
+      ${pdfBtn}
+    </div>
+    <div style="height:80px"></div>`;
+}
+
+function generateAircraftPDF(reg, type, month) {
+  const d = acAuditData(reg);
+  const sections = AIRCRAFT_CHECKLIST[type];
+  const label = type==='metro' ? 'SW3/SW4 Aircraft Equipment Audit Checklist' : 'WW24 Aircraft Equipment Audit Checklist';
+  const formNum = type==='metro' ? 'Form #03-8 · Version 63.0' : 'Form #03-8 · Version 8.0';
+
+  const rowsHtml = sections.map(sec=>`
+    <tr><td colspan="5" style="background:#f0f0f0;font-size:11px;font-weight:700;color:#444;text-align:center;padding:5px 8px;border:1px solid #ccc">${sec.section}</td></tr>
+    ${sec.items.map(item=>{
+      const it = d.items[item.key]||{};
+      return `<tr>
+        <td style="padding:5px 8px;border:1px solid #ddd;font-size:11px;font-weight:600;line-height:1.3">
+          ${item.label}${item.sub?`<div style="font-size:9px;color:#666;font-weight:400;margin-top:2px">${item.sub}</div>`:''}
+        </td>
+        <td style="text-align:center;border:1px solid #ddd;font-size:13px;font-weight:700;color:#27AE60">${it.yes?'✓':''}</td>
+        <td style="text-align:center;border:1px solid #ddd;font-size:13px;font-weight:700;color:#E74C3C">${it.no?'✗':''}</td>
+        <td style="text-align:center;border:1px solid #ddd;font-size:10px;color:#333">${it.expires||''}</td>
+        <td style="padding:4px 8px;border:1px solid #ddd;font-size:10px;color:#333">${it.comments||''}</td>
+      </tr>`;
+    }).join('')}`).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>${reg} Audit – ${month}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#1a1a1a;padding:28px;background:#fff}
+    h1{font-size:18px;font-weight:800;margin-bottom:2px}
+    .meta{color:#666;font-size:11px;margin-bottom:16px;border-bottom:2px solid #1a1a1a;padding-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px}
+    th{background:#1a1a1a;color:#fff;font-size:11px;padding:6px 8px;text-align:left;border:1px solid #1a1a1a}
+    th:nth-child(2),th:nth-child(3),th:nth-child(4){text-align:center;width:52px}
+    th:nth-child(4){width:80px}
+    .footer{display:flex;justify-content:space-between;font-size:10px;color:#888;margin-top:20px;border-top:1px solid #ddd;padding-top:8px}
+    .sig-row{display:flex;gap:40px;margin-top:16px}
+    .sig-field{flex:1;border-top:1px solid #333;padding-top:4px;font-size:11px;color:#555}
+  </style>
+  </head><body>
+  <h1>SkyiCare &nbsp;·&nbsp; ${label}</h1>
+  <div class="meta">
+    Aircraft: <strong>${reg}</strong> &nbsp;·&nbsp;
+    Configuration: <strong>${d.configuration||'—'}</strong> &nbsp;·&nbsp;
+    Date: <strong>${d.date||month}</strong> &nbsp;·&nbsp;
+    Month: <strong>${month}</strong>
+  </div>
+  <table>
+    <thead><tr>
+      <th>Item</th><th>Yes</th><th>No</th><th>Expires</th><th>Comments / Action Required</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <div class="sig-row">
+    <div class="sig-field">Auditor: <strong>${d.auditorName||'—'}</strong></div>
+    <div class="sig-field">Auditor Signature: ___________________________</div>
+  </div>
+  <div class="footer"><span>${formNum}</span><span>Generated ${new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long',day:'numeric'})}</span></div>
+  </body></html>`;
+
+  const win = window.open('','_blank');
+  if(win){ win.document.write(html); win.document.close(); win.print(); }
+  if(db) {
+    db.collection('auditAircraft').doc(acAuditDocKey(reg)).set({completedAt: new Date()}, {merge:true}).catch(()=>{});
+    acAuditData(reg).completedAt = new Date();
+    saveAcAudit(reg);
+  }
 }
 
 function updateAuditBadge() {
