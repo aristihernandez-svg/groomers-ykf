@@ -1103,6 +1103,8 @@ const S = {
   acCustomAircraft: {metro:[], westwind:[]}, // user-added registrations per type
   acDisabled: JSON.parse(localStorage.getItem('gykf_acDisabled')||'{}'), // {month:[reg,...]}
   acVersionsView: false, // PDF version manager screen
+  customAcTypesList: JSON.parse(localStorage.getItem('gykf_customAcTypesList')||'[]'), // [{id,name,regs,checklist,pdfVersion}]
+  acCustomTypeView: null,  // id of custom type folder open
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1297,7 +1299,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
-  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false;
+  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1342,6 +1344,7 @@ function render() {
       else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
       else if(S.acAuditReg) renderAircraftChecklist(el,S.acAuditReg,S.acAuditType);
       else if(S.acAuditView) renderAircraftFolder(el,S.acAuditView);
+      else if(S.acCustomTypeView) renderCustomAcFolder(el,S.acCustomTypeView);
       else if(S.acVersionsView) renderPdfVersions(el);
       else renderAuditsLanding(el);
       break;
@@ -1374,6 +1377,7 @@ function handleSwipeBack() {
   if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
   if(S.acAuditReg) { slideBack(()=>{ S.acAuditReg=null; render(); }); return true; }
+  if(S.acCustomTypeView) { slideBack(()=>{ S.acCustomTypeView=null; render(); }); return true; }
   if(S.acAuditView) { slideBack(()=>{ S.acAuditView=null; render(); }); return true; }
   if(S.procView !== null) { slideBack(()=>{ S.procView=null; render(); }); return true; }
   if(S.inDay) { slideBack(backWeek); return true; }
@@ -3695,6 +3699,370 @@ function renderProcs(el) {
   el.innerHTML=html;
 }
 
+// ── CUSTOM AIRCRAFT TYPE: ADD FLOW ─────────────────────────────────
+
+function openAddAircraftTypeFlow() {
+  openModal('New Aircraft Type',
+    `<label style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">Aircraft Type Name</label>
+     <input id="newAcTypeName" placeholder="e.g. Astra" style="width:100%;margin-top:6px;padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:15px;font-weight:700">
+     <div style="margin-top:14px;padding:12px;background:var(--glass2);border-radius:10px;border:1px solid var(--border2)">
+       <div style="font-size:12px;font-weight:700;color:var(--t1);margin-bottom:4px">Upload TC-approved PDF</div>
+       <div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:10px">The app will read the checklist items directly from the PDF and build the full audit form automatically.</div>
+       <button onclick="pickAircraftTypePdf()" style="width:100%;padding:11px;border-radius:var(--radius-sm);border:1.5px dashed var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:700;cursor:pointer">📄 Choose PDF</button>
+       <div id="newAcPdfStatus" style="margin-top:8px;font-size:11px;color:var(--t3);text-align:center"></div>
+     </div>`,
+    null);
+  document.getElementById('mSave').style.display='none';
+  document.getElementById('mBtnRow').style.display='none';
+}
+
+function pickAircraftTypePdf() {
+  const name = document.getElementById('newAcTypeName')?.value.trim();
+  if(!name) { toast('Enter a type name first'); return; }
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.pdf,application/pdf';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if(!file) return;
+    document.getElementById('newAcPdfStatus').textContent = 'Reading PDF…';
+    loadPdfJs(async () => {
+      try {
+        const parsed = await parsePdfIntoChecklist(file);
+        document.getElementById('newAcPdfStatus').textContent = `✓ Found ${parsed.checklist.reduce((n,s)=>n+s.items.length,0)} items in ${parsed.checklist.length} sections`;
+        closeModal();
+        showNewAcTypePreview(name, parsed);
+      } catch(e) {
+        document.getElementById('newAcPdfStatus').textContent = '⚠ ' + e.message;
+      }
+    });
+  };
+  inp.click();
+}
+
+async function parsePdfIntoChecklist(file) {
+  const ab = await file.arrayBuffer();
+  const pdf = await window.pdfjsLib.getDocument({data:ab}).promise;
+
+  // collect all text items with position info
+  const allItems = [];
+  for(let p=1; p<=pdf.numPages; p++) {
+    const pg = await pdf.getPage(p);
+    const tc = await pg.getTextContent();
+    const vp = pg.getViewport({scale:1});
+    tc.items.forEach(it => {
+      if(it.str.trim()) allItems.push({
+        str: it.str.trim(),
+        x: Math.round(it.transform[4]),
+        y: Math.round(vp.height - it.transform[5]),
+        w: Math.round(it.width),
+        h: Math.round(it.height),
+        page: p
+      });
+    });
+  }
+
+  // extract version/date/form
+  const fullTxt = allItems.map(i=>i.str).join(' ');
+  const vM = fullTxt.match(/Version\s+(\d+[\.\d]*)/i);
+  const dM = fullTxt.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}/i);
+  const fM = fullTxt.match(/Form\s+#?(\S+)/i);
+
+  // group items into rows by y-position (within 4px = same row)
+  const rows = [];
+  allItems.forEach(it => {
+    const existing = rows.find(r => Math.abs(r.y - it.y) <= 4 && r.page === it.page);
+    if(existing) { existing.items.push(it); existing.text += ' ' + it.str; }
+    else rows.push({y:it.y, page:it.page, items:[it], text:it.str});
+  });
+  rows.sort((a,b)=>a.page!==b.page ? a.page-b.page : a.y-b.y);
+
+  // skip header rows (version, form, title, column headers)
+  const skipPattern = /^(yes|no|expires|comments|action\s+required|item|version|form\s*#|edition|revision|date|aircraft|configuration|auditor|skycare|ww\d|sw\d|checklist|equipment|audit)/i;
+  const colHeaderPat = /^(yes|no|expires|comments|item)\s*$/i;
+
+  // detect section headers: short, ALL CAPS or title-case, not a column header, x close to left margin
+  const isSection = (row) => {
+    const t = row.text.replace(/\s+/g,' ').trim();
+    if(t.length < 3 || t.length > 80) return false;
+    if(colHeaderPat.test(t)) return false;
+    if(/^\d+$/.test(t)) return false;
+    // all caps words (ignoring punctuation) or contains mostly uppercase
+    const words = t.split(/\s+/);
+    const capsWords = words.filter(w=>/^[A-Z][A-Z\s\/\-]*$/.test(w));
+    return capsWords.length >= Math.max(1, words.length * 0.6);
+  };
+
+  // build checklist
+  const checklist = [];
+  let currentSection = null;
+  let lastItemLabel = null;
+
+  rows.forEach(row => {
+    const t = row.text.replace(/\s+/g,' ').trim();
+    if(!t || t.length < 2) return;
+    if(skipPattern.test(t)) return;
+    if(/^\d+$/.test(t)) return;
+    // skip pure Yes/No/Expires column content
+    if(/^(yes|no|n\/a|\d{4}[-\/]\d{2}[-\/]\d{2}|\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})$/i.test(t)) return;
+
+    if(isSection(row)) {
+      currentSection = {section: t, items:[]};
+      checklist.push(currentSection);
+      lastItemLabel = null;
+    } else if(currentSection) {
+      // sub-note heuristic: starts with lowercase, or starts with '(' or 'Located', and follows an item
+      const isSub = lastItemLabel && (
+        /^[a-z\(]/.test(t) ||
+        /^(located|note|see|refer|check|if|when|ensure|must|verify)/i.test(t)
+      );
+      if(isSub) {
+        const last = currentSection.items[currentSection.items.length-1];
+        if(last) last.sub = (last.sub ? last.sub + ' | ' : '') + t;
+      } else {
+        // strip leading item numbers like "1." "12." "A."
+        const label = t.replace(/^\d+[\.\)]\s*/,'').replace(/^[A-Z][\.\)]\s*/,'').trim();
+        if(label.length < 2) return;
+        const key = 'c_' + label.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,20) + '_' + currentSection.items.length;
+        currentSection.items.push({key, label, sub:''});
+        lastItemLabel = label;
+      }
+    }
+  });
+
+  // clean empty subs and empty sections
+  checklist.forEach(s => s.items.forEach(i => { if(!i.sub) delete i.sub; }));
+  const filtered = checklist.filter(s=>s.items.length>0);
+
+  if(filtered.length===0) throw new Error('No checklist items detected. Try a different PDF.');
+
+  return {
+    checklist: filtered,
+    pdfVersion: { version: vM?vM[1]:'1.0', date: dM?dM[0]:'', form: fM?fM[1]:'' }
+  };
+}
+
+function showNewAcTypePreview(name, parsed) {
+  const totalItems = parsed.checklist.reduce((n,s)=>n+s.items.length,0);
+  const sectionsHtml = parsed.checklist.map(s=>`
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">${s.section}</div>
+      ${s.items.map(i=>`<div style="font-size:12px;color:var(--t2);padding:3px 0;border-bottom:1px solid var(--border)">· ${i.label}</div>`).join('')}
+    </div>`).join('');
+
+  const id = 'ct_' + Date.now();
+  const html = `
+    <div style="margin-bottom:12px">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1;background:var(--glass2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--accent)">${parsed.checklist.length}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Sections</div>
+        </div>
+        <div style="flex:1;background:var(--glass2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:22px;font-weight:800;color:var(--accent)">${totalItems}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Items</div>
+        </div>
+        ${parsed.pdfVersion.version?`<div style="flex:1;background:var(--glass2);border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:16px;font-weight:800;color:var(--accent)">v${parsed.pdfVersion.version}</div>
+          <div style="font-size:10px;color:var(--t3);margin-top:2px">Version</div>
+        </div>`:''}
+      </div>
+      <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Detected checklist</div>
+      <div style="max-height:220px;overflow-y:auto;padding-right:4px">${sectionsHtml}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button onclick="confirmSaveCustomAcType('${id}','${name.replace(/'/g,"&#39;")}',${JSON.stringify(parsed).replace(/</g,'\\u003c')})"
+        style="width:100%;background:var(--accent);border:none;border-radius:10px;padding:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">
+        ✅ Create "${name}" audit type
+      </button>
+      <button onclick="closeModal()" style="width:100%;border-radius:10px;padding:11px;font-size:13px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--t2)">Cancel</button>
+    </div>`;
+
+  openModal(`Preview: ${name}`, html, null);
+  document.getElementById('mSave').style.display='none';
+  document.getElementById('mBtnRow').style.display='none';
+}
+
+function confirmSaveCustomAcType(id, name, parsed) {
+  S.customAcTypesList.push({id, name, regs:[], checklist:parsed.checklist, pdfVersion:parsed.pdfVersion});
+  saveCustomAcTypesList();
+  closeModal();
+  render();
+  toast(`✅ "${name}" audit type created`);
+}
+
+// ── CUSTOM AIRCRAFT TYPE: FOLDER VIEW ──────────────────────────────
+
+function renderCustomAcFolder(el, typeId) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) { S.acCustomTypeView=null; render(); return; }
+  document.getElementById('fab').style.display='none';
+  const month = acAuditMonthKey();
+  const d = new Date();
+  const rightLabel = d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear();
+  setBar({title:ct.name, back:'Audits', backFn:()=>{S.acCustomTypeView=null;render();}, rightLabel});
+
+  const cards = ct.regs.map(reg => {
+    const disabled = isAcDisabled(reg);
+    const done = !disabled && acIsComplete(reg, typeId);
+    const dotCol = disabled?'var(--border2)':done?'#27AE60':'var(--border2)';
+    const statusLabel = disabled?'Skipped':done?'Completed':'Pending';
+    const statusCol = disabled?'var(--t4)':done?'#27AE60':'var(--t3)';
+    const longPress = `onpointerdown="acFolderLongPress(event,'${typeId}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"`;
+    return `
+      <div onclick="${disabled?'':(`openAircraftChecklist('${reg}','${typeId}')`)}" ${longPress}
+        style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:16px 14px;cursor:${disabled?'default':'pointer'};opacity:${disabled?'0.45':'1'}">
+        <div style="font-size:20px;font-weight:800;color:var(--t1)">${reg}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px;margin-bottom:10px">${ct.name}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${dotCol};flex-shrink:0;display:inline-block"></span>
+          <span style="font-size:12px;font-weight:600;color:${statusCol}">${statusLabel}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  const emptyState = ct.regs.length===0 ? `
+    <div style="text-align:center;padding:40px 24px;color:var(--t3)">
+      <div style="font-size:40px;margin-bottom:12px">✈️</div>
+      <div style="font-size:14px;font-weight:600;color:var(--t2);margin-bottom:6px">No registrations yet</div>
+      <div style="font-size:12px;line-height:1.5">Add aircraft registrations below to start auditing.</div>
+    </div>` : `<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${cards}</div>`;
+
+  el.innerHTML=`
+    <div style="padding:12px 14px 4px;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.2px;text-transform:uppercase">Select Aircraft · ${month}</div>
+    ${emptyState}
+    <div style="padding:8px 14px 0">
+      <button onclick="openAddAircraftModal_custom('${typeId}')"
+        style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:20px;line-height:1">+</span> Add registration
+      </button>
+    </div>
+    <div style="padding:12px 14px 0;display:flex;gap:8px">
+      <button onclick="openCustomTypeSettings('${typeId}')"
+        style="flex:1;padding:11px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-size:13px;font-weight:600;cursor:pointer">
+        ⚙️ Settings
+      </button>
+    </div>
+    <div style="height:80px"></div>`;
+}
+
+function openAddAircraftModal_custom(typeId) {
+  openModal('Add Registration',
+    `<input id="customAcRegInput" placeholder="e.g. DAX" maxlength="8"
+       style="width:100%;padding:12px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:1px">`,
+    ()=>{
+      const val = (document.getElementById('customAcRegInput')?.value||'').trim().toUpperCase();
+      if(!val){toast('Enter a registration');return;}
+      const ct = S.customAcTypesList.find(t=>t.id===typeId);
+      if(!ct) return;
+      if(ct.regs.includes(val)){toast('Already added');return;}
+      ct.regs.push(val);
+      saveCustomAcTypesList();
+      closeModal(); render();
+      toast(`Added ${val}`);
+    });
+}
+
+function openCustomTypeSettings(typeId) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  const html=`
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <button onclick="renameCustomAcType('${typeId}')"
+        style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+        ✏️ Rename type
+      </button>
+      <button onclick="reuploadCustomAcPdf('${typeId}')"
+        style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+        📄 Upload new PDF version
+      </button>
+      <button onclick="deleteCustomAcType('${typeId}')"
+        style="width:100%;padding:12px;border-radius:10px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:#E74C3C;font-size:14px;font-weight:600;cursor:pointer;text-align:left">
+        🗑 Delete this type
+      </button>
+    </div>`;
+  openModal(ct.name, html, null);
+  document.getElementById('mSave').style.display='none';
+  document.getElementById('mBtnRow').style.display='none';
+}
+
+function renameCustomAcType(typeId) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  closeModal();
+  openModal('Rename Type',
+    `<input id="renameAcTypeInput" value="${ct.name}"
+       style="width:100%;padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:15px;font-weight:700">`,
+    ()=>{
+      const val = (document.getElementById('renameAcTypeInput')?.value||'').trim();
+      if(!val) return;
+      ct.name=val; saveCustomAcTypesList(); closeModal(); render(); toast('Renamed');
+    });
+}
+
+function reuploadCustomAcPdf(typeId) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  closeModal();
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.pdf,application/pdf';
+  inp.onchange = async () => {
+    const file = inp.files[0]; if(!file) return;
+    toast('Reading PDF…');
+    loadPdfJs(async()=>{
+      try {
+        const parsed = await parsePdfIntoChecklist(file);
+        const oldCount = ct.checklist.reduce((n,s)=>n+s.items.length,0);
+        const newCount = parsed.checklist.reduce((n,s)=>n+s.items.length,0);
+        const html=`
+          <div style="margin-bottom:14px">
+            <div style="display:flex;gap:8px;margin-bottom:10px">
+              <div style="flex:1;background:var(--glass2);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:var(--green)">+${Math.max(0,newCount-oldCount)}</div>
+                <div style="font-size:10px;color:var(--t3);margin-top:2px">New items</div>
+              </div>
+              <div style="flex:1;background:var(--glass2);border-radius:8px;padding:10px;text-align:center">
+                <div style="font-size:18px;font-weight:800;color:#E74C3C">−${Math.max(0,oldCount-newCount)}</div>
+                <div style="font-size:10px;color:var(--t3);margin-top:2px">Removed</div>
+              </div>
+            </div>
+            ${parsed.pdfVersion.version?`<div style="font-size:13px;color:var(--t1);margin-bottom:4px">New version: <strong>v${parsed.pdfVersion.version}</strong></div>`:''}
+            <div style="font-size:11px;color:var(--t3);line-height:1.5">Existing audit answers are preserved. Only the checklist structure and version info will update.</div>
+          </div>
+          <button onclick="applyCustomAcPdfUpdate('${typeId}',${JSON.stringify(parsed).replace(/</g,'\\u003c')})"
+            style="width:100%;background:var(--accent);border:none;border-radius:10px;padding:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px">
+            Apply update
+          </button>
+          <button onclick="closeModal()" style="width:100%;border-radius:10px;padding:11px;font-size:13px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--t2)">Cancel</button>`;
+        openModal('Review Update', html, null);
+        document.getElementById('mSave').style.display='none';
+        document.getElementById('mBtnRow').style.display='none';
+      } catch(e){ toast('Could not read PDF: '+e.message); }
+    });
+  };
+  inp.click();
+}
+
+function applyCustomAcPdfUpdate(typeId, parsed) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  ct.checklist = parsed.checklist;
+  ct.pdfVersion = parsed.pdfVersion;
+  saveCustomAcTypesList();
+  closeModal(); render();
+  toast('Checklist updated');
+}
+
+function deleteCustomAcType(typeId) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  if(!confirm(`Delete "${ct.name}" audit type? This cannot be undone.`)) return;
+  S.customAcTypesList = S.customAcTypesList.filter(t=>t.id!==typeId);
+  saveCustomAcTypesList();
+  S.acCustomTypeView=null; closeModal(); render();
+  toast(`Deleted "${ct.name}"`);
+}
+
+// ───────────────────────────────────────────────────────────────────
+
 function renderAuditsHub(el) { renderAuditsLanding(el); }
 
 function renderAuditsLanding(el) {
@@ -3836,7 +4204,9 @@ function acAuditData(reg) {
 }
 
 function acAllItems(type) {
-  return AIRCRAFT_CHECKLIST[type].flatMap(s => s.items);
+  if(AIRCRAFT_CHECKLIST[type]) return AIRCRAFT_CHECKLIST[type].flatMap(s => s.items);
+  const ct = S.customAcTypesList.find(t=>t.id===type);
+  return ct ? ct.checklist.flatMap(s=>s.items) : [];
 }
 
 function acAnsweredCount(reg, type) {
@@ -3847,7 +4217,12 @@ function acAnsweredCount(reg, type) {
 function acTotalCount(type) { return acAllItems(type).length; }
 
 function acIsComplete(reg, type) {
-  return acAnsweredCount(reg, type) === acTotalCount(type);
+  const total = acTotalCount(type);
+  return total > 0 && acAnsweredCount(reg, type) === total;
+}
+
+function saveCustomAcTypesList() {
+  try { localStorage.setItem('gykf_customAcTypesList', JSON.stringify(S.customAcTypesList)); } catch(e){}
 }
 
 function loadAcCustomAircraft() {
@@ -3902,18 +4277,30 @@ function doRemoveCustomAircraft(type, reg) {
   closeModal();
   render();
 }
+function removeCustomTypeReg(typeId, reg) {
+  const ct = S.customAcTypesList.find(t=>t.id===typeId);
+  if(!ct) return;
+  ct.regs = ct.regs.filter(r=>r!==reg);
+  saveCustomAcTypesList();
+  closeModal();
+  render();
+  toast(`Removed ${reg}`);
+}
 let _acFolderLongPressTimer = null;
 function acFolderLongPress(e, type, reg) {
   _acFolderLongPressTimer = setTimeout(()=>{
     _acFolderLongPressTimer = null;
     haptic('medium');
     const isCustom = (S.acCustomAircraft[type]||[]).includes(reg);
+    const isCustomType = S.customAcTypesList.find(t=>t.id===type);
+    const isCustomTypeReg = isCustomType && isCustomType.regs.includes(reg);
     const disabled = isAcDisabled(reg);
     const btns = `<div style="display:flex;flex-direction:column;gap:8px;padding:4px 0">
       <button onclick="toggleAcDisabled('${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
         ${disabled?'✅ Re-enable for this month':'🚫 Disable for this month'}
       </button>
       ${isCustom?`<button onclick="removeCustomAircraft('${type}','${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
+      ${isCustomTypeReg?`<button onclick="removeCustomTypeReg('${type}','${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
       <button onclick="closeModal()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--t3);font-size:13px;cursor:pointer">Cancel</button>
     </div>`;
     openModal(reg, btns, null);
@@ -4193,11 +4580,37 @@ function renderAircraftLandingSection() {
       </div>`;
   };
 
+  const customCards = S.customAcTypesList.map(ct => {
+    const regs = ct.regs.filter(r=>!isAcDisabled(r));
+    const done  = regs.filter(r=>acIsComplete(r,ct.id)).length;
+    const total = regs.length;
+    const allDone = total>0 && done===total;
+    const dot = allDone?'var(--green)':'#E8A000';
+    return `
+      <div onclick="S.acCustomTypeView='${ct.id}';render()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
+        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
+        <div style="height:100px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
+          <span style="font-size:38px">🛫</span>
+        </div>
+        <div style="padding:10px 12px 12px">
+          <div style="font-size:13px;font-weight:800;color:var(--t1)">${ct.name}</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">${done}/${total} audited · ${month}</div>
+        </div>
+      </div>`;
+  }).join('');
+
   return `
     <div style="padding:0 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px">Aircraft</div>
     <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
       ${folderCard('metro',    AIRCRAFT_METRO,    'Metro SW3/SW4', '✈️')}
       ${folderCard('westwind', AIRCRAFT_WESTWIND, 'Westwind WW24', '🛩️')}
+      ${customCards}
+    </div>
+    <div style="padding:10px 14px 4px">
+      <button onclick="openAddAircraftTypeFlow()"
+        style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <span style="font-size:18px;line-height:1">+</span> Add aircraft type
+      </button>
     </div>`;
 }
 
@@ -4278,11 +4691,12 @@ function openAcPastMonth(type, month) {
 }
 
 function renderAircraftChecklist(el, reg, type) {
-  const _folderLabel = type==='metro'?'Metro':'Westwind';
+  const _ct = S.customAcTypesList.find(t=>t.id===type);
+  const _folderLabel = type==='metro'?'Metro':type==='westwind'?'Westwind':(_ct?_ct.name:type);
   document.getElementById('fab').style.display='none';
   const month   = acAuditMonthKey();
   const d       = acAuditData(reg);
-  const sections = AIRCRAFT_CHECKLIST[type];
+  const sections = AIRCRAFT_CHECKLIST[type] || (_ct ? _ct.checklist : []);
   const total   = acTotalCount(type);
   const answered= acAnsweredCount(reg, type);
   const allDone = answered === total;
@@ -4382,6 +4796,7 @@ function generateAllAuditPDFs() {
   CREW_CARS.forEach(c=>{ if(!carAuditData(c.key).done) pending.push('Crew Car: '+c.name); });
   metroRegs.forEach(r=>{ if(!acIsComplete(r,'metro')) pending.push('Metro: '+r); });
   wwRegs.forEach(r=>{ if(!acIsComplete(r,'westwind')) pending.push('Westwind: '+r); });
+  S.customAcTypesList.forEach(ct=>{ ct.regs.filter(r=>!isAcDisabled(r)).forEach(r=>{ if(!acIsComplete(r,ct.id)) pending.push(ct.name+': '+r); }); });
   if(pending.length) {
     openModal('Pending Audits',
       `<div style="padding:4px 0">
@@ -4394,12 +4809,14 @@ function generateAllAuditPDFs() {
   let delay = 600;
   metroRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'metro',acMonth), delay); delay+=600; });
   wwRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'westwind',acMonth), delay); delay+=600; });
+  S.customAcTypesList.forEach(ct=>{ ct.regs.filter(r=>!isAcDisabled(r)).forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,ct.id,acMonth), delay); delay+=600; }); });
 }
 
 function generateAircraftPDF(reg, type, month) {
   const d = acAuditData(reg);
-  const sections = AIRCRAFT_CHECKLIST[type];
-  const pv = getPdfVersion(type) || PDF_VERSION_DEFAULTS[type];
+  const ct = S.customAcTypesList.find(t=>t.id===type);
+  const sections = AIRCRAFT_CHECKLIST[type] || (ct ? ct.checklist : []);
+  const pv = getPdfVersion(type) || (ct ? ct.pdfVersion : null) || PDF_VERSION_DEFAULTS[type] || {version:'1.0',date:'',form:''};
 
   const rowsHtml = sections.map(sec=>`
     <tr><td colspan="5" style="background:#d9e2f0;font-size:10px;font-weight:700;color:#1a1a1a;padding:5px 8px;border:1px solid #bbb;text-transform:uppercase;letter-spacing:.3px">${sec.section}</td></tr>
@@ -4416,7 +4833,7 @@ function generateAircraftPDF(reg, type, month) {
       </tr>`;
     }).join('')}`).join('');
 
-  const typeLabel = type==='westwind' ? 'WW24' : 'SW3/SW4';
+  const typeLabel = type==='westwind' ? 'WW24' : type==='metro' ? 'SW3/SW4' : (ct ? ct.name : type);
   const formTitle = `${typeLabel} Aircraft Equipment Audit Checklist`;
 
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
