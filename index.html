@@ -1023,7 +1023,7 @@ const AIRCRAFT_CHECKLIST = {
     ]},
     { section:'Located in the Documents Bag & AFM Binder', items:[
       {key:'afm',    label:'Aircraft Flight Manual', sub:'IAW – AFM Rev 13, 10 Aug 1990 | XDP – AFM Rev 4, 23 Jun 1998 | XAW –'},
-      {key:'wb_ofp', label:'Weight and Balance & Blank OFP', sub:'IAW – October 22, 2022 – V9.1 | XDP – August 11, 2021 – V9.1 | XAW –'},
+      {key:'wb_ofp', label:'Weight and Balance & Blank OFP (in the AFM with configurations pictures)', sub:'IAW – October 22, 2022 – V9.1 | XDP – August 11, 2021 – V9.1 | XAW –'},
       {key:'canada_fs', label:'Canada Flight Supplement'},
       {key:'vfr_ifr',   label:'VFR/IFR Charts', sub:'Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen'},
     ]},
@@ -4899,7 +4899,7 @@ function generateAircraftPDF(reg, type, month) {
     </tr>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{};
-      const subLines = item.sub ? item.sub.split(';').map(s=>s.trim()).filter(Boolean) : [];
+      const subLines = item.sub ? item.sub.split('|').map(s=>s.trim()).filter(Boolean) : [];
       const isBold = subLines.length > 0;
       return `<tr>
         <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:${isBold?'700':'400'};line-height:1.3;vertical-align:top">${item.label}</td>
