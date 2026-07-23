@@ -1827,15 +1827,17 @@ async function renderHome(el) {
       .home-tile:active{opacity:0.7;transform:scale(0.97)}
     </style>
 
-    <div class="hero-wrap">
-      <img src="Jessie/IMG_0518.HEIC" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="Jessie">
+    ${(()=>{const _ht=new Date();const _isJessie=_ht.getMonth()===6&&_ht.getDate()===23;return `<div class="hero-wrap">
+      ${_isJessie
+        ? `<img src="Jessie/IMG_0518.HEIC" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="">`
+        : HERO_IMGS.map((img,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${img.src}" id="hImg${i}" style="object-fit:${img.fit};padding:${img.pad};object-position:center top" alt="">`).join('')
+      }
       <div class="hero-grad"></div>
       <div class="hero-overlay">
         <img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:26px;filter:brightness(0) invert(1);opacity:0.9;display:block;margin:0 auto 6px">
-        <div style="font-size:13px;color:#fff;font-weight:700;letter-spacing:0.3px">Happy Birthday Jessie! 🎂</div>
-        <div style="font-size:11px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.3px;margin-top:3px">${dateStr}</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.3px">${dateStr}</div>
       </div>
-    </div>
+    </div>`;})()}
 
     ${renderHandoffNotesHtml()}
 
