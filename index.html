@@ -4157,9 +4157,8 @@ function setAcHeader(reg, field, value) {
 
 function openAcCommentModal(reg, key, currentVal) {
   openModal('Comments / Action Required',
-    `<textarea id="acCommentTA" style="width:100%;height:100px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${currentVal||''}</textarea>
-     <button onclick="saveAcComment('${reg}','${key}')" style="margin-top:10px;width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--accent);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Save</button>`,
-    null);
+    `<textarea id="acCommentTA" style="width:100%;height:100px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${currentVal||''}</textarea>`,
+    ()=>saveAcComment(reg, key));
 }
 
 function saveAcComment(reg, key) {
