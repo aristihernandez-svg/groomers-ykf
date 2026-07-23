@@ -4068,7 +4068,6 @@ function renderAuditsHub(el) { renderAuditsLanding(el); }
 function renderAuditsLanding(el) {
   setBar({title:'Audits'});
   showFab(openAddAudit);
-  refreshAcAudits();
   const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
