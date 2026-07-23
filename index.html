@@ -4356,12 +4356,16 @@ function refreshAcAudits() {
 function saveAcAudit(reg) {
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
   if(!db) return;
-  _lastAcAuditWrite = Date.now();
   const month = acAuditMonthKey();
   const type = S.acAuditType || (AIRCRAFT_WESTWIND.includes(reg)?'westwind':'metro');
-  const data = {...acAuditData(reg), month, reg, type};
-  db.collection('auditAircraft').doc(acAuditDocKey(reg)).set(data, {merge:true})
-    .catch(e=>console.log('saveAcAudit failed:',e));
+  // Write to single-doc state (drives live sync, identical pattern to shopState)
+  db.collection('auditAircraftState').doc(month).set(
+    {[reg]: {...acAuditData(reg), type}}, {merge:true}
+  ).catch(e=>console.log('saveAcAudit state failed:',e));
+  // Also write to legacy per-aircraft doc (used by PDF generation + past-months view)
+  db.collection('auditAircraft').doc(acAuditDocKey(reg)).set(
+    {...acAuditData(reg), month, reg, type}, {merge:true}
+  ).catch(e=>console.log('saveAcAudit legacy failed:',e));
 }
 
 let _acSaveTimer = {};
@@ -7679,10 +7683,15 @@ function setupLiveSync() {
       }
     }, e => console.log('shopState listener error:', e));
 
-    // Aircraft audit — real-time sync across devices (same pattern as crew cars: always re-render).
+    // Aircraft audit — single-doc listener, identical pattern to shopState.
     const _acMonth = acAuditMonthKey();
-    db.collection('auditAircraft').where('month','==',_acMonth).onSnapshot(snap => {
-      snap.docs.forEach(d => { S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
+    db.collection('auditAircraftState').doc(_acMonth).onSnapshot(snap => {
+      if(!snap.exists) return;
+      const data = snap.data();
+      Object.entries(data).forEach(([reg, auditData]) => {
+        const k = acAuditDocKey(reg);
+        S.acAudits[k] = {...(S.acAudits[k]||{}), ...auditData};
+      });
       try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e) {}
       render();
     }, e => console.log('acAudits listener error:', e));
