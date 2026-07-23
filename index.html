@@ -4896,19 +4896,18 @@ function generateAircraftPDF(reg, type, month) {
 
   const rowsHtml = sections.map(sec=>`
     <tr>
-      <td colspan="5" style="background:#c8c8c8;font-size:9.5px;font-weight:700;color:#1a1a1a;padding:4px 6px;border:1px solid #999;font-style:italic">${sec.section}</td>
+      <td colspan="5" style="background:#c8c8c8;font-size:7.5px;font-weight:700;color:#1a1a1a;padding:2px 4px;border:1px solid #999;font-style:italic;text-align:center">${sec.section}</td>
     </tr>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{};
       const subLines = item.sub ? item.sub.split(';;').map(s=>s.trim()).filter(Boolean) : [];
-      const isBold = subLines.length > 0;
-      const subHtml = subLines.map(s=>`<div style="font-size:8px;color:#444;font-style:italic;line-height:1.4;margin-top:1px">${s}</div>`).join('');
+      const subHtml = subLines.map(s=>`<div style="font-size:6.5px;color:#555;font-style:italic;font-weight:400;line-height:1.35;margin-top:0.5px">${s}</div>`).join('');
       return `<tr>
-        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:${isBold?'700':'400'};line-height:1.3;vertical-align:top">${item.label}${subHtml}</td>
-        <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#1a7a40;vertical-align:middle;width:32px">${it.yes?'✓':''}</td>
-        <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#c03030;vertical-align:middle;width:32px">${it.no?'✗':''}</td>
-        <td style="text-align:center;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:middle;padding:3px;width:68px">${it.expires||''}</td>
-        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:top">${it.comments||''}</td>
+        <td style="padding:1.5px 4px;border:1px solid #bbb;font-size:7.5px;font-weight:700;line-height:1.3;vertical-align:top">${item.label}${subHtml}</td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:10px;font-weight:700;color:#1a7a40;vertical-align:middle;width:24px">${it.yes?'✓':''}</td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:10px;font-weight:700;color:#c03030;vertical-align:middle;width:24px">${it.no?'✗':''}</td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:7px;color:#333;vertical-align:middle;padding:1.5px;width:58px">${it.expires||''}</td>
+        <td style="padding:1.5px 4px;border:1px solid #bbb;font-size:7px;color:#333;vertical-align:top">${it.comments||''}</td>
       </tr>`;
     }).join('')}`).join('');
 
@@ -4916,35 +4915,37 @@ function generateAircraftPDF(reg, type, month) {
   <title>${reg} – ${formTitle} – ${month}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Arial',sans-serif;font-size:10px;color:#1a1a1a;background:#fff}
+    body{font-family:'Arial',sans-serif;font-size:7.5px;color:#1a1a1a;background:#fff}
     .page{display:flex;flex-direction:row;min-height:100vh}
-    .spine{writing-mode:vertical-rl;transform:rotate(180deg);background:#1a1a1a;color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;padding:12px 6px;white-space:nowrap;text-align:center;flex-shrink:0;width:22px}
-    .content{flex:1;padding:14px 16px 10px}
-    .top-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px;border-bottom:2px solid #1a1a1a;padding-bottom:6px}
-    .logo-block{font-size:16px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;flex-shrink:0;margin-right:16px}
+    .spine{display:flex;flex-direction:column;align-items:center;justify-content:space-between;border:1.5px solid #555;border-radius:6px 0 0 6px;background:#fff;width:20px;flex-shrink:0;padding:6px 2px}
+    .spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-size:6.5px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;color:#1a1a1a;text-align:center}
+    .spine-logo{display:block;width:14px;height:auto;transform:rotate(180deg);margin-top:4px}
+    .content{flex:1;padding:8px 10px 6px}
+    .top-row{display:flex;align-items:flex-end;gap:0;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
     .fields-inline{display:flex;flex:1;gap:0}
-    .fi{display:flex;align-items:flex-end;gap:4px;margin-right:20px;font-size:10px}
+    .fi{display:flex;align-items:flex-end;gap:4px;margin-right:16px;font-size:8px}
     .fi-label{font-weight:700;white-space:nowrap}
-    .fi-val{border-bottom:1px solid #333;min-width:90px;padding-bottom:1px;font-size:10px}
-    table{width:100%;border-collapse:collapse;font-size:9.5px}
-    thead tr th{background:#1a1a1a;color:#fff;padding:4px 6px;border:1px solid #1a1a1a;font-size:9.5px;font-weight:700;text-align:left}
-    thead tr th:nth-child(2),thead tr th:nth-child(3){text-align:center;width:32px}
-    thead tr th:nth-child(4){text-align:center;width:68px}
-    thead tr th:nth-child(5){width:22%}
-    .sig-row{display:flex;gap:0;margin-top:8px;padding-top:6px;border-top:1px solid #333}
-    .sig-f{flex:1;display:flex;align-items:flex-end;gap:6px;font-size:10px;font-weight:700;margin-right:20px}
-    .sig-line{flex:1;border-bottom:1px solid #333;min-width:120px;padding-bottom:1px;font-size:10px;font-weight:400}
-    .footer{display:flex;justify-content:space-between;font-size:8px;color:#555;margin-top:6px;border-top:1px solid #ccc;padding-top:4px}
+    .fi-val{border-bottom:1px solid #333;min-width:80px;padding-bottom:1px;font-size:8px;font-weight:400}
+    table{width:100%;border-collapse:collapse;font-size:7.5px}
+    thead tr th{background:#fff;color:#1a1a1a;padding:2px 4px;border:1px solid #1a1a1a;font-size:7.5px;font-weight:700;text-align:left}
+    thead tr th:nth-child(2),thead tr th:nth-child(3){text-align:center;width:24px}
+    thead tr th:nth-child(4){text-align:center;width:58px}
+    thead tr th:nth-child(5){width:20%}
+    .aud-row td{background:#c8c8c8;padding:3px 6px;border:1px solid #999;font-size:7.5px;font-weight:700}
+    .aud-line{display:inline-block;min-width:120px;border-bottom:1px solid #555;margin-left:4px;font-weight:400}
+    .footer{display:flex;justify-content:space-between;font-size:7px;color:#555;margin-top:4px;border-top:1px solid #ccc;padding-top:3px}
     @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.back-btn{display:none}}
   </style>
   </head><body>
   <button class="back-btn" onclick="window.close()" style="display:inline-flex;align-items:center;gap:6px;margin:10px 0 10px 10px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#f5f5f5;font-size:13px;font-weight:600;cursor:pointer;color:#333">← Back to app</button>
   <div class="page">
-    <div class="spine">${formTitle}</div>
+    <div class="spine">
+      <div class="spine-title">${formTitle}</div>
+      <img class="spine-logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAANEAAABVCAYAAADXGwEhAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAEYoSURBVHhe7b13vFzHdef5rbr3du7XL+eEhwyQAEESzGISSVGiKMmyJMuSw9qW7XHatUc74/HsrKXVemdmZ+zdcRyHscajdVAwJZGUGEQxZ4IgCBDpJbycU/fr3H1v1f5Rt18AAfIRBDN++DwA3e/eunXr1Al16pxTQmutuYALuIBzhjz9iwu4gAt4Y7jARBdwAW8SQivvgjl3ARfwJiC0ci8w0QVcwJvABXNuw1iVNRrtf/a/EwKE9H+E+anco9ffewHvP1zQRGeF9plFgBaARqBBaBA2APmiy2Iqy+zcAqnlNK7nEQqGaKivpaWxhqqIY+SUdv17Lgz1+xEXmOhs0BqlPBAagQBp42nNXDLLY08dIpUpUPQkyXSBucUk6XQGTykCwSB11dU01sdorA6xZ1sH+3Z2G/5Z0VAX8H7CBSZ6FVaHw3M98sUCc6k8E3NZDrx8jFRB8OSzL5PJFbGcAFpYuJ7C8zSep1FopJRYQhMJCPbt7OQnPnw5N1+1c91TLuD9gwtM5MPsOWuEMGy0kMxx8tQ4k7Mp+kbmSOVcTvb1k4jHiUbDRIIBAgELIcD1FKWyR77gkc6VmVlKM7eQQmgJUrGru5G//6PfxBHe6Y+9gPcBPvBMpFFmzaMVWkAmV+TUxDwvHjnFsb4x4okE6dQS23vauWTPdkLCxZEQDjoEAhZgmKhY9sgVPZaW85wYmubpQwOcGJzCVYKA9Hjm218jaGm4ECDyvsMHnok85YEWFItFpuaXODk0w4FjI0xNz3HVnh5+8uM3E3FclNJIKRBaIIVACA1CoJFoBEor0B4oD5AcHZ7jD79+D8cG52muCnD/3/4eaHX64y/gfYC3l4m0WHEPmzX2Glcw5rPvD1v33flGJVxQAK7STC+kGJ5c5LFnj7C4mOS2D13CDVfsJhwIgFnlICRGW2lp+rbSf7Wmh9L49JSHEIKTI3P8mz/6NrdcsZ3f+vnb3wEttDqaqzA0OP1bA+OFRBsBcQEbw9vERL67WAsUhlbSf6rSPltpaSS1ACmEkfpoUBotBMLM4tPaPTd4HiA9SiWXibk0333wOXL5Atfu28alu3uoq477fRGrDLcyp15/cmmtQSnGp+f41mO9fOKarWzb1LKhe88ntNIgpM/q2oy5EGit0GiU1ijPw1Ma7bvxzY9CCIFlBQwdpEYKYfqvMd7K1af47yWM+/8DiLeHiTQoZQimlcITirKrKbiCdKFM0XXJF1zKnsaxLWJhm3jIIexYBGyFYwtsK4g4T9JR6RJuSfLw88f5p/ue5/YP7eVjH9pFIhZGSOnPC39inCPjKuUxNDbB9+5/jl/+6dtJVCXe9kmmlFpxmHgKwyha47oe+WKJXL7I0uIiS4uLFIoFPM8DDdKyCIVCJGprqautIxCQRCMhLCmxpERKEEIgV95HIqU8b/R5r+E8M5GReSsS1zcLNILl9DKv9I8ylXQ5MTjLt7/7AxbTBYQdwrIDCCERwhAJ7aLKBRpqY9xw9WXc+eHLuHxnG5GgfBNBFtqYZUJTKHp858HnePypg/zGz93Jvt3daDzjTcOPOKiMyjnOC6002lMIx0F7Cml8EOcRr8HgQuJ5HslUikKhRD5fZmZmgVPDg1TF4kQiQZyATXUiQUdbK7W1NUZ4+PA8j1QyxdT0DKnlZXKFsmlvKUk2m8NxgrS1t9HUVE8kHCAaDpBIxAkGQn63fGfNOY7dew3nlYk02vCNr9o10HtqhrseeJbhySUKxQw333A1TTVRlOcikP800GSKmqO9I7x46CQTs0sgbRzHAaEJBx1uuGwzX/nNzxKyK1rijUFpjdCKmVSe//Q393Ll3u1ceVE7rY3VOLZz3qWo1hqlFEJIYwqd1+aNRjEmsjbaRkq0hsXFJUbGp8nmiiSTKVKpFI5tcflllxCwJfX1dQQCARAa6ZvOr353Q0flt621RGlMailJvlCi/9Qos/NJn9aaYCBAoipOVVWYhoYaOttbDWXP2Pb7D+eZiRR4GoRiaHKRux96ib6hMW6+dh/XX74DXS4QDkWwHAcsjac8LCRaKbQWlNwS+WKJvrFFvv/wER470IvWAimhpirCz9yymV/+4qeMF2yDs1L7Zo2nykxMZ/jqn/wDX/7Sp+lojhMLR7Ft6z1IaH/hr43GK7seI6OT9A0OUSwbUxmhCQcs9ly0g+p4lEjErG8sy/bXl28MSmmzlvIUxXKZoZEJTg1Pks4W0AizwWwJLAmhoOTGD11JLBo5q7J8P+E8MJHx9QhtCLeQyvD84WGeO9RHU12cj964j9rqMFWxqLlaa2OQ+QtZLYwJJXzpB5piuczI9BL3P3GU7z30MovZHD1NMf7ma79IY13VBiZBRb+Zv3LFMk8f6ue79z7Cp++4ng9dvpWgEwKMbf/uZyLTv4rmEUJSKrtkMzkmJmcYn5plOZujXPawBNRUx+hoa6K1tYVoOIRlWciKJ2etqfoGoFGARPjaqVj2GB2fpH9whKVU1gTfAgJFLBrmxmsuJ5GInd7M+xJvnom0Rgmj1ocn5rnnscMMjc5x6Y4Obr56N23NNf50FitmhKiY84J1GsVMetMd13MZnVrgn+47yN2PHuB3fuY2fvqOKxDY/gL9TBPft8XxPVDaI5nO8/Bzxzlxaoyr9mzhmst2EgkFkFS8fefb1Dq/0FobJtegtIeQNsnkMiOjE8zML5HJ5skXS3iuR31Ngm1bu0hURaiKxwgGQ/6mwfmHBorFImPj0/QNjrGUyqKBgC3Zta2Lnds3Y1vWu3pszxdeT6S/LjQSoV3mljJ8/+GXefiZE3Q013PrtRfT1ljtaxmJ8B2jRupX0gXWj3Dl90IIHGnRWl/Dnq3NtNRE2H9xF3jK3+E4M2W0FigNWivAYy6V48cH+hkam+OO6/dy9b7txEJBw0DmYWdr6l0Brc1YmHWJERAvHznOwcPHOTUyxcJimly+TCQYZPvmTi7du43OtkbqahOEgsG39tW0WQvV1iRIxKMIIQgEArQ01dPV2Yq0/DH+AODcmEhXTAsAj1zB497HXuH+p45RVxPlmks309JYbRji9Hs3CO2bL011CW65cjdtTfUI4WshfVqr5mKzJyIkrlIMjC9w3+NHGR6Z4cYrd7B3RxeRUOBdr3nWQmBc1FrD5Mw8Lxw6xsDQODPzSbKFIgKzVtzS087O7T00NdYTCDhYK67At0YLrUXAsQmGAgihiYYcutqazFroA4RzYyLf24Mivel/yJf5wWMvMzI5z57tnWzvaTFW2ZtZawiwbMmm9kbu/PB+IqEQWGbjcN1+izYGi2FqF0+XOXZqkh88fpjFVJqrL9nEvl3dSOkg5XtBOvrvpgWe57GcyTA4NMbRk6cYHB6nWFIoZTyWrc217NjaRU93O4mqqL9X47vp32JULAYhzcZ4KBSgpamWxsY6s1n+Zmj/HsM5MZFZZBqJPjixwA8fP8LoVBLlaeqr41RHI2Zt8yYEoRCSgO3QUFfFpo6ms0tV35VecfUePj7E3Q+9QCqV44bLtnLl3s04lv2e2gzUGM/lcjrH4Vd6Od43zNz8EggLISRBx6Knq42d27vp7GgmFg2f3sTbBq01rusSDYfo7molHA6+OeH5HsQ5MZEJC7HwdJnHnj/G6GyWsjLrHM9T/v7I6fe8cayag2dioIrENhmn+UKJF14Z4dsPvMDcfJKb9u9k3/ZuHMtaEyl2Hjr1VsIPWyuXXeYWUxzvO8Wp4Uky2QJCSLTShEMBNne3sXVzJw31tQQck2X7zkEQDYdpa6qnJlF1Flq9v3GOTCRBa3K5Akd6x0lnS34qgWBiLslcMrPi8nxrYIIozXpB43qKg8dH+O93PcbMQobbb7iM/Xu6sZzKHtB7g7AaTaFQYnJqgd7+UfoGRnGCYfMOAmLRED1dzezcvsVfd/i1Hd5BBBybjrYWNvd0IuS7XEi9RTgnCgh/GqeyJeaSeVzXhPgHAwEOHBvilf7x1QvfEvhBq2g8z+XFY8P8/fefIpfL8+lbLuemK3cSCQf9jp67c+Ptg4k+yOTynBoZ59jJASamZgkGg2YLQWvi0SA7tnayc/tmwqGAcSyeD3X/JhEMBkkkYsaM82fGBw3nxEQV13DJ9UjnCnjKrJFsW9I7MsNLJ0ZZWs76U/2tgEIoi2KpYPJ2/vZexmYX+Mwd13DLNTsIO6Ky3eRL69ci7Gv97u2ARilNLl+gf3CUl4/0srScRflRiAChgKSnq43N3R0EHesd7/HZ8G7t11uNc2KiSmSwbUEo4PjBi2ZDMGCHePLFfn74+MvkC2V/0/M8ZHRWYsV8t6/nebx0Yor/7f/5FtmCy89+8jo+dOl2IuEo0nZ8iq4+c63zYS2DpbN50rkiruu9+T6eI3L5AidODtE/MGqcB1ogtBFM0XCAnVs62b1jG47jr+9eUyi817GWBvo9wZrnxESGXwTxcIDG+jhOQIM04T9Kw9hMkicO9HL4xBCecs3EfVO2u0ZrD09jcpI8m77xOf7jX93D6MQcv/iZG/jELfupXQkzMZu7qwTQgIcWGk8LylpRckulsnn+6e5HuOv+Zxifnvc3NNc89i2CESwKMGkJQ8PjDI9NUvbN4kq3w6Eg2zZ3sWP7ZpNJi/D5523o5DsEI28NvY3wffe/7rnNbC0QSlBTnWBTUy0hGfST7Ez0NlLw2KEBvn73C4zPFRDCReg3W6TDSGCNx0Qqzc9++U8ZGJ/n3//uz/GxG/YScYQfmHoWKBNEKbwC5WyOp46M8pnf/hP+5K4X+R8/eJGnDvSSzuTfFsEnhDSLcCHp7R9hcGiCYskz7ycEy88R0FgXYdfOzazJUnh/Q4NWApTA88B1QaFM6v27GOceO6cNw8wupvnqn36P54+P43oeAmESpoUAr8T+XR387q9+km2dDabEgPAQG+ZdU0AEoUEJXOVxfHie3/r9/8ZiucxP3nAxv/Tpm2lvrl65vLLY1lRC7CppA4J0ochjBwb4k6/fTa5YYu/OHpprw2zpaODay3fR1drgp3Gs78WrUBmxFa1g2jdfrblZC5AV7VZpV5o8IwmT0wscOdbP3GJyVcsoQdCR9HS3cMneXVgYLf5e8jKeE7SJTC+VXaamZimXPLTS1DckSCSqzj2dpDIH1o3da3/W+IpiXYzmWpW4viPnzkQ+lFacHJvna3/8zxw/NQeWtfJwrcGxJZfuaOO3v3gbu7c2mjRwITcQGFnJlTEMpzzF0NwCv/bvvs70Yp5dWxv4P379J9jS2YxtmWv8pZq5HgFCYeGRyrp895EDPPrMcUZGJ/jSFz5Bd0uMzZ3NRMMhHNsiYEvTzgbWG2YfzNRZENoUKwHDtatMpFHCRD5LbYGXZ3KhyMDQKJfs3EKxlOPIsT5mF5ZRPp9ZUhIJB+lobWTn9k2EQ4G1j31PwwTSrnyqzO6V9TVAajnLKyf6mZlZQivY1NnCrl1bCIUcpDD5UvB6Xkmz7l0Rphq0kCuZa+uuXLcGNrTT+EynQAi9ksi5vv+G1maOngcm8pSH55Y41DfJn/3TY7zSN+mnIUujBFAIC3Z01PMvf+EOrtjdAliv4uZXwXckmK56DE0k+eXf/UsWyoLmqgB/+K9/mu09TQSs1YS6SvCp8AmTK5V5ZWCWf/j+E8zMLnDrjfu4/tJtNNfWEAwogoGQCZR8g9BKGEmFRuOihUYI804rAgSFUi7CM1cNTuf4td//CxQ2/+ZLd2J5GZaWUpTKfnApGik0jXXVXLx7Gw0Nte+r0JnKhFVao7RCKUALXNclm8mwsJhkamaRqbkF0IJw0OZD1+4nFgkjLYkU2k/peJ0xERqtFKWycT4FnIBJZ5enbXVoZRgMgadMKJVWphaFRhCwwbbMHAZQCjxPoYFi0SWZXCaTzRAKBd88E2k/Y7TgejxxoJd/vPdZDg/M4GmJZSwpFGBJxebOBn72ziu44/p92BLDSGbOvQqVQS+5LkcHxvnjv3uAQ/2ztDfE+Oqvf5JLtrcTCDo+s/pp6EaMkEznOXFqghePDjIyPsOOng6u2ruV5qYE9YkISktMyRSz9tiI9jGdVCAsZpaWmZqeIbmcRXpltvW009TUuGIC6Mo7aU2xpHj+6CD/6W/uY3gqiRZw+6Xd7NpSTyTogLZQGpQuE48G2b6lm63bu30CSiPt3nWovKBY0z9f8qMRa1PD/YDhubkFsrk8hWKJslsGrYnHY9TV1qAVDI1McPTkIApNfW0Vl+3ZSTQaxnM1y8spwKO2to5wOHQWTeSni6BYTmd48aVj5PJF6qqr2HvxdqLRkG+qG2sjm82xlFwmtZxmbn6JbDYPUqI0SCFJRGwuu3QPwVCAhflFtNYsp9NorbGkzdxCipn5JVx1HjTRCrRmOZvncN84333oIM+8PES+5CEECG375XU1W9vr+cIdl3PHh/YQCNhn3HGvuMS11gyMzvJn//gQTx0aoioe5bd+6ibuvPkibD+lW3klpOX4dwY=" alt="">
+    </div>
     <div class="content">
 
       <div class="top-row">
-        <div class="logo-block">SkyCare</div>
         <div class="fields-inline">
           <div class="fi"><span class="fi-label">Aircraft:</span><span class="fi-val">${reg}</span></div>
           <div class="fi"><span class="fi-label">Configuration:</span><span class="fi-val">${d.configuration||''}</span></div>
@@ -4960,13 +4961,10 @@ function generateAircraftPDF(reg, type, month) {
           <th style="text-align:center">Expires</th>
           <th>Comments/Action Required</th>
         </tr></thead>
-        <tbody>${rowsHtml}</tbody>
+        <tbody>${rowsHtml}
+        <tr class="aud-row"><td colspan="5">Auditor:<span class="aud-line">${d.auditorName||''}</span>&nbsp;&nbsp;&nbsp;&nbsp;Auditor Signature:<span class="aud-line">&nbsp;</span></td></tr>
+        </tbody>
       </table>
-
-      <div class="sig-row">
-        <div class="sig-f">Auditor: <span class="sig-line">${d.auditorName||''}</span></div>
-        <div class="sig-f">Auditor Signature: <span class="sig-line"></span></div>
-      </div>
 
       <div class="footer">
         <span>Version ${pv.version} · ${pv.date}</span>
