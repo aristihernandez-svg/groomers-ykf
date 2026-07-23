@@ -982,14 +982,14 @@ const AIRCRAFT_CHECKLIST = {
     { section:'Located in the Aircraft Binder', items:[
       {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
       {key:'tm',           label:'Training Manual (TM)', sub:'Edition 1, Revision #4'},
-      {key:'aoc',          label:'Air Operator\'s Certificate (AOC)', sub:'Located in COM Chapter 1 · August 22, 2025'},
-      {key:'foc',          label:'Foreign Operators Certificate (FOC)', sub:'Located in COM Chapter 1'},
+      {key:'aoc',          label:'Air Operator\'s Certificate (AOC) – located in COM Chapter 1', sub:'August 22, 2025'},
+      {key:'foc',          label:'Foreign Operators Certificate (FOC) – located in COM Chapter 1', sub:'Part A August 30, 2023; Part B & C November 17, 2020'},
       {key:'agip',         label:'Aircraft Ground Icing Program (AGIP)', sub:'Edition 1, Revision #1, with 2025-2026 TC HOT Guidelines at end of Annex'},
-      {key:'crm',          label:'Company Routes Manual', sub:'October 2, 2007'},
+      {key:'crm',          label:'Company Routes Manual October 2, 2007'},
       {key:'rcap',         label:'RCAP'},
       {key:'dg_list',      label:'List of Dangerous Goods likely to be carried'},
-      {key:'msds',         label:'MSDS', sub:'Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid'},
-      {key:'mel',          label:'Minimum Equipment List (MEL) Metro III Only'},
+      {key:'msds',         label:'MSDS (Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid)'},
+      {key:'mel',          label:'Minimum Equipment List (MEL) Metro III Only', sub:'Edition 2, Revision #1'},
       {key:'sop',          label:'Standard Operating Procedures – SW3/SW4', sub:'Edition 3, Revision Original – May 30, 2025'},
       {key:'dg_emergency', label:'DG – Emergency Response'},
     ]},
@@ -1030,8 +1030,8 @@ const AIRCRAFT_CHECKLIST = {
     { section:'Located in the Aircraft Binder', items:[
       {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
       {key:'tm',           label:'Training Manual (TM)', sub:'Edition 1, Revision #5'},
-      {key:'aoc',          label:'Air Operator\'s Certificate (AOC)', sub:'Located in COM Chapter 1 · August 22, 2025'},
-      {key:'foc',          label:'Foreign Operators Certificate (FOC)', sub:'Located in COM Chapter 1'},
+      {key:'aoc',          label:'Air Operator\'s Certificate (AOC) – located in COM Chapter 1', sub:'August 22, 2025'},
+      {key:'foc',          label:'Foreign Operators Certificate (FOC) – located in COM Chapter 1', sub:'Part A August 30, 2023; Part B & C November 17, 2020'},
       {key:'agip',         label:'Aircraft Ground Icing Program (AGIP)', sub:'Edition 1, Revision #1, with 2025-2026 TC HOT Guidelines at end of Annex'},
       {key:'crm',          label:'Company Routes Manual', sub:'October 2, 2007'},
       {key:'rcap',         label:'RCAP'},
@@ -4899,17 +4899,22 @@ function generateAircraftPDF(reg, type, month) {
     </tr>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{};
-      const subLines = item.sub ? item.sub.split('|').map(s=>s.trim()).filter(Boolean) : [];
+      const subLines = item.sub ? item.sub.split(';').map(s=>s.trim()).filter(Boolean) : [];
+      const isBold = subLines.length > 0;
       return `<tr>
-        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:400;line-height:1.3;vertical-align:top">
-          ${item.label}
-          ${subLines.map(s=>`<div style="font-size:8px;color:#444;font-style:italic;line-height:1.3;margin-top:1px">${s}</div>`).join('')}
-        </td>
+        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:${isBold?'700':'400'};line-height:1.3;vertical-align:top">${item.label}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#1a7a40;vertical-align:middle;width:32px">${it.yes?'✓':''}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#c03030;vertical-align:middle;width:32px">${it.no?'✗':''}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:middle;padding:3px;width:68px">${it.expires||''}</td>
         <td style="padding:3px 6px;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:top">${it.comments||''}</td>
-      </tr>`;
+      </tr>
+      ${subLines.map(s=>`<tr>
+        <td style="padding:2px 6px 2px 14px;border:1px solid #bbb;font-size:9px;font-weight:400;color:#444;font-style:italic;line-height:1.3">${s}</td>
+        <td style="border:1px solid #bbb"></td>
+        <td style="border:1px solid #bbb"></td>
+        <td style="border:1px solid #bbb"></td>
+        <td style="border:1px solid #bbb"></td>
+      </tr>`).join('')}`;
     }).join('')}`).join('');
 
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
