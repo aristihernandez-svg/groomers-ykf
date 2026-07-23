@@ -4068,6 +4068,7 @@ function renderAuditsHub(el) { renderAuditsLanding(el); }
 function renderAuditsLanding(el) {
   setBar({title:'Audits'});
   showFab(openAddAudit);
+  refreshAcAudits();
   const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
@@ -4310,15 +4311,26 @@ function acFolderCancelPress() {
   if(_acFolderLongPressTimer){ clearTimeout(_acFolderLongPressTimer); _acFolderLongPressTimer=null; }
 }
 
+let _acAuditsUnsub = null;
 function loadAcAudits() {
   try { S.acAudits = JSON.parse(localStorage.getItem('gykf_acaudits')||'{}'); } catch(e){ S.acAudits={}; }
   if(!db) return;
+  if(_acAuditsUnsub) { _acAuditsUnsub(); _acAuditsUnsub=null; }
   const month = acAuditMonthKey();
-  db.collection('auditAircraft').where('month','==',month).onSnapshot(snap=>{
+  _acAuditsUnsub = db.collection('auditAircraft').where('month','==',month).onSnapshot(snap=>{
     snap.docs.forEach(d=>{ S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
     try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
     render();
   }, e=>console.log('loadAcAudits failed:',e));
+}
+function refreshAcAudits() {
+  if(!db) return;
+  const month = acAuditMonthKey();
+  db.collection('auditAircraft').where('month','==',month).get().then(snap=>{
+    snap.docs.forEach(d=>{ S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
+    try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
+    render();
+  }).catch(e=>console.log('refreshAcAudits failed:',e));
 }
 
 function saveAcAudit(reg) {
@@ -4356,8 +4368,8 @@ function savePdfVersion(type,data) {
   try{const all=JSON.parse(localStorage.getItem('gykf_pdfVersions')||'{}');all[type]=data;localStorage.setItem('gykf_pdfVersions',JSON.stringify(all));}catch(e){}
 }
 const PDF_VERSION_DEFAULTS = {
-  westwind:{version:'8.0',date:'September 23, 2025',form:'03-8'},
-  metro:   {version:'6.2',date:'March 5, 2025',     form:'02-5'},
+  westwind:{version:'8.0', date:'September 23, 2025', form:'03-8'},
+  metro:   {version:'63.0',date:'October 22, 2025',   form:'03-8'},
 };
 
 function showAuditReminderPopup(pending, dismissKey) {
@@ -4817,102 +4829,90 @@ function generateAircraftPDF(reg, type, month) {
   const ct = S.customAcTypesList.find(t=>t.id===type);
   const sections = AIRCRAFT_CHECKLIST[type] || (ct ? ct.checklist : []);
   const pv = getPdfVersion(type) || (ct ? ct.pdfVersion : null) || PDF_VERSION_DEFAULTS[type] || {version:'1.0',date:'',form:''};
-
-  const rowsHtml = sections.map(sec=>`
-    <tr><td colspan="5" style="background:#d9e2f0;font-size:10px;font-weight:700;color:#1a1a1a;padding:5px 8px;border:1px solid #bbb;text-transform:uppercase;letter-spacing:.3px">${sec.section}</td></tr>
-    ${sec.items.map(item=>{
-      const it = d.items[item.key]||{};
-      return `<tr>
-        <td style="padding:5px 8px;border:1px solid #ccc;font-size:10.5px;font-weight:600;line-height:1.35;vertical-align:top">
-          ${item.label}${item.sub?`<div style="font-size:8.5px;color:#555;font-weight:400;margin-top:2px;line-height:1.35">${item.sub.replace(/\|/g,'·')}</div>`:''}
-        </td>
-        <td style="text-align:center;border:1px solid #ccc;font-size:14px;font-weight:700;color:#1a7a40;vertical-align:middle">${it.yes?'✓':''}</td>
-        <td style="text-align:center;border:1px solid #ccc;font-size:14px;font-weight:700;color:#c03030;vertical-align:middle">${it.no?'✗':''}</td>
-        <td style="text-align:center;border:1px solid #ccc;font-size:9.5px;color:#333;vertical-align:middle;padding:4px">${it.expires||''}</td>
-        <td style="padding:4px 8px;border:1px solid #ccc;font-size:9.5px;color:#333;vertical-align:top">${it.comments||''}</td>
-      </tr>`;
-    }).join('')}`).join('');
-
   const typeLabel = type==='westwind' ? 'WW24' : type==='metro' ? 'SW3/SW4' : (ct ? ct.name : type);
   const formTitle = `${typeLabel} Aircraft Equipment Audit Checklist`;
+
+  const rowsHtml = sections.map(sec=>`
+    <tr>
+      <td colspan="5" style="background:#c8c8c8;font-size:9.5px;font-weight:700;color:#1a1a1a;padding:4px 6px;border:1px solid #999;font-style:italic">${sec.section}</td>
+    </tr>
+    ${sec.items.map(item=>{
+      const it = d.items[item.key]||{};
+      const subLines = item.sub ? item.sub.split('|').map(s=>s.trim()).filter(Boolean) : [];
+      return `<tr>
+        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:400;line-height:1.3;vertical-align:top">
+          ${item.label}
+          ${subLines.map(s=>`<div style="font-size:8px;color:#444;font-style:italic;line-height:1.3;margin-top:1px">${s}</div>`).join('')}
+        </td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#1a7a40;vertical-align:middle;width:32px">${it.yes?'✓':''}</td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#c03030;vertical-align:middle;width:32px">${it.no?'✗':''}</td>
+        <td style="text-align:center;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:middle;padding:3px;width:68px">${it.expires||''}</td>
+        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:top">${it.comments||''}</td>
+      </tr>`;
+    }).join('')}`).join('');
 
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>${reg} – ${formTitle} – ${month}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Arial',sans-serif;font-size:11px;color:#1a1a1a;padding:20px 24px;background:#fff}
-    .header{display:flex;align-items:flex-start;justify-content:space-between;border-bottom:2px solid #1a3a6a;padding-bottom:10px;margin-bottom:10px}
-    .logo{font-size:18px;font-weight:900;color:#1a3a6a;letter-spacing:-0.5px}
-    .logo span{color:#4a9eff}
-    .title-block{text-align:right}
-    .form-title{font-size:15px;font-weight:800;color:#1a1a1a;margin-bottom:3px}
-    .fields-row{display:flex;gap:20px;margin-bottom:12px;font-size:11px}
-    .field{flex:1;border-bottom:1px solid #333;padding-bottom:2px}
-    .field-label{font-size:9px;color:#666;margin-bottom:2px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-    .field-val{font-size:12px;font-weight:600;color:#1a1a1a;min-height:16px}
-    table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:10.5px}
-    th{background:#1a3a6a;color:#fff;font-size:10px;padding:5px 8px;text-align:left;border:1px solid #1a3a6a;font-weight:700}
-    th:nth-child(2),th:nth-child(3){text-align:center;width:36px}
-    th:nth-child(4){text-align:center;width:70px}
-    th:nth-child(5){width:160px}
-    .sig-row{display:flex;gap:30px;margin-top:12px;padding-top:10px;border-top:1px solid #ccc}
-    .sig-field{flex:1}
-    .sig-label{font-size:9px;color:#555;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-    .sig-line{border-bottom:1px solid #333;height:22px;font-size:12px;font-weight:600;padding-bottom:2px;color:#1a1a1a}
-    .page-footer{display:flex;justify-content:space-between;font-size:9px;color:#777;margin-top:14px;border-top:1px solid #ddd;padding-top:6px}
-    @media print{body{padding:14px 18px}@page{margin:10mm}}
+    body{font-family:'Arial',sans-serif;font-size:10px;color:#1a1a1a;background:#fff}
+    .page{display:flex;flex-direction:row;min-height:100vh}
+    .spine{writing-mode:vertical-rl;transform:rotate(180deg);background:#1a1a1a;color:#fff;font-size:10px;font-weight:700;letter-spacing:1px;padding:12px 6px;white-space:nowrap;text-align:center;flex-shrink:0;width:22px}
+    .content{flex:1;padding:14px 16px 10px}
+    .top-row{display:flex;align-items:flex-end;gap:0;margin-bottom:8px;border-bottom:2px solid #1a1a1a;padding-bottom:6px}
+    .logo-block{font-size:16px;font-weight:900;letter-spacing:-0.5px;color:#1a1a1a;flex-shrink:0;margin-right:16px}
+    .fields-inline{display:flex;flex:1;gap:0}
+    .fi{display:flex;align-items:flex-end;gap:4px;margin-right:20px;font-size:10px}
+    .fi-label{font-weight:700;white-space:nowrap}
+    .fi-val{border-bottom:1px solid #333;min-width:90px;padding-bottom:1px;font-size:10px}
+    table{width:100%;border-collapse:collapse;font-size:9.5px}
+    thead tr th{background:#1a1a1a;color:#fff;padding:4px 6px;border:1px solid #1a1a1a;font-size:9.5px;font-weight:700;text-align:left}
+    thead tr th:nth-child(2),thead tr th:nth-child(3){text-align:center;width:32px}
+    thead tr th:nth-child(4){text-align:center;width:68px}
+    thead tr th:nth-child(5){width:22%}
+    .sig-row{display:flex;gap:0;margin-top:8px;padding-top:6px;border-top:1px solid #333}
+    .sig-f{flex:1;display:flex;align-items:flex-end;gap:6px;font-size:10px;font-weight:700;margin-right:20px}
+    .sig-line{flex:1;border-bottom:1px solid #333;min-width:120px;padding-bottom:1px;font-size:10px;font-weight:400}
+    .footer{display:flex;justify-content:space-between;font-size:8px;color:#555;margin-top:6px;border-top:1px solid #ccc;padding-top:4px}
+    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
   </style>
   </head><body>
+  <div class="page">
+    <div class="spine">${formTitle}</div>
+    <div class="content">
 
-  <div class="header">
-    <div class="logo">Sky<span>Care</span></div>
-    <div class="title-block">
-      <div class="form-title">${formTitle}</div>
+      <div class="top-row">
+        <div class="logo-block">SkyCare</div>
+        <div class="fields-inline">
+          <div class="fi"><span class="fi-label">Aircraft:</span><span class="fi-val">${reg}</span></div>
+          <div class="fi"><span class="fi-label">Configuration:</span><span class="fi-val">${d.configuration||''}</span></div>
+          <div class="fi"><span class="fi-label">Date:</span><span class="fi-val">${d.date||''}</span></div>
+        </div>
+      </div>
+
+      <table>
+        <thead><tr>
+          <th>Item</th>
+          <th style="text-align:center">Yes</th>
+          <th style="text-align:center">No</th>
+          <th style="text-align:center">Expires</th>
+          <th>Comments/Action Required</th>
+        </tr></thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+
+      <div class="sig-row">
+        <div class="sig-f">Auditor: <span class="sig-line">${d.auditorName||''}</span></div>
+        <div class="sig-f">Auditor Signature: <span class="sig-line"></span></div>
+      </div>
+
+      <div class="footer">
+        <span>Version ${pv.version} · ${pv.date}</span>
+        <span>Form #${pv.form}</span>
+      </div>
+
     </div>
   </div>
-
-  <div class="fields-row">
-    <div class="field">
-      <div class="field-label">Aircraft</div>
-      <div class="field-val">${reg}</div>
-    </div>
-    <div class="field">
-      <div class="field-label">Configuration</div>
-      <div class="field-val">${d.configuration||''}</div>
-    </div>
-    <div class="field">
-      <div class="field-label">Date</div>
-      <div class="field-val">${d.date||''}</div>
-    </div>
-  </div>
-
-  <table>
-    <thead><tr>
-      <th>Item</th>
-      <th style="text-align:center">Yes</th>
-      <th style="text-align:center">No</th>
-      <th style="text-align:center">Expires</th>
-      <th>Comments / Action Required</th>
-    </tr></thead>
-    <tbody>${rowsHtml}</tbody>
-  </table>
-
-  <div class="sig-row">
-    <div class="sig-field">
-      <div class="sig-label">Auditor</div>
-      <div class="sig-line">${d.auditorName||''}</div>
-    </div>
-    <div class="sig-field">
-      <div class="sig-label">Auditor Signature</div>
-      <div class="sig-line"></div>
-    </div>
-  </div>
-
-  <div class="page-footer">
-    <span>Version ${pv.version} – ${pv.date}</span>
-    <span>Form #${pv.form}</span>
-  </div>
-
   </body></html>`;
 
   const win = window.open('','_blank');
