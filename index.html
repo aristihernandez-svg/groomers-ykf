@@ -4312,17 +4312,9 @@ function acFolderCancelPress() {
   if(_acFolderLongPressTimer){ clearTimeout(_acFolderLongPressTimer); _acFolderLongPressTimer=null; }
 }
 
-let _acAuditsUnsub = null;
 function loadAcAudits() {
   try { S.acAudits = JSON.parse(localStorage.getItem('gykf_acaudits')||'{}'); } catch(e){ S.acAudits={}; }
-  if(!db) return;
-  if(_acAuditsUnsub) { _acAuditsUnsub(); _acAuditsUnsub=null; }
-  const month = acAuditMonthKey();
-  _acAuditsUnsub = db.collection('auditAircraft').where('month','==',month).onSnapshot(snap=>{
-    snap.docs.forEach(d=>{ S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
-    try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
-    render();
-  }, e=>console.log('loadAcAudits failed:',e));
+  // Firestore listener is wired by setupLiveSync — no duplicate listener here
 }
 function refreshAcAudits() {
   if(!db) return;
@@ -4337,6 +4329,7 @@ function refreshAcAudits() {
 function saveAcAudit(reg) {
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
   if(!db) return;
+  _lastAcAuditWrite = Date.now();
   const month = acAuditMonthKey();
   const type = S.acAuditType || (AIRCRAFT_WESTWIND.includes(reg)?'westwind':'metro');
   const data = {...acAuditData(reg), month, reg, type};
@@ -5490,6 +5483,7 @@ function recentDayExpectedDate(dayIdx) {
 let _lastSelfWrite = 0; // suppress listener re-render for own writes
 let _lastLoadedDate = new Date().toDateString(); // tracks calendar date for overnight reset
 let _lastShopWrite = 0; // suppress shopping listener re-render for own writes
+let _lastAcAuditWrite = 0; // suppress audit listener re-render for own writes
 let _cachedShopState = null; // Firestore shopState cache — bridges catalog/state listener race
 let _cachedTaskState = null; // bridges taskState listener firing before task content loads
 let _shopSearchTimer = null; // debounce timer for shopping search
@@ -7659,7 +7653,6 @@ function setupLiveSync() {
     }, e => console.log('shopState listener error:', e));
 
     // Aircraft audit — real-time sync across devices.
-    let _lastAcAuditWrite = 0;
     const _acMonth = acAuditMonthKey();
     db.collection('auditAircraft').where('month','==',_acMonth).onSnapshot(snap => {
       snap.docs.forEach(d => { S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
@@ -7675,10 +7668,6 @@ function setupLiveSync() {
       if(!touchActive) rerender();
       else setTimeout(rerender, 200);
     }, e => console.log('acAudits listener error:', e));
-
-    // Patch saveAcAudit to stamp the write time so the listener above can suppress echo.
-    const _origSaveAcAudit = saveAcAudit;
-    saveAcAudit = function(reg) { _lastAcAuditWrite = Date.now(); _origSaveAcAudit(reg); };
 
     // Bored board done-state.
     db.collection('boredState').doc('state').onSnapshot(snap => {
