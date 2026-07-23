@@ -3395,9 +3395,9 @@ function generateAuditPDF(month) {
   let carSections='';
   CREW_CARS.forEach(car=>{
     const d=S.carAudits[month+'-'+car.key]||{};
-    const photos=d.photos||[];
-    const poorCount=photos.filter(p=>p.rating==='Poor').length;
-    const fairCount=photos.filter(p=>p.rating==='Fair').length;
+    const photos=Array.isArray(d.photos)&&d.photos.length===8?d.photos:Array.from({length:8},(_,i)=>(d.photos||[])[i]||null);
+    const poorCount=photos.filter(p=>p&&p.rating==='Poor').length;
+    const fairCount=photos.filter(p=>p&&p.rating==='Fair').length;
     carSections+=`
       <div class="car-section">
         <div class="car-title">
@@ -3408,12 +3408,21 @@ function generateAuditPDF(month) {
           </div>
           <div class="car-status ${d.done?'done':'pending'}">${d.done?'✅ Done':'⏳ Pending'}</div>
         </div>
-        ${photos.length?`<div class="photo-grid">${photos.map(p=>`
-          <div class="photo-cell">
-            <img src="${p.src}" class="photo-img">
-            <div class="photo-rating rating-${p.rating?.toLowerCase()}">${p.rating||'—'}</div>
-            ${p.note?`<div class="photo-note">${p.note}</div>`:''}
-          </div>`).join('')}</div>`:'<p class="no-photos">No photos taken</p>'}
+        <div class="photo-grid">${AUDIT_PHOTO_SLOTS.map((label,i)=>{
+          const p=photos[i];
+          return p
+            ?`<div class="photo-cell">
+                <img src="${p.src}" class="photo-img">
+                <div class="photo-label">${label}</div>
+                <div class="photo-rating rating-${p.rating?.toLowerCase()}">${p.rating||'—'}</div>
+                ${p.note?`<div class="photo-note">${p.note}</div>`:''}
+              </div>`
+            :`<div class="photo-cell empty">
+                <div class="photo-empty-box"></div>
+                <div class="photo-label">${label}</div>
+                <div class="photo-rating" style="color:#bbb">No photo</div>
+              </div>`;
+        }).join('')}</div>
         ${d.comments?`<div class="comments"><strong>Comments:</strong> ${d.comments}</div>`:''}
         ${d.groomer?`<div class="groomer-sig">Audited by: ${d.groomer}</div>`:''}
       </div>`;
@@ -3434,14 +3443,16 @@ function generateAuditPDF(month) {
     .car-status{margin-left:auto;font-size:12px;font-weight:600;white-space:nowrap}
     .car-status.done{color:#1a7a40}
     .car-status.pending{color:#999}
-    .photo-grid{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
-    .photo-cell{width:calc(14.28% - 7px);min-width:80px}
-    .photo-img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px;display:block}
-    .photo-rating{font-size:10px;font-weight:700;text-align:center;margin-top:3px;padding:2px 4px;border-radius:4px}
+    .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px}
+    .photo-cell{display:flex;flex-direction:column}
+    .photo-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block}
+    .photo-empty-box{width:100%;aspect-ratio:4/3;border-radius:6px;background:#f0f0f0;border:1px dashed #ccc}
+    .photo-label{font-size:9px;font-weight:700;color:#444;margin-top:3px;text-align:center}
+    .photo-rating{font-size:10px;font-weight:700;text-align:center;margin-top:2px;padding:2px 4px;border-radius:4px}
     .rating-good{background:#d4edda;color:#1a7a40}
     .rating-fair{background:#fff3cd;color:#856404}
     .rating-poor{background:#f8d7da;color:#842029}
-    .photo-note{font-size:10px;color:#555;margin-top:2px;text-align:center}
+    .photo-note{font-size:9px;color:#555;margin-top:2px;text-align:center}
     .no-photos{padding:12px 16px;color:#999;font-style:italic;font-size:12px}
     .comments{padding:10px 16px;background:#fffbf0;border-top:1px solid #e0e0e0;font-size:12px;color:#444}
     .groomer-sig{padding:6px 16px 10px;font-size:11px;color:#888;font-style:italic}
