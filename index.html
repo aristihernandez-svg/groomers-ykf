@@ -965,6 +965,7 @@ const AIRCRAFT_METRO    = ['CPX','TIM','IOC','IOB','IOJ','IOA','IOH','KKC'];
 const AIRCRAFT_WESTWIND = ['IAW','XDP','XAW'];
 
 const AIRCRAFT_CHECKLIST = {
+  // Sub-lines separated by ;; so that | can appear freely within a line (e.g. W&B pairs)
   metro: [
     { section:'Located with the Journey Log Book', items:[
       {key:'cert_insurance',    label:'Certificate of Insurance'},
@@ -974,10 +975,10 @@ const AIRCRAFT_CHECKLIST = {
       {key:'dtops_receipt',     label:'DTOPs Receipt (Current Year)'},
     ]},
     { section:'Located in the Documents Bag & AFM Binder', items:[
-      {key:'afm',    label:'Aircraft Flight Manual', sub:'CPX – Rev B-33 11/14/14 | TIM – Rev A-43 11/14/14 | IOC/IOB – Rev B-10 5/28/08 | IOJ/IOA – Rev A-15 07/27/20 | IOH – Rev A-14 05/28/08 | KKC – Rex A-44 07/27/20'},
-      {key:'wb_ofp', label:'Weight and Balance & OFP Version', sub:'CPX – Aug 29 2025 V5.55 | KKC – May 22 2025 V5.53 | IOC – Nov 27 2024 V8.48 | TIM – Oct 21 2025 V5.56 | IOB – Jun 2 2025 V2.1 | IOA – May 5 2025 V13.2 | IOJ – Aug 2 2024 V8.47 | IOH – Aug 2 2024 V8.47'},
+      {key:'afm',    label:'Aircraft Flight Manual', sub:'CPX – AFM Rev B-33 11/14/14;;TIM – AFM Rev A-43 11/14/14;;IOC/IOB – AFM Rev B-10 5/28/08;;IOJ/IOA – AFM Rev A-15 07/27/20;;IOH – AFM Rev A-14 05/28/08;;KKC – AFM Rex A-44 07/27/20'},
+      {key:'wb_ofp', label:'Weight and Balance & OFP Version', sub:'CPX – August 29, 2025 – V5.55  |  KKC – May 22, 2025 – V5.53;;IOC – November 27, 2024 – V8.48  |  TIM – October 21, 2025 – V5.56;;IOB – June 2, 2025 – V2.1  |  IOA – May 5, 2025 – V13.2;;IOJ – August 2, 2024 – V8.47  |  IOH – August 2, 2024 – V8.47'},
       {key:'canada_fs', label:'Canada Flight Supplement'},
-      {key:'vfr_ifr',   label:'VFR/IFR Charts', sub:'Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen'},
+      {key:'vfr_ifr',   label:'VFR/IFR Charts (Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen)'},
     ]},
     { section:'Located in the Aircraft Binder', items:[
       {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
@@ -994,7 +995,7 @@ const AIRCRAFT_CHECKLIST = {
       {key:'dg_emergency', label:'DG – Emergency Response'},
     ]},
     { section:'Located in the Aircraft', items:[
-      {key:'checklist_normal', label:'Checklist Normal SW3/SW4', sub:'Version 1.2 – May 20, 2025'},
+      {key:'checklist_normal', label:'Checklist Normal SW3/SW4 – Version 1.2 – May 20, 2025'},
       {key:'qrh',              label:'Quick Reference Handbook', sub:'Revision 8 – May 20, 2025'},
       {key:'pbs',              label:'Passenger Safety Briefing Script', sub:'Version 1.0 – May 30, 2025'},
       {key:'dtops_sticker',    label:'DTOPs Sticker Affixed Ext. of A/C by Door (Current Year)'},
@@ -1004,13 +1005,13 @@ const AIRCRAFT_CHECKLIST = {
       {key:'first_aid',        label:'First Aid Kit & Workplace Injury Log', sub:'If log used, send picture to healthandsafety@skycare.ca'},
       {key:'fire_ext',         label:'Fire Extinguisher'},
       {key:'survival',         label:'Survival Equipment'},
-      {key:'life_jackets',     label:'Life Jackets', sub:'1 for Each seat, including stretchers & pilot seats'},
-      {key:'headset_adaptors', label:'Aircraft Headset Adaptors', sub:'In pouch, in closet'},
+      {key:'life_jackets',     label:'Life Jackets', sub:'(1 for Each seat, including stretchers & pilot seats)'},
+      {key:'headset_adaptors', label:'Aircraft Headset Adaptors (In pouch, in closet)'},
       {key:'smoke_goggles',    label:'Smoke Goggles'},
-      {key:'o2_cockpit',       label:'O2 Masks, Cockpit', sub:'PIC and SIC Seats'},
-      {key:'o2_cabin',         label:'O2 Mask, Cabin', sub:'1 as depicted on SBC'},
-      {key:'needle_kit',       label:'Needle Pick Up Kit', sub:'Container, Tongs, Wipes, Gloves'},
-      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct', sub:'CPX, TIM, KKC – Metro II – January 2024 R6 | IOC, IOB, IOJ, IOH, IOA – Metro III – January 2024 R3'},
+      {key:'o2_cockpit',       label:'O2 Masks, Cockpit (PIC and SIC Seats)'},
+      {key:'o2_cabin',         label:'O2 Mask, Cabin (1 as depicted on SBC)'},
+      {key:'needle_kit',       label:'Needle Pick Up Kit (Container, Tongs, Wipes, Gloves)'},
+      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct:', sub:'CPX, TIM, KKC – Metro II – January 2024 R6;;IOC, IOB, IOJ, IOH, IOA – Metro III – January 2024 R3'},
     ]},
   ],
   westwind: [
@@ -1022,10 +1023,10 @@ const AIRCRAFT_CHECKLIST = {
       {key:'dtops_receipt',     label:'DTOPs Receipt (Current Year)'},
     ]},
     { section:'Located in the Documents Bag & AFM Binder', items:[
-      {key:'afm',    label:'Aircraft Flight Manual', sub:'IAW – AFM Rev 13, 10 Aug 1990 | XDP – AFM Rev 4, 23 Jun 1998 | XAW –'},
-      {key:'wb_ofp', label:'Weight and Balance & Blank OFP (in the AFM with configurations pictures)', sub:'IAW – October 22, 2022 – V9.1 | XDP – August 11, 2021 – V9.1 | XAW –'},
+      {key:'afm',    label:'Aircraft Flight Manual', sub:'IAW – AFM Rev 13, 10 Aug 1990;;XDP – AFM Rev 4, 23 Jun 1998;;XAW –'},
+      {key:'wb_ofp', label:'Weight and Balance & Blank OFP (in the AFM with configurations pictures)', sub:'IAW – October 22, 2022 – V9.1;;XDP – August 11, 2021 – V9.1;;XAW –'},
       {key:'canada_fs', label:'Canada Flight Supplement'},
-      {key:'vfr_ifr',   label:'VFR/IFR Charts', sub:'Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen'},
+      {key:'vfr_ifr',   label:'VFR/IFR Charts (Lo3-4/5-6, Hi3-4/5-6, T1/2, Cap 2,3,4,5,7 & Cap Gen)'},
     ]},
     { section:'Located in the Aircraft Binder', items:[
       {key:'com',          label:'Company Operations Manual (COM)', sub:'Edition 2, Revision #5'},
@@ -1033,10 +1034,10 @@ const AIRCRAFT_CHECKLIST = {
       {key:'aoc',          label:'Air Operator\'s Certificate (AOC) – located in COM Chapter 1', sub:'August 22, 2025'},
       {key:'foc',          label:'Foreign Operators Certificate (FOC) – located in COM Chapter 1', sub:'Part A August 30, 2023; Part B & C November 17, 2020'},
       {key:'agip',         label:'Aircraft Ground Icing Program (AGIP)', sub:'Edition 1, Revision #1, with 2025-2026 TC HOT Guidelines at end of Annex'},
-      {key:'crm',          label:'Company Routes Manual', sub:'October 2, 2007'},
+      {key:'crm',          label:'Company Routes Manual October 2, 2007'},
       {key:'rcap',         label:'RCAP'},
       {key:'dg_list',      label:'List of Dangerous Goods likely to be carried'},
-      {key:'msds',         label:'MSDS', sub:'Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid'},
+      {key:'msds',         label:'MSDS (Jet A1, 2380 Turbo oil, 782 Hydraulic Fluid)'},
       {key:'sop',          label:'Standard Operating Procedures – WW24', sub:'Edition 3, Revision 1 – June 18, 2025'},
       {key:'mel',          label:'MEL – WW24', sub:'Edition 1, Revision Original – January 20, 2020'},
       {key:'dg_emergency', label:'DG – Emergency Response'},
@@ -1048,16 +1049,16 @@ const AIRCRAFT_CHECKLIST = {
       {key:'dtops_sticker',    label:'DTOPs Sticker Affixed Ext. of A/C by Door (Current Year)'},
       {key:'baggage_tiedown',  label:'Baggage Tie-down Equipment'},
       {key:'baggage_scale',    label:'Baggage Scale Co-pilot seat back pouch'},
-      {key:'seatbelt_ext',     label:'Seatbelt Extender Co-pilot seat back pouch'},
+      {key:'seatbelt_ext',     label:'Seatbelt Extender Co-Pilot seat back pouch'},
       {key:'first_aid',        label:'First Aid Kit & Workplace Injury Log', sub:'If log used, send picture to healthandsafety@skycare.ca'},
       {key:'fire_ext',         label:'Fire Extinguisher'},
       {key:'survival',         label:'Survival Equipment'},
-      {key:'life_jackets',     label:'Life Jackets', sub:'1 for Each seat, including stretchers & pilot seats'},
-      {key:'headset_adaptors', label:'Aircraft Headset Adaptors', sub:'In pouch, in closet'},
+      {key:'life_jackets',     label:'Life Jackets', sub:'(1 for Each seat, including stretchers & pilot seats)'},
+      {key:'headset_adaptors', label:'Aircraft Headset Adaptors (In pouch, in closet)'},
       {key:'smoke_goggles',    label:'Smoke Goggles'},
-      {key:'o2_cockpit',       label:'O2 Masks, Cockpit', sub:'PIC and SIC Seats'},
-      {key:'o2_cabin',         label:'O2 Mask, Cabin', sub:'1 as depicted on SBC'},
-      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct', sub:'WW24 – Revision 3, September 2022'},
+      {key:'o2_cockpit',       label:'O2 Masks, Cockpit (PIC and SIC Seats)'},
+      {key:'o2_cabin',         label:'O2 Mask, Cabin (1 as depicted on SBC)'},
+      {key:'safety_cards',     label:'Confirm all safety briefing cards are present and correct:', sub:'WW24 – Revision 3, September 2022'},
     ]},
   ],
 };
@@ -4899,7 +4900,7 @@ function generateAircraftPDF(reg, type, month) {
     </tr>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{};
-      const subLines = item.sub ? item.sub.split('|').map(s=>s.trim()).filter(Boolean) : [];
+      const subLines = item.sub ? item.sub.split(';;').map(s=>s.trim()).filter(Boolean) : [];
       const isBold = subLines.length > 0;
       const subHtml = subLines.map(s=>`<div style="font-size:8px;color:#444;font-style:italic;line-height:1.4;margin-top:1px">${s}</div>`).join('');
       return `<tr>
