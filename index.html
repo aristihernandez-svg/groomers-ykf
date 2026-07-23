@@ -7652,21 +7652,12 @@ function setupLiveSync() {
       }
     }, e => console.log('shopState listener error:', e));
 
-    // Aircraft audit — real-time sync across devices.
+    // Aircraft audit — real-time sync across devices (same pattern as crew cars: always re-render).
     const _acMonth = acAuditMonthKey();
     db.collection('auditAircraft').where('month','==',_acMonth).onSnapshot(snap => {
       snap.docs.forEach(d => { S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
       try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e) {}
-      if(Date.now() - _lastAcAuditWrite < 1500) return;
-      const el = document.getElementById('content');
-      const rerender = () => {
-        if(S.acAuditReg) renderAircraftChecklist(el, S.acAuditReg, S.acAuditType);
-        else if(S.acAuditView) renderAircraftFolder(el, S.acAuditView);
-        else if(S.acCustomTypeView) renderCustomAcFolder(el, S.acCustomTypeView);
-        else if(S.tab==='audits') renderAuditsLanding(el);
-      };
-      if(!touchActive) rerender();
-      else setTimeout(rerender, 200);
+      render();
     }, e => console.log('acAudits listener error:', e));
 
     // Bored board done-state.
