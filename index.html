@@ -3456,8 +3456,9 @@ function generateAuditPDF(month) {
     .no-photos{padding:12px 16px;color:#999;font-style:italic;font-size:12px}
     .comments{padding:10px 16px;background:#fffbf0;border-top:1px solid #e0e0e0;font-size:12px;color:#444}
     .groomer-sig{padding:6px 16px 10px;font-size:11px;color:#888;font-style:italic}
-    @media print{body{padding:16px}.car-section{break-inside:avoid}}
+    @media print{.back-btn{display:none}body{padding:16px}.car-section{break-inside:avoid}}
   </style></head><body>
+  <button class="back-btn" onclick="window.close()" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:18px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#f5f5f5;font-size:13px;font-weight:600;cursor:pointer;color:#333">← Back to app</button>
   <h1>Crew Car Monthly Audit</h1>
   <div class="meta">Period: ${month} &nbsp;·&nbsp; Groomer: ${groomer} &nbsp;·&nbsp; Generated: ${now}</div>
   ${carSections}
@@ -4934,9 +4935,10 @@ function generateAircraftPDF(reg, type, month) {
     .sig-f{flex:1;display:flex;align-items:flex-end;gap:6px;font-size:10px;font-weight:700;margin-right:20px}
     .sig-line{flex:1;border-bottom:1px solid #333;min-width:120px;padding-bottom:1px;font-size:10px;font-weight:400}
     .footer{display:flex;justify-content:space-between;font-size:8px;color:#555;margin-top:6px;border-top:1px solid #ccc;padding-top:4px}
-    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.back-btn{display:none}}
   </style>
   </head><body>
+  <button class="back-btn" onclick="window.close()" style="display:inline-flex;align-items:center;gap:6px;margin:10px 0 10px 10px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#f5f5f5;font-size:13px;font-weight:600;cursor:pointer;color:#333">← Back to app</button>
   <div class="page">
     <div class="spine">${formTitle}</div>
     <div class="content">
