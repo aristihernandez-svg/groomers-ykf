@@ -1828,15 +1828,14 @@ async function renderHome(el) {
     </style>
 
     <div class="hero-wrap">
-      ${HERO_IMGS.map((img,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${img.src}" id="hImg${i}" style="object-fit:${img.fit};padding:${img.pad};object-position:center top" alt="">`).join('')}
+      <img src="Jessie/IMG_0518.HEIC" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="Jessie">
       <div class="hero-grad"></div>
       <div class="hero-overlay">
         <img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:26px;filter:brightness(0) invert(1);opacity:0.9;display:block;margin:0 auto 6px">
-        <div style="font-size:12px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.3px">${dateStr}</div>
+        <div style="font-size:13px;color:#fff;font-weight:700;letter-spacing:0.3px">Happy Birthday Jessie! 🎂</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.3px;margin-top:3px">${dateStr}</div>
       </div>
     </div>
-
-    ${(()=>{const _t=new Date();return(_t.getMonth()===6&&_t.getDate()===23)?`<div style="margin:0;padding:0;background:#000;text-align:center"><img src="Jessie/IMG_0518.HEIC" alt="" style="width:100%;max-height:340px;object-fit:cover;display:block"><div style="padding:10px 0 14px;font-size:14px;font-weight:700;color:#fff;letter-spacing:0.3px">Happy Birthday Jessie! 🎂</div></div>`:'';})()}
 
     ${renderHandoffNotesHtml()}
 
