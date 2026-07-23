@@ -959,6 +959,8 @@ const CREW_CARS = [
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
+const AUDIT_PHOTO_SLOTS = ['Front Exterior','Left Exterior','Back Exterior','Right Exterior','Dashboard','Front Seats','Back Seats','Under the Car'];
+
 const AIRCRAFT_METRO    = ['CPX','TIM','IOC','IOB','IOJ','IOA','IOH','KKC'];
 const AIRCRAFT_WESTWIND = ['IAW','XDP','XAW'];
 
@@ -2559,7 +2561,13 @@ function saveCarAudit(carKey) {
 }
 function carAuditData(carKey) {
   const k=auditDocKey(carKey);
-  if(!S.carAudits[k]) S.carAudits[k]={photos:[],comments:'',done:false,completedAt:null};
+  if(!S.carAudits[k]) S.carAudits[k]={photos:new Array(8).fill(null),comments:'',done:false,completedAt:null};
+  // Normalize to 8-slot fixed array (migrate from old unordered array)
+  const p=S.carAudits[k].photos;
+  if(!Array.isArray(p)||p.length!==8) {
+    const old=Array.isArray(p)?p.filter(x=>x):[];
+    S.carAudits[k].photos=Array.from({length:8},(_,i)=>old[i]||null);
+  }
   return S.carAudits[k];
 }
 function loadPastAudits() {
@@ -3251,6 +3259,7 @@ window._calPick=function(key,type,iso){
 
 // ── AUDIT HELPERS ─────────────────────────────────────────────
 let auditPhotoTarget=null;
+let auditPhotoSlot=0;
 
 function refreshAuditPhotos(key) {
   if(!db) return;
@@ -3281,37 +3290,47 @@ function auditSectionHTML(key) {
     <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
       style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:10px">
 
-    <!-- Photo grid -->
-    <div style="font-size:11px;color:var(--t3);margin-bottom:6px">Photos ${cd.photos.length}/7</div>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">`;
+    <!-- Photo grid — 8 fixed labeled slots -->
+    ${(()=>{const taken=cd.photos.filter(p=>p).length;return`<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Photos ${taken}/8</div>`;})()}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">`;
 
-  cd.photos.forEach((p,i)=>{
-    const rc=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
-    h+=`<div class="audit-photo-wrap">
-      <img src="${p.src}" onclick="viewPhoto('${p.src}')">
-      <div class="audit-rating ${rc}">${p.rating}</div>
-      <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:20px;height:20px;font-size:11px;cursor:pointer">✕</button>
-    </div>`;
+  AUDIT_PHOTO_SLOTS.forEach((label,i)=>{
+    const p=cd.photos[i];
+    if(p) {
+      const rc=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
+      h+=`<div style="position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--glass)">
+        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">
+        <div class="audit-rating ${rc}" style="position:absolute;bottom:28px;left:4px">${p.rating}</div>
+        <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:1">✕</button>
+        <div style="padding:4px 6px 6px;display:flex;gap:4px;align-items:center">
+          <span style="font-size:10px;font-weight:700;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</span>
+          <select onchange="setAuditRating('${key}',${i},this.value)" style="padding:2px 4px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);font-size:10px;color:var(--t1)">
+            <option value="Good" ${p.rating==='Good'?'selected':''}>✅</option>
+            <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️</option>
+            <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴</option>
+          </select>
+        </div>
+      </div>`;
+    } else {
+      h+=`<div onclick="triggerAuditPhoto('${key}',${i})" style="border-radius:var(--radius-sm);border:2px dashed var(--border2);background:var(--glass);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:4/3;padding:8px">
+        <span style="font-size:22px;color:var(--t4);line-height:1">+</span>
+        <span style="font-size:10px;font-weight:600;color:var(--t3);text-align:center;line-height:1.2">${label}</span>
+      </div>`;
+    }
   });
 
-  if(cd.photos.length<7) {
-    h+=`<div onclick="triggerAuditPhoto('${key}')" style="width:calc(33% - 4px);aspect-ratio:1;border-radius:var(--radius-sm);border:2px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--t3);font-size:24px;background:var(--glass)">+</div>`;
-  }
   h+=`</div>`;
 
-  if(cd.photos.length) {
+  // Notes row for taken photos
+  const takenPhotos=cd.photos.map((p,i)=>({p,i})).filter(({p})=>p);
+  if(takenPhotos.length) {
     h+=`<div style="margin-bottom:10px">`;
-    cd.photos.forEach((p,i)=>{
-      h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:9px 12px;margin-bottom:6px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
-        <img src="${p.src}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0">
-        <span style="font-size:11px;color:var(--t3);flex-shrink:0">Photo ${i+1}</span>
-        <select onchange="setAuditRating('${key}',${i},this.value)" style="padding:3px 6px;border-radius:12px;border:1px solid var(--border2);background:var(--glass2);font-size:11px;color:var(--t1);flex-shrink:0">
-          <option value="Good" ${p.rating==='Good'?'selected':''}>✅ Good</option>
-          <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️ Fair</option>
-          <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴 Poor</option>
-        </select>
+    takenPhotos.forEach(({p,i})=>{
+      h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <img src="${p.src}" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0">
+        <span style="font-size:10px;color:var(--t3);flex-shrink:0;font-weight:600">${AUDIT_PHOTO_SLOTS[i]}</span>
         <input value="${p.note||''}" placeholder="Note..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
-          style="flex:1;min-width:0;padding:5px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:12px;font-family:inherit;color:var(--t1);outline:none">
+          style="flex:1;min-width:0;padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:11px;font-family:inherit;color:var(--t1);outline:none">
       </div>`;
     });
     h+=`</div>`;
@@ -3328,15 +3347,16 @@ function auditSectionHTML(key) {
   return h;
 }
 
-function triggerAuditPhoto(key) {
+function triggerAuditPhoto(key, slotIdx) {
   auditPhotoTarget=key;
+  auditPhotoSlot=slotIdx;
   S.photoCtx='audit';
   const input=document.getElementById('photoInput');
   input.value=''; input.click();
 }
 function removeAuditPhoto(key,i) {
   if(!confirm('Remove this photo?')) return;
-  carAuditData(key).photos.splice(i,1);
+  carAuditData(key).photos[i]=null;
   saveCarAudit(key); render();
 }
 function setAuditRating(key,i,val) { carAuditData(key).photos[i].rating=val; saveCarAudit(key); }
@@ -6092,7 +6112,7 @@ function applyCapturedPhoto(src) {
     if(btn) btn.textContent='📷 Photo attached ✓';
   } else if(S.photoCtx==='audit' && auditPhotoTarget) {
     const key=auditPhotoTarget;
-    carAuditData(key).photos.push({src,rating:'Good',note:''});
+    carAuditData(key).photos[auditPhotoSlot]={src,rating:'Good',note:''};
     saveCarAudit(key);
     render();
     toast('Photo added ✓');
@@ -6133,7 +6153,7 @@ function setupPhotoInput() {
       const maxDim = S.photoCtx==='proc' ? 200 : 1280;
       const compressed=await compressImage(ev.target.result, maxDim);
       if(S.photoCtx==='audit' && auditPhotoTarget && storage) {
-        await uploadAuditPhoto(compressed, auditPhotoTarget);
+        await uploadAuditPhoto(compressed, auditPhotoTarget, auditPhotoSlot);
       } else {
         applyCapturedPhoto(compressed);
       }
@@ -6143,26 +6163,24 @@ function setupPhotoInput() {
   });
 }
 
-async function uploadAuditPhoto(dataUrl, key) {
+async function uploadAuditPhoto(dataUrl, key, slotIdx) {
   toast('Uploading photo…');
   try {
     const month=auditMonth();
-    const path=`audits/${month}/${key}/${Date.now()}.jpg`;
+    const path=`audits/${month}/${key}/slot${slotIdx}_${Date.now()}.jpg`;
     const ref=storage.ref(path);
     const res=await fetch(dataUrl);
     const blob=await res.blob();
     await ref.put(blob,{contentType:'image/jpeg'});
     const url=await ref.getDownloadURL();
     const newPhoto={src:url,rating:'Good',note:''};
-    // Use arrayUnion so we ADD to existing photos instead of overwriting them
+    carAuditData(key).photos[slotIdx]=newPhoto;
     if(db) {
       await db.collection('auditCars').doc(auditDocKey(key)).set(
-        {photos:firebase.firestore.FieldValue.arrayUnion(newPhoto), month, carKey:key},
+        {photos:carAuditData(key).photos, month, carKey:key},
         {merge:true}
       );
     }
-    // Mirror in memory for immediate UI update (onSnapshot will confirm)
-    carAuditData(key).photos.push(newPhoto);
     render();
     toast('Photo saved ✓');
   } catch(err) {
