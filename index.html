@@ -4901,20 +4901,14 @@ function generateAircraftPDF(reg, type, month) {
       const it = d.items[item.key]||{};
       const subLines = item.sub ? item.sub.split('|').map(s=>s.trim()).filter(Boolean) : [];
       const isBold = subLines.length > 0;
+      const subHtml = subLines.map(s=>`<div style="font-size:8px;color:#444;font-style:italic;line-height:1.4;margin-top:1px">${s}</div>`).join('');
       return `<tr>
-        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:${isBold?'700':'400'};line-height:1.3;vertical-align:top">${item.label}</td>
+        <td style="padding:3px 6px;border:1px solid #bbb;font-size:9.5px;font-weight:${isBold?'700':'400'};line-height:1.3;vertical-align:top">${item.label}${subHtml}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#1a7a40;vertical-align:middle;width:32px">${it.yes?'✓':''}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:12px;font-weight:700;color:#c03030;vertical-align:middle;width:32px">${it.no?'✗':''}</td>
         <td style="text-align:center;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:middle;padding:3px;width:68px">${it.expires||''}</td>
         <td style="padding:3px 6px;border:1px solid #bbb;font-size:9px;color:#333;vertical-align:top">${it.comments||''}</td>
-      </tr>
-      ${subLines.map(s=>`<tr>
-        <td style="padding:2px 6px 2px 14px;border:1px solid #bbb;font-size:9px;font-weight:400;color:#444;font-style:italic;line-height:1.3">${s}</td>
-        <td style="border:1px solid #bbb"></td>
-        <td style="border:1px solid #bbb"></td>
-        <td style="border:1px solid #bbb"></td>
-        <td style="border:1px solid #bbb"></td>
-      </tr>`).join('')}`;
+      </tr>`;
     }).join('')}`).join('');
 
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
