@@ -897,6 +897,12 @@ function setBar(config = {}) {
     barTitle.style.textAlign = 'center';
     barTitle.innerHTML = `<span style="font-size:15px;font-weight:700;color:var(--t1)">${title || ''}</span>`;
     barTitle.onclick = null;
+
+    if (config.rightLabel) {
+      barDay.textContent = config.rightLabel;
+    } else {
+      barDay.textContent = DAY_NAMES[TODAY];
+    }
   }
 }
 
@@ -3991,34 +3997,29 @@ function renderAircraftFolder(el, type) {
   const customRegs = (S.acCustomAircraft[type]||[]);
   const regs   = [...baseRegs, ...customRegs];
   const label  = type==='metro' ? 'Metro SW3/SW4' : 'Westwind WW24';
-  const shortLabel = type==='metro' ? 'Metro' : 'Westwind';
   const month  = acAuditMonthKey();
   const { urgent, overdue } = auditDeadlineStatus();
-  setBar({title: label, back:'Audits', backFn:()=>{S.acAuditView=null;render();}});
+  const d = new Date();
+  const rightLabel = d.toLocaleString('en-US',{month:'short'}) + ' ' + d.getFullYear();
+  setBar({title: label, back:'Audits', backFn:()=>{S.acAuditView=null;render();}, rightLabel});
 
   const cards = regs.map(reg => {
     const isCustom = customRegs.includes(reg);
-    const done    = acIsComplete(reg, type);
-    const answered= acAnsweredCount(reg, type);
-    const total   = acTotalCount(type);
-    const pending = !done && urgent;
-    const col     = done ? '#27AE60' : pending ? '#E74C3C' : '#E8A000';
-    const bg      = done ? 'rgba(39,174,96,0.12)' : pending ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
-    const statusLabel = done ? 'Done' : pending ? (overdue?'Overdue':'Urgent') : 'Pending';
-    const customBadge = isCustom ? `<div style="font-size:9px;font-weight:700;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:5px;padding:1px 5px;margin-top:3px;display:inline-block">Custom</div>` : '';
+    const done     = acIsComplete(reg, type);
+    const pending  = !done && urgent;
+    const dotCol   = done ? '#27AE60' : pending ? '#E74C3C' : 'var(--border2)';
+    const statusLabel = done ? 'Completed' : pending ? (overdue?'Overdue':'Urgent') : 'Pending';
+    const statusCol   = done ? '#27AE60' : pending ? '#E74C3C' : 'var(--t3)';
     const longPress = isCustom ? `onpointerdown="acFolderLongPress(event,'${type}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"` : '';
     return `
       <div onclick="openAircraftChecklist('${reg}','${type}')" ${longPress} class="${pending?'audit-blink':''}"
-        style="background:var(--glass2);border:1px solid ${pending?'rgba(231,76,60,0.45)':'var(--border2)'};
-               ${pending?'border-top:3px solid #E74C3C;':''}
-               border-radius:14px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center">
-        <div style="width:52px;height:52px;border-radius:50%;background:${bg};border:2px solid ${col};display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:${col}">${reg}</div>
-        <div style="min-width:0;width:100%">
-          <div style="font-size:13px;font-weight:700;color:var(--t1)">${reg}</div>
-          <div style="font-size:10px;color:var(--t3);margin-top:2px">${answered}/${total}</div>
-          ${customBadge}
+        style="background:var(--glass2);border:1px solid ${pending?'rgba(231,76,60,0.3)':'var(--border2)'};border-radius:12px;padding:16px 14px;cursor:pointer">
+        <div style="font-size:20px;font-weight:800;color:var(--t1);letter-spacing:-0.3px">${reg}${isCustom?`<span style="font-size:9px;font-weight:700;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:5px;padding:1px 5px;margin-left:5px;vertical-align:middle">Custom</span>`:''}</div>
+        <div style="font-size:12px;color:var(--t3);margin-top:3px;margin-bottom:10px">${label}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${dotCol};flex-shrink:0;display:inline-block"></span>
+          <span style="font-size:12px;font-weight:600;color:${statusCol}">${statusLabel}</span>
         </div>
-        <span style="font-size:11px;font-weight:700;color:${col};background:${bg};border:1px solid ${col}44;border-radius:20px;padding:3px 10px">${statusLabel}</span>
       </div>`;
   });
 
@@ -4052,7 +4053,8 @@ function renderAircraftFolder(el, type) {
 
   el.innerHTML=`
     ${deadlineBanner}
-    <div style="padding:10px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${cards.join('')}</div>
+    <div style="padding:12px 14px 4px;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.2px;text-transform:uppercase">Select Aircraft to Audit</div>
+    <div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${cards.join('')}</div>
     <div style="padding:0 14px 14px">
       <button onclick="openAddAircraftModal('${type}')"
         style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
