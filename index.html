@@ -7121,22 +7121,17 @@ function showEOD() {
       const audio = S.pendingHandoffAudio || '';
       let saveMsg = '';
       if((noteText || audio) && db) {
-        try {
-          await db.collection('handoffNotes').add({
-            text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
-            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
-            expireAt: ttlTimestamp(120)
-          });
-          broadcastNotif('📋 Handoff Note', noteText.slice(0, 80) || '(voice memo)', 'handoff');
-          saveMsg = 'Handoff note saved for next shift';
-        } catch(e) {
-          console.log('Handoff note save failed:', e);
-          saveMsg = '⚠️ Handoff note failed to save (offline?)';
-        }
+        db.collection('handoffNotes').add({
+          text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
+          resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
+          expireAt: ttlTimestamp(120)
+        }).then(()=>broadcastNotif('📋 Handoff Note', noteText.slice(0,80)||'(voice memo)','handoff'))
+          .catch(e=>console.log('Handoff note save failed:',e));
+        saveMsg = 'Handoff note saved for next shift';
       }
       let copyOk = false;
       try {
-        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
+        const t=document.getElementById('eodTxt'); t.select(); t.setSelectionRange(0,99999); document.execCommand('copy'); copyOk = true;
       } catch(e) { console.log('Clipboard copy failed:', e); }
       toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
