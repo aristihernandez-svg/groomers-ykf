@@ -7118,10 +7118,15 @@ function showEOD() {
      <label>Summary (auto-generated)</label>
      <textarea id="eodTxt" readonly style="height:200px;font-size:12px;line-height:1.5;background:var(--bg3)">${msg}</textarea>`,
     async()=>{
+      // Copy FIRST — execCommand('copy') requires a synchronous user-gesture
+      // context. Any await before this call breaks clipboard access on mobile.
+      let copyOk = false;
+      try {
+        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
+      } catch(e) { console.log('Clipboard copy failed:', e); }
+
       const noteText = document.getElementById('eodNote')?.value.trim() || '';
       const audio = S.pendingHandoffAudio || '';
-      // Save the handoff note FIRST — this is the important part, and must
-      // not get skipped if the clipboard copy below throws on some browser.
       let saveMsg = '';
       if((noteText || audio) && db) {
         try {
@@ -7143,12 +7148,6 @@ function showEOD() {
           saveMsg = '⚠️ Handoff note failed to save (offline?)';
         }
       }
-      // Then best-effort copy the summary — never lets a clipboard failure
-      // block saving the note or closing the modal.
-      let copyOk = false;
-      try {
-        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
-      } catch(e) { console.log('Clipboard copy failed:', e); }
       toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
       closeModal();
