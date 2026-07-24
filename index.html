@@ -957,6 +957,10 @@ const CREW_CARS = [
   {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan',      img:'cars/civic-removebg-preview.png'},
 ];
 
+// Bouncie GPS proxy — set this once the Cloudflare Worker is deployed
+// Leave empty to disable Bouncie tracking (no errors, chip just won't appear)
+const BOUNCIE_WORKER_URL = '';
+
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
 const AUDIT_PHOTO_SLOTS = ['Front Exterior','Left Exterior','Back Exterior','Right Exterior','Dashboard','Front Seats','Back Seats','Under the Car'];
@@ -1084,6 +1088,7 @@ const S = {
   handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
   pendingHandoffAudio: null,
   crewCarStatus: {}, // legacy — replaced by crewCarData
+  bouncieData: {},   // {carKey: {lat,lng,speed,isMoving,updatedAt,status}}
   buyerOut: false,
   procView: null,        // null | procKey — which procedure is open full-screen
   crewCarsView: null,   // null | 'list' | carKey | 'past-audit'
@@ -2719,6 +2724,16 @@ function carSquareIcon(car, size=48, radius=10) {
   </div>`;
 }
 
+async function fetchBouncieData() {
+  if (!BOUNCIE_WORKER_URL) return;
+  try {
+    const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles');
+    if (!res.ok) return;
+    S.bouncieData = await res.json();
+    render();
+  } catch(e) { console.log('Bouncie fetch failed:', e); }
+}
+
 function renderCrewCarsList(el) {
   const isCarsTab = S.tab === 'cars';
   if(isCarsTab) {
@@ -2824,7 +2839,13 @@ function renderCrewCarsList(el) {
               <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
               <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
             </div>
-            <div style="margin-top:8px">${stChip}</div>
+            <div style="margin-top:8px;display:flex;align-items:center;gap:6px">${stChip}${(()=>{
+              const b=S.bouncieData[car.key];
+              if(!BOUNCIE_WORKER_URL||!b||b.status==='unconfigured') return '';
+              if(b.status==='error') return `<span style="font-size:10px;color:var(--t3)">📡 offline</span>`;
+              const moving=b.isMoving?`<span style="font-size:10px;font-weight:700;color:#27AE60">🚗 Moving ${b.speed?Math.round(b.speed)+' km/h':''}</span>`:`<span style="font-size:10px;color:var(--t3)">📍 Parked</span>`;
+              return moving;
+            })()}</div>
             <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
               <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
                 <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
