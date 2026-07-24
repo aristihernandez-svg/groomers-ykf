@@ -7054,7 +7054,7 @@ async function runMigration() {
 }
 
 // ── END OF DAY ─────────────────────────────────────────────────────
-async function showEOD() {
+function showEOD() {
   const tabName=DAYS[getToday()], tasks=S.tasks[tabName]||[];
   const visible=tasks.filter(t=>!t.hidden);
   const done=visible.filter(t=>t.done);
@@ -7106,16 +7106,8 @@ async function showEOD() {
   msg+=`${'─'.repeat(30)}\n_Sent from ✈ Skycare — YKF Grooming Team_`;
   S.pendingHandoffAudio = null;
 
-  // Load today's existing handoff note to pre-populate the field
-  let _todayNote = null;
-  if(db) {
-    try {
-      const snap = await db.collection('handoffNotes')
-        .where('date', '==', dateStr).where('resolved', '==', false)
-        .orderBy('ts','desc').limit(1).get();
-      if(!snap.empty) _todayNote = { id: snap.docs[0].id, ...snap.docs[0].data() };
-    } catch(e) { console.log('Handoff note fetch failed:', e); }
-  }
+  // Find today's existing handoff note from the already-loaded listener state
+  const _todayNote = (S.handoffNotes||[]).find(n => n.date === dateStr) || null;
 
   openModal('📋 End of Day Summary',
     `<label>📌 Note for next shift (optional)</label>
