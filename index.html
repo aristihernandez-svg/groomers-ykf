@@ -7131,7 +7131,14 @@ function showEOD() {
       }
       let copyOk = false;
       try {
-        const t=document.getElementById('eodTxt'); t.select(); t.setSelectionRange(0,99999); document.execCommand('copy'); copyOk = true;
+        const txt = document.getElementById('eodTxt').value;
+        const tmp = document.createElement('textarea');
+        tmp.value = txt;
+        tmp.style.cssText = 'position:fixed;top:0;left:0;opacity:0;font-size:16px';
+        document.body.appendChild(tmp);
+        tmp.focus(); tmp.select(); tmp.setSelectionRange(0, tmp.value.length);
+        copyOk = document.execCommand('copy');
+        document.body.removeChild(tmp);
       } catch(e) { console.log('Clipboard copy failed:', e); }
       toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
