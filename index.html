@@ -7126,8 +7126,7 @@ function showEOD() {
       // block saving the note or closing the modal.
       let copyOk = false;
       try {
-        await navigator.clipboard.writeText(msg);
-        copyOk = true;
+        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
       } catch(e) { console.log('Clipboard copy failed:', e); }
       toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
