@@ -51,7 +51,7 @@ async function main() {
   }
 
   const match = COFFEE_TIMES
-    .filter(t => t.hour === h && Math.abs(t.minute - m) <= 20)
+    .filter(t => t.hour === h && Math.abs(t.minute - m) <= 7)
     .sort((a, b) => Math.abs(a.minute - m) - Math.abs(b.minute - m))[0];
   if (!match) {
     console.log(`No coffee time match for ${h}:${String(m).padStart(2,'0')} Eastern — skipping`);
