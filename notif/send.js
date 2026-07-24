@@ -29,6 +29,27 @@ async function main() {
   const h = eastern.getHours();
   const m = eastern.getMinutes();
 
+  // FORCE mode — set FORCE_SLOT env var to a slot index (0-based) to send that message immediately
+  // bypassing time check and dedup. Remove after testing.
+  if (process.env.FORCE_SLOT !== undefined) {
+    const idx = parseInt(process.env.FORCE_SLOT, 10);
+    const forced = COFFEE_TIMES[idx];
+    if (!forced) { console.log('Invalid FORCE_SLOT index'); process.exit(1); }
+    console.log(`FORCE mode — sending slot ${idx}: "${forced.message}"`);
+    const snap = await db.collection('pushSubscriptions').get();
+    const docs = snap.docs.map(d => ({ id: d.id, sub: d.data().sub })).filter(d => d.sub);
+    if (!docs.length) { console.log('No subscribers'); process.exit(0); }
+    const payload = JSON.stringify({
+      title: '✈ Skycare', body: forced.message,
+      icon:  'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
+      badge: 'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
+      tag: 'force-test', url: 'https://aristihernandez-svg.github.io/groomers-ykf/',
+    });
+    await Promise.allSettled(docs.map(d => webpush.sendNotification(d.sub, payload)));
+    console.log(`Sent to ${docs.length} device(s)`);
+    process.exit(0);
+  }
+
   const match = COFFEE_TIMES
     .filter(t => t.hour === h && Math.abs(t.minute - m) <= 20)
     .sort((a, b) => Math.abs(a.minute - m) - Math.abs(b.minute - m))[0];

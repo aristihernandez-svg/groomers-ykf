@@ -2,6 +2,11 @@ name: Coffee Notifications
 
 on:
   workflow_dispatch:         # triggered by cron-job.org every 5 minutes
+    inputs:
+      force_slot:
+        description: 'Force-send a slot by index (0=9:40coffee, 1=11:40coffee, 2=15:40coffee, 3=15:50CC, 4=20:00charge). Leave blank for normal time-based run.'
+        required: false
+        default: ''
 
 jobs:
   send-push:
@@ -26,3 +31,4 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           VAPID_PUBLIC_KEY: "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU"
           VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          FORCE_SLOT: ${{ github.event.inputs.force_slot }}
