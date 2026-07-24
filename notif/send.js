@@ -31,7 +31,7 @@ async function main() {
 
   // FORCE mode — set FORCE_SLOT env var to a slot index (0-based) to send that message immediately
   // bypassing time check and dedup. Remove after testing.
-  if (process.env.FORCE_SLOT !== undefined) {
+  if (process.env.FORCE_SLOT !== undefined && process.env.FORCE_SLOT !== '') {
     const idx = parseInt(process.env.FORCE_SLOT, 10);
     const forced = COFFEE_TIMES[idx];
     if (!forced) { console.log('Invalid FORCE_SLOT index'); process.exit(1); }
