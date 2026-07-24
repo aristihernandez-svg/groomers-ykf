@@ -19,6 +19,7 @@ const COFFEE_TIMES = [
   { hour: 9,  minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 11, minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 15, minute: 40, message: '☕ Hurry... gotta make coffee!' },
+  { hour: 15, minute: 50, message: '🚗 The CC doesn\'t live at your house — leave it at the airport where it belongs!' },
   { hour: 20, minute: 0,  message: '🔐 Leave the CC and the phone on charge!' },
 ];
 
@@ -28,7 +29,9 @@ async function main() {
   const h = eastern.getHours();
   const m = eastern.getMinutes();
 
-  const match = COFFEE_TIMES.find(t => t.hour === h && Math.abs(t.minute - m) <= 20);
+  const match = COFFEE_TIMES
+    .filter(t => t.hour === h && Math.abs(t.minute - m) <= 20)
+    .sort((a, b) => Math.abs(a.minute - m) - Math.abs(b.minute - m))[0];
   if (!match) {
     console.log(`No coffee time match for ${h}:${String(m).padStart(2,'0')} Eastern — skipping`);
     process.exit(0);
