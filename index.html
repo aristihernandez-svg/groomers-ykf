@@ -7105,10 +7105,9 @@ function showEOD() {
 
   msg+=`${'─'.repeat(30)}\n_Sent from ✈ Skycare — YKF Grooming Team_`;
   S.pendingHandoffAudio = null;
-  const _todayNote = (S.handoffNotes||[]).find(n=>n.date===dateStr && !n.resolved);
   openModal('📋 End of Day Summary',
     `<label>📌 Note for next shift (optional)</label>
-     <textarea id="eodNote" placeholder="Anything the next shift should know..." style="height:70px">${_todayNote ? _todayNote.text : ''}</textarea>
+     <textarea id="eodNote" placeholder="Anything the next shift should know..." style="height:70px"></textarea>
      <button type="button" id="eodVoiceBtn" onclick="recordHandoffVoice()"
        style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
               background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2);margin-bottom:4px">
@@ -7118,29 +7117,16 @@ function showEOD() {
      <label>Summary (auto-generated)</label>
      <textarea id="eodTxt" readonly style="height:200px;font-size:12px;line-height:1.5;background:var(--bg3)">${msg}</textarea>`,
     async()=>{
-      // Copy FIRST — execCommand('copy') requires a synchronous user-gesture
-      // context. Any await before this call breaks clipboard access on mobile.
-      let copyOk = false;
-      try {
-        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
-      } catch(e) { console.log('Clipboard copy failed:', e); }
-
       const noteText = document.getElementById('eodNote')?.value.trim() || '';
       const audio = S.pendingHandoffAudio || '';
       let saveMsg = '';
       if((noteText || audio) && db) {
         try {
-          if(_todayNote) {
-            await db.collection('handoffNotes').doc(_todayNote.id).update({
-              text:noteText, audio, ts:firebase.firestore.FieldValue.serverTimestamp()
-            });
-          } else {
-            await db.collection('handoffNotes').add({
-              text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
-              resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
-              expireAt: ttlTimestamp(120)
-            });
-          }
+          await db.collection('handoffNotes').add({
+            text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
+            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: ttlTimestamp(120)
+          });
           broadcastNotif('📋 Handoff Note', noteText.slice(0, 80) || '(voice memo)', 'handoff');
           saveMsg = 'Handoff note saved for next shift';
         } catch(e) {
@@ -7148,6 +7134,10 @@ function showEOD() {
           saveMsg = '⚠️ Handoff note failed to save (offline?)';
         }
       }
+      let copyOk = false;
+      try {
+        const t=document.getElementById('eodTxt'); t.select(); document.execCommand('copy'); copyOk = true;
+      } catch(e) { console.log('Clipboard copy failed:', e); }
       toast([copyOk?'📋 Copied':'', saveMsg].filter(Boolean).join(' — ') || 'Done');
       S.pendingHandoffAudio = null;
       closeModal();
