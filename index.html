@@ -8022,17 +8022,24 @@ let _fleetLastFetch = 0;
 let _fleetTimer = null;
 
 async function fetchFleetOpenSky() {
-  // Read from Firestore — positions are written every 5 min by fleet-alert.js (GitHub Actions)
-  // This avoids OpenSky's CORS block on browser requests
-  try {
-    if(!db) return null;
-    const snap = await db.collection('fleetPositions').doc('live').get();
-    if(!snap.exists) return null;
-    const { positions } = snap.data();
-    if(!positions) return null;
-    // Convert Firestore position map back to array format expected by refreshFleet
-    return Object.values(positions).filter(Boolean);
-  } catch(e) { return null; }
+  // Direct browser fetch from airplanes.live — free, no auth, open CORS
+  const results = await Promise.allSettled(
+    FLEET_AIRCRAFT.map(ac =>
+      fetch(`https://api.airplanes.live/v2/reg/${encodeURIComponent(ac.reg)}`, { signal: AbortSignal.timeout(8000) })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          const p = data?.ac?.[0];
+          if(!p) return null;
+          const onGround = p.alt_baro === 'ground' || p.on_ground === true;
+          const altFt = onGround ? 0 : (typeof p.alt_baro === 'number' ? p.alt_baro : null);
+          const speedKts = typeof p.gs === 'number' ? Math.round(p.gs) : 0;
+          const distNm = (p.lat && p.lon) ? Math.round(haversineNm(p.lat, p.lon, CYKF_LAT, CYKF_LON)) : null;
+          return { tail: ac.tail, reg: ac.reg, lat: p.lat, lon: p.lon, altFt, speedKts, track: p.track || 0, onGround, distNm };
+        })
+        .catch(() => null)
+    )
+  );
+  return results.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
 }
 
 function fleetCallsignMatch(callsign) {
@@ -8258,7 +8265,7 @@ function renderFleet(el) {
     </div>
 
     <div style="margin:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: OpenSky Network (free ADS-B). 30 nm ring alert fires once per inbound arrival. Tap Refresh every ~3 min.</div>
+      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: airplanes.live (free ADS-B). Auto-refreshes every 60s. 30 nm ring alert fires once per inbound arrival.</div>
     </div>
   </div>`;
 
@@ -8297,7 +8304,7 @@ function renderFleet(el) {
 
   // Auto-refresh every 60s while on fleet tab
   if(S.tab==='fleet'){
-    _fleetTimer=setTimeout(()=>{ if(S.tab==='fleet') refreshFleet(); },180000);
+    _fleetTimer=setTimeout(()=>{ if(S.tab==='fleet') refreshFleet(); },60000);
   }
 }
 
