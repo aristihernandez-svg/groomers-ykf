@@ -7054,7 +7054,7 @@ async function runMigration() {
 }
 
 // ── END OF DAY ─────────────────────────────────────────────────────
-function showEOD() {
+async function showEOD() {
   const tabName=DAYS[getToday()], tasks=S.tasks[tabName]||[];
   const visible=tasks.filter(t=>!t.hidden);
   const done=visible.filter(t=>t.done);
@@ -7105,9 +7105,21 @@ function showEOD() {
 
   msg+=`${'─'.repeat(30)}\n_Sent from ✈ Skycare — YKF Grooming Team_`;
   S.pendingHandoffAudio = null;
+
+  // Load today's existing handoff note to pre-populate the field
+  let _todayNote = null;
+  if(db) {
+    try {
+      const snap = await db.collection('handoffNotes')
+        .where('date', '==', dateStr).where('resolved', '==', false)
+        .orderBy('ts','desc').limit(1).get();
+      if(!snap.empty) _todayNote = { id: snap.docs[0].id, ...snap.docs[0].data() };
+    } catch(e) { console.log('Handoff note fetch failed:', e); }
+  }
+
   openModal('📋 End of Day Summary',
     `<label>📌 Note for next shift (optional)</label>
-     <textarea id="eodNote" placeholder="Anything the next shift should know..." style="height:70px"></textarea>
+     <textarea id="eodNote" placeholder="Anything the next shift should know..." style="height:70px">${_todayNote ? _todayNote.text : ''}</textarea>
      <button type="button" id="eodVoiceBtn" onclick="recordHandoffVoice()"
        style="width:100%;padding:11px;border-radius:8px;border:1px dashed var(--border2);
               background:var(--glass2);font-size:14px;cursor:pointer;color:var(--t2);margin-bottom:4px">
@@ -7121,12 +7133,18 @@ function showEOD() {
       const audio = S.pendingHandoffAudio || '';
       let saveMsg = '';
       if((noteText || audio) && db) {
-        db.collection('handoffNotes').add({
-          text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
-          resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
-          expireAt: ttlTimestamp(120)
-        }).then(()=>broadcastNotif('📋 Handoff Note', noteText.slice(0,80)||'(voice memo)','handoff'))
-          .catch(e=>console.log('Handoff note save failed:',e));
+        if(_todayNote) {
+          db.collection('handoffNotes').doc(_todayNote.id).update({
+            text:noteText, audio, ts:firebase.firestore.FieldValue.serverTimestamp()
+          }).catch(e=>console.log('Handoff note update failed:',e));
+        } else {
+          db.collection('handoffNotes').add({
+            text:noteText, audio, day:DAY_NAMES[getToday()], date:dateStr,
+            resolved:false, ts:firebase.firestore.FieldValue.serverTimestamp(),
+            expireAt: ttlTimestamp(120)
+          }).then(()=>broadcastNotif('📋 Handoff Note', noteText.slice(0,80)||'(voice memo)','handoff'))
+            .catch(e=>console.log('Handoff note save failed:',e));
+        }
         saveMsg = 'Handoff note saved for next shift';
       }
       let copyOk = false;
