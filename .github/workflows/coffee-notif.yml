@@ -2,11 +2,6 @@ name: Coffee Notifications
 
 on:
   workflow_dispatch:         # triggered by cron-job.org every 5 minutes
-    inputs:
-      force_slot:
-        description: 'Force-send a slot by index (0=9:40coffee, 1=11:40coffee, 2=15:40coffee, 3=15:50CC, 4=20:00charge). Leave blank for normal time-based run.'
-        required: false
-        default: ''
 
 jobs:
   send-push:
