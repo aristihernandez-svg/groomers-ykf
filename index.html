@@ -4914,10 +4914,11 @@ function generateAircraftPDF(reg, type, month) {
   const pv = getPdfVersion(type) || (ct ? ct.pdfVersion : null) || PDF_VERSION_DEFAULTS[type] || {version:'1.0',date:'',form:''};
   const typeLabel = type==='westwind' ? 'WW24' : type==='metro' ? 'SW3/SW4' : (ct ? ct.name : type);
   const formTitle = `${typeLabel} Aircraft Equipment Audit Checklist`;
+  const todayFmt = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
   const rowsHtml = sections.map(sec=>`
     <tr>
-      <td colspan="5" style="background:#c8c8c8;font-size:7.5px;font-weight:700;color:#1a1a1a;padding:2px 4px;border:1px solid #999;font-style:italic;text-align:center">${sec.section}</td>
+      <td colspan="5" style="background:#c8c8c8;font-size:7.5px;font-weight:700;color:#1a1a1a;padding:2px 4px;border:1px solid #999;text-align:center">${sec.section}</td>
     </tr>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{};
@@ -4941,9 +4942,9 @@ function generateAircraftPDF(reg, type, month) {
     .page{display:flex;flex-direction:row}
     .spine{width:20px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;padding:4px 0;overflow:hidden}
     .spine-text-zone{flex:0 0 38%;display:flex;align-items:center;justify-content:center;width:100%}
-    .spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;color:#1a1a1a;text-align:center;border:1px solid #1a1a1a;padding:4px 2px}
+    .spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:400;letter-spacing:0.5px;white-space:nowrap;color:#1a1a1a;text-align:center;border:1px solid #1a1a1a;padding:4px 2px}
     .spine-logo-zone{flex:1;width:100%;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;overflow:hidden}
-    .spine-logo{height:16px;width:180px;transform:rotate(-90deg);object-fit:contain;flex-shrink:0}
+    .spine-logo{height:20px;width:220px;transform:rotate(-90deg);object-fit:contain;flex-shrink:0}
     .content{flex:1;padding:8px 10px 6px}
     .ww-title{font-size:11px;font-weight:700;text-align:center;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
     .top-row{display:flex;align-items:flex-end;gap:0;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
@@ -4960,7 +4961,7 @@ function generateAircraftPDF(reg, type, month) {
     .aud-row td{background:#c8c8c8;padding:3px 6px;border:1px solid #999;font-size:7.5px;font-weight:700}
     .aud-line{display:inline-block;min-width:120px;border-bottom:1px solid #555;margin-left:4px;font-weight:400}
     .footer{display:flex;justify-content:space-between;font-size:7px;color:#555;margin-top:4px;border-top:1px solid #ccc;padding-top:3px}
-    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:1px!important;padding-bottom:1px!important}.back-btn{display:none}}
+    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:0!important;padding-bottom:0!important}.content{padding-top:3px!important;padding-bottom:3px!important}.top-row{margin-bottom:2px!important;padding-bottom:2px!important}.back-btn{display:none}}
   </style>
   </head><body>
   <div class="page">
@@ -4971,7 +4972,7 @@ function generateAircraftPDF(reg, type, month) {
         <div class="fields-inline">
           <div class="fi"><span class="fi-label">Aircraft:</span><span class="fi-val">${reg}</span></div>
           <div class="fi"><span class="fi-label">Configuration:</span><span class="fi-val">${d.configuration||''}</span></div>
-          <div class="fi"><span class="fi-label">Date:</span><span class="fi-val">${d.date||''}</span></div>
+          <div class="fi"><span class="fi-label">Date:</span><span class="fi-val">${d.date||todayFmt}</span></div>
         </div>
       </div>
 
