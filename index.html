@@ -2889,10 +2889,9 @@ function renderCrewCarsList(el) {
             </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:6px">${stChip}${(()=>{
               if(!bOk) return '';
-              const loc=b.isMoving?`<span style="font-size:10px;font-weight:700;color:#27AE60">🚗 Moving</span>`:`<span style="font-size:10px;color:var(--t3)">📍 Parked</span>`;
               const bat=b.battery&&b.battery!=='normal'?`<span style="font-size:10px;font-weight:700;color:#E74C3C">🔋 ${b.battery}</span>`:'';
               const mil=b.milOn?`<span style="font-size:10px;font-weight:700;color:#E74C3C">⚠️ Check Engine</span>`:'';
-              return loc+bat+mil;
+              return bat+mil;
             })()}</div>
             ${bOk&&b.milOn&&b.dtcList?.length?`<div style="margin-top:4px;font-size:10px;color:#E74C3C">DTC: ${b.dtcList.join(', ')}</div>`:''}
             <div style="margin-top:8px;display:flex;align-items:center;gap:7px">

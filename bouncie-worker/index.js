@@ -109,7 +109,6 @@ async function fetchAllVehicles(token) {
         const vehicle = Array.isArray(data) ? data[0] : data;
         results[key] = {
           status:    'ok',
-          isMoving:  vehicle?.stats?.isRunning                    ?? false,
           odometer:  vehicle?.stats?.odometer                     ?? null,
           fuelLevel: vehicle?.stats?.fuelLevel                    ?? null,
           battery:   vehicle?.stats?.battery?.status              ?? null,
