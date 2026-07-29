@@ -2732,8 +2732,48 @@ async function fetchBouncieData() {
     const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles');
     if (!res.ok) return;
     S.bouncieData = await res.json();
+    applyBouncieOdometer();
     render();
   } catch(e) { console.log('Bouncie fetch failed:', e); }
+}
+
+function applyBouncieOdometer() {
+  let changed = false;
+  for (const [key, b] of Object.entries(S.bouncieData)) {
+    if (b.status !== 'ok' || b.odometer == null) continue;
+    const d = carData(key);
+    if (d.bouncieBaseline == null || d.bouncieBaseline === '') continue;
+    const baseline = parseFloat(d.bouncieBaseline);
+    const baseKm   = parseFloat(d.bouncieBaseKm);
+    if (isNaN(baseline) || isNaN(baseKm)) continue;
+    const delta = Math.max(0, b.odometer - baseline);
+    const newKm = Math.round(baseKm + delta);
+    if (String(newKm) !== String(d.currentKm)) {
+      d.currentKm = String(newKm);
+      changed = true;
+    }
+  }
+  if (changed) saveCrewCarData();
+}
+
+function syncBouncieBaseline(key) {
+  const b = S.bouncieData[key];
+  if (!b || b.status !== 'ok' || b.odometer == null) {
+    alert('No Bouncie data available for this car yet — try again in a moment.');
+    return;
+  }
+  const d = carData(key);
+  const inputEl = document.getElementById('inlineKM_' + key);
+  const kmVal = inputEl ? inputEl.value.trim() : d.currentKm;
+  if (!kmVal) {
+    alert('Enter the real odometer reading first, then tap Sync.');
+    return;
+  }
+  d.currentKm       = kmVal;
+  d.bouncieBaseline = b.odometer;   // Bouncie km at time of calibration
+  d.bouncieBaseKm   = kmVal;        // real odometer at time of calibration
+  saveCrewCarData();
+  render();
 }
 
 function renderCrewCarsList(el) {
@@ -2979,7 +3019,10 @@ function renderCarDetail(el, key) {
             value="${d.currentKm||''}"
             onchange="saveInlineKm('${key}',this.value)"
             style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--t1);font-size:15px;font-weight:700;font-family:inherit;outline:none;padding:2px 0">
-          ${d.nextServiceKm&&d.currentKm&&(parseInt(d.nextServiceKm)-parseInt(d.currentKm))<=500?`<div style="font-size:11px;color:var(--red);font-weight:700;margin-top:4px">⚠️ Oil service due in ${Math.max(0,parseInt(d.nextServiceKm)-parseInt(d.currentKm))} km</div>`:''}
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;flex-wrap:wrap;gap:4px">
+            ${d.nextServiceKm&&d.currentKm&&(parseInt(d.nextServiceKm)-parseInt(d.currentKm))<=500?`<div style="font-size:11px;color:var(--red);font-weight:700">⚠️ Oil due in ${Math.max(0,parseInt(d.nextServiceKm)-parseInt(d.currentKm))} km</div>`:'<div></div>'}
+            ${BOUNCIE_WORKER_URL?`<button onclick="syncBouncieBaseline('${key}')" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-family:inherit;cursor:pointer">${d.bouncieBaseline!=null&&d.bouncieBaseline!==''?'🔄 Re-sync':'📡 Sync with Bouncie'}</button>`:''}
+          </div>
         </div>
       </div>
       ${d.crewNote?`<div style="background:#FFF59D;background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);border-radius:4px 4px 0 4px;padding:12px 14px;box-shadow:2px 4px 12px rgba(0,0,0,0.25)">
