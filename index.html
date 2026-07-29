@@ -2854,8 +2854,7 @@ function renderCrewCarsList(el) {
               const mil=b.milOn?`<span style="font-size:10px;font-weight:700;color:#E74C3C">⚠️ Check Engine</span>`:'';
               return loc+bat+mil;
             })()}</div>
-            ${bOk&&b.odometer?`<div style="margin-top:4px;font-size:10px;color:var(--t3)">🛣 ${Math.round(b.odometer).toLocaleString()} km</div>`:''}
-            ${bOk&&b.milOn&&b.dtcList?.length?`<div style="margin-top:2px;font-size:10px;color:#E74C3C">DTC: ${b.dtcList.join(', ')}</div>`:''}
+            ${bOk&&b.milOn&&b.dtcList?.length?`<div style="margin-top:4px;font-size:10px;color:#E74C3C">DTC: ${b.dtcList.join(', ')}</div>`:''}
             <div style="margin-top:8px;display:flex;align-items:center;gap:7px">
               <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
                 <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
