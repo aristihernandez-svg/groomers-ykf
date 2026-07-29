@@ -8518,9 +8518,10 @@ async function seedProceduresIfEmpty() {
 // won't broadcast the change until it's back online — nothing is lost.
 function fsSetTaskDone(tabName, task, done) {
   if(!db) return;
-  // Include today's date so stale states from last week are ignored on load
+  const now = new Date();
+  const tsKey = fsKey(task) + '_at';
   db.collection('taskState').doc(tabName).set(
-    {[fsKey(task)]:done, _date: new Date().toDateString()}, {merge:true}
+    {[fsKey(task)]:done, [tsKey]: now.toISOString(), _date: now.toDateString()}, {merge:true}
   ).catch(e => console.log('fsSetTaskDone failed (offline?):', e));
 }
 function fsSetShopState(item, checked, status, qty) {
