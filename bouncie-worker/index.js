@@ -1,28 +1,26 @@
 /**
  * Bouncie GPS Proxy — Cloudflare Worker
  *
- * Sits between the Skycare PWA and api.bouncie.dev so that:
- *  - API credentials never touch the browser
- *  - CORS is handled here, not blocked by Bouncie
- *
- * Deploy:
- *   wrangler deploy  (from bouncie-worker/ directory)
- *
- * Secrets — set via Cloudflare dashboard > Worker > Settings > Variables:
+ * Secrets (Worker Settings > Variables & Secrets):
  *   BOUNCIE_CLIENT_ID     = skycare-yk
- *   BOUNCIE_CLIENT_SECRET = (your client secret from bouncie.dev)
- *   BOUNCIE_REFRESH_TOKEN = (the refresh token obtained during OAuth setup)
+ *   BOUNCIE_CLIENT_SECRET = (client secret from bouncie.dev)
+ *
+ * KV binding (Worker Settings > Bindings > KV Namespace):
+ *   Variable name: BOUNCIE_KV  →  Namespace: BOUNCIE_TOKENS
+ *   Initial KV key: refresh_token = <current refresh token>
+ *
+ * Bouncie rotates refresh tokens on every use — KV stores the latest one.
  */
 
 const VEHICLE_MAP = {
-  escape:  { imei: '864486065705564', name: 'Ford Escape'        },
-  elantra: { imei: '864486065704609', name: 'Hyundai Elantra'    },
-  micra:   { imei: '864486067025912', name: 'Nissan Micra'       },
-  impala:  { imei: '864486065672418', name: 'Chevrolet Impala'   },
-  whtruck: { imei: '864486067777199', name: 'White MX Truck'     },
-  brtruck: { imei: '864486065705507', name: 'Brown MX Truck'     },
-  kubota:  { imei: null,              name: 'Kubota'             },
-  civic:   { imei: '864486064882232', name: 'Honda Civic'        },
+  escape:  { imei: '864486065705564', name: 'Ford Escape'      },
+  elantra: { imei: '864486065704609', name: 'Hyundai Elantra'  },
+  micra:   { imei: '864486067025912', name: 'Nissan Micra'     },
+  impala:  { imei: '864486065672418', name: 'Chevrolet Impala' },
+  whtruck: { imei: '864486067777199', name: 'White MX Truck'   },
+  brtruck: { imei: '864486065705507', name: 'Brown MX Truck'   },
+  kubota:  { imei: null,              name: 'Kubota'           },
+  civic:   { imei: '864486064882232', name: 'Honda Civic'      },
 };
 
 const CORS = {
@@ -31,7 +29,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-// Module-level token cache — survives across requests within the same Worker instance
+// In-memory cache for the current access token within a Worker instance lifetime
 let cachedToken = null;
 let tokenExpiresAt = 0;
 
@@ -59,10 +57,14 @@ export default {
 
 async function getAccessToken(env) {
   const now = Date.now();
-  // Use cached token if still valid (with 2-min buffer)
+  // Use in-memory cached token if still valid (2-min buffer)
   if (cachedToken && now < tokenExpiresAt - 120_000) {
     return cachedToken;
   }
+
+  // Read current refresh token from KV
+  const refreshToken = await env.BOUNCIE_KV.get('refresh_token');
+  if (!refreshToken) throw new Error('No refresh_token in KV — add key "refresh_token" to BOUNCIE_TOKENS namespace');
 
   const res = await fetch('https://auth.bouncie.com/oauth/token', {
     method: 'POST',
@@ -71,12 +73,17 @@ async function getAccessToken(env) {
       client_id:     env.BOUNCIE_CLIENT_ID,
       client_secret: env.BOUNCIE_CLIENT_SECRET,
       grant_type:    'refresh_token',
-      refresh_token: env.BOUNCIE_REFRESH_TOKEN,
+      refresh_token: refreshToken,
     }),
   });
 
   const data = await res.json();
   if (!data.access_token) throw new Error('Token refresh failed: ' + JSON.stringify(data));
+
+  // Bouncie rotates refresh tokens — save the new one to KV immediately
+  if (data.refresh_token) {
+    await env.BOUNCIE_KV.put('refresh_token', data.refresh_token);
+  }
 
   cachedToken = data.access_token;
   tokenExpiresAt = now + (data.expires_in ?? 3600) * 1000;
@@ -102,14 +109,14 @@ async function fetchAllVehicles(token) {
         const vehicle = Array.isArray(data) ? data[0] : data;
         results[key] = {
           status:    'ok',
-          lat:       vehicle?.stats?.location?.lat    ?? null,
-          lng:       vehicle?.stats?.location?.lon    ?? null,
-          speed:     vehicle?.stats?.speed            ?? 0,
-          isMoving:  vehicle?.stats?.isRunning        ?? false,
-          odometer:  vehicle?.stats?.odometer         ?? null,
-          fuelLevel: vehicle?.stats?.fuelLevel        ?? null,
+          lat:       vehicle?.stats?.location?.lat     ?? null,
+          lng:       vehicle?.stats?.location?.lon     ?? null,
+          speed:     vehicle?.stats?.speed             ?? 0,
+          isMoving:  vehicle?.stats?.isRunning         ?? false,
+          odometer:  vehicle?.stats?.odometer          ?? null,
+          fuelLevel: vehicle?.stats?.fuelLevel         ?? null,
           address:   vehicle?.stats?.location?.address ?? null,
-          updatedAt: vehicle?.stats?.lastUpdated      ?? null,
+          updatedAt: vehicle?.stats?.lastUpdated       ?? null,
         };
       } catch (e) {
         results[key] = { status: 'error', error: e.message };
