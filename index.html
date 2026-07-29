@@ -2821,94 +2821,175 @@ function renderCrewCarsList(el) {
     </div>`;
   } // end if(!isCarsTab)
 
-  // ── Car list ── sort alerts to top ──
+  // ── Car list ──
   const todayIso=localDateISO();
-  const sortedCars=[...CREW_CARS].sort((a,b)=>{
-    const da=carData(a.key), db2=carData(b.key);
-    const ckA=parseInt(da.currentKm)||0, nsA=parseInt(da.nextServiceKm)||0;
-    const ckB=parseInt(db2.currentKm)||0, nsB=parseInt(db2.nextServiceKm)||0;
-    const oilA=ckA>0&&nsA>0&&(nsA-ckA)<=500;
-    const oilB=ckB>0&&nsB>0&&(nsB-ckB)<=500;
-    const fsA=FUEL_STOPS.find(s=>s.value===da.fuel); const pctA=fsA?fsA.pct:null;
-    const fsB=FUEL_STOPS.find(s=>s.value===db2.fuel); const pctB=fsB?fsB.pct:null;
-    const fuelA=pctA!==null&&pctA<=0.5;
-    const fuelB=pctB!==null&&pctB<=0.5;
-    const alertA=(oilA||fuelA)?0:1, alertB=(oilB||fuelB)?0:1;
-    return alertA-alertB;
-  });
 
-  const auditGridCards = [];
-  sortedCars.forEach(car=>{
-    const d=carData(car.key);
-    const auditCD=carAuditData(car.key);
-    const regExp=d.regExpiry&&d.regExpiry<todayIso;
-    const insExp=d.insuranceExpiry&&d.insuranceExpiry<todayIso;
-    const docAlert=regExp||insExp;
-    const docBadge=docAlert?`<span style="font-size:10px;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
-    const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
-    const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
-    const b=S.bouncieData[car.key];
-    const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
-    const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
-    const fuelPct=bOk&&b.fuelLevel!=null ? b.fuelLevel/100 : (fs?fs.pct:null);
-    const fuelLabel=bOk&&b.fuelLevel!=null ? Math.round(b.fuelLevel)+'%' : (d.fuel||'—');
-    const fuelAlert=fuelPct!==null&&fuelPct<=0.25;
-    const fuelFlash=fuelPct!==null&&fuelPct<=0.15;
-    const milAlert=bOk&&b.milOn;
-    const battAlert=bOk&&(b.battery==='low'||b.battery==='shutdown');
-    const anyAlert=oilWarn||fuelAlert||docAlert||milAlert||battAlert;
-    const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.15?'#E74C3C':fuelPct<0.25?'#F1C40F':fuelPct<0.6?'#82E06A':'#27AE60';
-    const SC={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
-    const curSt=d.status||'';
-    const stChip=curSt
-      ? `<button onclick="event.stopPropagation();openStatusDrop('${car.key}',this)"
-           style="padding:3px 10px;border-radius:20px;border:1.5px solid ${SC[curSt]||'var(--border2)'};
-                  background:${(SC[curSt]||'#888')+'22'};color:${SC[curSt]||'var(--t2)'};
-                  font-size:11px;font-weight:700;cursor:pointer">${curSt} ▾</button>`
-      : `<button onclick="event.stopPropagation();openStatusDrop('${car.key}',this)"
-           style="padding:3px 10px;border-radius:20px;border:1.5px dashed var(--border2);
-                  background:transparent;color:var(--t3);font-size:11px;font-weight:600;cursor:pointer">Status ▾</button>`;
-    if(isCarsTab) {
-      html+=`
-        <div onclick="openCarDetail('${car.key}')" style="
-          display:flex;align-items:flex-start;gap:13px;padding:16px 14px 14px;
-          border-bottom:2px solid ${anyAlert?'rgba(231,76,60,0.25)':'var(--border)'};
-          cursor:pointer;transition:background 0.15s;
-          background:${anyAlert?'rgba(231,76,60,0.11)':'var(--glass)'};
-          ${anyAlert?'border-left:4px solid var(--red)':'border-left:4px solid transparent'}">
-          <div style="position:relative;flex-shrink:0;margin-top:2px">
-            ${carSquareIcon(car,58,12)}
-            ${auditCD.done?`<div style="position:absolute;bottom:-2px;right:-2px;background:var(--green);border-radius:50%;width:15px;height:15px;border:2px solid var(--bg);display:flex;align-items:center;justify-content:center;font-size:9px">✓</div>`:''}
+  if(isCarsTab) {
+    // ── NEW CARD DESIGN ──
+    const _spannerSvg=(color,sz=13)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`;
+    const _fc=p=>p===null?'#2A4A6A':p<=0.15?'#EF4444':p<=0.25?'#F59E0B':'#22C55E';
+    const _hasAlert=car=>{
+      const d=carData(car.key),b=S.bouncieData[car.key];
+      const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
+      const ckm=parseInt(d.currentKm)||0,nsKm=parseInt(d.nextServiceKm)||0;
+      const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
+      const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
+      return (ckm>0&&nsKm>0&&(nsKm-ckm)<=500)||(fuelPct!==null&&fuelPct<=0.25)||
+             (bOk&&b.milOn)||(bOk&&(b.battery==='low'||b.battery==='shutdown'))||
+             !!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
+    };
+    const _buildCard=car=>{
+      const d=carData(car.key);
+      const b=S.bouncieData[car.key];
+      const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
+      const ckm=parseInt(d.currentKm)||0,nsKm=parseInt(d.nextServiceKm)||0;
+      const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
+      const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
+      const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
+      const fuelPctNum=fuelPct!==null?Math.round(fuelPct*100):null;
+      const fuelAlert=fuelPct!==null&&fuelPct<=0.25;
+      const fuelLabel=bOk&&b.fuelLevel!=null?Math.round(b.fuelLevel)+'%':(d.fuel||'—');
+      const milAlert=bOk&&b.milOn;
+      const battAlert=bOk&&(b.battery==='low'||b.battery==='shutdown');
+      const anyAlert=oilWarn||fuelAlert||milAlert||battAlert||!!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
+      const svcRemain=ckm>0&&nsKm>0?Math.max(0,nsKm-ckm):null;
+      const svcPct=svcRemain!==null?Math.min(100,Math.max(0,Math.round((10000-(nsKm-ckm))/10000*100))):0;
+      const svcCol=svcRemain===null?'#2A4A6A':svcRemain<=500?'#EF4444':svcRemain<=2000?'#F59E0B':'#3B82F6';
+      const trackPct=Math.min(Math.max(svcPct,4),92);
+      const fc=_fc(fuelPct);
+      const fpNum=fuelPctNum??0;
+      const cardBorder=anyAlert?'rgba(239,68,68,.42)':'#1A2840';
+      const cardBg=anyAlert?'linear-gradient(110deg,#160F14,#130C18)':'linear-gradient(110deg,#0D1828,#0B1625)';
+      const chip=milAlert||battAlert||fuelAlert?
+        `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(239,68,68,.18);color:#F87171;flex-shrink:0;margin-left:6px;white-space:nowrap">Alert</span>`:
+        oilWarn?`<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(245,158,11,.18);color:#FBB040;flex-shrink:0;margin-left:6px;white-space:nowrap">Service</span>`:
+        `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ADE80;flex-shrink:0;margin-left:6px;white-space:nowrap">OK</span>`;
+      const tagItems=[];
+      if(milAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">⚠️ MIL ${b.dtcList?.join(' ')||''}</span>`);
+      if(battAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">🔋 Battery ${b.battery}</span>`);
+      if(oilWarn) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(245,158,11,.18);color:#FBB040">🛢️ Oil due in ${svcRemain} km</span>`);
+      const tags=tagItems.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${tagItems.join('')}</div>`:'';
+      let statusIcons='';
+      if(bOk){
+        const batOk=!battAlert;
+        const batCol=batOk?'#22C55E':'#EF4444';
+        const engOk=!milAlert;
+        const engCol=engOk?'#22C55E':'#EF4444';
+        const batSvg=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${batCol}" stroke-width="2.2" stroke-linecap="round"><rect x="1" y="7" width="17" height="10" rx="2"/><path d="M23 11v2" stroke="${batCol}" stroke-width="2.5"/><rect x="3" y="9" width="${batOk?11:3}" height="6" rx="1" fill="${batCol}" stroke="none"/></svg>`;
+        const engSvg=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${engCol}" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="13" height="8" rx="2"/><path d="M16 10h2l2 2-2 2h-2M7 8V6M11 8V6M3 12H1"/></svg>`;
+        const siStyle=col=>`width:30px;height:30px;border-radius:50%;background:${col}15;border:1.5px solid ${col}28;display:flex;align-items:center;justify-content:center;position:relative`;
+        const badge=(col,ok)=>`<div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:${col};border:1.5px solid #080D14;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#fff">${ok?'✓':'!'}</div>`;
+        statusIcons=`<div style="display:flex;gap:10px;align-items:flex-end">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="${siStyle(batCol)}">${batSvg}${badge(batCol,batOk)}</div>
+            <div style="font-size:9px;font-weight:700;color:${batCol}">Battery</div>
           </div>
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:5px">
-              <span style="font-size:15px;font-weight:700;color:var(--t1)">${car.name}${docBadge}</span>
-              ${car.plate?`<span style="font-size:10px;font-weight:800;letter-spacing:1.2px;color:#111;background:#f5e642;border-radius:3px;padding:1px 5px;border:1px solid rgba(0,0,0,0.2)">${car.plate}</span>`:''}
-              <span class="${fuelFlash?'oil-flash-icon':''}" style="font-size:15px;margin-left:auto">⛽</span>
-              <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
-            </div>
-            <div style="margin-top:8px;display:flex;align-items:center;gap:6px">${stChip}${(()=>{
-              if(!bOk) return '';
-              const bat=b.battery&&b.battery!=='normal'?`<span style="font-size:10px;font-weight:700;color:#E74C3C">🔋 ${b.battery}</span>`:'';
-              const mil=b.milOn?`<span style="font-size:10px;font-weight:700;color:#E74C3C">⚠️ Check Engine</span>`:'';
-              return bat+mil;
-            })()}</div>
-            ${bOk&&b.milOn&&b.dtcList?.length?`<div style="margin-top:4px;font-size:10px;color:#E74C3C">DTC: ${b.dtcList.join(', ')}</div>`:''}
-            <div style="margin-top:8px;display:flex;align-items:center;gap:7px">
-              <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
-                <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
-              </div>
-              <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${fuelLabel}</span>
-            </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="${siStyle(engCol)}">${engSvg}${badge(engCol,engOk)}</div>
+            <div style="font-size:9px;font-weight:700;color:${engCol}">Engine</div>
           </div>
-          <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>
         </div>`;
-    } else {
-      const pendingUrgent = !auditCD.done && urgent;
-      const auditCol = auditCD.done ? '#27AE60' : pendingUrgent ? '#E74C3C' : '#E8A000';
-      const auditBg  = auditCD.done ? 'rgba(39,174,96,0.12)' : pendingUrgent ? 'rgba(231,76,60,0.12)' : 'rgba(232,160,0,0.12)';
-      const statusLabel = auditCD.done ? 'Completed' : pendingUrgent ? (overdue?'Overdue':'Urgent') : 'Pending';
-      const dotCol = auditCD.done ? '#27AE60' : pendingUrgent ? '#E74C3C' : '#9CA3AF';
+      }
+      const fuelRail=`<div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:12px 10px;border-left:1px solid ${fc}18;background:${fc}06">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div style="position:relative;width:52px;height:52px;border-radius:14px;background:#111D2E;overflow:hidden;border:1px solid ${fc}25">
+            <div style="position:absolute;bottom:0;left:0;right:0;height:${fpNum}%;background:${fc}28"></div>
+            <div style="position:absolute;bottom:${fpNum}%;left:0;right:0;height:2px;background:${fc}55"></div>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${fc}" stroke-width="1.8" stroke-linecap="round"><path d="M3 22V6a2 2 0 012-2h8a2 2 0 012 2v4h1a2 2 0 012 2v3a1 1 0 001 1 1 1 0 001-1v-5l-3-3"/><path d="M3 11h12"/></svg>
+            </div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-size:13px;font-weight:900;letter-spacing:-.3px;color:${fc}">${fuelPctNum!==null?fuelPctNum+'%':fuelLabel}</div>
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${fc};opacity:.5">Fuel</div>
+          </div>
+        </div>
+      </div>`;
+      const raceStrip=svcRemain!==null?`<div style="border-top:1px solid #1A2840;padding:9px 13px 11px;background:${svcCol}06">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="display:flex;align-items:center;gap:5px">
+            ${_spannerSvg(svcCol,13)}
+            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${svcCol}">Next Service</span>
+          </div>
+          <div style="text-align:right">
+            <span style="font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.4px;color:${svcCol}">${Number(svcRemain).toLocaleString()}</span>
+            <span style="font-size:10px;font-weight:600;margin-left:1px;color:${svcCol}88">km left</span>
+            <div style="font-size:9px;color:${svcCol}66">at ${Number(nsKm).toLocaleString()} km</div>
+          </div>
+        </div>
+        <div style="position:relative;height:30px;display:flex;align-items:center">
+          <div style="position:absolute;left:0;right:0;height:6px;background:#1A2840;border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${svcPct}%;border-radius:3px;background:linear-gradient(90deg,#3B82F640,${svcCol})"></div>
+          </div>
+          <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:${trackPct}%;pointer-events:none">
+            <img src="${car.img}" style="width:26px;height:26px;object-fit:contain;transform:scaleX(-1);filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))" onerror="this.style.display='none'">
+          </div>
+        </div>
+      </div>`:'';
+      return `<div onclick="openCarDetail('${car.key}')" style="border-radius:18px;overflow:hidden;border:1px solid ${cardBorder};margin:0 12px 10px;cursor:pointer;background:${cardBg}">
+        <div style="display:flex;min-height:92px">
+          <div style="width:62px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:12px 5px;background:linear-gradient(145deg,${car.color}28,${car.color}0E)">
+            <img src="${car.img}" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))" onerror="this.style.opacity='.3'">
+            <div style="font-size:7px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75;color:${car.color}">${car.label}</div>
+            ${car.plate?`<div style="font-size:7px;font-weight:700;color:#2A4060;letter-spacing:.3px">${car.plate}</div>`:''}
+          </div>
+          <div style="flex:1;min-width:0;padding:12px 8px;display:flex;flex-direction:column;justify-content:space-between">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px">
+              <div style="font-size:14px;font-weight:800;color:#EAF2FF;letter-spacing:-.2px">${car.name}</div>
+              ${chip}
+            </div>
+            <div style="display:flex;align-items:flex-end;justify-content:space-between">
+              <div>
+                <div style="font-size:10px;color:#2A4A6A;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">Odometer</div>
+                <div style="font-size:19px;font-weight:800;color:#C8DCF0;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1">${ckm>0?Number(ckm).toLocaleString():'—'}<span style="font-size:10px;color:#2A4060;font-weight:600;margin-left:2px">km</span></div>
+              </div>
+              ${statusIcons}
+            </div>
+            ${tags}
+          </div>
+          ${fuelRail}
+        </div>
+        ${raceStrip}
+      </div>`;
+    };
+    const alertCars=CREW_CARS.filter(c=>_hasAlert(c));
+    const clearCars=CREW_CARS.filter(c=>!_hasAlert(c));
+    const secHdr=(label,color)=>`<div style="font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:0 14px 10px;color:${color}">${label}<span style="flex:1;height:1px;background:#1A2840;display:block"></span></div>`;
+    if(alertCars.length){
+      html+=secHdr('⚠️ Needs Attention','#EF4444');
+      alertCars.forEach(c=>{html+=_buildCard(c);});
+      html+=`<div style="height:14px"></div>`;
+    }
+    html+=secHdr('✅ All Clear','#22C55E');
+    clearCars.forEach(c=>{html+=_buildCard(c);});
+
+  } else {
+    // ── Audits tab: existing grid ──
+    const sortedCars=[...CREW_CARS].sort((a,b)=>{
+      const da=carData(a.key), db2=carData(b.key);
+      const ckA=parseInt(da.currentKm)||0, nsA=parseInt(da.nextServiceKm)||0;
+      const ckB=parseInt(db2.currentKm)||0, nsB=parseInt(db2.nextServiceKm)||0;
+      const oilA=ckA>0&&nsA>0&&(nsA-ckA)<=500;
+      const oilB=ckB>0&&nsB>0&&(nsB-ckB)<=500;
+      const fsA=FUEL_STOPS.find(s=>s.value===da.fuel); const pctA=fsA?fsA.pct:null;
+      const fsB=FUEL_STOPS.find(s=>s.value===db2.fuel); const pctB=fsB?fsB.pct:null;
+      const fuelA=pctA!==null&&pctA<=0.5;
+      const fuelB=pctB!==null&&pctB<=0.5;
+      const alertA=(oilA||fuelA)?0:1, alertB=(oilB||fuelB)?0:1;
+      return alertA-alertB;
+    });
+    const auditGridCards=[];
+    sortedCars.forEach(car=>{
+      const d=carData(car.key);
+      const auditCD=carAuditData(car.key);
+      const regExp=d.regExpiry&&d.regExpiry<todayIso;
+      const insExp=d.insuranceExpiry&&d.insuranceExpiry<todayIso;
+      const docAlert=regExp||insExp;
+      const docBadge=docAlert?`<span style="font-size:10px;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
+      const pendingUrgent=!auditCD.done&&urgent;
+      const auditCol=auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':'#E8A000';
+      const statusLabel=auditCD.done?'Completed':pendingUrgent?(overdue?'Overdue':'Urgent'):'Pending';
+      const dotCol=auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':'#9CA3AF';
       auditGridCards.push(`
         <div onclick="openCarDetail('${car.key}')" class="${pendingUrgent?'audit-blink':''}"
           style="background:var(--glass2);border:1px solid ${pendingUrgent?'rgba(231,76,60,0.35)':'var(--border2)'};
@@ -2921,15 +3002,14 @@ function renderCrewCarsList(el) {
             <span style="font-size:11px;font-weight:600;color:${auditCol}">${statusLabel}</span>
           </div>
         </div>`);
+    });
+    if(auditGridCards.length){
+      html+=`<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${auditGridCards.join('')}</div>`;
     }
-  });
-  if(!isCarsTab && auditGridCards.length) {
-    html+=`<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${auditGridCards.join('')}</div>`;
+    html+=`<div style="padding:10px 16px 4px">
+      <div style="font-size:11px;color:var(--t3);line-height:1.8">🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged</div>
+    </div>`;
   }
-
-  html+=`<div style="padding:10px 16px 4px">
-    <div style="font-size:11px;color:var(--t3);line-height:1.8">🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged</div>
-  </div>`;
 
   // ── Past audits (audits tab only) ──
   if(!isCarsTab && S.pastAudits.length) {
