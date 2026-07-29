@@ -1230,6 +1230,8 @@ async function bootApp() {
     setupPhotoInput();
     loadAuditTilesLocal(); // show tiles instantly before Firestore responds
     initFirebase(); // best-effort; app works locally even if this fails
+    fetchBouncieData();
+    setInterval(fetchBouncieData, 2 * 60 * 1000); // refresh every 2 minutes
   } catch(e) {
     console.log('Boot setup error:', e);
   }
