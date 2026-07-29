@@ -2807,11 +2807,17 @@ function renderCrewCarsList(el) {
     const docBadge=docAlert?`<span style="font-size:10px;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
     const ckm=parseInt(d.currentKm)||0, nsKm=parseInt(d.nextServiceKm)||0;
     const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
-    const fs=FUEL_STOPS.find(s=>s.value===d.fuel); const fuelPct=fs?fs.pct:null;
-    const fuelAlert=fuelPct!==null&&fuelPct<=0.5;
-    const fuelFlash=fuelPct!==null&&fuelPct<=0.25;
-    const anyAlert=oilWarn||fuelAlert||docAlert;
-    const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.25?'#E74C3C':fuelPct<0.5?'#F1C40F':fuelPct<0.75?'#82E06A':'#27AE60';
+    const b=S.bouncieData[car.key];
+    const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
+    const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
+    const fuelPct=bOk&&b.fuelLevel!=null ? b.fuelLevel/100 : (fs?fs.pct:null);
+    const fuelLabel=bOk&&b.fuelLevel!=null ? Math.round(b.fuelLevel)+'%' : (d.fuel||'—');
+    const fuelAlert=fuelPct!==null&&fuelPct<=0.25;
+    const fuelFlash=fuelPct!==null&&fuelPct<=0.15;
+    const milAlert=bOk&&b.milOn;
+    const battAlert=bOk&&(b.battery==='low'||b.battery==='shutdown');
+    const anyAlert=oilWarn||fuelAlert||docAlert||milAlert||battAlert;
+    const fuelCol=fuelPct===null?'var(--border)':fuelPct<0.15?'#E74C3C':fuelPct<0.25?'#F1C40F':fuelPct<0.6?'#82E06A':'#27AE60';
     const SC={'CR':'#27AE60','MX':'#E8A000','N/A':'#5a6478','OUT':'#E74C3C'};
     const curSt=d.status||'';
     const stChip=curSt
@@ -2842,17 +2848,19 @@ function renderCrewCarsList(el) {
               <span class="${oilWarn?'oil-flash-icon':''}" style="font-size:15px">🛢</span>
             </div>
             <div style="margin-top:8px;display:flex;align-items:center;gap:6px">${stChip}${(()=>{
-              const b=S.bouncieData[car.key];
-              if(!BOUNCIE_WORKER_URL||!b||b.status==='unconfigured') return '';
-              if(b.status==='error') return `<span style="font-size:10px;color:var(--t3)">📡 offline</span>`;
-              const moving=b.isMoving?`<span style="font-size:10px;font-weight:700;color:#27AE60">🚗 Moving ${b.speed?Math.round(b.speed)+' km/h':''}</span>`:`<span style="font-size:10px;color:var(--t3)">📍 Parked</span>`;
-              return moving;
+              if(!bOk) return '';
+              const loc=b.isMoving?`<span style="font-size:10px;font-weight:700;color:#27AE60">🚗 Moving</span>`:`<span style="font-size:10px;color:var(--t3)">📍 Parked</span>`;
+              const bat=b.battery&&b.battery!=='normal'?`<span style="font-size:10px;font-weight:700;color:#E74C3C">🔋 ${b.battery}</span>`:'';
+              const mil=b.milOn?`<span style="font-size:10px;font-weight:700;color:#E74C3C">⚠️ Check Engine</span>`:'';
+              return loc+bat+mil;
             })()}</div>
-            <div style="margin-top:10px;display:flex;align-items:center;gap:7px">
+            ${bOk&&b.odometer?`<div style="margin-top:4px;font-size:10px;color:var(--t3)">🛣 ${Math.round(b.odometer).toLocaleString()} km</div>`:''}
+            ${bOk&&b.milOn&&b.dtcList?.length?`<div style="margin-top:2px;font-size:10px;color:#E74C3C">DTC: ${b.dtcList.join(', ')}</div>`:''}
+            <div style="margin-top:8px;display:flex;align-items:center;gap:7px">
               <div style="flex:1;height:7px;background:var(--border);border-radius:4px;overflow:hidden">
                 <div style="height:100%;width:${fuelPct===null?0:Math.round(fuelPct*100)}%;background:${fuelCol};border-radius:4px;transition:width 0.4s"></div>
               </div>
-              <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${d.fuel||'—'}</span>
+              <span style="font-size:11px;font-weight:700;color:${fuelAlert?'#E74C3C':'var(--t3)'};flex-shrink:0">${fuelLabel}</span>
             </div>
           </div>
           <div style="color:var(--border2);font-size:20px;margin-top:4px">›</div>

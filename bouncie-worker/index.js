@@ -109,14 +109,13 @@ async function fetchAllVehicles(token) {
         const vehicle = Array.isArray(data) ? data[0] : data;
         results[key] = {
           status:    'ok',
-          lat:       vehicle?.stats?.location?.lat     ?? null,
-          lng:       vehicle?.stats?.location?.lon     ?? null,
-          speed:     vehicle?.stats?.speed             ?? 0,
-          isMoving:  vehicle?.stats?.isRunning         ?? false,
-          odometer:  vehicle?.stats?.odometer          ?? null,
-          fuelLevel: vehicle?.stats?.fuelLevel         ?? null,
-          address:   vehicle?.stats?.location?.address ?? null,
-          updatedAt: vehicle?.stats?.lastUpdated       ?? null,
+          isMoving:  vehicle?.stats?.isRunning                    ?? false,
+          odometer:  vehicle?.stats?.odometer                     ?? null,
+          fuelLevel: vehicle?.stats?.fuelLevel                    ?? null,
+          battery:   vehicle?.stats?.battery?.status              ?? null,
+          milOn:     vehicle?.stats?.mil?.milOn                   ?? false,
+          dtcList:   vehicle?.stats?.mil?.qualifiedDtcList        ?? [],
+          updatedAt: vehicle?.stats?.lastUpdated                  ?? null,
         };
       } catch (e) {
         results[key] = { status: 'error', error: e.message };
