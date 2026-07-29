@@ -948,8 +948,8 @@ const PROC_VIDEOS = {
 
 const CREW_CARS = [
   {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png',  plate:''},
-  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png', plate:'DANF 068'},
-  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png',   plate:'DCYZ 952'},
+  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png', plate:'DANF 068', facesRight:true},
+  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png',   plate:'DCYZ 952',  facesRight:true},
   {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala-removebg-preview.png',  plate:'DDET 939'},
   {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck-removebg-preview.png', plate:'CB 70643'},
   {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck-removebg-preview.png', plate:'BP 61870'},
@@ -2922,7 +2922,7 @@ function renderCrewCarsList(el) {
             <div style="height:100%;width:${svcPct}%;border-radius:3px;background:linear-gradient(90deg,#3B82F640,${svcCol})"></div>
           </div>
           <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:${trackPct}%;pointer-events:none">
-            <img src="${car.img}" style="width:26px;height:26px;object-fit:contain;transform:scaleX(-1);filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))" onerror="this.style.display='none'">
+            <img src="${car.img}" style="width:26px;height:26px;object-fit:contain;transform:${car.facesRight?'none':'scaleX(-1)'};filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))" onerror="this.style.display='none'">
           </div>
         </div>
       </div>`:'';
@@ -3038,13 +3038,19 @@ function renderCrewCarsList(el) {
 // ── RENDER: CAR DETAIL ────────────────────────────────────────
 function renderCarDetail(el, key) {
   const car=CREW_CARS.find(c=>c.key===key);
-  if(!car){backToCarList();return;}
+  if(!car){S.crewCarsView=S.tab==='cars'?null:'list';render();return;}
   const d=carData(key);
-  setBar({title: car.name, back:'Crew Cars', backFn: backToCarList});
+  setBar({title: car.name, back:'Crew Cars', backFn: S.tab==='cars'?()=>{S.crewCarsView=null;render();}:backToCarList});
   document.getElementById('fab').style.display='none';
   const fuelLog=d.log.filter(l=>l.type==='fuel').slice(-1)[0];
   const oilLog=d.log.filter(l=>l.type==='oil').slice(-1)[0];
   const washLog=d.log.filter(l=>l.type==='wash').slice(-1)[0];
+  const _b=S.bouncieData[key];
+  const _bOk=BOUNCIE_WORKER_URL&&_b&&_b.status==='ok';
+  const _bFuel=_bOk&&_b.fuelLevel!=null;
+  const _fuelDisplayLabel=_bFuel?Math.round(_b.fuelLevel)+'%':(fuelLog?fuelLog.value:'—');
+  const _fuelDisplaySub=_bFuel?'Bouncie live':(fuelLog?fmtDate(fuelLog.date):'No record');
+  const _fuelLevel=_bFuel?(_b.fuelLevel<=5?'Empty':_b.fuelLevel<=37.5?'1/4':_b.fuelLevel<=62.5?'1/2':_b.fuelLevel<=87.5?'3/4':'Full'):(fuelLog?.value||'');
 
   let html=`
     <!-- Car hero banner -->
@@ -3067,9 +3073,9 @@ function renderCarDetail(el, key) {
 
       <!-- Fuel card -->
       <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
-        ${fuelTankSvg(fuelLog?.value||'')}
-        <span style="font-size:12px;font-weight:800;color:var(--t1)">${fuelLog?fuelLog.value:'—'}</span>
-        <span style="font-size:10px;color:var(--t3)">${fuelLog?fmtDate(fuelLog.date):'No record'}</span>
+        ${fuelTankSvg(_fuelLevel)}
+        <span style="font-size:12px;font-weight:800;color:var(--t1)">${_fuelDisplayLabel}</span>
+        <span style="font-size:10px;color:var(--t3)">${_fuelDisplaySub}</span>
       </div>
 
       <!-- Oil Change card -->
