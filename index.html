@@ -6084,14 +6084,21 @@ function locationSelect(selected='') {
 function openEditTask(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
   const oldKey=fsKey(t.task);
-  // Find which loaded days have this task — use as pre-selection
-  const loadedDayIndices=[];
-  DAYS.forEach((day,i)=>{ if(S.tasks[day]?.find(x=>fsKey(x.task)===oldKey)) loadedDayIndices.push(i); });
   // Determine init mode from stored freq
   let initMode='specific';
   if(t.freq==='Daily') initMode='daily';
   else if(t.freq==='Once'||t.freq==='One-off') initMode='once';
-  const initDays = initMode==='daily'?[0,1,2,3,4,5,6]:initMode==='once'?[DAYS.indexOf(tabName)]:loadedDayIndices;
+  // Parse day indices from the freq string ("Mon · Wed · Sat") — reliable even
+  // when those days are not loaded in memory. Fallback to scanning loaded days
+  // for legacy tasks that have a missing or non-standard freq value.
+  const freqIndices = (t.freq&&initMode==='specific')
+    ? t.freq.split(' · ').map(s=>DAY_SHORT.indexOf(s.trim())).filter(i=>i>=0)
+    : [];
+  const loadedDayIndices=[];
+  if(!freqIndices.length) DAYS.forEach((day,i)=>{ if(S.tasks[day]?.find(x=>fsKey(x.task)===oldKey)) loadedDayIndices.push(i); });
+  const initDays = initMode==='daily'?[0,1,2,3,4,5,6]
+    : initMode==='once'?[DAYS.indexOf(tabName)]
+    : freqIndices.length ? freqIndices : loadedDayIndices;
 
   openModal('✏️ Edit Task',
     `<label>Task description</label>
