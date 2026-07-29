@@ -4934,7 +4934,7 @@ function generateAircraftPDF(reg, type, month) {
     }).join('')}`).join('');
 
   const isMetro = type === 'metro';
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=850">
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=900">
   <title>${reg} – ${formTitle} – ${month}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
@@ -4943,7 +4943,7 @@ function generateAircraftPDF(reg, type, month) {
     .spine{width:20px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;padding:4px 0;overflow:hidden}
     .spine-text-zone{flex:0 0 38%;display:flex;align-items:center;justify-content:center;width:100%}
     .spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:400;letter-spacing:0.5px;white-space:nowrap;color:#1a1a1a;text-align:center;border:1px solid #1a1a1a;padding:4px 2px}
-    .spine-logo-zone{flex:1;width:100%;display:flex;align-items:flex-start;justify-content:center;padding-top:6px;overflow:hidden}
+    .spine-logo-zone{flex:1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
     .spine-logo{height:20px;width:220px;transform:rotate(-90deg);object-fit:contain;flex-shrink:0}
     .content{flex:1;padding:8px 10px 6px}
     .ww-title{font-size:11px;font-weight:700;text-align:center;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
@@ -4961,7 +4961,7 @@ function generateAircraftPDF(reg, type, month) {
     .aud-row td{background:#c8c8c8;padding:3px 6px;border:1px solid #999;font-size:7.5px;font-weight:700}
     .aud-line{display:inline-block;min-width:120px;border-bottom:1px solid #555;margin-left:4px;font-weight:400}
     .footer{display:flex;justify-content:space-between;font-size:7px;color:#555;margin-top:4px;border-top:1px solid #ccc;padding-top:3px}
-    @media print{@page{margin:6mm;size:letter portrait}body{-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:0!important;padding-bottom:0!important}.content{padding-top:3px!important;padding-bottom:3px!important}.top-row{margin-bottom:2px!important;padding-bottom:2px!important}.back-btn{display:none}}
+    @media print{@page{margin:0;size:letter portrait}body{padding:6mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:0!important;padding-bottom:0!important;font-size:7px!important;line-height:1.2!important}.content{padding-top:3px!important;padding-bottom:3px!important}.top-row{margin-bottom:2px!important;padding-bottom:2px!important}.back-btn{display:none}}
   </style>
   </head><body>
   <div class="page">
