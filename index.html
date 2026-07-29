@@ -4933,17 +4933,17 @@ function generateAircraftPDF(reg, type, month) {
     }).join('')}`).join('');
 
   const isMetro = type === 'metro';
-  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=750">
   <title>${reg} – ${formTitle} – ${month}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:'Arial',sans-serif;font-size:7.5px;color:#1a1a1a;background:#fff}
-    .page{display:flex;flex-direction:row;min-height:100vh}
-    .spine{width:20px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;padding:4px 0;overflow:hidden;position:relative;z-index:1}
+    .page{display:flex;flex-direction:row}
+    .spine{width:20px;flex-shrink:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;padding:4px 0;overflow:hidden}
     .spine-text-zone{flex:0 0 38%;display:flex;align-items:center;justify-content:center;width:100%}
     .spine-title{writing-mode:vertical-rl;transform:rotate(180deg);font-size:10px;font-weight:700;letter-spacing:0.5px;white-space:nowrap;color:#1a1a1a;text-align:center;border:1px solid #1a1a1a;padding:4px 2px}
-    .spine-logo-zone{flex:1;width:100%;position:relative;overflow:hidden}
-    .spine-logo{position:absolute;height:16px;width:200px;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-90deg);object-fit:contain}
+    .spine-logo-zone{flex:1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .spine-logo{height:16px;width:180px;transform:rotate(-90deg);object-fit:contain;flex-shrink:0}
     .content{flex:1;padding:8px 10px 6px}
     .ww-title{font-size:11px;font-weight:700;text-align:center;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
     .top-row{display:flex;align-items:flex-end;gap:0;margin-bottom:5px;border-bottom:1.5px solid #1a1a1a;padding-bottom:4px}
