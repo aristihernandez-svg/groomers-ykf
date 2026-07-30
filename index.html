@@ -4368,37 +4368,16 @@ function renderAuditsHub(el) { renderAuditsLanding(el); }
 function renderAuditsLanding(el) {
   setBar({title:'Audits'});
   showFab(openAddAudit);
-  const anyRed=CREW_CARS.some(c=>carStatusColor(carData(c.key).washed)==='var(--red)');
-  const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
-  const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
 
-  // Inject slideshow CSS once
+  // Slideshow CSS: 1s per car
   if(!document.getElementById('cc-slide-style')){
-    const n=CREW_CARS.length, dur=n*3;
-    const pct=(3/dur*100).toFixed(2), fo=(3/dur*100+2.5).toFixed(2);
+    const n=CREW_CARS.length, dur=n*1;
+    const pct=(1/dur*100).toFixed(2), fo=(1/dur*100+1).toFixed(2);
     const s=document.createElement('style');
     s.id='cc-slide-style';
-    s.textContent=`@keyframes ccSlide{0%{opacity:0}1%{opacity:1}${pct}%{opacity:1}${fo}%{opacity:0}100%{opacity:0}}`;
+    s.textContent=`@keyframes ccSlide{0%{opacity:0}2%{opacity:1}${pct}%{opacity:1}${fo}%{opacity:0}100%{opacity:0}}`;
     document.head.appendChild(s);
   }
-
-  const customTiles=Object.entries(S.auditTiles).map(([key,t])=>{
-    const iconHtml=t.iconImg
-      ?`<img src="${t.iconImg}" style="width:100%;height:100%;object-fit:cover">`
-      :`<span style="font-size:38px">${t.icon||'📋'}</span>`;
-    return `
-      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;user-select:none"
-        onclick="S.auditTileView='${key}';render()"
-        onpointerdown="auditTileLongPress(event,'${key}')"
-        onpointerup="auditTileCancelPress()"
-        onpointercancel="auditTileCancelPress()"
-        onpointermove="auditTileCancelPress()">
-        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;overflow:hidden;border-bottom:1px solid var(--border)">${iconHtml}</div>
-        <div style="padding:10px 12px 12px">
-          <div style="font-size:13px;font-weight:800;color:var(--t1)">${t.title}</div>
-        </div>
-      </div>`;
-  }).join('');
 
   const _metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r));
   const _wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r));
@@ -4409,45 +4388,144 @@ function renderAuditsLanding(el) {
   const _astraDone = _astraRegs.every(r=>acIsComplete(r,'astra'));
   const _allDone   = _carsDone && _metroDone && _wwDone && _astraDone;
 
-  const n=CREW_CARS.length, dur=n*3;
-  const carSlides=CREW_CARS.map((c,i)=>`<img src="${c.img}" alt="${c.label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));animation:ccSlide ${dur}s linear ${i*3}s infinite;opacity:0">`).join('');
+  // Section label helper
+  const sectionLabel = (icon, text) =>
+    `<div style="padding:14px 16px 6px;display:flex;align-items:center;gap:8px">
+       <span style="font-size:13px">${icon}</span>
+       <span style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t2)">${text}</span>
+       <div style="flex:1;height:1px;background:var(--border2);margin-left:4px"></div>
+     </div>`;
 
-  const facilitySection = Object.keys(S.auditTiles).length ? `
-    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">🏢 Facility &amp; Base</div>
-    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">${customTiles}</div>
-  ` : '';
+  // Audit row helper: onclick, iconHtml, name, sub, badge html
+  const auditRow = (onclick, iconHtml, name, sub, badgeHtml, extra='') =>
+    `<div onclick="${onclick}" style="margin:0 16px 8px;background:var(--glass2);border:1px solid var(--border2)${extra};border-radius:12px;display:flex;align-items:center;gap:12px;padding:10px 12px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+       <div style="width:44px;height:44px;border-radius:10px;background:var(--navy2,#0B1628);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden">${iconHtml}</div>
+       <div style="flex:1;min-width:0">
+         <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">${name}</div>
+         <div style="font-size:11px;color:var(--t3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sub}</div>
+       </div>
+       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+         ${badgeHtml}
+         <span style="color:var(--border2);font-size:18px;font-weight:600">›</span>
+       </div>
+     </div>`;
+
+  const badge = (label, bg, color) =>
+    `<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:${bg};color:${color};white-space:nowrap">${label}</span>`;
+
+  const acImg = (src) =>
+    `<img src="${src}" style="width:38px;height:38px;object-fit:contain">`;
+
+  // Aircraft rows
+  const metroMonth = acAuditMonthKey();
+  const metroDone  = _metroRegs.filter(r=>acIsComplete(r,'metro')).length;
+  const metroBadge = _metroDone ? badge('Done','#0F3020','#2ECC71')
+    : metroDone>0 ? badge(`${_metroRegs.length-metroDone} left`,'#2A1010','#E74C3C')
+    : badge('New','#0F1E40','#4A90D9');
+  const metroSub = `${_metroRegs.join(', ')} · ${metroMonth}`;
+
+  const wwDone = _wwRegs.filter(r=>acIsComplete(r,'westwind')).length;
+  const wwBadge = _wwDone ? badge('Done','#0F3020','#2ECC71')
+    : wwDone>0 ? badge(`${_wwRegs.length-wwDone} left`,'#2A1010','#E74C3C')
+    : badge('New','#0F1E40','#4A90D9');
+  const wwSub = `${_wwRegs.join(', ')} · ${metroMonth}`;
+
+  const astraDoneCount = _astraRegs.filter(r=>acIsComplete(r,'astra')).length;
+  const astraBadge = _astraDone ? badge('Done','#0F3020','#2ECC71')
+    : astraDoneCount>0 ? badge(`${_astraRegs.length-astraDoneCount} left`,'#2A1010','#E74C3C')
+    : badge('New','#0F1E40','#4A90D9');
+  const astraBorder = !_astraDone && astraDoneCount===0 ? ';border-color:#2E5080' : '';
+  const astraSub = `${_astraRegs.map(r=>'C-'+r).join(', ')} · ${_astraDone?'Last: '+metroMonth:'Not yet completed'}`;
+
+  // Custom aircraft types
+  const customAcRows = S.customAcTypesList.map(ct=>{
+    const regs = ct.regs.filter(r=>!isAcDisabled(r));
+    const done = regs.filter(r=>acIsComplete(r,ct.id)).length;
+    const allD = regs.length>0 && done===regs.length;
+    const b = allD ? badge('Done','#0F3020','#2ECC71') : done>0 ? badge(`${regs.length-done} left`,'#2A1010','#E74C3C') : badge('New','#0F1E40','#4A90D9');
+    return auditRow(`S.acCustomTypeView='${ct.id}';render()`, `<span style="font-size:26px">🛫</span>`, ct.name, `${regs.join(', ')} · ${metroMonth}`, b);
+  }).join('');
+
+  // Facility & Base rows (custom tiles)
+  const facilityRows = Object.entries(S.auditTiles).map(([key,t])=>{
+    const iconHtml = t.iconImg
+      ? `<img src="${t.iconImg}" style="width:38px;height:38px;object-fit:cover;border-radius:6px">`
+      : `<span style="font-size:26px">${t.icon||'📋'}</span>`;
+    const onclick = `S.auditTileView='${key}';render()" onpointerdown="auditTileLongPress(event,'${key}')" onpointerup="auditTileCancelPress()" onpointercancel="auditTileCancelPress()" onpointermove="auditTileCancelPress()`;
+    return auditRow(onclick, iconHtml, t.title, t.subtitle||'Tap to open', badge('Open','#1A2840','#4A90D9'));
+  }).join('');
+
+  // Static facility placeholders (built-in audit types not yet coded)
+  const facilityPlaceholders = [
+    { name:'Crew House', sub:'220 Thomas Slee Dr.',
+      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="8" y="16" width="24" height="18" rx="2" fill="#3D5C8C" opacity="0.6"/><path d="M6 18L20 8l14 10" stroke="#5BA3F5" stroke-width="2" fill="none"/><rect x="15" y="24" width="10" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>` },
+    { name:'Hangar & Office', sub:'YKF Base',
+      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><path d="M6 22 Q20 10 34 22 L34 36 L6 36Z" fill="#3D5C8C" opacity="0.5"/><path d="M4 22 Q20 8 36 22" stroke="#5BA3F5" stroke-width="1.5" fill="none"/><rect x="14" y="26" width="12" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>` },
+    { name:'MSDS', sub:'Safety data sheets',
+      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="7" y="10" width="26" height="20" rx="3" fill="#3D5C8C" opacity="0.5"/><rect x="11" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="21" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="11" y="22" width="18" height="4" rx="1" fill="#5BA3F5" opacity="0.3"/></svg>` },
+    { name:'Parking Lot MX', sub:'YKF ramp',
+      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="6" y="28" width="28" height="6" rx="1" fill="#3D5C8C" opacity="0.6"/><rect x="10" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="24" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="8" y="14" width="24" height="6" rx="1" fill="#5BA3F5" opacity="0.3"/><circle cx="12" cy="34" r="3" fill="#4A90D9" opacity="0.7"/><circle cx="28" cy="34" r="3" fill="#4A90D9" opacity="0.7"/></svg>` },
+    { name:'YKF Base', sub:'Monthly checklist',
+      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><path d="M20 8L8 16v18h24V16z" fill="#3D5C8C" opacity="0.5"/><path d="M14 34V24h12v10" fill="#4A90D9" opacity="0.4"/><path d="M8 16L20 8l12 8" stroke="#5BA3F5" stroke-width="1.5" fill="none"/></svg>` },
+  ].map(p=>`<div style="margin:0 16px 8px;background:var(--glass2);border:1px solid var(--border2);border-radius:12px;display:flex;align-items:center;gap:12px;padding:10px 12px;opacity:0.55">
+    <div style="width:44px;height:44px;border-radius:10px;background:var(--navy2,#0B1628);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.icon}</div>
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">${p.name}</div>
+      <div style="font-size:11px;color:var(--t3)">${p.sub}</div>
+    </div>
+    <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#2A2010;color:#E8A000">Soon</span>
+  </div>`).join('');
+
+  // Crew Cars slideshow in 44px icon square (1s per car)
+  const ccn=CREW_CARS.length, ccdur=ccn*1;
+  const carsLeft = CREW_CARS.filter(c=>!carAuditData(c.key).done).length;
+  const carsBadge = _carsDone ? badge('Done','#0F3020','#2ECC71')
+    : carsLeft>0 ? badge(`${carsLeft} left`,'#2A2010','#E8A000')
+    : badge('New','#0F1E40','#4A90D9');
+  const carSlides = CREW_CARS.map((c,i)=>
+    `<img src="${c.img}" alt="${c.label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;animation:ccSlide ${ccdur}s linear ${i*1}s infinite;opacity:0">`
+  ).join('');
+  const carIconHtml = `<div style="position:relative;width:100%;height:100%">${carSlides}</div>`;
 
   el.innerHTML=`
-    ${renderAircraftLandingSection()}
-    ${facilitySection}
-    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">🚗 Crew Cars</div>
-    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div onclick="openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
-        <div style="position:absolute;top:8px;right:8px;z-index:2;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="position:relative;height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));border-bottom:1px solid var(--border);overflow:hidden">
-          ${carSlides}
-        </div>
-        <div style="padding:10px 12px 12px">
-          <div style="font-size:13px;font-weight:800;color:var(--t1)">Crew Cars</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:3px">${CREW_CARS.length} vehicles · tap to manage</div>
-        </div>
-      </div>
+    <div style="padding:18px 16px 10px">
+      <div style="font-size:22px;font-weight:800;color:var(--t1);margin-bottom:3px">Audit Forms</div>
+      <div style="font-size:12px;color:var(--t3)">Tap an audit to open and fill</div>
     </div>
-    <div style="padding:0 14px 10px">
+
+    ${sectionLabel('✈','Aircraft')}
+    ${auditRow("openAircraftFolder('metro')", acImg('cars/Metroliner_logo-removebg-preview.png'), 'Metro SW3/SW4', metroSub, metroBadge)}
+    ${auditRow("openAircraftFolder('westwind')", acImg('cars/Westwind-removebg-preview.png'), 'WestWind WW24', wwSub, wwBadge)}
+    ${auditRow("openAircraftFolder('astra')", acImg('cars/Astra-removebg-preview.png'), 'Astra AJ25', astraSub, astraBadge, astraBorder)}
+    ${customAcRows}
+    <div style="margin:0 16px 8px">
+      <button onclick="openAddAircraftTypeFlow()" style="width:100%;padding:11px;border-radius:10px;border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+        <span style="font-size:16px;line-height:1">+</span> Add aircraft type
+      </button>
+    </div>
+
+    ${(Object.keys(S.auditTiles).length || true) ? sectionLabel('🏢','Facility &amp; Base') : ''}
+    ${facilityRows}
+    ${facilityPlaceholders}
+
+    ${sectionLabel('🚗','Crew Cars')}
+    ${auditRow('openCrewCars()', carIconHtml, 'Crew Cars', `${CREW_CARS.length} vehicles · tap to manage`, carsBadge)}
+
+    <div style="margin:14px 16px 8px">
       <button onclick="generateAllAuditPDFs()"
-        style="width:100%;padding:14px 16px;border-radius:var(--radius);border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'var(--accent-dim)':'var(--glass2)'};cursor:${_allDone?'pointer':'default'};display:flex;align-items:center;gap:13px;text-align:left;opacity:${_allDone?'1':'0.5'}">
-        <span style="font-size:24px;line-height:1;flex-shrink:0">📦</span>
+        style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'var(--accent-dim)':'var(--glass2)'};cursor:${_allDone?'pointer':'default'};display:flex;align-items:center;gap:13px;text-align:left;opacity:${_allDone?'1':'0.45'}">
+        <span style="font-size:22px;line-height:1;flex-shrink:0">📦</span>
         <span style="flex:1">
-          <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Generate All PDFs</span>
+          <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Generate all PDFs</span>
           <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate':'Complete all audits to enable'}</span>
         </span>
         <span style="color:${_allDone?'var(--accent)':'var(--border2)'};font-size:20px;opacity:0.7">›</span>
       </button>
     </div>
-    <div style="padding:0 14px 14px">
+    <div style="margin:0 16px 8px">
       <button onclick="S.acVersionsView=true;render()"
-        style="width:100%;padding:12px 16px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--glass2);cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
-        <span style="font-size:22px;line-height:1;flex-shrink:0">🗂</span>
+        style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--glass2);cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
+        <span style="font-size:20px;line-height:1;flex-shrink:0">🗂</span>
         <span style="flex:1">
           <span style="display:block;font-size:13px;font-weight:700;color:var(--t1)">PDF Form Versions</span>
           <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">Update version · date · form # · upload new TC PDF</span>
@@ -4455,12 +4533,12 @@ function renderAuditsLanding(el) {
         <span style="color:var(--border2);font-size:20px">›</span>
       </button>
     </div>
-    <div style="padding:0 14px 14px">
+    <div style="margin:0 16px 8px">
       <button onclick="resetAllAcAudits()"
-        style="width:100%;padding:12px 16px;border-radius:var(--radius);border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.07);cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
-        <span style="font-size:22px;line-height:1;flex-shrink:0">🗑</span>
+        style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.07);cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
+        <span style="font-size:20px;line-height:1;flex-shrink:0">🗑</span>
         <span style="flex:1">
-          <span style="display:block;font-size:13px;font-weight:700;color:#E84040">Reset All Aircraft Audits</span>
+          <span style="display:block;font-size:13px;font-weight:700;color:#E84040">Reset all aircraft audits</span>
           <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">Clears all checkmarks for this month on all devices</span>
         </span>
       </button>
@@ -4960,78 +5038,6 @@ function saveAcComment(reg, key) {
   render();
 }
 
-function renderAircraftLandingSection() {
-  const month = acAuditMonthKey();
-  const { urgent, overdue, daysLeft } = auditDeadlineStatus();
-
-  const AC_IMAGES = {
-    metro:    'cars/Metroliner_logo-removebg-preview.png',
-    westwind: 'cars/Westwind-removebg-preview.png',
-    astra:    'cars/Astra-removebg-preview.png',
-  };
-  const folderCard = (type, regs, label) => {
-    const done   = regs.filter(r => acIsComplete(r, type)).length;
-    const total  = regs.length;
-    const allDone= done === total;
-    const anyPending = done < total;
-    const dot    = allDone ? 'var(--green)' : (urgent && anyPending) ? '#E74C3C' : '#E8A000';
-    const urgentBadge = urgent && anyPending
-      ? `<span style="font-size:10px;font-weight:700;color:${overdue?'#E74C3C':'#E8A000'};margin-left:4px">${overdue?'OVERDUE':'DUE 10th'}</span>` : '';
-    const imgSrc = AC_IMAGES[type];
-    const imgHtml = imgSrc
-      ? `<img src="${imgSrc}" style="max-width:88%;max-height:80px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7))">`
-      : `<span style="font-size:42px">🛫</span>`;
-    return `
-      <div onclick="openAircraftFolder('${type}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
-        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
-          ${imgHtml}
-        </div>
-        <div style="padding:10px 12px 12px">
-          <div style="font-size:13px;font-weight:800;color:var(--t1)">${label}${urgentBadge}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:3px">${done}/${total} audited · ${month}</div>
-        </div>
-      </div>`;
-  };
-
-  const customCards = S.customAcTypesList.map(ct => {
-    const regs = ct.regs.filter(r=>!isAcDisabled(r));
-    const done  = regs.filter(r=>acIsComplete(r,ct.id)).length;
-    const total = regs.length;
-    const allDone = total>0 && done===total;
-    const dot = allDone?'var(--green)':'#E8A000';
-    const ctImg = AC_IMAGES[ct.id];
-    const ctImgHtml = ctImg
-      ? `<img src="${ctImg}" style="max-width:88%;max-height:80px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7))">`
-      : `<span style="font-size:38px">🛫</span>`;
-    return `
-      <div onclick="S.acCustomTypeView='${ct.id}';render()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
-        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
-          ${ctImgHtml}
-        </div>
-        <div style="padding:10px 12px 12px">
-          <div style="font-size:13px;font-weight:800;color:var(--t1)">${ct.name}</div>
-          <div style="font-size:11px;color:var(--t3);margin-top:3px">${done}/${total} audited · ${month}</div>
-        </div>
-      </div>`;
-  }).join('');
-
-  return `
-    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">✈ Aircraft</div>
-    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${folderCard('metro',    [...AIRCRAFT_METRO,    ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)), 'Metro SW3/SW4')}
-      ${folderCard('westwind', [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)), 'Westwind WW24')}
-      ${folderCard('astra',    AIRCRAFT_ASTRA, 'Astra AJ25')}
-      ${customCards}
-    </div>
-    <div style="padding:10px 14px 4px">
-      <button onclick="openAddAircraftTypeFlow()"
-        style="width:100%;padding:13px;border-radius:var(--radius);border:1.5px dashed var(--border2);background:transparent;color:var(--t2);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
-        <span style="font-size:18px;line-height:1">+</span> Add aircraft type
-      </button>
-    </div>`;
-}
 
 function renderAircraftFolder(el, type) {
   document.getElementById('fab').style.display='none';
