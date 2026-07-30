@@ -4725,7 +4725,7 @@ function renderCrewHouseChecklist(el) {
   const sectionsHtml = CREW_HOUSE_CHECKLIST.map(sec=>`
     <div style="padding:14px 16px 6px;display:flex;align-items:center;gap:8px">
       <div style="width:3px;height:18px;background:var(--accent);border-radius:2px;flex-shrink:0"></div>
-      <div style="font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--t1)">${sec.section}</div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)">${sec.section}</div>
     </div>
     ${sec.items.map(item=>{
       const it = d.items[item.key]||{score:0,comment:''};
