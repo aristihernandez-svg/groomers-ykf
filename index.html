@@ -4320,6 +4320,16 @@ function renderAuditsLanding(el) {
   const allGreen=CREW_CARS.every(c=>carStatusColor(carData(c.key).washed)==='var(--green)');
   const dot=anyRed?'var(--red)':allGreen?'var(--green)':'#E8A000';
 
+  // Inject slideshow CSS once
+  if(!document.getElementById('cc-slide-style')){
+    const n=CREW_CARS.length, dur=n*3;
+    const pct=(3/dur*100).toFixed(2), fo=(3/dur*100+2.5).toFixed(2);
+    const s=document.createElement('style');
+    s.id='cc-slide-style';
+    s.textContent=`@keyframes ccSlide{0%{opacity:0}1%{opacity:1}${pct}%{opacity:1}${fo}%{opacity:0}100%{opacity:0}}`;
+    document.head.appendChild(s);
+  }
+
   const customTiles=Object.entries(S.auditTiles).map(([key,t])=>{
     const iconHtml=t.iconImg
       ?`<img src="${t.iconImg}" style="width:100%;height:100%;object-fit:cover">`
@@ -4345,21 +4355,30 @@ function renderAuditsLanding(el) {
   const _wwDone    = _wwRegs.every(r=>acIsComplete(r,'westwind'));
   const _allDone   = _carsDone && _metroDone && _wwDone;
 
+  const n=CREW_CARS.length, dur=n*3;
+  const carSlides=CREW_CARS.map((c,i)=>`<img src="${c.img}" alt="${c.label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6));animation:ccSlide ${dur}s linear ${i*3}s infinite;opacity:0">`).join('');
+
+  const facilitySection = Object.keys(S.auditTiles).length ? `
+    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">🏢 Facility &amp; Base</div>
+    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">${customTiles}</div>
+  ` : '';
+
   el.innerHTML=`
-    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+    ${renderAircraftLandingSection()}
+    ${facilitySection}
+    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">🚗 Crew Cars</div>
+    <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
       <div onclick="openCrewCars()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
-        <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;padding:10px;border-bottom:1px solid var(--border)">
-          ${CREW_CARS.map(c=>`<img src="${c.img}" alt="${c.label}" style="width:38px;height:28px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.5))">`).join('')}
+        <div style="position:absolute;top:8px;right:8px;z-index:2;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
+        <div style="position:relative;height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));border-bottom:1px solid var(--border);overflow:hidden">
+          ${carSlides}
         </div>
         <div style="padding:10px 12px 12px">
           <div style="font-size:13px;font-weight:800;color:var(--t1)">Crew Cars</div>
           <div style="font-size:11px;color:var(--t3);margin-top:3px">${CREW_CARS.length} vehicles · tap to manage</div>
         </div>
       </div>
-      ${customTiles}
     </div>
-    ${renderAircraftLandingSection()}
     <div style="padding:0 14px 10px">
       <button onclick="generateAllAuditPDFs()"
         style="width:100%;padding:14px 16px;border-radius:var(--radius);border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'var(--accent-dim)':'var(--glass2)'};cursor:${_allDone?'pointer':'default'};display:flex;align-items:center;gap:13px;text-align:left;opacity:${_allDone?'1':'0.5'}">
@@ -4843,7 +4862,12 @@ function renderAircraftLandingSection() {
   const month = acAuditMonthKey();
   const { urgent, overdue, daysLeft } = auditDeadlineStatus();
 
-  const folderCard = (type, regs, label, icon) => {
+  const AC_IMAGES = {
+    metro:    'cars/Metroliner_logo-removebg-preview.png',
+    westwind: 'cars/Westwind-removebg-preview.png',
+    astra:    'cars/Astra-removebg-preview.png',
+  };
+  const folderCard = (type, regs, label) => {
     const done   = regs.filter(r => acIsComplete(r, type)).length;
     const total  = regs.length;
     const allDone= done === total;
@@ -4851,11 +4875,15 @@ function renderAircraftLandingSection() {
     const dot    = allDone ? 'var(--green)' : (urgent && anyPending) ? '#E74C3C' : '#E8A000';
     const urgentBadge = urgent && anyPending
       ? `<span style="font-size:10px;font-weight:700;color:${overdue?'#E74C3C':'#E8A000'};margin-left:4px">${overdue?'OVERDUE':'DUE 10th'}</span>` : '';
+    const imgSrc = AC_IMAGES[type];
+    const imgHtml = imgSrc
+      ? `<img src="${imgSrc}" style="max-width:88%;max-height:80px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7))">`
+      : `<span style="font-size:42px">🛫</span>`;
     return `
       <div onclick="openAircraftFolder('${type}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
         <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:100px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
-          <span style="font-size:42px">${icon}</span>
+        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
+          ${imgHtml}
         </div>
         <div style="padding:10px 12px 12px">
           <div style="font-size:13px;font-weight:800;color:var(--t1)">${label}${urgentBadge}</div>
@@ -4870,11 +4898,15 @@ function renderAircraftLandingSection() {
     const total = regs.length;
     const allDone = total>0 && done===total;
     const dot = allDone?'var(--green)':'#E8A000';
+    const ctImg = AC_IMAGES[ct.id];
+    const ctImgHtml = ctImg
+      ? `<img src="${ctImg}" style="max-width:88%;max-height:80px;object-fit:contain;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.7))">`
+      : `<span style="font-size:38px">🛫</span>`;
     return `
       <div onclick="S.acCustomTypeView='${ct.id}';render()" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;cursor:pointer;position:relative">
         <div style="position:absolute;top:8px;right:8px;width:10px;height:10px;border-radius:50%;background:${dot}"></div>
-        <div style="height:100px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
-          <span style="font-size:38px">🛫</span>
+        <div style="height:130px;background:linear-gradient(160deg,var(--navy2,#0d1f3c),var(--bg));display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border)">
+          ${ctImgHtml}
         </div>
         <div style="padding:10px 12px 12px">
           <div style="font-size:13px;font-weight:800;color:var(--t1)">${ct.name}</div>
@@ -4884,10 +4916,10 @@ function renderAircraftLandingSection() {
   }).join('');
 
   return `
-    <div style="padding:0 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-top:4px">Aircraft</div>
+    <div style="padding:10px 14px 8px;font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">✈ Aircraft</div>
     <div style="padding:0 14px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      ${folderCard('metro',    AIRCRAFT_METRO,    'Metro SW3/SW4', '✈️')}
-      ${folderCard('westwind', AIRCRAFT_WESTWIND, 'Westwind WW24', '🛩️')}
+      ${folderCard('metro',    [...AIRCRAFT_METRO,    ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)), 'Metro SW3/SW4')}
+      ${folderCard('westwind', [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)), 'Westwind WW24')}
       ${customCards}
     </div>
     <div style="padding:10px 14px 4px">
