@@ -1212,6 +1212,8 @@ const S = {
   acVersionsView: false, // PDF version manager screen
   customAcTypesList: JSON.parse(localStorage.getItem('gykf_customAcTypesList')||'[]'), // [{id,name,regs,checklist,pdfVersion}]
   acCustomTypeView: null,  // id of custom type folder open
+  crewHouseView: false,  // true = crew house checklist open
+  crewHouseAudit: {},    // {date, inspector, items:{key:{score,comment}}, comments}
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1376,6 +1378,7 @@ async function bootApp() {
         loadPastAudits();
         loadAcAudits();
         loadAcAuditLabels();
+        loadCrewHouseAudit();
         loadAcCustomAircraft();
       })
       .catch(e => console.log('Boot fetch error:', e))
@@ -1409,7 +1412,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
-  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null;
+  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null; S.crewHouseView=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1451,6 +1454,7 @@ function render() {
       if(S.crewCarsView==='list') renderCrewCarsList(el);
       else if(S.crewCarsView==='past') renderPastAuditView(el,S.pastAuditView);
       else if(S.crewCarsView) renderCarAudit(el,S.crewCarsView);
+      else if(S.crewHouseView) renderCrewHouseChecklist(el);
       else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
       else if(S.acAuditReg) renderAircraftChecklist(el,S.acAuditReg,S.acAuditType);
       else if(S.acAuditView) renderAircraftFolder(el,S.acAuditView);
@@ -1484,6 +1488,7 @@ function slideBack(fn) {
 function handleSwipeBack() {
   if(S.pastAuditView !== null) { slideBack(()=>{ S.pastAuditView=null; S.crewCarsView='list'; render(); }); return true; }
   if(S.crewCarsView && S.crewCarsView !== 'list') { slideBack(backToCarList); return true; }
+  if(S.crewHouseView) { slideBack(()=>{ S.crewHouseView=false; render(); }); return true; }
   if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
   if(S.acAuditReg) { slideBack(()=>{ S.acAuditReg=null; render(); }); return true; }
@@ -4455,10 +4460,19 @@ function renderAuditsLanding(el) {
     return auditRow(onclick, iconHtml, t.title, t.subtitle||'Tap to open', badge('Open','#1A2840','#4A90D9'));
   }).join('');
 
-  // Static facility placeholders (built-in audit types not yet coded)
+  // Crew House — live audit
+  const chData = S.crewHouseAudit;
+  const chTotal = CREW_HOUSE_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
+  const chDone  = Object.values(chData.items||{}).filter(i=>i.score>0).length;
+  const chComplete = chDone === chTotal;
+  const chBadge = chComplete ? badge('Done','#0F3020','#2ECC71')
+    : chDone>0 ? badge(`${chDone}/${chTotal}`,'#2A2010','#E8A000')
+    : badge('New','#0F1E40','#4A90D9');
+  const chIcon = `<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="8" y="16" width="24" height="18" rx="2" fill="#3D5C8C" opacity="0.6"/><path d="M6 18L20 8l14 10" stroke="#5BA3F5" stroke-width="2" fill="none"/><rect x="15" y="24" width="10" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>`;
+  const crewHouseRow = auditRow('S.crewHouseView=true;render()', chIcon, 'Crew House', `220 Thomas Slee Dr. · ${chDone}/${chTotal} items`, chBadge);
+
+  // Static facility placeholders (not yet built)
   const facilityPlaceholders = [
-    { name:'Crew House', sub:'220 Thomas Slee Dr.',
-      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="8" y="16" width="24" height="18" rx="2" fill="#3D5C8C" opacity="0.6"/><path d="M6 18L20 8l14 10" stroke="#5BA3F5" stroke-width="2" fill="none"/><rect x="15" y="24" width="10" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>` },
     { name:'Hangar & Office', sub:'YKF Base',
       icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><path d="M6 22 Q20 10 34 22 L34 36 L6 36Z" fill="#3D5C8C" opacity="0.5"/><path d="M4 22 Q20 8 36 22" stroke="#5BA3F5" stroke-width="1.5" fill="none"/><rect x="14" y="26" width="12" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>` },
     { name:'MSDS', sub:'Safety data sheets',
@@ -4505,6 +4519,7 @@ function renderAuditsLanding(el) {
     </div>
 
     ${(Object.keys(S.auditTiles).length || true) ? sectionLabel('🏢','Facility &amp; Base') : ''}
+    ${crewHouseRow}
     ${facilityRows}
     ${facilityPlaceholders}
 
@@ -4544,6 +4559,291 @@ function renderAuditsLanding(el) {
       </button>
     </div>
     <div style="height:80px"></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// CREW HOUSE AUDIT
+// ══════════════════════════════════════════════════════════════
+
+const CREW_HOUSE_CHECKLIST = [
+  { section:'Entrance / Exits', items:[
+    {key:'ch_exit_clutter',   label:'All exits clear of clutter for safe exit in emergency'},
+    {key:'ch_doors_work',     label:'All doors are in working order'},
+    {key:'ch_doors_lock',     label:'All doors can be locked properly'},
+    {key:'ch_stairs',         label:'Stairs clear of safety hazards'},
+  ]},
+  { section:'Emergency Procedure', items:[
+    {key:'ch_exit_plan',      label:'Emergency exit plan is posted and current'},
+    {key:'ch_house_rules',    label:'House rules are posted and current'},
+  ]},
+  { section:'Kitchen / Eating Area', items:[
+    {key:'ch_kit_floor',      label:'Floor in safe condition (slips/trips/falls)'},
+    {key:'ch_kit_clean',      label:'Areas are clean and tidy'},
+    {key:'ch_kit_lights',     label:'Lights working and adequate'},
+    {key:'ch_kit_doors',      label:'Doors and windows open and close'},
+    {key:'ch_kit_taps',       label:'Taps and sinks are clean and in working order'},
+    {key:'ch_kit_outlets',    label:'Outlets and cords are in safe condition'},
+    {key:'ch_kit_pest',       label:'Area free of pest evidence'},
+    {key:'ch_kit_mold',       label:'Area free of mold evidence'},
+    {key:'ch_kit_appliances', label:'Appliances (microwave, fridge, etc.) clean and working'},
+    {key:'ch_kit_extinguisher',label:'Fire extinguisher present and certified'},
+    {key:'ch_kit_smoke',      label:'Smoke detector present and functioning'},
+    {key:'ch_kit_co',         label:'Carbon monoxide detector present and functioning'},
+    {key:'ch_kit_firstaid',   label:'First aid kit present, obvious and stocked'},
+  ]},
+  { section:'Washroom — Main Floor', items:[
+    {key:'ch_wm_floor',       label:'Floor in safe condition (slips/trips/falls)'},
+    {key:'ch_wm_clean',       label:'Area is clean and tidy'},
+    {key:'ch_wm_lights',      label:'Lights working and adequate'},
+    {key:'ch_wm_doors',       label:'Doors and windows open and close'},
+    {key:'ch_wm_taps',        label:'Taps and sinks are clean and in working order'},
+    {key:'ch_wm_toilet',      label:'Toilets clean and working'},
+    {key:'ch_wm_shower',      label:'Shower/bath clean and working'},
+    {key:'ch_wm_outlets',     label:'Outlets and cords are in safe condition'},
+    {key:'ch_wm_pest',        label:'Area free of pest evidence'},
+    {key:'ch_wm_mold',        label:'Area free of mold evidence'},
+  ]},
+  { section:'Washroom — Upstairs', items:[
+    {key:'ch_wu_floor',       label:'Floor in safe condition (slips/trips/falls)'},
+    {key:'ch_wu_clean',       label:'Area is clean and tidy'},
+    {key:'ch_wu_lights',      label:'Lights working and adequate'},
+    {key:'ch_wu_doors',       label:'Doors and windows open and close'},
+    {key:'ch_wu_taps',        label:'Taps and sinks are clean and in working order'},
+    {key:'ch_wu_toilet',      label:'Toilets clean and working'},
+    {key:'ch_wu_shower',      label:'Shower/bath clean and working'},
+    {key:'ch_wu_outlets',     label:'Outlets and cords are in safe condition'},
+    {key:'ch_wu_pest',        label:'Area free of pest evidence'},
+    {key:'ch_wu_mold',        label:'Area free of mold evidence'},
+  ]},
+  { section:'Washroom — Master Bedroom', items:[
+    {key:'ch_wmb_floor',      label:'Floor in safe condition (slips/trips/falls)'},
+    {key:'ch_wmb_clean',      label:'Area is clean and tidy'},
+    {key:'ch_wmb_lights',     label:'Lights working and adequate'},
+    {key:'ch_wmb_doors',      label:'Doors and windows open and close'},
+    {key:'ch_wmb_taps',       label:'Taps and sinks are clean and in working order'},
+    {key:'ch_wmb_toilet',     label:'Toilets clean and working'},
+    {key:'ch_wmb_shower',     label:'Shower/bath clean and working'},
+    {key:'ch_wmb_outlets',    label:'Outlets and cords are in safe condition'},
+    {key:'ch_wmb_pest',       label:'Area free of pest evidence'},
+    {key:'ch_wmb_mold',       label:'Area free of mold evidence'},
+  ]},
+  { section:'Bedrooms #1 – #4', items:[
+    {key:'ch_bed_doors',      label:'Door and window(s) open and close'},
+    {key:'ch_bed_clean',      label:'Area is clean and tidy'},
+    {key:'ch_bed_hazards',    label:'Doorway clear of hazards in case of emergency'},
+    {key:'ch_bed_pest',       label:'Area free of pest evidence'},
+    {key:'ch_bed_mold',       label:'Area free of mold evidence'},
+  ]},
+  { section:'Living Area', items:[
+    {key:'ch_liv_outlets',    label:'Outlets and cords are in safe condition'},
+    {key:'ch_liv_pest',       label:'Area free of pest evidence'},
+    {key:'ch_liv_mold',       label:'Area free of mold evidence'},
+    {key:'ch_liv_doors',      label:'Doors and windows open and close'},
+    {key:'ch_liv_clean',      label:'Area is clean and tidy'},
+  ]},
+  { section:'Laundry Room', items:[
+    {key:'ch_lau_outlets',    label:'Outlets and cords are in safe condition'},
+    {key:'ch_lau_pest',       label:'Area free of pest evidence'},
+    {key:'ch_lau_mold',       label:'Area free of mold evidence'},
+    {key:'ch_lau_doors',      label:'Doors and windows open and close'},
+    {key:'ch_lau_clean',      label:'Area is clean and tidy'},
+  ]},
+];
+
+const CH_TOTAL = CREW_HOUSE_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
+
+function chData() {
+  if(!S.crewHouseAudit) S.crewHouseAudit={};
+  if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
+  return S.crewHouseAudit;
+}
+
+function loadCrewHouseAudit() {
+  try { S.crewHouseAudit = JSON.parse(localStorage.getItem('gykf_crewhouse')||'{}'); } catch(e){}
+  if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
+  if(!db) return;
+  db.collection('facilityAudits').doc('crewhouse').get().then(doc=>{
+    if(doc.exists){ S.crewHouseAudit=doc.data(); if(!S.crewHouseAudit.items) S.crewHouseAudit.items={}; }
+    try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
+  }).catch(()=>{});
+}
+
+function saveCrewHouseAudit() {
+  try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
+  if(db) db.collection('facilityAudits').doc('crewhouse').set(S.crewHouseAudit,{merge:true}).catch(()=>{});
+}
+
+const saveCrewHouseDebounced = debounce(saveCrewHouseAudit, 800);
+
+function chSetScore(key, score) {
+  const d = chData();
+  const prev = (d.items[key]||{}).score;
+  d.items[key] = d.items[key]||{};
+  d.items[key].score = prev===score ? 0 : score;
+  saveCrewHouseDebounced();
+  render();
+}
+
+function chSetComment(key, val) {
+  const d = chData();
+  if(!d.items[key]) d.items[key]={score:0};
+  d.items[key].comment = val;
+  saveCrewHouseDebounced();
+}
+
+function chSetField(field, val) {
+  chData()[field] = val;
+  saveCrewHouseDebounced();
+}
+
+function chScoreColor(s) {
+  const colors=['','#E03030','#D85018','#CC7010','#C09010','#A8A818','#88B820','#60C030','#30C840','#20C850','#10CC60'];
+  const bgs=   ['','#1E0808','#1E0E08','#1E1408','#1A1A08','#161A08','#101A08','#0C1C0C','#0A1E0E','#082010','#062012'];
+  return {color:colors[s]||'#6A80A0', bg:bgs[s]||'transparent'};
+}
+
+function renderCrewHouseChecklist(el) {
+  const d = chData();
+  const done = Object.values(d.items).filter(i=>i.score>0).length;
+  setBar({title:'Crew House', back:'Audits', backFn:()=>{S.crewHouseView=false;render();}});
+  document.getElementById('fab').style.display='none';
+
+  const sectionsHtml = CREW_HOUSE_CHECKLIST.map(sec=>`
+    <div style="padding:10px 16px 3px;font-size:10px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--accent)">
+      ${sec.section}
+    </div>
+    ${sec.items.map(item=>{
+      const it = d.items[item.key]||{score:0,comment:''};
+      const scoreRow = [1,2,3,4,5,6,7,8,9,10].map(n=>{
+        const {color,bg}=chScoreColor(n);
+        const sel = it.score===n;
+        return `<div onclick="chSetScore('${item.key}',${n})" style="flex:1;height:26px;border-radius:5px;cursor:pointer;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;background:${bg};color:${color};opacity:${sel?1:0.3};outline:${sel?`2px solid ${color}`:'none'};outline-offset:-2px">${n}</div>`;
+      }).join('');
+      const commentHtml = it.comment
+        ? `<div onclick="chEditComment('${item.key}')" style="margin-top:6px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:6px 9px;font-size:11px;color:var(--t2);cursor:pointer">${it.comment}</div>`
+        : `<div onclick="chEditComment('${item.key}')" style="margin-top:5px;font-size:11px;color:var(--border2);padding:2px 0;cursor:pointer">+ add comment</div>`;
+      return `<div style="margin:0 14px 5px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:9px 11px">
+        <div style="font-size:12px;color:var(--t1);margin-bottom:7px;line-height:1.35;font-weight:500">${item.label}</div>
+        <div style="display:flex;gap:3px">${scoreRow}</div>
+        ${commentHtml}
+      </div>`;
+    }).join('')}
+  `).join('');
+
+  el.innerHTML=`
+    <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
+        <input type="date" value="${d.date||''}" onchange="chSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="chSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+    </div>
+
+    ${sectionsHtml}
+
+    <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
+      <textarea oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+    </div>
+
+    <div style="margin:8px 14px 8px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateCrewHousePDF()">
+      <span style="font-size:20px;flex-shrink:0">📄</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--accent)">Generate PDF</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${done} / ${CH_TOTAL} items scored</div>
+      </div>
+      <span style="color:var(--border2);font-size:18px">›</span>
+    </div>
+    <div style="height:80px"></div>`;
+}
+
+function chEditComment(key) {
+  const d = chData();
+  const cur = (d.items[key]||{}).comment||'';
+  openModal('Add comment',
+    `<textarea id="chComTA" style="width:100%;height:90px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${cur}</textarea>`,
+    ()=>{ chSetComment(key, document.getElementById('chComTA')?.value||''); closeModal(); render(); });
+}
+
+function generateCrewHousePDF() {
+  const d = chData();
+  const todayFmt = d.date ? new Date(d.date+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const inspector = d.inspector || '';
+  const comments  = d.comments  || '';
+
+  // Score pill HTML
+  const pill = (s)=>{
+    if(!s) return '<span style="color:#aaa;font-size:9px">—</span>';
+    const colors=['','#C01010','#9A3800','#885000','#706000','#606800','#4A6800','#306800','#1A6030','#0A5840','#045035'];
+    const bgs   =['','#FFD6D6','#FFE0CC','#FFE8B8','#FFF2B0','#FFFAAA','#F0FAA0','#D8F5A0','#BAEFC0','#9AEED0','#80ECC0'];
+    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:9px;font-weight:800;background:${bgs[s]};color:${colors[s]}">${s}</span>`;
+  };
+
+  // Build table rows — compact for 2-page fit
+  const rowsHtml = CREW_HOUSE_CHECKLIST.map(sec=>`
+    <tr><td colspan="3" style="background:#E8EEF8;font-size:8px;font-weight:800;color:#1A3A6A;padding:3px 6px;border-bottom:1px solid #C8D4E8;letter-spacing:0.8px;text-transform:uppercase">${sec.section}</td></tr>
+    ${sec.items.map(item=>{
+      const it = d.items[item.key]||{};
+      return `<tr>
+        <td style="padding:2.5px 6px;border-bottom:0.5px solid #EEF1F8;font-size:9px;color:#222;line-height:1.3">${item.label}</td>
+        <td style="text-align:center;padding:2.5px 4px;border-bottom:0.5px solid #EEF1F8;white-space:nowrap">${pill(it.score||0)}</td>
+        <td style="padding:2.5px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#555;font-style:italic">${it.comment||''}</td>
+      </tr>`;
+    }).join('')}
+  `).join('');
+
+  const logoSrc = 'cars/Skycare_logo-removebg-preview.png';
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>Crew House Inspection — ${todayFmt}</title>
+  <style>
+    @page { size:letter; margin:14mm 14mm 14mm 14mm; }
+    body { font-family:Arial,Helvetica,sans-serif; font-size:9px; color:#1a1a1a; margin:0; }
+    table { width:100%; border-collapse:collapse; }
+    tr:nth-child(even) td { background:#FAFBFD; }
+  </style>
+  </head><body>
+  <table style="margin-bottom:10px">
+    <tr>
+      <td style="width:90px"><img src="${logoSrc}" style="height:32px;display:block"></td>
+      <td style="text-align:right">
+        <div style="font-size:13px;font-weight:800;color:#1A3A6A">YKF Crew House Inspection Safety Checklist</div>
+        <div style="font-size:9px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+      </td>
+    </tr>
+  </table>
+  <div style="height:1.5px;background:#1A3A6A;margin-bottom:8px"></div>
+  <table style="margin-bottom:10px;border:1px solid #D0D8EC;border-radius:3px">
+    <tr>
+      <td style="padding:5px 10px;border-right:1px solid #D0D8EC;width:25%"><div style="font-size:7px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Date of inspection</div><div style="font-size:10px;font-weight:700">${todayFmt}</div></td>
+      <td style="padding:5px 10px;border-right:1px solid #D0D8EC;width:25%"><div style="font-size:7px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Inspected by</div><div style="font-size:10px;font-weight:700">${inspector}</div></td>
+      <td style="padding:5px 10px;border-right:1px solid #D0D8EC;width:25%"><div style="font-size:7px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Work order</div><div style="font-size:9px;color:#1A3A6A">fs7.formsite.com/skycare</div></td>
+      <td style="padding:5px 10px;width:25%"><div style="font-size:7px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Score legend</div><div style="font-size:9px;color:#555">1 = critical &nbsp;·&nbsp; 10 = perfect</div></td>
+    </tr>
+  </table>
+  <table>
+    <thead><tr style="background:#F0F4FA">
+      <th style="padding:4px 6px;text-align:left;font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1.5px solid #C8D4E8;width:62%">Item</th>
+      <th style="padding:4px 6px;text-align:center;font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1.5px solid #C8D4E8;width:10%">Score</th>
+      <th style="padding:4px 6px;text-align:left;font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1.5px solid #C8D4E8">Comments</th>
+    </tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+  <div style="margin-top:12px;padding-top:10px;border-top:1px solid #D0D8EC">
+    <div style="font-size:7px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#1A3A6A;margin-bottom:6px">Comments</div>
+    <div style="border:1px solid #D0D8EC;border-radius:3px;padding:8px 10px;min-height:48px;font-size:9px;color:${comments?'#1a1a1a':'#bbb'};font-style:${comments?'normal':'italic'}">${comments||'(no general comments added)'}</div>
+  </div>
+  <div style="margin-top:12px;padding-top:8px;border-top:1px solid #D0D8EC;display:flex;justify-content:space-between;font-size:8px;color:#999">
+    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+  </div>
+  <script>window.onload=()=>{window.print();}<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank','width=900,height=700');
+  if(w){w.document.write(html);w.document.close();}
 }
 
 function resetAllAcAudits() {
