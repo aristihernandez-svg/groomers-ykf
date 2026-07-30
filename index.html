@@ -4673,7 +4673,11 @@ function saveCrewHouseAudit() {
   if(db) db.collection('facilityAudits').doc('crewhouse').set(S.crewHouseAudit,{merge:true}).catch(()=>{});
 }
 
-const saveCrewHouseDebounced = debounce(saveCrewHouseAudit, 800);
+let _chSaveTimer = null;
+function saveCrewHouseDebounced() {
+  clearTimeout(_chSaveTimer);
+  _chSaveTimer = setTimeout(saveCrewHouseAudit, 800);
+}
 
 function chSetScore(key, score) {
   const d = chData();
