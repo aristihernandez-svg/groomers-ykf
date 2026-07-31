@@ -6399,10 +6399,12 @@ function resetMsdsAudit() {
 function resetAllAcAudits() {
   if(!confirm('Reset ALL audits? This clears aircraft, crew cars, and every facility audit on every device. This cannot be undone.')) return;
 
-  // Aircraft audits
+  // Aircraft audits (metro, westwind, astra, custom types)
   const allRegs = [
-    ...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[]),
-    ...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])
+    ...AIRCRAFT_METRO,    ...(S.acCustomAircraft.metro||[]),
+    ...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[]),
+    ...AIRCRAFT_ASTRA,    ...(S.acCustomAircraft.astra||[]),
+    ...(S.customAcTypesList||[]).flatMap(t=>t.regs||[]),
   ];
   allRegs.forEach(reg => {
     const key = acAuditDocKey(reg);
@@ -6411,10 +6413,10 @@ function resetAllAcAudits() {
   });
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
 
-  // Crew car audits
-  S.crewCarData = {};
-  try { localStorage.removeItem('gykf_carchecks'); } catch(e){}
-  if(db) db.collection('crewCarData').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
+  // Crew car audits (includes photos stored in carAudits docs)
+  S.carAudits = {};
+  try { localStorage.removeItem('gykf_caudits'); } catch(e){}
+  if(db) db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
 
   // Facility audits
   S.crewHouseAudit = {items:{}};
