@@ -4877,7 +4877,7 @@ function generateCrewHousePDF() {
     <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
-  <script>window.onload=()=>{window.print();window.close();};<\/script>
+  <script>window.onload=()=>{window.print();};window.addEventListener('afterprint',()=>window.close());<\/script>
   </body></html>`;
 
   const w=window.open('','_blank');
@@ -5174,7 +5174,7 @@ function generateHangarPDF() {
     <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
-  <script>window.onload=()=>{window.print();window.close();};<\/script>
+  <script>window.onload=()=>{window.print();};window.addEventListener('afterprint',()=>window.close());<\/script>
   </body></html>`;
 
   const w=window.open('','_blank');
