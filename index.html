@@ -7171,6 +7171,11 @@ function generateAllAuditPDFs() {
   }
   generateAuditPDF(month);
   let delay = 600;
+  setTimeout(()=>generateCrewHousePDF(), delay); delay+=600;
+  setTimeout(()=>generateHangarPDF(), delay); delay+=600;
+  setTimeout(()=>generateParkingPDF(), delay); delay+=600;
+  setTimeout(()=>generateYkfBasePDF(), delay); delay+=600;
+  setTimeout(()=>generateMsdsPDF(), delay); delay+=600;
   metroRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'metro',acMonth), delay); delay+=600; });
   wwRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'westwind',acMonth), delay); delay+=600; });
   astraRegs.forEach(r=>{ setTimeout(()=>generateAircraftPDF(r,'astra',acMonth), delay); delay+=600; });
