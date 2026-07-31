@@ -6591,8 +6591,8 @@ function acFolderLongPress(e, type, reg) {
       <button onclick="toggleAcDisabled('${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;font-weight:600;cursor:pointer;text-align:left">
         ${disabled?'✅ Re-enable for this month':'🚫 Disable for this month'}
       </button>
-      ${isCustom?`<button onclick="removeCustomAircraft('${type}','${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
-      ${isCustomTypeReg?`<button onclick="removeCustomTypeReg('${type}','${reg}');closeModal()" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
+      ${isCustom?`<button onclick="doRemoveCustomAircraft('${type}','${reg}')" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
+      ${isCustomTypeReg?`<button onclick="removeCustomTypeReg('${type}','${reg}')" style="width:100%;padding:13px;border-radius:10px;border:1px solid rgba(232,64,64,0.3);background:rgba(232,64,64,0.08);color:#E84040;font-size:14px;font-weight:600;cursor:pointer;text-align:left">🗑 Remove aircraft</button>`:''}
       <button onclick="closeModal()" style="width:100%;padding:12px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--t3);font-size:13px;cursor:pointer">Cancel</button>
     </div>`;
     openModal(reg, btns, null);
