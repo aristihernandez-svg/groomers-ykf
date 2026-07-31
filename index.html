@@ -6419,7 +6419,7 @@ function checkMonthlyAuditReset() {
     ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>
       db.collection('facilityAudits').doc(doc).delete().catch(()=>{})
     );
-    db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
+    db.collection('auditCars').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
   }
 
   localStorage.setItem('gykf_last_audit_reset', currentMonth);
