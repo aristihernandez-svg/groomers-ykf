@@ -787,6 +787,7 @@ body::before{
 </div>
 
 <div id="wheel-overlay" style="display:none;position:fixed;inset:0;z-index:9999;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.55)"></div>
+<div id="cal-overlay" style="display:none;position:fixed;inset:0;z-index:10000;flex-direction:column;justify-content:flex-end;background:rgba(0,0,0,0.55)"></div>
 
 <div id="app">
   <div class="bar">
@@ -1222,6 +1223,8 @@ const S = {
   msdsAudit: {},         // {date, auditor, items:{key:true/false}}
   parkingView: false,    // true = Parking Lot MX audit open
   parkingAudit: {},      // {date, inspector, items:{key:{score,comment}}}
+  ykfBaseView: false,    // true = YKF Base monthly checklist open
+  ykfBaseAudit: {},      // {date, inspector, eyewashExpiry, items:{key:{val,comment}}}
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1390,6 +1393,7 @@ async function bootApp() {
         loadHangarAudit();
         loadMsdsAudit();
         loadParkingAudit();
+        loadYkfBaseAudit();
         loadAcCustomAircraft();
       })
       .catch(e => console.log('Boot fetch error:', e))
@@ -1423,7 +1427,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
-  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null; S.crewHouseView=false; S.hangarView=false; S.msdsView=false; S.parkingView=false;
+  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null; S.crewHouseView=false; S.hangarView=false; S.msdsView=false; S.parkingView=false; S.ykfBaseView=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1469,6 +1473,7 @@ function render() {
       else if(S.hangarView) renderHangarChecklist(el);
       else if(S.msdsView) renderMsdsChecklist(el);
       else if(S.parkingView) renderParkingChecklist(el);
+      else if(S.ykfBaseView) renderYkfBaseChecklist(el);
       else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
       else if(S.acAuditReg) renderAircraftChecklist(el,S.acAuditReg,S.acAuditType);
       else if(S.acAuditView) renderAircraftFolder(el,S.acAuditView);
@@ -1506,6 +1511,7 @@ function handleSwipeBack() {
   if(S.hangarView) { slideBack(()=>{ S.hangarView=false; render(); }); return true; }
   if(S.msdsView) { slideBack(()=>{ S.msdsView=false; render(); }); return true; }
   if(S.parkingView) { slideBack(()=>{ S.parkingView=false; render(); }); return true; }
+  if(S.ykfBaseView) { slideBack(()=>{ S.ykfBaseView=false; render(); }); return true; }
   if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
   if(S.acAuditReg) { slideBack(()=>{ S.acAuditReg=null; render(); }); return true; }
@@ -4521,18 +4527,17 @@ function renderAuditsLanding(el) {
   const plIcon = `<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="6" y="28" width="28" height="6" rx="1" fill="#3D5C8C" opacity="0.6"/><rect x="10" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="24" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="8" y="14" width="24" height="6" rx="1" fill="#5BA3F5" opacity="0.3"/><circle cx="12" cy="34" r="3" fill="#4A90D9" opacity="0.7"/><circle cx="28" cy="34" r="3" fill="#4A90D9" opacity="0.7"/></svg>`;
   const parkingRow = auditRow('S.parkingView=true;render()', plIcon, 'Parking Lot MX', `YKF Base · ${plDone}/${plTotal} items`, plBadge);
 
-  // Static facility placeholders (not yet built)
-  const facilityPlaceholders = [
-    { name:'YKF Base', sub:'Monthly checklist',
-      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><path d="M20 8L8 16v18h24V16z" fill="#3D5C8C" opacity="0.5"/><path d="M14 34V24h12v10" fill="#4A90D9" opacity="0.4"/><path d="M8 16L20 8l12 8" stroke="#5BA3F5" stroke-width="1.5" fill="none"/></svg>` },
-  ].map(p=>`<div style="margin:0 16px 8px;background:var(--glass2);border:1px solid var(--border2);border-radius:12px;display:flex;align-items:center;gap:12px;padding:10px 12px;opacity:0.55">
-    <div style="width:44px;height:44px;border-radius:10px;background:var(--navy2,#0B1628);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.icon}</div>
-    <div style="flex:1;min-width:0">
-      <div style="font-size:14px;font-weight:700;color:var(--t1);margin-bottom:2px">${p.name}</div>
-      <div style="font-size:11px;color:var(--t3)">${p.sub}</div>
-    </div>
-    <span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:#2A2010;color:#E8A000">Soon</span>
-  </div>`).join('');
+  // YKF Base — live audit
+  const ykfAuditData = S.ykfBaseAudit;
+  const ykfDone = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&(ykfAuditData.items||{})[i.key]&&(ykfAuditData.items||{})[i.key].val).length, 0);
+  const ykfComplete = ykfDone === YKF_TOTAL;
+  const ykfBadge = ykfComplete ? badge('Done','#0F3020','#2ECC71')
+    : ykfDone>0 ? badge(`${ykfDone}/${YKF_TOTAL}`,'#2A2010','#E8A000')
+    : badge('New','#0F1E40','#4A90D9');
+  const ykfIcon = `<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><path d="M20 8L8 16v18h24V16z" fill="#3D5C8C" opacity="0.5"/><path d="M14 34V24h12v10" fill="#4A90D9" opacity="0.4"/><path d="M8 16L20 8l12 8" stroke="#5BA3F5" stroke-width="1.5" fill="none"/></svg>`;
+  const ykfBaseRow = auditRow('S.ykfBaseView=true;render()', ykfIcon, 'YKF Base', `Monthly checklist · ${ykfDone}/${YKF_TOTAL} items`, ykfBadge);
+
+  const facilityPlaceholders = '';
 
   // Crew Cars slideshow in 44px icon square (1s per car)
   const ccn=CREW_CARS.length, ccdur=ccn*1;
@@ -4567,6 +4572,7 @@ function renderAuditsLanding(el) {
     ${hangarRow}
     ${msdsRow}
     ${parkingRow}
+    ${ykfBaseRow}
     ${facilityRows}
     ${facilityPlaceholders}
 
@@ -5645,6 +5651,349 @@ function resetParkingAudit() {
 }
 
 // ══════════════════════════════════════════════════════════════
+// CALENDAR DATE PICKER (reusable — for expiry-type fields)
+// ══════════════════════════════════════════════════════════════
+
+let _calCb       = null;
+let _calSelected = null;
+let _calYear     = 0;
+let _calMonth    = 0;
+
+function openCalPicker(currentVal, callback) {
+  _calCb = callback;
+  _calSelected = currentVal || null;
+  const ref = currentVal ? new Date(currentVal+'T12:00:00') : new Date();
+  _calYear  = ref.getFullYear();
+  _calMonth = ref.getMonth();
+  _renderCal();
+}
+
+function _renderCal() {
+  const ovl = document.getElementById('cal-overlay');
+  if(!ovl) return;
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS   = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+  const firstDow = new Date(_calYear, _calMonth, 1).getDay();
+  const daysInMonth = new Date(_calYear, _calMonth+1, 0).getDate();
+  const todayISO = new Date().toISOString().split('T')[0];
+
+  let cells = '';
+  for(let i=0; i<firstDow; i++) cells += `<div></div>`;
+  for(let d=1; d<=daysInMonth; d++) {
+    const iso = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isSelected = iso === _calSelected;
+    const isToday    = iso === todayISO;
+    const bg  = isSelected ? '#1A3A6A' : 'transparent';
+    const col = isSelected ? '#5BA3F5' : isToday ? '#4A90D9' : '#d8d8d8';
+    const fw  = isSelected || isToday ? '700' : '400';
+    const ring = isToday && !isSelected ? ';border:1px solid rgba(74,144,217,0.4);border-radius:50%' : isSelected ? ';border-radius:50%' : '';
+    cells += `<div onclick="_calSelect('${iso}')" style="display:flex;align-items:center;justify-content:center;height:34px;cursor:pointer;background:${bg}${ring};border-radius:${isSelected?'50%':'4px'};font-size:13px;font-weight:${fw};color:${col}">${d}</div>`;
+  }
+
+  const selLabel = _calSelected
+    ? new Date(_calSelected+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+    : 'No date selected';
+
+  ovl.innerHTML = `
+    <div onclick="_calCancel()" style="flex:1"></div>
+    <div style="background:#12141c;border-radius:18px 18px 0 0;border-top:1px solid #22242e">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 18px 8px;border-bottom:1px solid #1c1e28">
+        <div onclick="_calCancel()" style="font-size:13px;color:#555;cursor:pointer;padding:4px 0">Cancel</div>
+        <div style="font-size:12px;font-weight:700;color:#888">${selLabel}</div>
+        <div onclick="_calDone()" style="font-size:13px;font-weight:700;color:#4A90D9;cursor:pointer;padding:4px 0">Done</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 18px 4px">
+        <div onclick="_calPrev()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;background:rgba(255,255,255,0.05);font-size:18px;color:#888">‹</div>
+        <div style="font-size:14px;font-weight:700;color:#d8d8d8">${MONTHS[_calMonth]} ${_calYear}</div>
+        <div onclick="_calNext()" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;background:rgba(255,255,255,0.05);font-size:18px;color:#888">›</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:4px 14px 0">
+        ${DAYS.map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:#444;padding:4px 0">${d}</div>`).join('')}
+        ${cells}
+      </div>
+      <div style="padding:10px 18px 16px;display:flex;gap:8px">
+        ${_calSelected ? `<div onclick="_calClear()" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07);text-align:center;font-size:13px;font-weight:600;color:#E84040;cursor:pointer">Clear</div>` : ''}
+        <div onclick="_calDone()" style="flex:2;padding:11px;border-radius:10px;background:#1A3A6A;text-align:center;font-size:13px;font-weight:700;color:#5BA3F5;cursor:pointer">Confirm</div>
+      </div>
+    </div>`;
+  ovl.style.display = 'flex';
+}
+
+function _calSelect(iso) { _calSelected = iso; _renderCal(); }
+function _calPrev() { _calMonth--; if(_calMonth<0){_calMonth=11;_calYear--;} _renderCal(); }
+function _calNext() { _calMonth++; if(_calMonth>11){_calMonth=0;_calYear++;} _renderCal(); }
+function _calCancel() { const o=document.getElementById('cal-overlay'); if(o){o.style.display='none';o.innerHTML='';} _calCb=null; }
+function _calClear() { _calSelected=null; _renderCal(); }
+function _calDone() {
+  const val = _calSelected;
+  const cb  = _calCb;
+  _calCancel();
+  if(cb) cb(val);
+}
+
+// ══════════════════════════════════════════════════════════════
+// YKF BASE MONTHLY CHECKLIST
+// ══════════════════════════════════════════════════════════════
+
+const YKF_BASE_CHECKLIST = [
+  { section:'General Exterior', items:[
+    {key:'ykf_ge_gate',       label:'Gate closed?',                                                                     loc:''},
+  ]},
+  { section:'Hangar', items:[
+    {key:'ykf_hg_smoke1',     label:'Smoke Detector #1 in working order (battery tested)',                              loc:'Pilot Room'},
+    {key:'ykf_hg_smoke2',     label:'Smoke Detector #2 in working order (battery tested)',                              loc:'Apron Exit Door'},
+    {key:'ykf_hg_smoke3',     label:'Smoke Detector #3 in working order (battery tested)',                              loc:'Oxygen Tanks'},
+    {key:'ykf_hg_co1',        label:'Carbon Monoxide Detector #1 in working order (battery tested)',                    loc:'Dan\'s Office'},
+    {key:'ykf_hg_co2',        label:'Carbon Monoxide Detector #2 in working order (battery tested)',                    loc:'Above First Aid Kit'},
+    {key:'ykf_hg_needle',     label:'Needle Pick Up Kit available?',                                                    loc:'Work bench'},
+    {key:'ykf_hg_needlerep',  label:'Does the kit need to be replaced?',                                                loc:''},
+  ]},
+  { section:'Emergency Lighting', items:[
+    {key:'ykf_el_light1',     label:'Emergency Light #1 in working order (manually tested)',                            loc:'Above Chemicals'},
+    {key:'ykf_el_light2',     label:'Emergency Light #2 in working order (manually tested)',                            loc:'Mechanic work desk'},
+    {key:'ykf_el_exit1',      label:'Exit Sign #1 illuminated',                                                        loc:'Apron exit door'},
+    {key:'ykf_el_exit2',      label:'Exit Sign #2 illuminated',                                                        loc:'Exterior of medic room'},
+    {key:'ykf_el_exit3',      label:'Exit Sign #3 illuminated',                                                        loc:'Exterior of Wes\' office'},
+  ]},
+  { section:'Fire Extinguishers', items:[
+    {key:'ykf_fe_ext1',       label:'Extinguisher #1 — cert, labelled & unobstructed',                                 loc:'Pilot room'},
+    {key:'ykf_fe_ext2',       label:'Extinguisher #2 — cert, labelled & unobstructed',                                 loc:'Dining / lunch area'},
+    {key:'ykf_fe_ext3',       label:'Extinguisher #3 — cert, labelled & unobstructed',                                 loc:'Circuit breakers section'},
+    {key:'ykf_fe_ext4',       label:'Extinguisher #4 — cert, labelled & unobstructed',                                 loc:'Oxygen tanks'},
+    {key:'ykf_fe_ext5a',      label:'Extinguisher #5 — cert, labelled & unobstructed',                                 loc:'Wes\' office'},
+    {key:'ykf_fe_ext5b',      label:'Extinguisher #5 — cert, labelled & unobstructed',                                 loc:'Medic room'},
+    {key:'ykf_fe_ext5c',      label:'Extinguisher #5 — cert, labelled & unobstructed',                                 loc:'Cabinets'},
+  ]},
+  { section:'Eye Wash Station', items:[
+    {key:'ykf_ew_available',  label:'Eye wash solution available',                                                      loc:''},
+    {key:'ykf_ew_expiry',     label:'Expiration date of solution',                                                      loc:'', type:'date'},
+    {key:'ykf_ew_clear',      label:'Station free from obstructions',                                                   loc:''},
+  ]},
+  { section:'First Aid Kit', items:[
+    {key:'ykf_fak_log',       label:'Workplace Injury Log clipped to kit',                                              loc:''},
+    {key:'ykf_fak_used',      label:'Has log been used? (if yes, take picture and submit to H&S email)',                loc:''},
+    {key:'ykf_fak_stocked',   label:'First Aid Kit stocked per card in kit?',                                           loc:''},
+  ]},
+];
+
+const YKF_TOTAL = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date').length, 0);
+
+function ykfData() {
+  if(!S.ykfBaseAudit) S.ykfBaseAudit={};
+  if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={};
+  return S.ykfBaseAudit;
+}
+
+function loadYkfBaseAudit() {
+  try { S.ykfBaseAudit = JSON.parse(localStorage.getItem('gykf_ykfbase')||'{}'); } catch(e){}
+  if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={};
+  if(!db) return;
+  db.collection('facilityAudits').doc('ykfbase').get().then(doc=>{
+    if(doc.exists){ S.ykfBaseAudit=doc.data(); if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={}; }
+    try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
+  }).catch(()=>{});
+}
+
+function saveYkfBaseAudit() {
+  try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
+  if(db) db.collection('facilityAudits').doc('ykfbase').set(S.ykfBaseAudit,{merge:true}).catch(()=>{});
+}
+
+let _ykfSaveTimer = null;
+function saveYkfBaseDebounced() { clearTimeout(_ykfSaveTimer); _ykfSaveTimer = setTimeout(saveYkfBaseAudit, 800); }
+
+function ykfSetAnswer(key, val) {
+  const d = ykfData();
+  if(!d.items[key]) d.items[key]={};
+  d.items[key].val = val;
+  saveYkfBaseDebounced();
+  render();
+}
+
+function ykfSetComment(key, text) {
+  const d = ykfData();
+  if(!d.items[key]) d.items[key]={};
+  d.items[key].comment = text;
+  saveYkfBaseDebounced();
+}
+
+function ykfSetField(field, val) { ykfData()[field]=val; saveYkfBaseDebounced(); }
+
+function ykfSetExpiry(val) { ykfData().eyewashExpiry = val; saveYkfBaseDebounced(); render(); }
+
+function renderYkfBaseChecklist(el) {
+  const d = ykfData();
+  const done = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&d.items[i.key]&&d.items[i.key].val).length, 0);
+  setBar({title:'YKF Base', back:'Audits', backFn:()=>{S.ykfBaseView=false;render();}});
+  document.getElementById('fab').style.display='none';
+
+  const todayISO = new Date().toISOString().split('T')[0];
+  if(!d.date) { d.date=todayISO; saveYkfBaseDebounced(); }
+
+  const sectionsHtml = YKF_BASE_CHECKLIST.map(sec=>`
+    <div style="padding:14px 16px 6px;display:flex;align-items:center;gap:8px">
+      <div style="width:3px;height:18px;background:var(--accent);border-radius:2px;flex-shrink:0"></div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--accent)">${sec.section}</div>
+    </div>
+    ${sec.items.map(item=>{
+      if(item.type==='date') {
+        const expVal = d.eyewashExpiry||'';
+        const expLabel = expVal
+          ? new Date(expVal+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})
+          : 'Tap to set date';
+        const hasVal = !!expVal;
+        return `<div style="margin:0 14px 5px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;font-size:13px;color:var(--t1);line-height:1.35;font-weight:500">${item.label}</div>
+            <div onclick="openCalPicker('${expVal}',ykfSetExpiry)" style="flex-shrink:0;padding:5px 10px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid ${hasVal?'rgba(74,144,217,0.5)':'rgba(255,255,255,0.1)'};font-size:11px;font-weight:700;color:${hasVal?'#5BA3F5':'#444'};white-space:nowrap">${expLabel}</div>
+          </div>
+        </div>`;
+      }
+      const it = d.items[item.key]||{};
+      const answered = it.val === 'yes' || it.val === 'no';
+      const isNo = it.val === 'yes' ? false : it.val === 'no' ? true : false;
+      const commentHtml = answered
+        ? `<textarea oninput="ykfSetComment('${item.key}',this.value)" placeholder="Add a note…" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:46px;box-sizing:border-box">${it.comment||''}</textarea>`
+        : '';
+      return `<div style="margin:0 14px 5px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 12px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="flex:1">
+            <div style="font-size:13px;color:var(--t1);line-height:1.35;font-weight:500">${item.label}</div>
+            ${item.loc?`<div style="font-size:10px;color:var(--t3);margin-top:2px">${item.loc}</div>`:''}
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0">
+            <div onclick="ykfSetAnswer('${item.key}','yes')" style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;background:${it.val==='yes'?'rgba(46,204,113,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='yes'?'#2ECC71':'rgba(255,255,255,0.1)'};color:${it.val==='yes'?'#2ECC71':'#444'}">Yes</div>
+            <div onclick="ykfSetAnswer('${item.key}','no')" style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;background:${it.val==='no'?'rgba(232,64,64,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='no'?'#E84040':'rgba(255,255,255,0.1)'};color:${it.val==='no'?'#E84040':'#444'}">No</div>
+          </div>
+        </div>
+        ${commentHtml}
+      </div>`;
+    }).join('')}
+  `).join('');
+
+  el.innerHTML=`
+    <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
+        <input type="date" value="${d.date}" onchange="ykfSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="ykfSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+    </div>
+
+    ${sectionsHtml}
+
+    <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
+      <textarea oninput="ykfSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+    </div>
+
+    <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateYkfBasePDF()">
+      <span style="font-size:20px;flex-shrink:0">📄</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--accent)">Generate PDF</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${done} / ${YKF_TOTAL} items answered</div>
+      </div>
+      <span style="color:var(--border2);font-size:18px">›</span>
+    </div>
+    <div onclick="resetYkfBaseAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+      <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
+    </div>
+    <div style="height:80px"></div>`;
+}
+
+function generateYkfBasePDF() {
+  const d = ykfData();
+  const todayFmt = new Date((d.date||new Date().toISOString().split('T')[0])+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const inspector = d.inspector||'';
+  const comments  = d.comments||'';
+  const logoSrc   = 'cars/Skycare_logo-removebg-preview.png';
+
+  const yn = (v) => {
+    if(!v) return '<span style="color:#aaa;font-size:8px">—</span>';
+    if(v==='yes') return '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:800;background:#D5F5E3;color:#1E8449">Y</span>';
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;font-size:7px;font-weight:800;background:#FADBD8;color:#922B21">N</span>';
+  };
+
+  const bodyRows = YKF_BASE_CHECKLIST.map(sec=>`
+    <tr><td colspan="3" style="background:#D8E4F5;padding:3px 6px;border-top:1px solid #B8CCE8;border-bottom:1px solid #B8CCE8">
+      <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">${sec.section}</span>
+    </td></tr>
+    ${sec.items.map((item,i)=>{
+      const bg=i%2===1?'#FAFBFD':'#FFFFFF';
+      if(item.type==='date') {
+        const expVal = d.eyewashExpiry||'';
+        const expLabel = expVal ? new Date(expVal+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '—';
+        return `<tr style="background:${bg}">
+          <td style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#222;line-height:1.25;width:60%">${item.label}</td>
+          <td colspan="2" style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#444;font-weight:600">${expLabel}</td>
+        </tr>`;
+      }
+      const it = d.items[item.key]||{};
+      return `<tr style="background:${bg}">
+        <td style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#222;line-height:1.25;width:60%">${item.label}${item.loc?`<span style="color:#888;font-size:7.5px"> · ${item.loc}</span>`:''}
+        </td>
+        <td style="padding:2px 4px;border-bottom:0.5px solid #EEF1F8;text-align:center;width:8%">${yn(it.val||'')}</td>
+        <td style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;font-style:italic">${it.comment||''}</td>
+      </tr>`;
+    }).join('')}
+  `).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>YKF Base Inspection — ${todayFmt}</title>
+  <style>
+    @page{size:letter;margin:10mm 10mm 10mm 10mm;}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:8.5px;color:#1a1a1a;margin:0;}
+    table{width:100%;border-collapse:collapse;}
+  </style></head><body>
+  <table style="margin-bottom:7px"><tr>
+    <td style="width:80px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block"></td>
+    <td style="text-align:right;vertical-align:middle">
+      <div style="font-size:13px;font-weight:800;color:#1A3A6A">YKF Monthly Base Safety Checklist</div>
+      <div style="font-size:8px;color:#666;margin-top:2px">YKF Base · Kitchener ON</div>
+    </td>
+  </tr></table>
+  <div style="height:1.5px;background:#1A3A6A;margin-bottom:6px"></div>
+  <table style="margin-bottom:7px;border:1px solid #C8D4E8"><tr>
+    <td style="padding:4px 8px;border-right:1px solid #C8D4E8;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Date</div><div style="font-size:9px;font-weight:700">${todayFmt}</div></td>
+    <td style="padding:4px 8px;border-right:1px solid #C8D4E8;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Inspector</div><div style="font-size:9px;font-weight:700">${inspector}</div></td>
+    <td style="padding:4px 8px;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Legend</div><div style="font-size:8px;color:#555">Y = Yes · N = No · — = Not answered</div></td>
+  </tr></table>
+  <table style="border:1px solid #C8D4E8">
+    <thead><tr style="background:#F0F4FA">
+      <th style="padding:3px 5px;text-align:left;font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:60%">Item</th>
+      <th style="padding:3px 4px;text-align:center;font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:8%">Y/N</th>
+      <th style="padding:3px 5px;text-align:left;font-size:7.5px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8">Comments</th>
+    </tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>
+  ${comments?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid #C8D4E8">
+    <div style="font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A;margin-bottom:4px">Comments</div>
+    <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:36px;font-size:8.5px;color:#1a1a1a">${comments}</div>
+  </div>`:''}
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
+    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+  </div>
+  <script>window.onload=()=>{window.print();};window.addEventListener('afterprint',()=>window.close());<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();}
+}
+
+function resetYkfBaseAudit() {
+  if(!confirm('Reset all YKF Base audit fields? This clears everything on every device.')) return;
+  S.ykfBaseAudit={items:{}};
+  try{localStorage.removeItem('gykf_ykfbase');}catch(e){}
+  if(db) db.collection('facilityAudits').doc('ykfbase').delete().catch(()=>{});
+  render();
+  toast('YKF Base audit reset ✓');
+}
+
+// ══════════════════════════════════════════════════════════════
 // MSDS HANGAR AUDIT
 // ══════════════════════════════════════════════════════════════
 
@@ -6473,6 +6822,10 @@ function setAcField(reg, key, field, value) {
   saveAcAuditDebounced(reg);
 }
 
+function openAcExpiryCal(reg, key, currentVal) {
+  openCalPicker(currentVal||null, val => { setAcField(reg, key, 'expires', val||''); render(); });
+}
+
 function setAcHeader(reg, field, value) {
   const d = acAuditData(reg);
   d[field] = value;
@@ -6662,9 +7015,8 @@ function renderAircraftChecklist(el, reg, type) {
                 style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasYes?'#27AE60':'var(--border2)'};background:${hasYes?'rgba(39,174,96,0.18)':'transparent'};color:${hasYes?'#27AE60':'var(--t4)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</button>
               <button onclick="toggleAcItem('${reg}','${item.key}','no')"
                 style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasNo?'#E74C3C':'var(--border2)'};background:${hasNo?'rgba(231,76,60,0.18)':'transparent'};color:${hasNo?'#E74C3C':'var(--t4)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✗</button>
-              <input type="text" placeholder="Expires" value="${it.expires||''}"
-                oninput="setAcField('${reg}','${item.key}','expires',this.value)"
-                style="width:52px;padding:4px 2px;border:none;border-bottom:1.5px solid var(--border2);background:transparent;color:var(--t2);font-size:10px;text-align:center;outline:none">
+              <div onclick="openAcExpiryCal('${reg}','${item.key}','${it.expires||''}')"
+                style="width:60px;padding:4px 2px;border:none;border-bottom:1.5px solid ${it.expires?'var(--accent-border)':'var(--border2)'};background:transparent;color:${it.expires?'var(--accent)':'var(--t3)'};font-size:10px;text-align:center;cursor:pointer;white-space:nowrap;flex-shrink:0">${it.expires?fmtDate(it.expires):'Expires'}</div>
               <button onclick="openAcCommentModal('${reg}','${item.key}','${(it.comments||'').replace(/'/g,'&#39;')}')"
                 style="padding:4px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid ${hasComment?'var(--accent-border)':'var(--border2)'};background:transparent;color:${hasComment?'var(--accent)':'var(--t3)'};cursor:pointer;white-space:nowrap">Notes</button>
             </div>`}
