@@ -1216,6 +1216,8 @@ const S = {
   crewHouseAudit: {},    // {date, inspector, items:{key:{score,comment}}, comments}
   hangarView: false,     // true = hangar & office checklist open
   hangarAudit: {},       // {date, inspector, items:{key:{score,comment}}, comments}
+  msdsView: false,       // true = MSDS hangar audit open
+  msdsAudit: {},         // {date, auditor, items:{key:true/false}}
   dayNotes: {},         // {isoDate: {text, completed}} — per-day team sticky notes
   tasksSource: 'sheets', // 'sheets' | 'firestore' — controlled by appConfig/tasksSource
 };
@@ -1382,6 +1384,7 @@ async function bootApp() {
         loadAcAuditLabels();
         loadCrewHouseAudit();
         loadHangarAudit();
+        loadMsdsAudit();
         loadAcCustomAircraft();
       })
       .catch(e => console.log('Boot fetch error:', e))
@@ -1415,7 +1418,7 @@ function goTab(id) {
   // Reset all sub-navigation so returning to a tab always starts at the top level
   S.auditsView=false; S.procView=null; S.crewCarsView=null;
   S.crewCarsFromAudits=false; S.flightDropdown=null; S.pastAuditView=null;
-  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null; S.crewHouseView=false; S.hangarView=false;
+  S.auditTileView=null; S.acAuditView=null; S.acAuditReg=null; S.acAuditType=null; S.acVersionsView=false; S.acCustomTypeView=null; S.crewHouseView=false; S.hangarView=false; S.msdsView=false;
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('nb-'+id)?.classList.add('on');
   setBarLogo();
@@ -1459,6 +1462,7 @@ function render() {
       else if(S.crewCarsView) renderCarAudit(el,S.crewCarsView);
       else if(S.crewHouseView) renderCrewHouseChecklist(el);
       else if(S.hangarView) renderHangarChecklist(el);
+      else if(S.msdsView) renderMsdsChecklist(el);
       else if(S.auditTileView) renderAuditTileView(el,S.auditTileView);
       else if(S.acAuditReg) renderAircraftChecklist(el,S.acAuditReg,S.acAuditType);
       else if(S.acAuditView) renderAircraftFolder(el,S.acAuditView);
@@ -1494,6 +1498,7 @@ function handleSwipeBack() {
   if(S.crewCarsView && S.crewCarsView !== 'list') { slideBack(backToCarList); return true; }
   if(S.crewHouseView) { slideBack(()=>{ S.crewHouseView=false; render(); }); return true; }
   if(S.hangarView) { slideBack(()=>{ S.hangarView=false; render(); }); return true; }
+  if(S.msdsView) { slideBack(()=>{ S.msdsView=false; render(); }); return true; }
   if(S.auditTileView) { slideBack(()=>{ S.auditTileView=null; render(); }); return true; }
   if(S.crewCarsView === 'list') { slideBack(backToProcs); return true; }
   if(S.acAuditReg) { slideBack(()=>{ S.acAuditReg=null; render(); }); return true; }
@@ -4476,6 +4481,17 @@ function renderAuditsLanding(el) {
   const chIcon = `<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="8" y="16" width="24" height="18" rx="2" fill="#3D5C8C" opacity="0.6"/><path d="M6 18L20 8l14 10" stroke="#5BA3F5" stroke-width="2" fill="none"/><rect x="15" y="24" width="10" height="10" rx="1" fill="#4A90D9" opacity="0.5"/></svg>`;
   const crewHouseRow = auditRow('S.crewHouseView=true;render()', chIcon, 'Crew House', `220 Thomas Slee Dr. · ${chDone}/${chTotal} items`, chBadge);
 
+  // MSDS — live audit
+  const msAuditData = S.msdsAudit;
+  const MSDS_TOTAL = 149;
+  const msDone = Object.values(msAuditData.items||{}).filter(v=>v===true).length;
+  const msComplete = msDone === MSDS_TOTAL;
+  const msBadge = msComplete ? badge('Done','#0F3020','#2ECC71')
+    : msDone>0 ? badge(`${msDone}/${MSDS_TOTAL}`,'#2A2010','#E8A000')
+    : badge('New','#0F1E40','#4A90D9');
+  const msIcon = `<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="7" y="10" width="26" height="20" rx="3" fill="#3D5C8C" opacity="0.5"/><rect x="11" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="21" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="11" y="22" width="18" height="4" rx="1" fill="#5BA3F5" opacity="0.3"/></svg>`;
+  const msdsRow = auditRow('S.msdsView=true;render()', msIcon, 'MSDS', `Safety data sheets · ${msDone}/${MSDS_TOTAL} items`, msBadge);
+
   // Hangar & Office — live audit
   const hoAuditData = S.hangarAudit;
   const hoTotal = HANGAR_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
@@ -4489,8 +4505,6 @@ function renderAuditsLanding(el) {
 
   // Static facility placeholders (not yet built)
   const facilityPlaceholders = [
-    { name:'MSDS', sub:'Safety data sheets',
-      icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="7" y="10" width="26" height="20" rx="3" fill="#3D5C8C" opacity="0.5"/><rect x="11" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="21" y="14" width="8" height="6" rx="1" fill="#4A90D9" opacity="0.6"/><rect x="11" y="22" width="18" height="4" rx="1" fill="#5BA3F5" opacity="0.3"/></svg>` },
     { name:'Parking Lot MX', sub:'YKF ramp',
       icon:`<svg width="28" height="28" viewBox="0 0 40 40" fill="none"><rect x="6" y="28" width="28" height="6" rx="1" fill="#3D5C8C" opacity="0.6"/><rect x="10" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="24" y="18" width="6" height="10" rx="1" fill="#4A90D9" opacity="0.5"/><rect x="8" y="14" width="24" height="6" rx="1" fill="#5BA3F5" opacity="0.3"/><circle cx="12" cy="34" r="3" fill="#4A90D9" opacity="0.7"/><circle cx="28" cy="34" r="3" fill="#4A90D9" opacity="0.7"/></svg>` },
     { name:'YKF Base', sub:'Monthly checklist',
@@ -4535,6 +4549,7 @@ function renderAuditsLanding(el) {
     ${(Object.keys(S.auditTiles).length || true) ? sectionLabel('🏢','Facility &amp; Base') : ''}
     ${crewHouseRow}
     ${hangarRow}
+    ${msdsRow}
     ${facilityRows}
     ${facilityPlaceholders}
 
@@ -5189,6 +5204,409 @@ function resetHangarAudit() {
   if(db) db.collection('facilityAudits').doc('hangar').delete().catch(()=>{});
   render();
   toast('Hangar & Office audit reset ✓');
+}
+
+// ══════════════════════════════════════════════════════════════
+// MSDS HANGAR AUDIT
+// ══════════════════════════════════════════════════════════════
+
+const MSDS_CHECKLIST = [
+  { section:'A', items:[
+    {key:'ms_20mule',       label:'20 Mule Borax',              loc:'Groomer Corner'},
+    {key:'ms_3m_adhesive',  label:'3M Adhesive Remover',        loc:'Misc. Cabinet'},
+    {key:'ms_3m_polish',    label:'3M Machine Polish',          loc:'Groomer Corner'},
+    {key:'ms_3m_rubber',    label:'3M Rubber and Gasket',       loc:'Flam. Cabinet'},
+    {key:'ms_3m_spray',     label:'3M Spray Adhesive',          loc:'Misc. Cabinet'},
+    {key:'ms_aero600',      label:'Aero 600',                   loc:'Groomer Corner'},
+    {key:'ms_aero7',        label:'Aeroshell Grease 7',         loc:'Oil + Grease Cabinet'},
+    {key:'ms_aero33',       label:'Aeroshell Grease 33',        loc:'Oil + Grease Cabinet'},
+    {key:'ms_aero64',       label:'Aeroshell Grease 64',        loc:'Oil + Grease Cabinet'},
+    {key:'ms_alex_latex',   label:'Alex Plus Acrylic Latex',    loc:'Groomer Corner'},
+    {key:'ms_alex_spack',   label:'Alex Plus Spackling',        loc:'Groomer Corner'},
+    {key:'ms_armhammer',    label:'Arm & Hammer Baking Soda',   loc:'Main Sink'},
+    {key:'ms_armorall',     label:'Armor All Spray',            loc:'Groomer Corner'},
+    {key:'ms_armorall_foam',label:'Armor All Tire Foam',        loc:'Groomer Corner'},
+    {key:'ms_armorall_shin',label:'Armor All Tire Shine',       loc:'Groomer Corner'},
+    {key:'ms_antiseize',    label:'Anti-Seize',                 loc:'Oil + Grease Cabinet'},
+  ]},
+  { section:'B', items:[
+    {key:'ms_barkeepers',   label:'Bar Keepers Friend Polish',  loc:'Main Sink'},
+    {key:'ms_behr',         label:'Behr Enamel',                loc:'Misc. Cabinet'},
+    {key:'ms_biobor',       label:'Biobor Biocide',             loc:'Flam. Cabinet'},
+    {key:'ms_bonderite',    label:'Bonderite C-IC 33',          loc:'Flam. Cabinet'},
+    {key:'ms_britetouch',   label:'Brite Touch',                loc:'Misc. Cabinet'},
+  ]},
+  { section:'C', items:[
+    {key:'ms_castrol30',    label:'Castrol 5W-30',              loc:'Flam. Cabinet'},
+    {key:'ms_carwash',      label:'Car Wash Mr. Pink',          loc:'Groomer Corner'},
+    {key:'ms_citra',        label:'Citra Clean',                loc:'Groomer Corner'},
+    {key:'ms_cgc',          label:'CGC Sheetrock Compound',     loc:'Groomer Corner'},
+    {key:'ms_clr',          label:'CLR Rust Remover',           loc:'Main Sink'},
+    {key:'ms_conductive',   label:'Conductive Cement',          loc:'Flam. Cabinet'},
+    {key:'ms_coolit',       label:'Cool-It',                    loc:'Misc. Cabinet'},
+    {key:'ms_crc_carb',     label:'CRC Carb Cleaner',           loc:'Oil + Grease Cabinet'},
+    {key:'ms_crc_eng',      label:'CRC Engine Degreaser',       loc:'Flam. Cabinet'},
+    {key:'ms_castrol20',    label:'Castrol 5W-20',              loc:'Seacan'},
+    {key:'ms_chemguys_air', label:'Chemical Guys Air Freshener',loc:'Groomer Corner'},
+    {key:'ms_chemguys_int', label:'Chemical Guys Interior Clean',loc:'Groomer Corner'},
+  ]},
+  { section:'D', items:[
+    {key:'ms_deoxit',       label:'Deoxit 5% Spray',            loc:'Flam. Cabinet'},
+    {key:'ms_dlx',          label:'DLX Lmaster White',          loc:'Flam. Cabinet'},
+    {key:'ms_dowsil',       label:'Dowsil Adhesive',            loc:'Misc. Cabinet'},
+    {key:'ms_dupli_paint',  label:'Dupli-colour Aerosol Paint', loc:'Misc. Cabinet'},
+    {key:'ms_dupli_eng',    label:'Dupli-Colour Engine Enamel', loc:'Misc. Cabinet'},
+    {key:'ms_dish',         label:'Dish Soap',                  loc:'Main Sink'},
+  ]},
+  { section:'E', items:[
+    {key:'ms_eastman',      label:'Eastman Turbo Oil 2380',     loc:'Oil + Grease Cabinet'},
+    {key:'ms_easyoff',      label:'Easy Off Oven Cleaner',      loc:'Main Sink'},
+    {key:'ms_emzone_air',   label:'Emzone Air Duster',          loc:'Flam. Cabinet'},
+    {key:'ms_emzone_but',   label:'Emzone Butane Fuel',         loc:'Flam. Cabinet'},
+    {key:'ms_extreme',      label:'Extreme Simple Green Aircraft',loc:'Groomer Corner'},
+  ]},
+  { section:'F', items:[
+    {key:'ms_febreeze',     label:'Febreeze',                   loc:'Groomer Corner'},
+    {key:'ms_flitz',        label:'Flitz Metal Polish',         loc:'Groomer Corner'},
+  ]},
+  { section:'G', items:[
+    {key:'ms_good_primer',  label:'Goodrich Adhesive Primer',   loc:'Misc. Cabinet'},
+    {key:'ms_good_cement',  label:'Goodrich Cement',            loc:'Misc. Cabinet'},
+    {key:'ms_googone',      label:'Goo Gone',                   loc:'Groomer Corner'},
+    {key:'ms_gunk_brakes',  label:'Gunk Brakes Cleaner',        loc:'Flam. Cabinet'},
+    {key:'ms_eng_cleaner',  label:'Engine Cleaner',             loc:'Flam. Cabinet'},
+    {key:'ms_gunk_eng',     label:'Gunk Engine Protector',      loc:'Flam. Cabinet'},
+  ]},
+  { section:'I', items:[
+    {key:'ms_iceshield',    label:'Iceshield Plus',             loc:'Flam. Cabinet'},
+    {key:'ms_invglass1',    label:'Invisible Glass',            loc:'Groomer Corner'},
+    {key:'ms_ipa',          label:'IPA',                        loc:'Flam. Cabinet'},
+    {key:'ms_invglass2',    label:'Invisible Glass (2)',        loc:'Groomer Corner'},
+  ]},
+  { section:'J', items:[
+    {key:'ms_jetglo',       label:'Jetglo Polyurethane',        loc:'Misc. Cabinet'},
+  ]},
+  { section:'K', items:[
+    {key:'ms_killfrost_of', label:'Kill Frost OF Plus',         loc:'Flam. Cabinet'},
+    {key:'ms_killex',       label:'Killex Herbicide',           loc:'Seacan'},
+    {key:'ms_killfrost_abc',label:'Killfrost ABC-S Plus',       loc:'Flam. Cabinet'},
+  ]},
+  { section:'L', items:[
+    {key:'ms_lacauer',      label:'Lacauer',                    loc:'Flam. Cabinet'},
+    {key:'ms_lepage_poly',  label:'Lepage Polyurethane',        loc:'Misc. Cabinet'},
+    {key:'ms_lepage_epoxy', label:'Lepage Epoxy Resin',         loc:'Misc. Cabinet'},
+    {key:'ms_liquidwrench', label:'Liquid Wrench Penetrating Oil',loc:'Oil + Grease Cabinet'},
+    {key:'ms_lps1',         label:'LPS1 Aerosol',               loc:'Oil + Grease Cabinet'},
+    {key:'ms_lps2',         label:'LPS2 Aerosol',               loc:'Oil + Grease Cabinet'},
+    {key:'ms_lps3',         label:'LPS3 Aerosol',               loc:'Oil + Grease Cabinet'},
+    {key:'ms_lps_electro',  label:'LPS Electro Contact Cleaner',loc:'Oil + Grease Cabinet'},
+    {key:'ms_lysol_dis',    label:'Lysol Disinfectant',         loc:'Groomer Corner'},
+    {key:'ms_lysol_multi',  label:'Lysol Multi-Surface',        loc:'Groomer Corner'},
+    {key:'ms_lysol_purp',   label:'Lysol Multi-Purpose',        loc:'Groomer Corner'},
+    {key:'ms_lysol_toilet', label:'Lysol Toilet Cleaner',       loc:'Washrooms'},
+  ]},
+  { section:'M', items:[
+    {key:'ms_magnaflux',    label:'Magnaflux Couplant',         loc:'Flam. Cabinet'},
+    {key:'ms_mappro',       label:'MAP Pro Hand Torch Fuel',    loc:'Flam. Cabinet'},
+    {key:'ms_mek',          label:'Methyl Ethyl Ketone',        loc:'Flam. Cabinet'},
+    {key:'ms_mg_contact',   label:'MG Chemicals Contact Cleaner',loc:'Oil + Grease Cabinet'},
+    {key:'ms_mobil_shell',  label:'Mobil Grease Shell 100',     loc:'Oil + Grease Cabinet'},
+    {key:'ms_mobil28',      label:'Mobil Grease 28',            loc:'Oil + Grease Cabinet'},
+    {key:'ms_mobiljet254',  label:'Mobil Jet Oil 254',          loc:'Oil + Grease Cabinet'},
+    {key:'ms_mobiljet284',  label:'Mobil Jet Oil 284',          loc:'Oil + Grease Cabinet'},
+    {key:'ms_molykote',     label:'Molykote Insulating',        loc:'Oil + Grease Cabinet'},
+    {key:'ms_monosil',      label:'Monosilicone Sealant',       loc:'Misc. Cabinet'},
+    {key:'ms_mopar',        label:'Mopar Steering Fluid',       loc:'Flam. Cabinet'},
+    {key:'ms_moto80w90',    label:'Motomaster SAE 80W-90',      loc:'Oil + Grease / Seacan'},
+    {key:'ms_moto5w30',     label:'Motomaster 5W-30',           loc:'Oil + Grease / Seacan'},
+    {key:'ms_mousemilk',    label:'Mouse Milk Penetrating Oil', loc:'Flam. Cabinet'},
+    {key:'ms_mrclean_mag',  label:'Mr. Clean Magic Erase',      loc:'Main Sink'},
+    {key:'ms_mrclean_floor',label:'Mr. Clean Floor + Surface',  loc:'Main Sink'},
+    {key:'ms_mrclean_multi',label:'Mr. Clean Multi-Purpose',    loc:'Main Sink'},
+  ]},
+  { section:'N', items:[
+    {key:'ms_neogard',      label:'Neogard Epoxy Primer',       loc:'Flam. Cabinet'},
+    {key:'ms_nitrogen',     label:'Nitrogen',                   loc:'By Oxygen Tanks'},
+    {key:'ms_nyco148',      label:'Nyco Grease 148',            loc:'Oil + Grease Cabinet'},
+  ]},
+  { section:'O', items:[
+    {key:'ms_oatey_abs',    label:'Oatey ABS Cement',           loc:'Flam. Cabinet'},
+    {key:'ms_oatey_pvc',    label:'Oatey PVC Cement',           loc:'Misc. Cabinet'},
+    {key:'ms_orange_en',    label:'Orange Enamel',              loc:'Misc. Cabinet'},
+    {key:'ms_oxygen',       label:'Oxygen',                     loc:'MX Corner'},
+  ]},
+  { section:'P', items:[
+    {key:'ms_pbs_seal',     label:'PBS Boot Sealant',           loc:'Flam. Cabinet'},
+    {key:'ms_pbs_rem',      label:'PBS Boot Remover',           loc:'Flam. Cabinet'},
+    {key:'ms_peerco',       label:'Peerco 321',                 loc:'Oil + Grease Cabinet'},
+    {key:'ms_permagask',    label:'Perma Gasket',               loc:'Misc. Cabinet'},
+    {key:'ms_phillip66',    label:'Phillip 66 Hydraulic',       loc:'Oil + Grease Cabinet'},
+    {key:'ms_pinesol',      label:'Pinesol',                    loc:'Groomer Corner'},
+    {key:'ms_polygone',     label:'Polygone',                   loc:'Flam. Cabinet'},
+    {key:'ms_powerfist',    label:'Powerfist Solvent',          loc:'Flam. Cabinet'},
+    {key:'ms_prestone_af',  label:'Prestone Anti-Freeze',       loc:'Groomer Corner'},
+    {key:'ms_prestone_cool',label:'Prestone Coolant',           loc:'Groomer Corner / Seacan'},
+    {key:'ms_prist',        label:'Prist',                      loc:'Groomer Corner'},
+    {key:'ms_proform',      label:'Proform Paint Stripper',     loc:'Flam. Cabinet'},
+    {key:'ms_prosolvable',  label:'Prosolvable Solvent Cleaner',loc:'Flam. Cabinet'},
+    {key:'ms_ptouch',       label:'PTouch Clear Glass',         loc:'Misc. Cabinet'},
+    {key:'ms_purell',       label:'Purell Hand Sanitizer',      loc:'Groomer Corner'},
+  ]},
+  { section:'R', items:[
+    {key:'ms_raid',         label:'Raid Foaming Wasp Killer',   loc:'Groomer Corner'},
+    {key:'ms_rainx',        label:'Rain X',                     loc:'Groomer Corner'},
+    {key:'ms_ronson',       label:'Ronson Butane',              loc:'Flam. Cabinet'},
+    {key:'ms_roundup',      label:'Roundup Weed Killer',        loc:'Groomer Corner'},
+    {key:'ms_royco481',     label:'Royco 481',                  loc:'Oil + Grease Cabinet'},
+    {key:'ms_royco782',     label:'Royco 782',                  loc:'Oil + Grease Cabinet'},
+    {key:'ms_rustol_top',   label:'Rustoleum Top',              loc:'Misc. Cabinet'},
+    {key:'ms_rustol_white', label:'Rustoleum Gloss White',      loc:'Misc. Cabinet'},
+  ]},
+  { section:'S', items:[
+    {key:'ms_scrubbing',    label:'Scrubbing Bubbles',          loc:'Washrooms'},
+    {key:'ms_sep',          label:'SEP One Step Primer',        loc:'Misc. Cabinet'},
+    {key:'ms_sherlock',     label:'Sherlock Leak Detector',     loc:'Flam. Cabinet'},
+    {key:'ms_silicagel',    label:'Silica Gel',                 loc:'Misc. Cabinet'},
+    {key:'ms_simplegreen',  label:'Simple Green',               loc:'Groomer Corner'},
+    {key:'ms_superrem',     label:'Super Remover Auto Stripper',loc:'Flam. Cabinet'},
+    {key:'ms_skc',          label:'SKC Aerosol',                loc:'Flam. Cabinet'},
+    {key:'ms_skydrol',      label:'Skydrol Hydraulic',          loc:'Oil + Grease Cabinet'},
+    {key:'ms_simoniz',      label:'Simoniz Leather Cleaner',    loc:'Groomer Corner'},
+    {key:'ms_stinger',      label:'Stinger Deodorizer',         loc:'Groomer Corner'},
+    {key:'ms_smrcement',    label:'SMR Cement',                 loc:'Flam. Cabinet'},
+    {key:'ms_sonorrace',    label:'Sonorrace',                  loc:'Flam. Cabinet'},
+  ]},
+  { section:'T', items:[
+    {key:'ms_tempo',        label:'Tempo Primer',               loc:'Misc. Cabinet'},
+    {key:'ms_toluene',      label:'Toluene',                    loc:'Flam. Cabinet'},
+    {key:'ms_triflow',      label:'Triflow Lubricant',          loc:'Flam. Cabinet'},
+    {key:'ms_trufuel',      label:'Trufuel',                    loc:'Flam. Cabinet'},
+  ]},
+  { section:'U', items:[
+    {key:'ms_ultrachem',    label:'Ultrachem Fluid',            loc:'Misc. Cabinet'},
+    {key:'ms_ultragel',     label:'Ultragel 2',                 loc:'Flam. Cabinet'},
+  ]},
+  { section:'V', items:[
+    {key:'ms_vim',          label:'Vim Cleanser',               loc:'Washrooms'},
+  ]},
+  { section:'W', items:[
+    {key:'ms_washerfluid',  label:'Washer Fluid',               loc:'Groomer Corner'},
+    {key:'ms_washwax',      label:'Wash Wax',                   loc:'Groomer Corner'},
+    {key:'ms_wd40',         label:'WD-40',                      loc:'Oil + Grease Cabinet'},
+    {key:'ms_wurth',        label:'Wurth Temp. Spray',          loc:'Flam. Cabinet'},
+  ]},
+  { section:'X', items:[
+    {key:'ms_xhaust',       label:'Xhaust and Soot Remover',    loc:'Groomer Corner'},
+  ]},
+  { section:'Z', items:[
+    {key:'ms_zep_cherry',   label:'Zep Cherry',                 loc:'Groomer Corner'},
+    {key:'ms_zep_citrus',   label:'Zep Citrus Degreaser',       loc:'Groomer Corner'},
+    {key:'ms_zep_floor',    label:'Zep Floor Stripper',         loc:'Groomer Corner'},
+    {key:'ms_zep_purple',   label:'Zep Purple',                 loc:'Groomer Corner'},
+    {key:'ms_zep_wetlook',  label:'Zep Wet Look Floor Polish',  loc:'Groomer Corner'},
+    {key:'ms_zp9f',         label:'ZP-9F',                      loc:'Flam. Cabinet'},
+  ]},
+];
+
+function msData() {
+  if(!S.msdsAudit) S.msdsAudit={};
+  if(!S.msdsAudit.items) S.msdsAudit.items={};
+  return S.msdsAudit;
+}
+
+function loadMsdsAudit() {
+  try { S.msdsAudit = JSON.parse(localStorage.getItem('gykf_msds')||'{}'); } catch(e){}
+  if(!S.msdsAudit.items) S.msdsAudit.items={};
+  if(!db) return;
+  db.collection('facilityAudits').doc('msds').get().then(doc=>{
+    if(doc.exists){ S.msdsAudit=doc.data(); if(!S.msdsAudit.items) S.msdsAudit.items={}; }
+    try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
+  }).catch(()=>{});
+}
+
+function saveMsdsAudit() {
+  try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
+  if(db) db.collection('facilityAudits').doc('msds').set(S.msdsAudit,{merge:true}).catch(()=>{});
+}
+
+let _msSaveTimer = null;
+function saveMsdsDebounced() {
+  clearTimeout(_msSaveTimer);
+  _msSaveTimer = setTimeout(saveMsdsAudit, 800);
+}
+
+function msSetCheck(key, val) {
+  msData().items[key] = val;
+  saveMsdsDebounced();
+  render();
+}
+
+function msSelectAll() {
+  const d = msData();
+  const allKeys = MSDS_CHECKLIST.flatMap(s=>s.items.map(i=>i.key));
+  const allChecked = allKeys.every(k=>d.items[k]===true);
+  allKeys.forEach(k=>{ d.items[k] = !allChecked; });
+  saveMsdsDebounced();
+  render();
+}
+
+function msSetField(field, val) {
+  msData()[field] = val;
+  saveMsdsDebounced();
+}
+
+function renderMsdsChecklist(el) {
+  const d = msData();
+  const allKeys = MSDS_CHECKLIST.flatMap(s=>s.items.map(i=>i.key));
+  const total = allKeys.length;
+  const done = allKeys.filter(k=>d.items[k]===true).length;
+  const allChecked = done === total;
+  setBar({title:'MSDS Audit', back:'Audits', backFn:()=>{S.msdsView=false;render();}});
+  document.getElementById('fab').style.display='none';
+
+  const _todayISO = new Date().toISOString().split('T')[0];
+  if(!d.date) { d.date = _todayISO; saveMsdsDebounced(); }
+
+  const sectionsHtml = MSDS_CHECKLIST.map(sec=>`
+    <div style="padding:10px 16px 4px;display:flex;align-items:center;gap:8px">
+      <div style="width:3px;height:16px;background:var(--accent);border-radius:2px;flex-shrink:0"></div>
+      <div style="font-size:12px;font-weight:800;letter-spacing:1.2px;color:var(--accent)">${sec.section}</div>
+      <div style="font-size:10px;color:var(--t3);margin-left:2px">${sec.items.length} items</div>
+    </div>
+    <div style="margin:0 14px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;overflow:hidden">
+      ${sec.items.map((item,i)=>{
+        const checked = d.items[item.key]===true;
+        const bg = i%2===0 ? 'transparent' : 'rgba(255,255,255,0.02)';
+        return `<div onclick="msSetCheck('${item.key}',${!checked})" style="display:flex;align-items:center;gap:10px;padding:8px 11px;background:${bg};border-bottom:${i<sec.items.length-1?'1px solid var(--border2)':'none'};cursor:pointer">
+          <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${checked?'#4CAF50':'var(--border2)'};background:${checked?'rgba(76,175,80,0.2)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">
+            ${checked?'<span style="font-size:12px;color:#4CAF50;font-weight:800">✓</span>':''}
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;color:${checked?'var(--t3)':'var(--t1)'};${checked?'text-decoration:line-through;text-decoration-color:var(--border2)':''};line-height:1.3">${item.label}</div>
+            <div style="font-size:10px;color:var(--t3);margin-top:1px">${item.loc}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+  `).join('');
+
+  el.innerHTML=`
+    <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
+        <input type="date" value="${d.date}" onchange="msSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
+        <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">AUDITOR</span>
+        <input type="text" value="${(d.auditor||'').replace(/"/g,'&quot;')}" oninput="msSetField('auditor',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+      </div>
+      <div onclick="msSelectAll()" style="display:flex;align-items:center;gap:10px;background:${allChecked?'rgba(76,175,80,0.1)':'var(--glass2)'};border:1px solid ${allChecked?'rgba(76,175,80,0.3)':'var(--border2)'};border-radius:9px;padding:8px 11px;cursor:pointer">
+        <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${allChecked?'#4CAF50':'var(--border2)'};background:${allChecked?'rgba(76,175,80,0.2)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${allChecked?'<span style="font-size:12px;color:#4CAF50;font-weight:800">✓</span>':''}
+        </div>
+        <span style="font-size:13px;font-weight:600;color:${allChecked?'#4CAF50':'var(--t2)'}">Select all</span>
+        <span style="margin-left:auto;font-size:11px;color:var(--t3)">${done} / ${total}</span>
+      </div>
+    </div>
+
+    ${sectionsHtml}
+
+    <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Notes</div>
+      <textarea oninput="msSetField('notes',this.value)" placeholder="Add general audit notes…" style="width:100%;min-height:60px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.notes||''}</textarea>
+    </div>
+
+    <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateMsdsPDF()">
+      <span style="font-size:20px;flex-shrink:0">📄</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:700;color:var(--accent)">Generate PDF</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${done} / ${total} items verified</div>
+      </div>
+      <span style="color:var(--border2);font-size:18px">›</span>
+    </div>
+    <div onclick="resetMsdsAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+      <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
+    </div>
+    <div style="height:80px"></div>`;
+}
+
+function generateMsdsPDF() {
+  const d = msData();
+  const todayFmt = new Date((d.date||new Date().toISOString().split('T')[0])+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const auditor = d.auditor || '';
+  const notes = d.notes || '';
+  const logoSrc = 'cars/Skycare_logo-removebg-preview.png';
+
+  const bodyRows = MSDS_CHECKLIST.map(sec=>`
+    <tr><td colspan="3" style="background:#D8E4F5;padding:3px 6px;border-top:1px solid #B8CCE8;border-bottom:1px solid #B8CCE8">
+      <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">${sec.section}</span>
+    </td></tr>
+    ${sec.items.map((item,i)=>{
+      const checked = d.items[item.key]===true;
+      const bg = i%2===1 ? '#FAFBFD' : '#FFFFFF';
+      return `<tr style="background:${bg}">
+        <td style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#222;width:55%">${item.label}</td>
+        <td style="padding:2px 5px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;width:30%">${item.loc}</td>
+        <td style="padding:2px 4px;border-bottom:0.5px solid #EEF1F8;text-align:center;width:15%">${checked?'<span style="font-size:11px;color:#1a7a1a;font-weight:800">✓</span>':'<span style="color:#ccc;font-size:11px">○</span>'}</td>
+      </tr>`;
+    }).join('')}
+  `).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
+  <title>MSDS Hangar Audit — ${todayFmt}</title>
+  <style>
+    @page { size:letter; margin:10mm 10mm 10mm 10mm; }
+    body { font-family:Arial,Helvetica,sans-serif; font-size:8.5px; color:#1a1a1a; margin:0; }
+    table { width:100%; border-collapse:collapse; }
+  </style>
+  </head><body>
+  <table style="margin-bottom:7px">
+    <tr>
+      <td style="width:80px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block"></td>
+      <td style="text-align:right;vertical-align:middle">
+        <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF MSDS Hangar Audit</div>
+        <div style="font-size:8px;color:#666;margin-top:2px">YKF Base · Kitchener ON</div>
+      </td>
+    </tr>
+  </table>
+  <div style="height:1.5px;background:#1A3A6A;margin-bottom:6px"></div>
+  <table style="margin-bottom:7px;border:1px solid #C8D4E8">
+    <tr>
+      <td style="padding:4px 8px;border-right:1px solid #C8D4E8;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Date</div><div style="font-size:9px;font-weight:700">${todayFmt}</div></td>
+      <td style="padding:4px 8px;border-right:1px solid #C8D4E8;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Auditor</div><div style="font-size:9px;font-weight:700">${auditor}</div></td>
+      <td style="padding:4px 8px;width:33%"><div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Status</div><div style="font-size:8.5px;color:#555">✓ = verified · ○ = not checked</div></td>
+    </tr>
+  </table>
+  <table style="border:1px solid #C8D4E8">
+    <thead><tr style="background:#F0F4FA">
+      <th style="padding:3px 5px;text-align:left;font-size:7.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:55%">Product</th>
+      <th style="padding:3px 5px;text-align:left;font-size:7.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:30%">Location</th>
+      <th style="padding:3px 4px;text-align:center;font-size:7.5px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:15%">Status</th>
+    </tr></thead>
+    <tbody>${bodyRows}</tbody>
+  </table>
+  ${notes?`<div style="margin-top:7px;padding-top:7px;border-top:1px solid #C8D4E8">
+    <div style="font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A;margin-bottom:4px">Notes</div>
+    <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:28px;font-size:8.5px;color:#1a1a1a">${notes}</div>
+  </div>`:''}
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
+    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+  </div>
+  <script>window.onload=()=>{window.print();};window.addEventListener('afterprint',()=>window.close());<\/script>
+  </body></html>`;
+
+  const w=window.open('','_blank');
+  if(w){w.document.write(html);w.document.close();}
+}
+
+function resetMsdsAudit() {
+  if(!confirm('Reset all MSDS audit fields? This clears all checkmarks and the auditor name on every device.')) return;
+  S.msdsAudit = {items:{}};
+  try { localStorage.removeItem('gykf_msds'); } catch(e){}
+  if(db) db.collection('facilityAudits').doc('msds').delete().catch(()=>{});
+  render();
+  toast('MSDS audit reset ✓');
 }
 
 function resetAllAcAudits() {
