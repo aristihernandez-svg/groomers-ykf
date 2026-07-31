@@ -6413,10 +6413,7 @@ function resetAllAcAudits() {
   });
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
 
-  // Crew car audits (includes photos stored in carAudits docs)
-  S.carAudits = {};
-  try { localStorage.removeItem('gykf_caudits'); } catch(e){}
-  if(db) db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
+  // NOTE: crew car audit data (photos, completion) is NOT reset here — it is operational data, not a facility audit.
 
   // Facility audits
   S.crewHouseAudit = {items:{}};
