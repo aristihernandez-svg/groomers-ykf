@@ -4721,7 +4721,7 @@ function loadCrewHouseAudit() {
     else { S.crewHouseAudit={items:{}}; }
     try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
     render();
-  }, ()=>{});
+  }, e=>console.error('crewhouse onSnapshot error:', e));
 }
 
 function saveCrewHouseAudit() {
@@ -5032,7 +5032,7 @@ function loadHangarAudit() {
     else { S.hangarAudit={items:{}}; }
     try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
     render();
-  }, ()=>{});
+  }, e=>console.error('hangar onSnapshot error:', e));
 }
 
 function saveHangarAudit() {
@@ -5472,7 +5472,7 @@ function loadParkingAudit() {
     else { S.parkingAudit={items:{}}; }
     try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
     render();
-  }, ()=>{});
+  }, e=>console.error('parking onSnapshot error:', e));
 }
 
 function saveParkingAudit() {
@@ -5800,7 +5800,7 @@ function loadYkfBaseAudit() {
     else { S.ykfBaseAudit={items:{}}; }
     try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
     render();
-  }, ()=>{});
+  }, e=>console.error('ykfbase onSnapshot error:', e));
 }
 
 function saveYkfBaseAudit() {
@@ -6219,7 +6219,7 @@ function loadMsdsAudit() {
     else { S.msdsAudit={items:{}}; }
     try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
     render();
-  }, ()=>{});
+  }, e=>console.error('msds onSnapshot error:', e));
 }
 
 function saveMsdsAudit() {
