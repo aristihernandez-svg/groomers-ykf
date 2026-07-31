@@ -1194,7 +1194,7 @@ const S = {
   crewCarsView: null,   // null | 'list' | carKey | 'past-audit'
   crewCarsFromAudits: false, // true when crew cars was opened from the Audits hub
   crewCarData: {},      // {carKey: {fuel, oilChange, washed, log:[]}}
-  carAudits: {},        // {'{month}-{carKey}': {photos, comments, done, groomer, completedAt}}
+  monthlyCarAudits: {}, // {'{month}-{carKey}': {photos, comments, done, groomer, completedAt}} — MONTHLY PHOTO AUDITS ONLY. NOT crew car vehicle data.
   auditGroomer: '',     // name of groomer doing this month's audit
   pastAudits: [],       // [{month, groomer, completedAt}] loaded from Firestore
   pastAuditView: null,  // month string being viewed, or null
@@ -1395,6 +1395,7 @@ async function bootApp() {
         loadParkingAudit();
         loadYkfBaseAudit();
         loadAcCustomAircraft();
+        checkMonthlyAuditReset();
       })
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
@@ -2680,37 +2681,37 @@ function auditMonth() {
 }
 function auditDocKey(carKey) { return auditMonth()+'-'+carKey; }
 function loadCarAudits() {
-  try { S.carAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.carAudits={}; }
+  try { S.monthlyCarAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.monthlyCarAudits={}; }
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
   if(!db) return;
   const month=auditMonth();
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    snap.docs.forEach(d=>{ S.carAudits[d.id]={...S.carAudits[d.id],...d.data()}; });
-    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+    snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
+    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
     updateAuditBadge();
     render();
   }, e=>console.log('loadCarAudits Firestore failed:',e));
 }
 function saveCarAudit(carKey) {
-  try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+  try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
   try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
   updateAuditBadge();
   if(!db) return;
   const month=auditMonth();
-  const data={...S.carAudits[auditDocKey(carKey)], month, carKey};
+  const data={...S.monthlyCarAudits[auditDocKey(carKey)], month, carKey};
   db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
     .catch(e=>console.log('saveCarAudit Firestore failed:',e));
 }
 function carAuditData(carKey) {
   const k=auditDocKey(carKey);
-  if(!S.carAudits[k]) S.carAudits[k]={photos:new Array(8).fill(null),comments:'',done:false,completedAt:null};
+  if(!S.monthlyCarAudits[k]) S.monthlyCarAudits[k]={photos:new Array(8).fill(null),comments:'',done:false,completedAt:null};
   // Normalize to 8-slot fixed array (migrate from old unordered array)
-  const p=S.carAudits[k].photos;
+  const p=S.monthlyCarAudits[k].photos;
   if(!Array.isArray(p)||p.length!==8) {
     const old=Array.isArray(p)?p.filter(x=>x):[];
-    S.carAudits[k].photos=Array.from({length:8},(_,i)=>old[i]||null);
+    S.monthlyCarAudits[k].photos=Array.from({length:8},(_,i)=>old[i]||null);
   }
-  return S.carAudits[k];
+  return S.monthlyCarAudits[k];
 }
 function loadPastAudits() {
   if(!db) return;
@@ -3559,8 +3560,8 @@ function refreshAuditPhotos(key) {
   db.collection('auditCars').doc(auditDocKey(key)).get().then(snap=>{
     if(!snap.exists) return;
     const data = snap.data();
-    if(!S.carAudits[snap.id]) S.carAudits[snap.id]={photos:[],comments:'',done:false,completedAt:null};
-    S.carAudits[snap.id] = {...S.carAudits[snap.id], ...data};
+    if(!S.monthlyCarAudits[snap.id]) S.monthlyCarAudits[snap.id]={photos:[],comments:'',done:false,completedAt:null};
+    S.monthlyCarAudits[snap.id] = {...S.monthlyCarAudits[snap.id], ...data};
     // Replace only the audit section DOM node — do NOT call auditSectionHTML here
     // (that would re-schedule refreshAuditPhotos and create an infinite loop)
     const el=document.getElementById('auditSection_'+key);
@@ -3687,7 +3688,7 @@ function generateAuditPDF(month) {
   const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
   let carSections='';
   CREW_CARS.forEach(car=>{
-    const d=S.carAudits[month+'-'+car.key]||{};
+    const d=S.monthlyCarAudits[month+'-'+car.key]||{};
     const photos=Array.isArray(d.photos)&&d.photos.length===8?d.photos:Array.from({length:8},(_,i)=>(d.photos||[])[i]||null);
     const poorCount=photos.filter(p=>p&&p.rating==='Poor').length;
     const fairCount=photos.filter(p=>p&&p.rating==='Fair').length;
@@ -3779,7 +3780,7 @@ function renderPastAuditView(el, month) {
     </div>`;
 
   CREW_CARS.forEach(car=>{
-    const d=S.carAudits[month+'-'+car.key]||{};
+    const d=S.monthlyCarAudits[month+'-'+car.key]||{};
     const photos=d.photos||[];
     html+=`<div style="border-bottom:1px solid var(--border);padding:12px 14px">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
@@ -3813,8 +3814,8 @@ function deleteAuditMonth(month) {
   batch.commit()
     .then(()=>{
       S.pastAudits=S.pastAudits.filter(a=>a.month!==month);
-      CREW_CARS.forEach(c=>{ delete S.carAudits[month+'-'+c.key]; });
-      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+      CREW_CARS.forEach(c=>{ delete S.monthlyCarAudits[month+'-'+c.key]; });
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
       S.crewCarsView='list'; S.pastAuditView=null;
       render(); toast('🗑 Audit deleted');
     })
@@ -3828,8 +3829,8 @@ function deleteCarAudit(month, carKey) {
   if(!db){toast('No connection');return;}
   db.collection('auditCars').doc(month+'-'+carKey).delete()
     .then(()=>{
-      delete S.carAudits[month+'-'+carKey];
-      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.carAudits)); } catch(e){}
+      delete S.monthlyCarAudits[month+'-'+carKey];
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
       render(); toast('🗑 '+car?.name+' audit deleted');
     })
     .catch(e=>{ console.log('deleteCarAudit failed:',e); toast('Delete failed'); });
@@ -6396,8 +6397,37 @@ function resetMsdsAudit() {
   toast('MSDS audit reset ✓');
 }
 
+function checkMonthlyAuditReset() {
+  const currentMonth = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
+  const lastReset = localStorage.getItem('gykf_last_audit_reset');
+  if(lastReset === currentMonth) return;
+
+  // New month — reset all facility audits + monthly car photo audits
+  // NEVER touches crew car vehicle data (gykf_ccd / S.crewCarData)
+  S.crewHouseAudit   = {items:{}};
+  S.hangarAudit      = {items:{}};
+  S.msdsAudit        = {items:{}};
+  S.parkingAudit     = {items:{}};
+  S.ykfBaseAudit     = {items:{}};
+  S.monthlyCarAudits = {};
+
+  ['gykf_crewhouse','gykf_hangar','gykf_msds','gykf_parking','gykf_ykfbase','gykf_caudits'].forEach(k=>{
+    try { localStorage.removeItem(k); } catch(e){}
+  });
+
+  if(db) {
+    ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>
+      db.collection('facilityAudits').doc(doc).delete().catch(()=>{})
+    );
+    db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
+  }
+
+  localStorage.setItem('gykf_last_audit_reset', currentMonth);
+  console.log('Monthly audit reset fired for', currentMonth);
+}
+
 function resetAllAcAudits() {
-  if(!confirm('Reset ALL audits? This clears aircraft, crew cars, and every facility audit on every device. This cannot be undone.')) return;
+  if(!confirm('Reset ALL audits? This clears all aircraft checklists, all facility audits, and crew car monthly photo audits. Crew car vehicle data (fuel, odometer, oil, registration, insurance, wash dates) is NEVER touched.')) return;
 
   // Aircraft audits (metro, westwind, astra, custom types)
   const allRegs = [
@@ -6413,7 +6443,10 @@ function resetAllAcAudits() {
   });
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
 
-  // NOTE: crew car audit data (photos, completion) is NOT reset here — it is operational data, not a facility audit.
+  // Monthly car photo audits (photos, done status per car) — NOT crew car vehicle data
+  S.monthlyCarAudits = {};
+  try { localStorage.removeItem('gykf_caudits'); } catch(e){}
+  if(db) db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
 
   // Facility audits
   S.crewHouseAudit = {items:{}};
