@@ -4716,12 +4716,12 @@ function loadCrewHouseAudit() {
   try { S.crewHouseAudit = JSON.parse(localStorage.getItem('gykf_crewhouse')||'{}'); } catch(e){}
   if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
   if(!db) return;
-  const _chFetchTs = Date.now();
-  db.collection('facilityAudits').doc('crewhouse').get().then(doc=>{
-    if(parseInt(localStorage.getItem('gykf_audit_reset_ts')||'0') > _chFetchTs) return;
+  db.collection('facilityAudits').doc('crewhouse').onSnapshot(doc=>{
     if(doc.exists){ S.crewHouseAudit=doc.data(); if(!S.crewHouseAudit.items) S.crewHouseAudit.items={}; }
+    else { S.crewHouseAudit={items:{}}; }
     try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
-  }).catch(()=>{});
+    render();
+  }, ()=>{});
 }
 
 function saveCrewHouseAudit() {
@@ -5027,12 +5027,12 @@ function loadHangarAudit() {
   try { S.hangarAudit = JSON.parse(localStorage.getItem('gykf_hangar')||'{}'); } catch(e){}
   if(!S.hangarAudit.items) S.hangarAudit.items={};
   if(!db) return;
-  const _hoFetchTs = Date.now();
-  db.collection('facilityAudits').doc('hangar').get().then(doc=>{
-    if(parseInt(localStorage.getItem('gykf_audit_reset_ts')||'0') > _hoFetchTs) return;
+  db.collection('facilityAudits').doc('hangar').onSnapshot(doc=>{
     if(doc.exists){ S.hangarAudit=doc.data(); if(!S.hangarAudit.items) S.hangarAudit.items={}; }
+    else { S.hangarAudit={items:{}}; }
     try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
-  }).catch(()=>{});
+    render();
+  }, ()=>{});
 }
 
 function saveHangarAudit() {
@@ -5467,12 +5467,12 @@ function loadParkingAudit() {
   try { S.parkingAudit = JSON.parse(localStorage.getItem('gykf_parking')||'{}'); } catch(e){}
   if(!S.parkingAudit.items) S.parkingAudit.items={};
   if(!db) return;
-  const _pkFetchTs = Date.now();
-  db.collection('facilityAudits').doc('parking').get().then(doc=>{
-    if(parseInt(localStorage.getItem('gykf_audit_reset_ts')||'0') > _pkFetchTs) return;
+  db.collection('facilityAudits').doc('parking').onSnapshot(doc=>{
     if(doc.exists){ S.parkingAudit=doc.data(); if(!S.parkingAudit.items) S.parkingAudit.items={}; }
+    else { S.parkingAudit={items:{}}; }
     try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
-  }).catch(()=>{});
+    render();
+  }, ()=>{});
 }
 
 function saveParkingAudit() {
@@ -5795,12 +5795,12 @@ function loadYkfBaseAudit() {
   try { S.ykfBaseAudit = JSON.parse(localStorage.getItem('gykf_ykfbase')||'{}'); } catch(e){}
   if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={};
   if(!db) return;
-  const _ybFetchTs = Date.now();
-  db.collection('facilityAudits').doc('ykfbase').get().then(doc=>{
-    if(parseInt(localStorage.getItem('gykf_audit_reset_ts')||'0') > _ybFetchTs) return;
+  db.collection('facilityAudits').doc('ykfbase').onSnapshot(doc=>{
     if(doc.exists){ S.ykfBaseAudit=doc.data(); if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={}; }
+    else { S.ykfBaseAudit={items:{}}; }
     try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
-  }).catch(()=>{});
+    render();
+  }, ()=>{});
 }
 
 function saveYkfBaseAudit() {
@@ -6214,12 +6214,12 @@ function loadMsdsAudit() {
   try { S.msdsAudit = JSON.parse(localStorage.getItem('gykf_msds')||'{}'); } catch(e){}
   if(!S.msdsAudit.items) S.msdsAudit.items={};
   if(!db) return;
-  const _mdFetchTs = Date.now();
-  db.collection('facilityAudits').doc('msds').get().then(doc=>{
-    if(parseInt(localStorage.getItem('gykf_audit_reset_ts')||'0') > _mdFetchTs) return;
+  db.collection('facilityAudits').doc('msds').onSnapshot(doc=>{
     if(doc.exists){ S.msdsAudit=doc.data(); if(!S.msdsAudit.items) S.msdsAudit.items={}; }
+    else { S.msdsAudit={items:{}}; }
     try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
-  }).catch(()=>{});
+    render();
+  }, ()=>{});
 }
 
 function saveMsdsAudit() {
