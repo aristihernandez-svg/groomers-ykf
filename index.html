@@ -3720,51 +3720,55 @@ function auditSectionHTML(key) {
   const cd=carAuditData(key);
   const month=auditMonth();
 
-  // ── helpers ──────────────────────────────────────────────────
-  const btnBase='padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.15s';
-  function condBtn(carKey, checkKey, val, label, activeColor, activeBg, activeBorder) {
-    const chk=cd.checks[checkKey]||{};
-    const active=chk.status===val;
-    return `<button onclick="setCarAuditCheck('${carKey}','${checkKey}','${val}')"
-      style="${btnBase};background:${active?activeBg:'var(--glass2)'};color:${active?activeColor:'var(--t3)'};border-color:${active?activeBorder:'var(--border2)'}">${label}</button>`;
-  }
-  function checkRow(carKey, item) {
-    const chk=cd.checks[item.key]||{};
-    if(item.type==='done') {
-      const isDone=chk.status==='done';
-      return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--t1)">${item.label}</span>
-          <button onclick="setCarAuditCheck('${carKey}','${item.key}',${isDone?"null":"'done'"});if(!${isDone})fetchBouncieData()"
-            style="${btnBase};background:${isDone?'rgba(39,174,96,0.15)':'var(--glass2)'};color:${isDone?'#27AE60':'var(--t3)'};border-color:${isDone?'rgba(39,174,96,0.4)':'var(--border2)'}">
-            ${isDone?'✓ Done':'— Not yet'}
-          </button>
-        </div>`;
-    }
-    const st=chk.status;
-    const needsNote=(st==='Fair'||st==='Issue');
-    return `
-      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="flex:1;font-size:13px;font-weight:600;color:var(--t1)">${item.label}</span>
-          <div style="display:flex;gap:4px">
-            ${condBtn(carKey,item.key,'OK',  '✅ OK',   '#27AE60','rgba(39,174,96,0.15)','rgba(39,174,96,0.4)')}
-            ${condBtn(carKey,item.key,'Fair', '⚠️ Fair', '#E8A000','rgba(232,160,0,0.15)','rgba(232,160,0,0.4)')}
-            ${condBtn(carKey,item.key,'Issue','🔴 Issue','#E84040','rgba(232,64,64,0.15)', 'rgba(232,64,64,0.4)')}
-            ${condBtn(carKey,item.key,null,   'N/A',     'var(--t3)','var(--glass2)','var(--border2)')}
-          </div>
-        </div>
-        ${needsNote?`<input value="${chk.note||''}" placeholder="Describe the issue..." oninput="setCarAuditCheckNote('${carKey}','${item.key}',this.value)"
-          style="width:100%;margin-top:7px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:12px;font-family:inherit;color:var(--t1);outline:none;box-sizing:border-box">`:''}
-      </div>`;
-  }
-
   // ── checklist progress ────────────────────────────────────────
   const totalChecks=CAR_AUDIT_CHECKS.length;
   const doneChecks=CAR_AUDIT_CHECKS.filter(c=>{
     const st=(cd.checks[c.key]||{}).status;
     return st!==null&&st!==undefined;
   }).length;
+  const condItems=CAR_AUDIT_CHECKS.filter(c=>c.type==='condition');
+  const doneItems=CAR_AUDIT_CHECKS.filter(c=>c.type==='done');
+
+  // ── card grid ────────────────────────────────────────────────
+  let cardsHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;align-items:start">`;
+  condItems.forEach(item=>{
+    const chk=cd.checks[item.key]||{};
+    const st=chk.status;
+    const isOK=st==='OK';
+    const isIssue=st==='Issue';
+    const cardBg=isOK?'rgba(39,174,96,0.1)':isIssue?'rgba(232,64,64,0.1)':'var(--glass2)';
+    const cardBorder=isOK?'rgba(39,174,96,0.35)':isIssue?'rgba(232,64,64,0.35)':'var(--border2)';
+    const labelColor=isOK?'#27AE60':isIssue?'#E84040':'var(--t1)';
+    cardsHTML+=`
+      <div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:7px">
+        <div style="font-size:11px;font-weight:600;color:${labelColor}">${item.label}</div>
+        <div style="display:flex;gap:5px">
+          <button onclick="setCarAuditCheck('${key}','${item.key}','OK')"
+            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isOK?'rgba(39,174,96,0.85)':'var(--border2)'};background:${isOK?'rgba(39,174,96,0.85)':'var(--glass2)'};color:${isOK?'#fff':'var(--t3)'}">OK</button>
+          <button onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
+            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isIssue?'rgba(232,64,64,0.85)':'var(--border2)'};background:${isIssue?'rgba(232,64,64,0.85)':'var(--glass2)'};color:${isIssue?'#fff':'var(--t3)'}">Issue</button>
+        </div>
+        ${isIssue?`<textarea placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
+          style="width:100%;padding:5px 7px;border-radius:7px;border:1px solid rgba(232,64,64,0.35);background:rgba(232,64,64,0.07);color:var(--t1);font-size:10px;font-family:inherit;resize:none;outline:none" rows="2">${chk.note||''}</textarea>`:''}
+      </div>`;
+  });
+  cardsHTML+=`</div>`;
+  doneItems.forEach(item=>{
+    const chk=cd.checks[item.key]||{};
+    const isDone=chk.status==='done';
+    cardsHTML+=`
+      <div style="background:${isDone?'rgba(39,174,96,0.1)':'var(--glass2)'};border:1px solid ${isDone?'rgba(39,174,96,0.35)':'var(--border2)'};border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px;margin-bottom:10px">
+        <span style="font-size:18px;line-height:1;flex-shrink:0">🔄</span>
+        <div style="flex:1">
+          <div style="font-size:12px;font-weight:600;color:${isDone?'#27AE60':'var(--t1)'}">Bouncie re-synced</div>
+          <div style="font-size:10px;color:var(--t3)">${isDone?'GPS data refreshed':'Tap to confirm sync'}</div>
+        </div>
+        <button onclick="setCarAuditCheck('${key}','${item.key}',${isDone?"null":"'done'"});if(!${isDone})fetchBouncieData()"
+          style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${isDone?'rgba(39,174,96,0.5)':'var(--border2)'};background:${isDone?'rgba(39,174,96,0.15)':'var(--glass2)'};color:${isDone?'#27AE60':'var(--t3)'}">
+          ${isDone?'✓ Done':'— Not yet'}
+        </button>
+      </div>`;
+  });
 
   let h=`
   <div id="auditSection_${key}" style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
@@ -3774,13 +3778,11 @@ function auditSectionHTML(key) {
       style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:14px">
 
     <!-- Vehicle Inspection checklist -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase">🔍 Vehicle Inspection</div>
       <div style="font-size:11px;font-weight:700;color:${doneChecks===totalChecks?'#27AE60':'var(--t3)'}">${doneChecks}/${totalChecks}</div>
     </div>
-    <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:0 12px;margin-bottom:14px">
-      ${CAR_AUDIT_CHECKS.map(item=>checkRow(key,item)).join('')}
-    </div>
+    ${cardsHTML}
 
     <!-- Photo grid -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -3896,15 +3898,30 @@ function generateAuditPDF(month) {
     const photos=Array.isArray(d.photos)&&d.photos.length===8?d.photos:Array.from({length:8},(_,i)=>(d.photos||[])[i]||null);
     const poorCount=photos.filter(p=>p&&p.rating==='Poor').length;
     const fairCount=photos.filter(p=>p&&p.rating==='Fair').length;
+    const checks=d.checks||{};
+    const issueItems=CAR_AUDIT_CHECKS.filter(c=>c.type==='condition'&&(checks[c.key]||{}).status==='Issue');
+    const inspectionRows=CAR_AUDIT_CHECKS.map(c=>{
+      const st=(checks[c.key]||{}).status;
+      const note=(checks[c.key]||{}).note||'';
+      const pill=st==='OK'?`<span style="background:#d4edda;color:#1a7a40;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">OK</span>`
+                :st==='Issue'?`<span style="background:#f8d7da;color:#842029;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">Issue</span>`
+                :st==='done'?`<span style="background:#d4edda;color:#1a7a40;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">✓ Done</span>`
+                :`<span style="color:#bbb;font-size:10px">—</span>`;
+      return `<tr><td style="padding:5px 10px;font-size:11px;color:#333;border-bottom:1px solid #f0f0f0">${c.label}</td><td style="padding:5px 10px;text-align:right;border-bottom:1px solid #f0f0f0">${pill}</td>${note?`<td style="padding:5px 10px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;font-style:italic">${note}</td>`:`<td style="border-bottom:1px solid #f0f0f0"></td>`}</tr>`;
+    }).join('');
     carSections+=`
       <div class="car-section">
         <div class="car-title">
           <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" class="car-thumb" onerror="this.style.display='none'">
           <div>
             <div class="car-name">${car.name}</div>
-            <div class="car-meta">${car.label} · ${poorCount?'🔴 '+poorCount+' Poor issue'+(poorCount!==1?'s':''):''}${fairCount?' ⚠️ '+fairCount+' Fair':''}${!poorCount&&!fairCount?'✅ All Good':''}</div>
+            <div class="car-meta">${car.label} · ${issueItems.length?'🔴 '+issueItems.length+' issue'+(issueItems.length!==1?'s':''):''}${poorCount?' 📷 '+poorCount+' Poor photo'+(poorCount!==1?'s':''):''}${!issueItems.length&&!poorCount?'✅ All Good':''}</div>
           </div>
           <div class="car-status ${d.done?'done':'pending'}">${d.done?'✅ Done':'⏳ Pending'}</div>
+        </div>
+        <div class="insp-section">
+          <div class="insp-title">Vehicle Inspection</div>
+          <table style="width:100%;border-collapse:collapse">${inspectionRows}</table>
         </div>
         <div class="photo-grid">${AUDIT_PHOTO_SLOTS.map((label,i)=>{
           const p=photos[i];
@@ -3952,6 +3969,8 @@ function generateAuditPDF(month) {
     .rating-poor{background:#f8d7da;color:#842029}
     .photo-note{font-size:9px;color:#555;margin-top:2px;text-align:center}
     .no-photos{padding:12px 16px;color:#999;font-style:italic;font-size:12px}
+    .insp-section{padding:8px 16px;border-bottom:1px solid #e0e0e0;background:#fafafa}
+    .insp-title{font-size:10px;font-weight:700;color:#666;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
     .comments{padding:10px 16px;background:#fffbf0;border-top:1px solid #e0e0e0;font-size:12px;color:#444}
     .groomer-sig{padding:6px 16px 10px;font-size:11px;color:#888;font-style:italic}
     @media print{.back-btn{display:none}body{padding:16px}.car-section{break-inside:avoid}}
