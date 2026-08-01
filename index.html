@@ -4700,23 +4700,46 @@ function deleteCustomAcType(typeId) {
 function renderAuditsHub(el) { renderAuditsLanding(el); }
 
 function openAuditGuide() {
-  if(document.getElementById('auditGuideOverlay')) {
-    document.getElementById('auditGuideOverlay').style.display='flex';
-    return;
-  }
+  const existing=document.getElementById('auditGuideOverlay');
+  if(existing) existing.remove();
+
   const ov=document.createElement('div');
   ov.id='auditGuideOverlay';
-  ov.style.cssText='position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column;overflow:hidden';
-  ov.innerHTML=`
-    <div style="display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--glass);border-bottom:1px solid var(--border);flex-shrink:0;position:sticky;top:0;z-index:1">
-      <button onclick="document.getElementById('auditGuideOverlay').style.display='none'" style="width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">×</button>
-      <div style="flex:1;font-size:16px;font-weight:800;color:var(--t1)">How to Do Audits</div>
-      <div style="font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.5px">August 2026</div>
-    </div>
-    <div style="overflow-y:auto;flex:1;padding:0 0 40px">
-      ${_auditGuideHTML()}
-    </div>`;
+  ov.style.cssText='position:fixed;inset:0;z-index:9000;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;transition:transform 0.25s ease';
+
+  const header=document.createElement('div');
+  header.style.cssText='display:flex;align-items:center;gap:10px;padding:12px 16px;background:var(--glass);border-bottom:1px solid var(--border);flex-shrink:0';
+
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='×';
+  closeBtn.style.cssText='width:34px;height:34px;border-radius:50%;border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+  closeBtn.addEventListener('click',()=>ov.remove());
+
+  const title=document.createElement('div');
+  title.style.cssText='flex:1;font-size:16px;font-weight:800;color:var(--t1)';
+  title.textContent='How to Do Audits';
+
+  const badge=document.createElement('div');
+  badge.style.cssText='font-size:10px;color:var(--t3);font-weight:600;letter-spacing:0.5px';
+  badge.textContent='August 2026';
+
+  header.append(closeBtn,title,badge);
+
+  const body=document.createElement('div');
+  body.style.cssText='overflow-y:auto;flex:1;padding:0 0 40px';
+  body.innerHTML=_auditGuideHTML();
+
+  ov.append(header,body);
   document.body.appendChild(ov);
+
+  // Swipe right to close
+  let startX=0, startY=0;
+  ov.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;},{passive:true});
+  ov.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    const dy=Math.abs(e.changedTouches[0].clientY-startY);
+    if(dx>80&&dy<60) ov.remove();
+  },{passive:true});
 }
 
 function _auditGuideHTML() {
