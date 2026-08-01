@@ -1016,6 +1016,16 @@ const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
 const AUDIT_PHOTO_SLOTS = ['Front Exterior','Left Exterior','Back Exterior','Right Exterior','Dashboard','Front Seats','Back Seats','Under the Car'];
 
+const CAR_AUDIT_CHECKS = [
+  { key:'lights_front',  label:'Front lights',      type:'condition' },
+  { key:'lights_rear',   label:'Rear lights',        type:'condition' },
+  { key:'lights_turn',   label:'Turn signal lights', type:'condition' },
+  { key:'bouncie_sync',  label:'Bouncie re-synced',  type:'done'      },
+  { key:'phone_mount',   label:'Phone mount',        type:'condition' },
+  { key:'cable_charger', label:'Cable / charger',    type:'condition' },
+  { key:'damage',        label:'Visible damage',     type:'condition' },
+];
+
 const AIRCRAFT_METRO    = ['CPX','TIM','IOC','IOB','IOJ','IOA','IOH','KKC'];
 const AIRCRAFT_WESTWIND = ['IAW','XDP','XAW'];
 const AIRCRAFT_ASTRA    = ['FDAX'];
@@ -2712,16 +2722,35 @@ function saveCarAudit(carKey) {
   db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
     .catch(e=>console.log('saveCarAudit Firestore failed:',e));
 }
+let _carAuditSaveTimers={};
+function saveCarAuditDebounced(carKey) {
+  clearTimeout(_carAuditSaveTimers[carKey]);
+  _carAuditSaveTimers[carKey]=setTimeout(()=>saveCarAudit(carKey), 800);
+}
 function carAuditData(carKey) {
   const k=auditDocKey(carKey);
-  if(!S.monthlyCarAudits[k]) S.monthlyCarAudits[k]={photos:new Array(8).fill(null),comments:'',done:false,completedAt:null};
+  if(!S.monthlyCarAudits[k]) S.monthlyCarAudits[k]={photos:new Array(8).fill(null),checks:{},comments:'',done:false,completedAt:null};
   // Normalize to 8-slot fixed array (migrate from old unordered array)
   const p=S.monthlyCarAudits[k].photos;
   if(!Array.isArray(p)||p.length!==8) {
     const old=Array.isArray(p)?p.filter(x=>x):[];
     S.monthlyCarAudits[k].photos=Array.from({length:8},(_,i)=>old[i]||null);
   }
+  if(!S.monthlyCarAudits[k].checks) S.monthlyCarAudits[k].checks={};
   return S.monthlyCarAudits[k];
+}
+function setCarAuditCheck(carKey, checkKey, status) {
+  const cd=carAuditData(carKey);
+  if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
+  cd.checks[checkKey].status=status;
+  saveCarAuditDebounced(carKey);
+  render();
+}
+function setCarAuditCheckNote(carKey, checkKey, note) {
+  const cd=carAuditData(carKey);
+  if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
+  cd.checks[checkKey].note=note;
+  saveCarAuditDebounced(carKey);
 }
 const _recordsExpandedMonths   = new Set();
 const _recordsExpandedAcMonths = new Set();
@@ -3690,16 +3719,74 @@ function refreshAuditPhotos(key) {
 function auditSectionHTML(key) {
   const cd=carAuditData(key);
   const month=auditMonth();
+
+  // ── helpers ──────────────────────────────────────────────────
+  const btnBase='padding:5px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid transparent;transition:all 0.15s';
+  function condBtn(carKey, checkKey, val, label, activeColor, activeBg, activeBorder) {
+    const chk=cd.checks[checkKey]||{};
+    const active=chk.status===val;
+    return `<button onclick="setCarAuditCheck('${carKey}','${checkKey}','${val}')"
+      style="${btnBase};background:${active?activeBg:'var(--glass2)'};color:${active?activeColor:'var(--t3)'};border-color:${active?activeBorder:'var(--border2)'}">${label}</button>`;
+  }
+  function checkRow(carKey, item) {
+    const chk=cd.checks[item.key]||{};
+    if(item.type==='done') {
+      const isDone=chk.status==='done';
+      return `
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--t1)">${item.label}</span>
+          <button onclick="setCarAuditCheck('${carKey}','${item.key}',${isDone?"null":"'done'"});if(!${isDone})fetchBouncieData()"
+            style="${btnBase};background:${isDone?'rgba(39,174,96,0.15)':'var(--glass2)'};color:${isDone?'#27AE60':'var(--t3)'};border-color:${isDone?'rgba(39,174,96,0.4)':'var(--border2)'}">
+            ${isDone?'✓ Done':'— Not yet'}
+          </button>
+        </div>`;
+    }
+    const st=chk.status;
+    const needsNote=(st==='Fair'||st==='Issue');
+    return `
+      <div style="padding:10px 0;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="flex:1;font-size:13px;font-weight:600;color:var(--t1)">${item.label}</span>
+          <div style="display:flex;gap:4px">
+            ${condBtn(carKey,item.key,'OK',  '✅ OK',   '#27AE60','rgba(39,174,96,0.15)','rgba(39,174,96,0.4)')}
+            ${condBtn(carKey,item.key,'Fair', '⚠️ Fair', '#E8A000','rgba(232,160,0,0.15)','rgba(232,160,0,0.4)')}
+            ${condBtn(carKey,item.key,'Issue','🔴 Issue','#E84040','rgba(232,64,64,0.15)', 'rgba(232,64,64,0.4)')}
+            ${condBtn(carKey,item.key,null,   'N/A',     'var(--t3)','var(--glass2)','var(--border2)')}
+          </div>
+        </div>
+        ${needsNote?`<input value="${chk.note||''}" placeholder="Describe the issue..." oninput="setCarAuditCheckNote('${carKey}','${item.key}',this.value)"
+          style="width:100%;margin-top:7px;padding:7px 10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:12px;font-family:inherit;color:var(--t1);outline:none;box-sizing:border-box">`:''}
+      </div>`;
+  }
+
+  // ── checklist progress ────────────────────────────────────────
+  const totalChecks=CAR_AUDIT_CHECKS.length;
+  const doneChecks=CAR_AUDIT_CHECKS.filter(c=>{
+    const st=(cd.checks[c.key]||{}).status;
+    return st!==null&&st!==undefined;
+  }).length;
+
   let h=`
   <div id="auditSection_${key}" style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📋 Monthly Audit — ${month}</div>
 
-    <!-- Groomer name -->
     <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
-      style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:10px">
+      style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:14px">
 
-    <!-- Photo grid — 8 fixed labeled slots -->
-    ${(()=>{const taken=cd.photos.filter(p=>p).length;return`<div style="font-size:11px;color:var(--t3);margin-bottom:8px">Photos ${taken}/8</div>`;})()}
+    <!-- Vehicle Inspection checklist -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase">🔍 Vehicle Inspection</div>
+      <div style="font-size:11px;font-weight:700;color:${doneChecks===totalChecks?'#27AE60':'var(--t3)'}">${doneChecks}/${totalChecks}</div>
+    </div>
+    <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:0 12px;margin-bottom:14px">
+      ${CAR_AUDIT_CHECKS.map(item=>checkRow(key,item)).join('')}
+    </div>
+
+    <!-- Photo grid -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase">📷 Photos</div>
+      <div style="font-size:11px;color:var(--t3)">${cd.photos.filter(p=>p).length}/8</div>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">`;
 
   AUDIT_PHOTO_SLOTS.forEach((label,i)=>{
@@ -3707,7 +3794,7 @@ function auditSectionHTML(key) {
     if(p) {
       const rc=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
       h+=`<div style="position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--glass)">
-        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block">
+        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer">
         <div class="audit-rating ${rc}" style="position:absolute;bottom:28px;left:4px">${p.rating}</div>
         <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:1">✕</button>
         <div style="padding:4px 6px 6px;display:flex;gap:4px;align-items:center">
@@ -3729,13 +3816,13 @@ function auditSectionHTML(key) {
 
   h+=`</div>`;
 
-  // Notes row for taken photos
+  // Photo notes
   const takenPhotos=cd.photos.map((p,i)=>({p,i})).filter(({p})=>p);
   if(takenPhotos.length) {
-    h+=`<div style="margin-bottom:10px">`;
+    h+=`<div style="margin-bottom:14px">`;
     takenPhotos.forEach(({p,i})=>{
       h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
-        <img src="${p.src}" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0">
+        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;cursor:pointer">
         <span style="font-size:10px;color:var(--t3);flex-shrink:0;font-weight:600">${AUDIT_PHOTO_SLOTS[i]}</span>
         <input value="${p.note||''}" placeholder="Note..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
           style="flex:1;min-width:0;padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:11px;font-family:inherit;color:var(--t1);outline:none">
@@ -3744,8 +3831,11 @@ function auditSectionHTML(key) {
     h+=`</div>`;
   }
 
-  h+=`<textarea placeholder="Comments — condition, issues, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
-    style="width:100%;min-height:70px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:10px">${cd.comments||''}</textarea>
+  // Overall report
+  h+=`
+    <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">📝 Overall Report</div>
+    <textarea placeholder="General condition, issues found, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
+      style="width:100%;min-height:80px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:12px">${cd.comments||''}</textarea>
 
   <button onclick="markCarAuditDone('${key}')"
     style="width:100%;padding:12px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
