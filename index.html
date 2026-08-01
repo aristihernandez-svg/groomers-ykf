@@ -2704,13 +2704,17 @@ function loadCarAudits() {
   try { S.monthlyCarAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.monthlyCarAudits={}; }
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
   if(!db) return;
-  const month=auditMonth();
-  db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
-    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
-    updateAuditBadge();
-    render();
-  }, e=>console.log('loadCarAudits Firestore failed:',e));
+  // Individual per-car document listeners — same pattern as facility audits (crewhouse/hangar)
+  // fires instantly on any write to that specific doc, not a collection query
+  CREW_CARS.forEach(car=>{
+    const docKey=auditDocKey(car.key);
+    db.collection('auditCars').doc(docKey).onSnapshot(doc=>{
+      if(doc.exists) S.monthlyCarAudits[docKey]={...S.monthlyCarAudits[docKey],...doc.data()};
+      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
+      updateAuditBadge();
+      render();
+    }, e=>console.log('loadCarAudits onSnapshot failed:',car.key,e));
+  });
 }
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
