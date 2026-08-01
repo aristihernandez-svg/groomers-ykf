@@ -3940,55 +3940,80 @@ async function archiveAudit() {
 // ── GENERATE PDF ──────────────────────────────────────────────
 function generateAuditPDF(month) {
   const groomer=S.auditGroomer||'Team';
-  const now=new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+  const generatedFmt=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+  const logoSrc=location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
   let carSections='';
   CREW_CARS.forEach(car=>{
     const d=S.monthlyCarAudits[month+'-'+car.key]||{};
     const photos=Array.isArray(d.photos)&&d.photos.length===8?d.photos:Array.from({length:8},(_,i)=>(d.photos||[])[i]||null);
     const poorCount=photos.filter(p=>p&&p.rating==='Poor').length;
-    const fairCount=photos.filter(p=>p&&p.rating==='Fair').length;
     const checks=d.checks||{};
     const issueItems=CAR_AUDIT_CHECKS.filter(c=>c.type==='condition'&&(checks[c.key]||{}).status==='Issue');
-    const inspectionRows=CAR_AUDIT_CHECKS.map(c=>{
+    const inspectionRows=CAR_AUDIT_CHECKS.map((c,i)=>{
       const st=(checks[c.key]||{}).status;
       const note=(checks[c.key]||{}).note||'';
-      const pill=st==='OK'?`<span style="background:#d4edda;color:#1a7a40;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">OK</span>`
-                :st==='Issue'?`<span style="background:#f8d7da;color:#842029;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">Issue</span>`
-                :st==='done'?`<span style="background:#d4edda;color:#1a7a40;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700">✓ Done</span>`
-                :`<span style="color:#bbb;font-size:10px">—</span>`;
-      return `<tr><td style="padding:5px 10px;font-size:11px;color:#333;border-bottom:1px solid #f0f0f0">${c.label}</td><td style="padding:5px 10px;text-align:right;border-bottom:1px solid #f0f0f0">${pill}</td>${note?`<td style="padding:5px 10px;font-size:10px;color:#666;border-bottom:1px solid #f0f0f0;font-style:italic">${note}</td>`:`<td style="border-bottom:1px solid #f0f0f0"></td>`}</tr>`;
+      const rowBg=i%2===1?'#FAFBFD':'#FFFFFF';
+      const pill=st==='OK'
+        ?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:1px 8px;border-radius:8px;font-size:7.5px;font-weight:800;background:#d4edda;color:#1a7a40">OK</span>`
+        :st==='Issue'
+        ?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:1px 8px;border-radius:8px;font-size:7.5px;font-weight:800;background:#f8d7da;color:#842029">Issue</span>`
+        :st==='done'
+        ?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:1px 8px;border-radius:8px;font-size:7.5px;font-weight:800;background:#d4edda;color:#1a7a40">✓ Done</span>`
+        :`<span style="color:#bbb;font-size:8px">—</span>`;
+      return `<tr style="background:${rowBg}">
+        <td style="padding:3px 8px;font-size:8.5px;color:#333;border-bottom:0.5px solid #EEF1F8;width:58%">${c.label}</td>
+        <td style="padding:3px 8px;text-align:center;border-bottom:0.5px solid #EEF1F8;width:14%">${pill}</td>
+        <td style="padding:3px 8px;font-size:7.5px;color:#666;font-style:italic;border-bottom:0.5px solid #EEF1F8">${note}</td>
+      </tr>`;
+    }).join('');
+    const statusBadge=d.done
+      ?`<span style="font-size:7.5px;font-weight:700;background:#d4edda;color:#1a7a40;padding:2px 7px;border-radius:8px">✅ Complete</span>`
+      :`<span style="font-size:7.5px;font-weight:700;background:#fff3cd;color:#856404;padding:2px 7px;border-radius:8px">⏳ Pending</span>`;
+    const carSummary=issueItems.length
+      ?`${issueItems.length} issue${issueItems.length!==1?'s':''} flagged`+( poorCount?` · ${poorCount} Poor photo${poorCount!==1?'s':''}`:'' )
+      :poorCount?`${poorCount} Poor photo${poorCount!==1?'s':''}`:'All checks clear';
+    const photoGrid=AUDIT_PHOTO_SLOTS.map((label,i)=>{
+      const p=photos[i];
+      return p
+        ?`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <img src="${p.src}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;display:block">
+            <div style="font-size:6px;font-weight:700;color:#444;text-align:center;line-height:1.2">${label}</div>
+            <div style="font-size:6.5px;font-weight:700;text-align:center;padding:0 3px;border-radius:2px;${p.rating==='Good'?'background:#d4edda;color:#1a7a40':p.rating==='Fair'?'background:#fff3cd;color:#856404':'background:#f8d7da;color:#842029'}">${p.rating||'—'}</div>
+            ${p.note?`<div style="font-size:6px;color:#555;text-align:center">${p.note}</div>`:''}
+          </div>`
+        :`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <div style="width:100%;aspect-ratio:4/3;background:#f0f0f0;border:1px dashed #C8D4E8;border-radius:3px"></div>
+            <div style="font-size:6px;font-weight:700;color:#aaa;text-align:center;line-height:1.2">${label}</div>
+            <div style="font-size:6.5px;color:#bbb;text-align:center">—</div>
+          </div>`;
     }).join('');
     carSections+=`
-      <div class="car-section">
-        <div class="car-title">
-          <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" class="car-thumb" onerror="this.style.display='none'">
-          <div>
-            <div class="car-name">${car.name}</div>
-            <div class="car-meta">${car.label} · ${issueItems.length?'🔴 '+issueItems.length+' issue'+(issueItems.length!==1?'s':''):''}${poorCount?' 📷 '+poorCount+' Poor photo'+(poorCount!==1?'s':''):''}${!issueItems.length&&!poorCount?'✅ All Good':''}</div>
+      <div style="border:1px solid #C8D4E8;margin-bottom:10px;break-inside:avoid">
+        <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#F0F4FA;border-bottom:1px solid #C8D4E8">
+          <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" style="width:50px;height:34px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">
+          <div style="flex:1">
+            <div style="font-size:11px;font-weight:800;color:#1A3A6A">${car.name}</div>
+            <div style="font-size:7.5px;color:#666;margin-top:1px">${car.label} · ${car.fuel==='diesel'?'Diesel':'Gasoline'} · ${carSummary}</div>
           </div>
-          <div class="car-status ${d.done?'done':'pending'}">${d.done?'✅ Done':'⏳ Pending'}</div>
+          ${statusBadge}
         </div>
-        <div class="insp-section">
-          <div class="insp-title">Vehicle Inspection</div>
-          <table style="width:100%;border-collapse:collapse">${inspectionRows}</table>
+        <div style="padding:4px 10px;background:#D8E4F5;border-bottom:1px solid #C8D4E8">
+          <span style="font-size:7.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">Vehicle Inspection Checklist</span>
         </div>
-        <div class="photo-grid">${AUDIT_PHOTO_SLOTS.map((label,i)=>{
-          const p=photos[i];
-          return p
-            ?`<div class="photo-cell">
-                <img src="${p.src}" class="photo-img">
-                <div class="photo-label">${label}</div>
-                <div class="photo-rating rating-${p.rating?.toLowerCase()}">${p.rating||'—'}</div>
-                ${p.note?`<div class="photo-note">${p.note}</div>`:''}
-              </div>`
-            :`<div class="photo-cell empty">
-                <div class="photo-empty-box"></div>
-                <div class="photo-label">${label}</div>
-                <div class="photo-rating" style="color:#bbb">No photo</div>
-              </div>`;
-        }).join('')}</div>
-        ${d.comments?`<div class="comments"><strong>Comments:</strong> ${d.comments}</div>`:''}
-        ${d.groomer?`<div class="groomer-sig">Audited by: ${d.groomer}</div>`:''}
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:#F0F4FA">
+            <th style="padding:3px 8px;text-align:left;font-size:7px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:58%">Item</th>
+            <th style="padding:3px 8px;text-align:center;font-size:7px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8;width:14%">Status</th>
+            <th style="padding:3px 8px;text-align:left;font-size:7px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:#555;border-bottom:1px solid #C8D4E8">Notes</th>
+          </tr></thead>
+          <tbody>${inspectionRows}</tbody>
+        </table>
+        <div style="padding:4px 10px;background:#D8E4F5;border-top:1px solid #C8D4E8;border-bottom:1px solid #C8D4E8">
+          <span style="font-size:7.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">Condition Photos</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;padding:8px 10px">${photoGrid}</div>
+        ${d.comments?`<div style="padding:6px 10px;background:#FAFBFD;border-top:1px solid #C8D4E8;font-size:8px;color:#444"><strong>Comments:</strong> ${d.comments}</div>`:''}
+        ${d.groomer?`<div style="padding:4px 10px 6px;font-size:7.5px;color:#888;font-style:italic;border-top:1px solid #EEF1F8">Audited by: ${d.groomer}</div>`:''}
       </div>`;
   });
 
@@ -3996,44 +4021,51 @@ function generateAuditPDF(month) {
   <title>Crew Car Audit — ${month}</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;color:#1a1a1a;padding:32px;background:#fff}
-    h1{font-size:22px;font-weight:800;margin-bottom:4px}
-    .meta{color:#666;font-size:12px;margin-bottom:24px;border-bottom:2px solid #1a1a1a;padding-bottom:12px}
-    .car-section{margin-bottom:28px;border:1px solid #e0e0e0;border-radius:10px;overflow:hidden;break-inside:avoid}
-    .car-title{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f5f5f5;border-bottom:1px solid #e0e0e0}
-    .car-thumb{width:56px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0}
-    .car-name{font-size:15px;font-weight:700}
-    .car-meta{font-size:11px;color:#666;margin-top:2px}
-    .car-status{margin-left:auto;font-size:12px;font-weight:600;white-space:nowrap}
-    .car-status.done{color:#1a7a40}
-    .car-status.pending{color:#999}
-    .photo-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 16px}
-    .photo-cell{display:flex;flex-direction:column}
-    .photo-img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:6px;display:block}
-    .photo-empty-box{width:100%;aspect-ratio:4/3;border-radius:6px;background:#f0f0f0;border:1px dashed #ccc}
-    .photo-label{font-size:9px;font-weight:700;color:#444;margin-top:3px;text-align:center}
-    .photo-rating{font-size:10px;font-weight:700;text-align:center;margin-top:2px;padding:2px 4px;border-radius:4px}
-    .rating-good{background:#d4edda;color:#1a7a40}
-    .rating-fair{background:#fff3cd;color:#856404}
-    .rating-poor{background:#f8d7da;color:#842029}
-    .photo-note{font-size:9px;color:#555;margin-top:2px;text-align:center}
-    .no-photos{padding:12px 16px;color:#999;font-style:italic;font-size:12px}
-    .insp-section{padding:8px 16px;border-bottom:1px solid #e0e0e0;background:#fafafa}
-    .insp-title{font-size:10px;font-weight:700;color:#666;letter-spacing:.8px;text-transform:uppercase;margin-bottom:5px}
-    .comments{padding:10px 16px;background:#fffbf0;border-top:1px solid #e0e0e0;font-size:12px;color:#444}
-    .groomer-sig{padding:6px 16px 10px;font-size:11px;color:#888;font-style:italic}
-    @media print{.back-btn{display:none}body{padding:16px}.car-section{break-inside:avoid}}
-  </style></head><body>
-  <button class="back-btn" onclick="window.close()" style="display:inline-flex;align-items:center;gap:6px;margin-bottom:18px;padding:8px 16px;border-radius:20px;border:1px solid #ccc;background:#f5f5f5;font-size:13px;font-weight:600;cursor:pointer;color:#333">← Back to app</button>
-  <h1>Crew Car Monthly Audit</h1>
-  <div class="meta">Period: ${month} &nbsp;·&nbsp; Groomer: ${groomer} &nbsp;·&nbsp; Generated: ${now}</div>
+    @page{size:letter;margin:10mm 10mm 10mm 10mm}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:8.5px;color:#1a1a1a;background:#fff}
+    table{width:100%;border-collapse:collapse}
+  </style>
+  </head><body>
+  <table style="margin-bottom:7px">
+    <tr>
+      <td style="width:100px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block" onerror="this.style.display='none'"></td>
+      <td style="text-align:right;vertical-align:middle">
+        <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew Car Monthly Audit</div>
+        <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+      </td>
+    </tr>
+  </table>
+  <div style="height:1.5px;background:#1A3A6A;margin-bottom:7px"></div>
+  <table style="margin-bottom:10px;border:1px solid #C8D4E8">
+    <tr>
+      <td style="padding:5px 9px;border-right:1px solid #C8D4E8;width:28%">
+        <div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Period</div>
+        <div style="font-size:9px;font-weight:700">${month}</div>
+      </td>
+      <td style="padding:5px 9px;border-right:1px solid #C8D4E8;width:28%">
+        <div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:2px">Auditor</div>
+        <div style="font-size:9px;font-weight:700">${groomer}</div>
+      </td>
+      <td style="padding:5px 9px">
+        <div style="font-size:6.5px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:#888;margin-bottom:3px">Status legend</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:7.5px;color:#555">
+          <span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;font-size:7px;font-weight:800;background:#d4edda;color:#1a7a40">OK</span> good condition &nbsp;·&nbsp;
+          <span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;font-size:7px;font-weight:800;background:#f8d7da;color:#842029">Issue</span> flagged &nbsp;·&nbsp;
+          <span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;font-size:7px;font-weight:800;background:#d4edda;color:#1a7a40">✓ Done</span> completed
+        </div>
+      </td>
+    </tr>
+  </table>
   ${carSections}
+  <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
+    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>Generated ${generatedFmt}</span>
+  </div>
+  <script>window.onload=()=>{window.print();};window.addEventListener('afterprint',()=>window.close());<\/script>
   </body></html>`;
 
   const w=window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  setTimeout(()=>w.print(),600);
+  if(w){w.document.write(html);w.document.close();}
 }
 
 // ── PAST AUDIT VIEW ───────────────────────────────────────────
