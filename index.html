@@ -6678,6 +6678,9 @@ function checkMonthlyAuditReset() {
 function resetAllAcAudits() {
   if(!confirm('Reset ALL audits? This clears all aircraft checklists, all facility audits, and crew car monthly photo audits. Crew car vehicle data (fuel, odometer, oil, registration, insurance, wash dates) is NEVER touched.')) return;
 
+  // Archive current data BEFORE wiping anything
+  saveAuditSnapshot();
+
   // Aircraft audits (metro, westwind, astra, custom types)
   const allRegs = [
     ...AIRCRAFT_METRO,    ...(S.acCustomAircraft.metro||[]),
@@ -6707,7 +6710,6 @@ function resetAllAcAudits() {
   if(db) ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>db.collection('facilityAudits').doc(doc).delete().catch(()=>{}));
 
   render();
-  saveAuditSnapshot();
   localStorage.setItem('gykf_audit_reset_ts', Date.now().toString());
   toast('All audits reset ✓');
 }
