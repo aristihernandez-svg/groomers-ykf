@@ -2706,22 +2706,20 @@ function loadCarAudits() {
   if(!db) return;
   const month=auditMonth();
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    snap.docs.forEach(d=>{
-      const existing=S.monthlyCarAudits[d.id]||{};
-      const incoming=d.data();
-      // Deep-merge checks so a remote update never clobbers local pending changes
-      S.monthlyCarAudits[d.id]={...existing,...incoming,checks:{...(existing.checks||{}),...(incoming.checks||{})}};
-    });
+    if(Date.now()-_carAuditLastWrite<1500) return; // suppress echo of own write
+    snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
     try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
     updateAuditBadge();
     render();
   }, e=>console.log('loadCarAudits Firestore failed:',e));
 }
+let _carAuditLastWrite=0;
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
   try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
   updateAuditBadge();
   if(!db) return;
+  _carAuditLastWrite=Date.now();
   const month=auditMonth();
   const data={...S.monthlyCarAudits[auditDocKey(carKey)], month, carKey};
   db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
@@ -2747,8 +2745,9 @@ function carAuditData(carKey) {
 function setCarAuditCheck(carKey, checkKey, status) {
   const cd=carAuditData(carKey);
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
-  cd.checks[checkKey].status=status;
-  _saveCarAuditCheckDebounced(carKey, checkKey);
+  // tap same pill again → deselect back to pending
+  cd.checks[checkKey].status = cd.checks[checkKey].status===status ? null : status;
+  saveCarAuditDebounced(carKey);
   _refreshCarAuditCard(carKey, checkKey);
 }
 function _refreshCarAuditCard(carKey, checkKey) {
@@ -2799,25 +2798,7 @@ function setCarAuditCheckNote(carKey, checkKey, note) {
   const cd=carAuditData(carKey);
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
   cd.checks[checkKey].note=note;
-  _saveCarAuditCheckDebounced(carKey, checkKey);
-}
-const _carAuditCheckSaveTimers={};
-function _saveCarAuditCheckDebounced(carKey, checkKey) {
-  const k=carKey+'|'+checkKey;
-  clearTimeout(_carAuditCheckSaveTimers[k]);
-  _carAuditCheckSaveTimers[k]=setTimeout(()=>{
-    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
-    if(!db) return;
-    const cd=carAuditData(carKey);
-    const docKey=auditDocKey(carKey);
-    const month=auditMonth();
-    const fieldData={};
-    fieldData[`checks.${checkKey}`]=cd.checks[checkKey]||{status:null,note:''};
-    fieldData.month=month;
-    fieldData.carKey=carKey;
-    db.collection('auditCars').doc(docKey).set(fieldData,{merge:true})
-      .catch(e=>console.log('saveCarAuditCheck Firestore failed:',e));
-  }, 800);
+  saveCarAuditDebounced(carKey);
 }
 const _recordsExpandedMonths   = new Set();
 const _recordsExpandedAcMonths = new Set();
