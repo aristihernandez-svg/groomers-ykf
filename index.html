@@ -2706,7 +2706,12 @@ function loadCarAudits() {
   if(!db) return;
   const month=auditMonth();
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
+    snap.docs.forEach(d=>{
+      const existing=S.monthlyCarAudits[d.id]||{};
+      const incoming=d.data();
+      // Deep-merge checks so a remote update never clobbers local pending changes
+      S.monthlyCarAudits[d.id]={...existing,...incoming,checks:{...(existing.checks||{}),...(incoming.checks||{})}};
+    });
     try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
     updateAuditBadge();
     render();
@@ -2743,7 +2748,7 @@ function setCarAuditCheck(carKey, checkKey, status) {
   const cd=carAuditData(carKey);
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
   cd.checks[checkKey].status=status;
-  saveCarAuditDebounced(carKey);
+  _saveCarAuditCheckDebounced(carKey, checkKey);
   _refreshCarAuditCard(carKey, checkKey);
 }
 function _refreshCarAuditCard(carKey, checkKey) {
@@ -2794,7 +2799,25 @@ function setCarAuditCheckNote(carKey, checkKey, note) {
   const cd=carAuditData(carKey);
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
   cd.checks[checkKey].note=note;
-  saveCarAuditDebounced(carKey);
+  _saveCarAuditCheckDebounced(carKey, checkKey);
+}
+const _carAuditCheckSaveTimers={};
+function _saveCarAuditCheckDebounced(carKey, checkKey) {
+  const k=carKey+'|'+checkKey;
+  clearTimeout(_carAuditCheckSaveTimers[k]);
+  _carAuditCheckSaveTimers[k]=setTimeout(()=>{
+    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
+    if(!db) return;
+    const cd=carAuditData(carKey);
+    const docKey=auditDocKey(carKey);
+    const month=auditMonth();
+    const fieldData={};
+    fieldData[`checks.${checkKey}`]=cd.checks[checkKey]||{status:null,note:''};
+    fieldData.month=month;
+    fieldData.carKey=carKey;
+    db.collection('auditCars').doc(docKey).set(fieldData,{merge:true})
+      .catch(e=>console.log('saveCarAuditCheck Firestore failed:',e));
+  }, 800);
 }
 const _recordsExpandedMonths   = new Set();
 const _recordsExpandedAcMonths = new Set();
