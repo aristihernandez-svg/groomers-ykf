@@ -2744,7 +2744,51 @@ function setCarAuditCheck(carKey, checkKey, status) {
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
   cd.checks[checkKey].status=status;
   saveCarAuditDebounced(carKey);
-  render();
+  _refreshCarAuditCard(carKey, checkKey);
+}
+function _refreshCarAuditCard(carKey, checkKey) {
+  const item=CAR_AUDIT_CHECKS.find(c=>c.key===checkKey);
+  if(!item||item.type!=='condition') { render(); return; }
+  const cd=carAuditData(carKey);
+  const chk=cd.checks[checkKey]||{};
+  const st=chk.status;
+  const isOK=st==='OK';
+  const isIssue=st==='Issue';
+  const cardBg=isOK?'rgba(39,174,96,0.1)':isIssue?'rgba(232,64,64,0.1)':'var(--glass2)';
+  const cardBorder=isOK?'rgba(39,174,96,0.35)':isIssue?'rgba(232,64,64,0.35)':'var(--border2)';
+  const labelColor=isOK?'#27AE60':isIssue?'#E84040':'var(--t1)';
+  const el=document.getElementById('cacard-'+carKey+'-'+checkKey);
+  if(!el){render();return;}
+  el.style.background=cardBg;
+  el.style.borderColor=cardBorder;
+  el.querySelector('.cacard-label').style.color=labelColor;
+  const okBtn=el.querySelector('.cacard-ok');
+  okBtn.style.background=isOK?'rgba(39,174,96,0.85)':'var(--glass2)';
+  okBtn.style.borderColor=isOK?'rgba(39,174,96,0.85)':'var(--border2)';
+  okBtn.style.color=isOK?'#fff':'var(--t3)';
+  const issBtn=el.querySelector('.cacard-issue');
+  issBtn.style.background=isIssue?'rgba(232,64,64,0.85)':'var(--glass2)';
+  issBtn.style.borderColor=isIssue?'rgba(232,64,64,0.85)':'var(--border2)';
+  issBtn.style.color=isIssue?'#fff':'var(--t3)';
+  let noteEl=el.querySelector('.cacard-note');
+  if(isIssue&&!noteEl){
+    noteEl=document.createElement('textarea');
+    noteEl.className='cacard-note';
+    noteEl.rows=2;
+    noteEl.placeholder='Describe the issue…';
+    noteEl.value=chk.note||'';
+    noteEl.style.cssText='width:100%;padding:5px 7px;border-radius:7px;border:1px solid rgba(232,64,64,0.35);background:rgba(232,64,64,0.07);color:var(--t1);font-size:10px;font-family:inherit;resize:none;outline:none';
+    noteEl.oninput=function(){setCarAuditCheckNote(carKey,checkKey,this.value);};
+    el.appendChild(noteEl);
+    noteEl.focus();
+  } else if(!isIssue&&noteEl) {
+    noteEl.remove();
+  }
+  // update score badge
+  const totalChecks=CAR_AUDIT_CHECKS.length;
+  const doneChecks=CAR_AUDIT_CHECKS.filter(c=>{const s=(cd.checks[c.key]||{}).status;return s!==null&&s!==undefined;}).length;
+  const badge=document.getElementById('cacheck-score-'+carKey);
+  if(badge){badge.textContent=doneChecks+'/'+totalChecks;badge.style.color=doneChecks===totalChecks?'#27AE60':'var(--t3)';}
 }
 function setCarAuditCheckNote(carKey, checkKey, note) {
   const cd=carAuditData(carKey);
@@ -3740,15 +3784,15 @@ function auditSectionHTML(key) {
     const cardBorder=isOK?'rgba(39,174,96,0.35)':isIssue?'rgba(232,64,64,0.35)':'var(--border2)';
     const labelColor=isOK?'#27AE60':isIssue?'#E84040':'var(--t1)';
     cardsHTML+=`
-      <div style="background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:7px">
-        <div style="font-size:11px;font-weight:600;color:${labelColor}">${item.label}</div>
+      <div id="cacard-${key}-${item.key}" style="background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:7px">
+        <div class="cacard-label" style="font-size:11px;font-weight:600;color:${labelColor}">${item.label}</div>
         <div style="display:flex;gap:5px">
-          <button onclick="setCarAuditCheck('${key}','${item.key}','OK')"
+          <button class="cacard-ok" onclick="setCarAuditCheck('${key}','${item.key}','OK')"
             style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isOK?'rgba(39,174,96,0.85)':'var(--border2)'};background:${isOK?'rgba(39,174,96,0.85)':'var(--glass2)'};color:${isOK?'#fff':'var(--t3)'}">OK</button>
-          <button onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
+          <button class="cacard-issue" onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
             style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isIssue?'rgba(232,64,64,0.85)':'var(--border2)'};background:${isIssue?'rgba(232,64,64,0.85)':'var(--glass2)'};color:${isIssue?'#fff':'var(--t3)'}">Issue</button>
         </div>
-        ${isIssue?`<textarea placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
+        ${isIssue?`<textarea class="cacard-note" placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
           style="width:100%;padding:5px 7px;border-radius:7px;border:1px solid rgba(232,64,64,0.35);background:rgba(232,64,64,0.07);color:var(--t1);font-size:10px;font-family:inherit;resize:none;outline:none" rows="2">${chk.note||''}</textarea>`:''}
       </div>`;
   });
@@ -3780,7 +3824,7 @@ function auditSectionHTML(key) {
     <!-- Vehicle Inspection checklist -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase">🔍 Vehicle Inspection</div>
-      <div style="font-size:11px;font-weight:700;color:${doneChecks===totalChecks?'#27AE60':'var(--t3)'}">${doneChecks}/${totalChecks}</div>
+      <div id="cacheck-score-${key}" style="font-size:11px;font-weight:700;color:${doneChecks===totalChecks?'#27AE60':'var(--t3)'}">${doneChecks}/${totalChecks}</div>
     </div>
     ${cardsHTML}
 
