@@ -2706,7 +2706,7 @@ function loadCarAudits() {
   if(!db) return;
   const month=auditMonth();
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    if(Date.now()-_carAuditLastWrite<1500) return; // suppress echo of own write
+    if(snap.metadata.hasPendingWrites) return; // own write still in-flight — skip echo
     snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
     try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
     updateAuditBadge();
