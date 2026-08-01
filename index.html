@@ -2706,20 +2706,17 @@ function loadCarAudits() {
   if(!db) return;
   const month=auditMonth();
   db.collection('auditCars').where('month','==',month).onSnapshot(snap=>{
-    if(snap.metadata.hasPendingWrites) return; // own write still in-flight — skip echo
     snap.docs.forEach(d=>{ S.monthlyCarAudits[d.id]={...S.monthlyCarAudits[d.id],...d.data()}; });
     try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
     updateAuditBadge();
     render();
   }, e=>console.log('loadCarAudits Firestore failed:',e));
 }
-let _carAuditLastWrite=0;
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
   try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
   updateAuditBadge();
   if(!db) return;
-  _carAuditLastWrite=Date.now();
   const month=auditMonth();
   const data={...S.monthlyCarAudits[auditDocKey(carKey)], month, carKey};
   db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
@@ -2747,7 +2744,7 @@ function setCarAuditCheck(carKey, checkKey, status) {
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
   // tap same pill again → deselect back to pending
   cd.checks[checkKey].status = cd.checks[checkKey].status===status ? null : status;
-  saveCarAuditDebounced(carKey);
+  saveCarAudit(carKey); // immediate write — same pattern as facility audits
   _refreshCarAuditCard(carKey, checkKey);
 }
 function _refreshCarAuditCard(carKey, checkKey) {
