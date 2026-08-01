@@ -4648,9 +4648,9 @@ function renderAuditsLanding(el) {
   // Crew Cars slideshow in 44px icon square (1s per car)
   const ccn=CREW_CARS.length, ccdur=ccn*1;
   const carsLeft = CREW_CARS.filter(c=>!carAuditData(c.key).done).length;
+  const carsDoneCount = CREW_CARS.length - carsLeft;
   const carsBadge = _carsDone ? badge('Done','#0F3020','#2ECC71')
-    : carsLeft>0 ? badge(`${carsLeft} left`,'#2A2010','#E8A000')
-    : badge('New','#0F1E40','#4A90D9');
+    : badge(`${carsDoneCount}/${CREW_CARS.length}`,'#2A2010','#E8A000');
   const carSlides = CREW_CARS.map((c,i)=>
     `<img src="${c.img}" alt="${c.label}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;padding:4px;animation:ccSlide ${ccdur}s linear ${i*1}s infinite;opacity:0">`
   ).join('');
