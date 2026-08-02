@@ -249,56 +249,57 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
   <div>
     <div class="section-label">💰 Money &amp; Free Credits — Read this first</div>
     <div class="budget-hero">
+      <!-- TOP ROW: credit remaining + deadline -->
       <div class="bh-top">
         <div>
-          <div class="bh-title">Google Cloud Free Trial Credit</div>
-          <div class="bh-big" id="gcp-credit-left">$<span id="gcp-dollars">—</span> <span>left</span></div>
-          <div class="bh-caption" id="gcp-days-left">Enter your remaining credit below ↓</div>
+          <div class="bh-title">🔥 Firebase Blaze · Google Cloud Free Trial</div>
+          <div class="bh-big">$<span id="gcp-dollars">425.27</span> <span>CAD left</span></div>
+          <div class="bh-caption" id="gcp-days-left">70 days left · expires October 11, 2026</div>
         </div>
-        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px 18px;min-width:180px">
-          <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Update my numbers</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div>
-              <div style="font-size:11px;color:#64748b;margin-bottom:3px">$ credit left</div>
-              <input id="inp-dollars" type="number" placeholder="e.g. 475" style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;font-weight:700">
-            </div>
-            <div>
-              <div style="font-size:11px;color:#64748b;margin-bottom:3px">Days left in trial</div>
-              <input id="inp-days" type="number" placeholder="e.g. 70" style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;font-weight:700">
-            </div>
-            <button onclick="saveBudget()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer">Save</button>
-          </div>
+        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px 18px;min-width:200px">
+          <div style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">⚠ What happens Oct 11, 2026?</div>
+          <div style="font-size:13px;color:#cbd5e1;line-height:1.5">Your free trial ends. After that, Firebase charges your <strong style="color:#fff">real credit card</strong> for every read, write and photo stored. At current usage that's about <strong style="color:#4ade80">$0.30 CAD/month</strong> — very cheap, but your card WILL be charged.</div>
+          <a class="manual-link" href="https://console.firebase.google.com/project/groomer-ykf/overview" target="_blank" style="margin-top:10px">→ Firebase billing console ↗</a>
         </div>
       </div>
+
+      <!-- METERS ROW -->
       <div class="bh-meters">
         <div class="bh-meter">
-          <div class="bh-meter-label">Trial days used</div>
-          <div class="bh-meter-val" id="bm-days-used">—</div>
+          <div class="bh-meter-label">Days left in trial</div>
+          <div class="bh-meter-val" id="bm-days-val">70</div>
           <div class="bh-track"><div class="bh-fill" id="bm-days-bar" style="width:0%"></div></div>
-          <div class="bh-note" id="bm-days-note">Enter days above</div>
+          <div class="bh-note" id="bm-days-note">Expires Oct 11, 2026</div>
         </div>
         <div class="bh-meter">
-          <div class="bh-meter-label">Credit spent estimate</div>
-          <div class="bh-meter-val" id="bm-spent">—</div>
-          <div class="bh-track"><div class="bh-fill" id="bm-spent-bar" style="width:0%"></div></div>
-          <div class="bh-note" id="bm-spent-note">Enter $ above</div>
+          <div class="bh-meter-label">Credit remaining (CAD)</div>
+          <div class="bh-meter-val">$425.27</div>
+          <div class="bh-track"><div class="bh-fill fill-safe" style="width:85%"></div></div>
+          <div class="bh-note">~$0.30/month at current usage → lasts forever</div>
         </div>
         <div class="bh-meter">
-          <div class="bh-meter-label">🔥 Firebase Spark plan</div>
-          <div class="bh-meter-val" style="color:#4ade80">FREE</div>
-          <div class="bh-track"><div class="bh-fill fill-safe" style="width:100%"></div></div>
-          <div class="bh-note">No card needed · forever free</div>
+          <div class="bh-meter-label">Est. daily Firebase cost</div>
+          <div class="bh-meter-val" id="bm-daily-cost">—</div>
+          <div class="bh-track"><div class="bh-fill fill-safe" id="bm-cost-bar" style="width:5%"></div></div>
+          <div class="bh-note" id="bm-cost-note">Based on today's reads &amp; writes</div>
         </div>
         <div class="bh-meter">
           <div class="bh-meter-label">🐙 GitHub &amp; Pages</div>
-          <div class="bh-meter-val" style="color:#4ade80">FREE</div>
+          <div class="bh-meter-val" style="color:#4ade80">$0.00</div>
           <div class="bh-track"><div class="bh-fill fill-safe" style="width:100%"></div></div>
-          <div class="bh-note">Free forever · no limits</div>
+          <div class="bh-note">Free forever — no credit card ever</div>
         </div>
       </div>
-      <a class="manual-link" href="https://console.cloud.google.com/billing" target="_blank">→ Check exact GCP billing on Google Cloud Console ↗</a>
-      &nbsp;&nbsp;
-      <a class="manual-link" href="https://console.anthropic.com" target="_blank">→ Check Claude / Anthropic usage ↗</a>
+
+      <!-- WARNING BOX -->
+      <div style="margin-top:18px;background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:12px 16px;font-size:13px;color:#fbbf24;line-height:1.5">
+        <strong>The real clock is October 11, 2026 — not the money.</strong> You have $425 CAD left but the app only costs ~$0.30/month, so you'll never run out of credit. What matters is the date: after Oct 11 your linked credit card starts getting small automatic charges. Set a reminder to review the Firebase billing page around that date.
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:10px">
+        <a class="manual-link" href="https://console.firebase.google.com/project/groomer-ykf/overview" target="_blank">→ Firebase Console ↗</a>
+        <a class="manual-link" href="https://console.cloud.google.com/billing" target="_blank">→ Google Cloud Billing ↗</a>
+        <a class="manual-link" href="https://console.anthropic.com" target="_blank">→ Claude / Anthropic ↗</a>
+      </div>
     </div>
   </div>
 
@@ -620,58 +621,48 @@ firebase.initializeApp({
 });
 var db = firebase.firestore();
 
-// ── BUDGET (localStorage) ──
-function loadBudgetUI() {
-  var dollars = parseFloat(localStorage.getItem('sky_gcp_dollars') || '');
-  var days    = parseInt(localStorage.getItem('sky_gcp_days') || '');
-  var startDate = localStorage.getItem('sky_gcp_start'); // ISO string when they first entered
+// ── TRIAL COUNTDOWN ──
+(function(){
+  var expiry = new Date('2026-10-11T00:00:00');
+  var daysLeft = Math.ceil((expiry - Date.now()) / 86400000);
+  daysLeft = Math.max(0, daysLeft);
+  document.getElementById('bm-days-val').textContent = daysLeft;
+  document.getElementById('gcp-days-left').textContent = daysLeft + ' days left · expires October 11, 2026';
+  var totalDays = Math.ceil((expiry - new Date('2026-08-02')) / 86400000); // approx trial total from today
+  var elapsed = totalDays - daysLeft;
+  var pct = Math.min(100, Math.round((elapsed / totalDays) * 100));
+  var bar = document.getElementById('bm-days-bar');
+  bar.style.width = pct + '%';
+  bar.className = 'bh-fill ' + (daysLeft < 14 ? 'fill-danger' : daysLeft < 30 ? 'fill-warn' : 'fill-safe');
+  if (daysLeft < 14) document.getElementById('bm-days-note').textContent = '⚠ Less than 2 weeks left!';
+  else if (daysLeft < 30) document.getElementById('bm-days-note').textContent = 'Under a month — check billing settings';
+  else document.getElementById('bm-days-note').textContent = 'Expires Oct 11, 2026';
+})();
 
-  if (dollars) {
-    // We don't know how much was spent; show the credit remaining they typed
-    document.getElementById('gcp-dollars').textContent = dollars.toFixed(0);
-    document.getElementById('inp-dollars').value = dollars;
-  }
-  if (days) {
-    document.getElementById('inp-days').value = days;
-    if (!startDate) {
-      // First time — set start to today minus nothing (we assume 'days left' was entered today)
-      startDate = new Date().toISOString();
-      localStorage.setItem('sky_gcp_start', startDate);
-    }
-    // Days elapsed since they first entered this
-    var elapsed = Math.round((Date.now() - new Date(startDate)) / 86400000);
-    var total   = days + elapsed; // approximate total trial days
-    var pctDays = Math.min(100, Math.round((elapsed / total) * 100));
-    document.getElementById('bm-days-used').textContent = elapsed + ' days elapsed';
-    document.getElementById('bm-days-bar').style.width = pctDays + '%';
-    document.getElementById('bm-days-bar').className = 'bh-fill ' + (pctDays > 75 ? 'fill-danger' : pctDays > 50 ? 'fill-warn' : 'fill-safe');
-    document.getElementById('bm-days-note').textContent = days + ' days still left in trial';
-    document.getElementById('gcp-days-left').textContent = days + ' days left in trial';
-  }
-  if (dollars) {
-    // Rough: assume linear burn. If they have $475 left and 70 days left, total was maybe $600 over 90 days
-    // We can't know actual spend — just show the credit they have left prominently
-    document.getElementById('bm-spent').textContent = '$' + dollars + ' left';
-    var pctCredit = Math.max(0, Math.min(100, Math.round(((600 - dollars) / 600) * 100)));
-    // simpler: show bar based on how much they have vs a $500 baseline
-    var usedEst = Math.max(0, 500 - dollars);
-    var pctSpent = Math.min(100, Math.round((usedEst / 500) * 100));
-    document.getElementById('bm-spent-bar').style.width = pctSpent + '%';
-    document.getElementById('bm-spent-bar').className = 'bh-fill ' + (pctSpent > 80 ? 'fill-danger' : pctSpent > 50 ? 'fill-warn' : 'fill-safe');
-    document.getElementById('bm-spent-note').textContent = 'Check Google Cloud Console for exact spend';
-  }
+// ── BLAZE COST CALCULATOR ──
+// Pricing in CAD (approx 1.36x USD rates as of 2026)
+var BLAZE = {
+  readPer100k:    0.082,  // CAD per 100K reads
+  writePer100k:   0.245,  // CAD per 100K writes
+  deletePer100k:  0.027,  // CAD per 100K deletes
+  storagePerGB:   0.035,  // CAD per GB/month
+};
+function calcDailyCost(reads, writes, deletes) {
+  return (reads  / 100000 * BLAZE.readPer100k) +
+         (writes / 100000 * BLAZE.writePer100k) +
+         (deletes/ 100000 * BLAZE.deletePer100k);
 }
-function saveBudget() {
-  var d = parseFloat(document.getElementById('inp-dollars').value);
-  var days = parseInt(document.getElementById('inp-days').value);
-  if (d) localStorage.setItem('sky_gcp_dollars', d);
-  if (days) {
-    localStorage.setItem('sky_gcp_days', days);
-    localStorage.setItem('sky_gcp_start', new Date().toISOString());
-  }
-  loadBudgetUI();
+function updateCostMeter(reads, writes, deletes) {
+  var daily = calcDailyCost(reads, writes, deletes);
+  var monthly = daily * 30;
+  document.getElementById('bm-daily-cost').textContent = '$' + daily.toFixed(4) + ' CAD';
+  document.getElementById('bm-cost-note').textContent = '≈ $' + monthly.toFixed(2) + ' CAD/month at this rate';
+  // Bar: $0.50/day would be concerning, scale to that
+  var barPct = Math.min(100, Math.round((daily / 0.50) * 100));
+  var costBar = document.getElementById('bm-cost-bar');
+  costBar.style.width = Math.max(3, barPct) + '%';
+  costBar.className = 'bh-fill ' + (daily > 0.30 ? 'fill-danger' : daily > 0.10 ? 'fill-warn' : 'fill-safe');
 }
-loadBudgetUI();
 
 // ── HELPERS ──
 function fmt(n) { return n === null || n === undefined ? '—' : Number(n).toLocaleString(); }
@@ -809,9 +800,13 @@ async function loadQuota() {
     }
     var d = doc.data();
 
-    setQuotaBar('q-reads-bar', 'q-reads-label', 'q-reads-cap', d.reads_today, 50000, '', 60, 85);
-    setQuotaBar('q-writes-bar', 'q-writes-label', 'q-writes-cap', d.writes_today, 20000, '', 60, 85);
-    setQuotaBar('q-deletes-bar', 'q-deletes-label', 'q-deletes-cap', d.deletes_today, 20000, '', 60, 85);
+    var reads   = d.reads_today   || 0;
+    var writes  = d.writes_today  || 0;
+    var deletes = d.deletes_today || 0;
+    updateCostMeter(reads, writes, deletes);
+    setQuotaBar('q-reads-bar', 'q-reads-label', 'q-reads-cap', reads,   50000, '', 60, 85);
+    setQuotaBar('q-writes-bar', 'q-writes-label', 'q-writes-cap', writes, 20000, '', 60, 85);
+    setQuotaBar('q-deletes-bar', 'q-deletes-label', 'q-deletes-cap', deletes, 20000, '', 60, 85);
 
     var fsBytes = d.firestore_bytes || 0;
     document.getElementById('q-fs-storage-label').textContent = fmtBytes(fsBytes) + ' used of 1 GB free';
@@ -851,36 +846,42 @@ async function loadQuota() {
     }
 
     // ── FIRESTORE ANALYSIS ──
-    var readPct  = pct(d.reads_today,  50000);
-    var writePct = pct(d.writes_today, 20000);
-    var delPct   = pct(d.deletes_today, 20000);
+    var readPct  = pct(reads,  50000);
+    var writePct = pct(writes, 20000);
+    var delPct   = pct(deletes, 20000);
     var worst    = Math.max(readPct, writePct, delPct);
-    var readsLeft  = 50000  - (d.reads_today  || 0);
-    var writesLeft = 20000  - (d.writes_today || 0);
-    var projReads  = Math.round((d.reads_today  || 0) / (new Date().getHours() + 1) * 24);
+    var readsLeft  = 50000 - reads;
+    var writesLeft = 20000 - writes;
+    var projReads  = Math.round(reads / (new Date().getHours() + 1) * 24);
+    var dailyCostCAD = calcDailyCost(reads, writes, deletes);
+    var monthlyCostCAD = dailyCostCAD * 30;
 
     var fsLevel, fsTitle, fsBody, fsAction;
+    var costStr = '$' + dailyCostCAD.toFixed(4) + ' CAD today (~$' + monthlyCostCAD.toFixed(2) + ' CAD/month)';
     if (worst < 30) {
-      fsLevel = 'safe'; fsTitle = '✅ Your database is completely relaxed today';
-      fsBody = 'The app read the database ' + fmt(d.reads_today) + ' times and saved data ' + fmt(d.writes_today) + ' times today. ' +
-        'That\'s only ' + readPct + '% of your free daily limit. At this pace you\'ll end the day using about ' + fmt(projReads) + ' reads — ' +
-        'you still have ' + fmt(readsLeft) + ' reads left to burn today. Everything resets at midnight automatically.';
-      fsAction = 'Nothing to do. You\'re well within the free tier.';
+      fsLevel = 'safe'; fsTitle = '✅ Your database is relaxed and cheap today';
+      fsBody = 'The app read the database ' + fmt(reads) + ' times and saved data ' + fmt(writes) + ' times today — only ' + readPct + '% of your daily limit. ' +
+        'At this pace you\'ll use about ' + fmt(projReads) + ' reads by midnight, leaving you ' + fmt(readsLeft) + ' reads to spare. ' +
+        'On the Blaze plan, today\'s usage costs approximately <strong>' + costStr + '</strong>.';
+      fsAction = 'Nothing to do. Usage and cost are both very low.';
     } else if (worst < 60) {
       fsLevel = 'safe'; fsTitle = '✅ Database is healthy — moderately busy';
-      fsBody = 'The app has used ' + readPct + '% of its free reads and ' + writePct + '% of its free writes today. ' +
-        'This is normal for an active team. You still have ' + fmt(readsLeft) + ' reads and ' + fmt(writesLeft) + ' writes left today.';
-      fsAction = 'No action needed, but check back again tonight to make sure usage doesn\'t spike.';
+      fsBody = 'The app has used ' + readPct + '% of its daily reads and ' + writePct + '% of its daily writes. ' +
+        'You still have ' + fmt(readsLeft) + ' reads and ' + fmt(writesLeft) + ' writes left today. ' +
+        'Cost so far: approximately <strong>' + costStr + '</strong>.';
+      fsAction = 'No action needed, but check back tonight to make sure usage doesn\'t spike unexpectedly.';
     } else if (worst < 85) {
-      fsLevel = 'warn'; fsTitle = '⚡ Getting busy — watch this today';
-      fsBody = 'You\'ve used ' + worst + '% of your free daily limit. The app is working hard. At this pace you could hit the free limit before midnight. ' +
-        'If you run out, the app will stop being able to read or save data until midnight (when it resets for free).';
-      fsAction = 'Tell your developer. Consider whether something is making the app read data too often — like the shopping list or audits refreshing repeatedly.';
+      fsLevel = 'warn'; fsTitle = '⚡ Getting busy — keep an eye on this';
+      fsBody = 'You\'ve used ' + worst + '% of your daily limit. The app is working hard today. At this pace you might hit the ceiling before midnight — ' +
+        'if that happens, the app stops reading/saving data until midnight when it resets. ' +
+        'Cost today: approximately <strong>' + costStr + '</strong>.';
+      fsAction = 'Tell your developer. Something may be reading data more than expected.';
     } else {
-      fsLevel = 'danger'; fsTitle = '🚨 CLOSE TO THE LIMIT — act now';
-      fsBody = 'You\'ve used ' + worst + '% of your free daily quota. If this reaches 100% before midnight, the app will stop working — ' +
-        'your team won\'t be able to check tasks, save audits, or use any feature that touches the database. It resets automatically at midnight PT.';
-      fsAction = 'Contact your developer right now. The app may stop working before midnight.';
+      fsLevel = 'danger'; fsTitle = '🚨 ALMOST AT THE LIMIT — act now';
+      fsBody = 'You\'ve used ' + worst + '% of your daily quota. If this hits 100% before midnight, the app stops working for your whole team — ' +
+        'no tasks, no audits, nothing. It resets automatically at midnight PT. ' +
+        'Cost today: approximately <strong>' + costStr + '</strong>.';
+      fsAction = 'Contact your developer immediately.';
     }
     setAnalysis('analysis-fs', fsLevel, fsTitle, fsBody, fsAction);
 
