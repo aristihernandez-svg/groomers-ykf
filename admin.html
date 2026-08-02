@@ -126,6 +126,16 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 
 /* LAST UPDATED */
 .last-updated{text-align:center;font-size:11px;color:var(--muted);padding-top:4px;padding-bottom:12px}
+
+/* ANALYSIS BOX */
+.analysis{border-radius:10px;padding:13px 15px;margin:14px 0 4px;font-size:13px;line-height:1.55}
+.analysis.safe{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.analysis.warn{background:#fffbeb;border:1px solid #fde68a;color:#92400e}
+.analysis.danger{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.analysis.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+.analysis-title{font-weight:800;margin-bottom:4px;font-size:13px}
+.analysis-action{margin-top:8px;font-weight:700;display:flex;align-items:flex-start;gap:6px}
+.analysis-action::before{content:'→';flex-shrink:0}
 /* PIN LOCK */
 #pin-lock{position:fixed;inset:0;z-index:99999;background:#1a2332;display:flex;align-items:center;justify-content:center;flex-direction:column}
 #pin-lock.hidden{display:none}
@@ -178,7 +188,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 
 <script>
 (function(){
-  var PIN='1984', entered='', locked=false;
+  var PIN='2783', entered='', locked=false;
   // Check session
   if(sessionStorage.getItem('sky_admin_ok')==='1'){
     document.getElementById('pin-lock').classList.add('hidden');
@@ -369,6 +379,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
         </div>
       </div>
 
+        <div id="analysis-fs" class="analysis info"><div class="analysis-title">⏳ Loading analysis…</div></div>
+      </div>
+
       <div class="card-footer">
         <div class="cost-tag cost-watch">⚠ Watch this one — it has daily limits</div>
         <a class="cf-link" href="https://console.firebase.google.com/project/groomer-ykf/firestore" target="_blank">Open Database Console ↗</a>
@@ -408,6 +421,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
             <div class="row"><div class="row-q">Downloads per day</div><div class="row-a safe">1 GB free</div></div>
             <div class="row"><div class="row-q">What goes here</div><div class="row-a">Audit photos, PDFs</div></div>
           </div>
+          <div id="analysis-storage" class="analysis info"><div class="analysis-title">⏳ Loading analysis…</div></div>
         </div>
         <div class="card-footer">
           <div class="cost-tag cost-watch">⚠ Check monthly — photos add up</div>
@@ -439,6 +453,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
             <div class="row"><div class="row-q">Last code update</div><div class="row-a" id="gh-deploy">…</div></div>
             <div class="row"><div class="row-q">How to update it</div><div class="row-a">Just push to GitHub</div></div>
           </div>
+          <div id="analysis-pages" class="analysis info"><div class="analysis-title">⏳ Loading analysis…</div></div>
         </div>
         <div class="card-footer">
           <div class="cost-tag cost-free">✓ Free forever · no limits</div>
@@ -478,6 +493,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
             <div class="row"><div class="row-q">Repo size</div><div class="row-a" id="gh-size">…</div></div>
             <div class="row"><div class="row-q">Will this ever cost money?</div><div class="row-a safe">Never — it's free forever</div></div>
           </div>
+          <div id="analysis-gh" class="analysis info"><div class="analysis-title">⏳ Loading analysis…</div></div>
         </div>
         <div class="card-footer">
           <div class="cost-tag cost-free">✓ Free forever</div>
@@ -509,6 +525,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
             <div class="row"><div class="row-q">Monthly limit</div><div class="row-a safe">Unlimited</div></div>
             <div class="row"><div class="row-q">Used for</div><div class="row-a">Shift alerts, coffee, MX</div></div>
             <div class="row"><div class="row-q">Will this ever cost money?</div><div class="row-a safe">Never</div></div>
+          </div>
+          <div id="analysis-fcm" class="analysis safe">
+            <div class="analysis-title">✅ Nothing to worry about here</div>
+            Push notifications are 100% free, forever, with no limits. Google doesn't charge for FCM — ever. You can send 1 notification or 1 million, it costs exactly $0.
+            <div class="analysis-action">No action needed. Relax on this one.</div>
           </div>
         </div>
         <div class="card-footer">
@@ -671,6 +692,13 @@ function timeAgo(iso) {
 }
 function colorClass(p, a, r) { return p >= r ? 'danger' : p >= a ? 'warn' : 'safe'; }
 function fillColor(p, a, r) { return p >= r ? '#ef4444' : p >= a ? '#f59e0b' : '#22c55e'; }
+function setAnalysis(id, level, title, body, action) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'analysis ' + level;
+  el.innerHTML = '<div class="analysis-title">' + title + '</div>' + body +
+    (action ? '<div class="analysis-action">' + action + '</div>' : '');
+}
 function setQuotaBar(barId, labelId, capId, val, max, unit, warnPct, dangerPct) {
   var p = pct(val, max);
   var cl = colorClass(p, warnPct, dangerPct);
@@ -709,9 +737,24 @@ async function loadGitHub() {
     if (m) document.getElementById('gh-commits').textContent = m[1];
     document.getElementById('gh-badge').textContent = '✓ Connected';
     document.getElementById('gh-badge').className = 'status safe';
+
+    var commitCount = m ? parseInt(m[1]) : 0;
+    var repoSizeMB = repo.size > 1024 ? (repo.size / 1024).toFixed(1) : null;
+    var lastDate = commits[0] ? new Date(commits[0].commit.author.date) : null;
+    var hoursAgo = lastDate ? Math.round((Date.now() - lastDate) / 3600000) : null;
+    var activityMsg = hoursAgo < 2 ? 'The team is actively working on the app right now.' :
+                      hoursAgo < 24 ? 'The last change was made ' + hoursAgo + ' hours ago — the app is being actively developed.' :
+                      'The last change was ' + Math.round(hoursAgo/24) + ' day(s) ago.';
+    setAnalysis('analysis-gh', 'safe',
+      '✅ Your code is safe and healthy',
+      'GitHub is like a filing cabinet that keeps every version of the app ever made — ' + (commitCount ? 'all ' + commitCount + ' of them. ' : '') +
+      activityMsg + ' The repo is ' + (repoSizeMB ? repoSizeMB + ' MB' : repo.size + ' KB') + ' total, which GitHub hosts for free with no size limits.',
+      'No action needed. GitHub will never charge you for this.'
+    );
   } catch (e) {
     document.getElementById('gh-badge').textContent = 'Error';
     document.getElementById('gh-badge').className = 'status danger';
+    setAnalysis('analysis-gh', 'danger', '❌ Could not reach GitHub', 'GitHub may be down or there is a network issue. Try refreshing.', 'Check github.com to see if it\'s a global outage.');
   }
 }
 
@@ -731,6 +774,14 @@ async function loadPages() {
     document.getElementById('pages-online').className = 'row-a safe';
     document.getElementById('pages-badge').textContent = '✓ Online';
     document.getElementById('pages-badge').className = 'status safe';
+    var feel = ms < 300 ? 'That\'s lightning fast — faster than blinking.' : ms < 600 ? 'That\'s a good speed — users won\'t notice any delay.' : ms < 1200 ? 'A bit slow but acceptable. Users may notice a slight pause.' : 'This is slow. Users might think the app is broken.';
+    var lvl = ms < 600 ? 'safe' : ms < 1200 ? 'warn' : 'danger';
+    var act = ms < 600 ? 'No action needed. The app is performing well.' : ms < 1200 ? 'Keep an eye on this. If it stays slow, tell your developer.' : 'Tell your developer — the app is loading too slowly for your team.';
+    setAnalysis('analysis-pages', lvl,
+      (ms < 600 ? '✅' : ms < 1200 ? '⚡' : '🐢') + ' App loaded in ' + ms + 'ms',
+      feel + ' GitHub Pages hosts your app for free on servers all around the world, so it\'s almost always fast and reliable.',
+      act
+    );
   } catch (e) {
     document.getElementById('pages-emoji').textContent = '🔴';
     document.getElementById('pages-speed').textContent = '!!';
@@ -740,6 +791,11 @@ async function loadPages() {
     document.getElementById('pages-online').className = 'row-a danger';
     document.getElementById('pages-badge').textContent = '✗ Down';
     document.getElementById('pages-badge').className = 'status danger';
+    setAnalysis('analysis-pages', 'danger',
+      '🚨 The app is not responding!',
+      'When we tried to load Skycare, it didn\'t answer. This means your team can\'t open the app right now.',
+      'Contact your developer immediately. This is urgent.'
+    );
   }
 }
 
@@ -793,6 +849,69 @@ async function loadQuota() {
       document.getElementById('q-updated').textContent = ts;
       document.getElementById('worker-last-run').textContent = ts;
     }
+
+    // ── FIRESTORE ANALYSIS ──
+    var readPct  = pct(d.reads_today,  50000);
+    var writePct = pct(d.writes_today, 20000);
+    var delPct   = pct(d.deletes_today, 20000);
+    var worst    = Math.max(readPct, writePct, delPct);
+    var readsLeft  = 50000  - (d.reads_today  || 0);
+    var writesLeft = 20000  - (d.writes_today || 0);
+    var projReads  = Math.round((d.reads_today  || 0) / (new Date().getHours() + 1) * 24);
+
+    var fsLevel, fsTitle, fsBody, fsAction;
+    if (worst < 30) {
+      fsLevel = 'safe'; fsTitle = '✅ Your database is completely relaxed today';
+      fsBody = 'The app read the database ' + fmt(d.reads_today) + ' times and saved data ' + fmt(d.writes_today) + ' times today. ' +
+        'That\'s only ' + readPct + '% of your free daily limit. At this pace you\'ll end the day using about ' + fmt(projReads) + ' reads — ' +
+        'you still have ' + fmt(readsLeft) + ' reads left to burn today. Everything resets at midnight automatically.';
+      fsAction = 'Nothing to do. You\'re well within the free tier.';
+    } else if (worst < 60) {
+      fsLevel = 'safe'; fsTitle = '✅ Database is healthy — moderately busy';
+      fsBody = 'The app has used ' + readPct + '% of its free reads and ' + writePct + '% of its free writes today. ' +
+        'This is normal for an active team. You still have ' + fmt(readsLeft) + ' reads and ' + fmt(writesLeft) + ' writes left today.';
+      fsAction = 'No action needed, but check back again tonight to make sure usage doesn\'t spike.';
+    } else if (worst < 85) {
+      fsLevel = 'warn'; fsTitle = '⚡ Getting busy — watch this today';
+      fsBody = 'You\'ve used ' + worst + '% of your free daily limit. The app is working hard. At this pace you could hit the free limit before midnight. ' +
+        'If you run out, the app will stop being able to read or save data until midnight (when it resets for free).';
+      fsAction = 'Tell your developer. Consider whether something is making the app read data too often — like the shopping list or audits refreshing repeatedly.';
+    } else {
+      fsLevel = 'danger'; fsTitle = '🚨 CLOSE TO THE LIMIT — act now';
+      fsBody = 'You\'ve used ' + worst + '% of your free daily quota. If this reaches 100% before midnight, the app will stop working — ' +
+        'your team won\'t be able to check tasks, save audits, or use any feature that touches the database. It resets automatically at midnight PT.';
+      fsAction = 'Contact your developer right now. The app may stop working before midnight.';
+    }
+    setAnalysis('analysis-fs', fsLevel, fsTitle, fsBody, fsAction);
+
+    // ── STORAGE ANALYSIS ──
+    var gcsBytes  = d.storage_bytes || 0;
+    var gcsMB     = (gcsBytes / 1048576).toFixed(1);
+    var gcsGB     = (gcsBytes / 1073741824).toFixed(3);
+    var gcsPctVal = pct(gcsBytes, 5 * 1073741824);
+    var stLevel, stTitle, stBody, stAction;
+    if (gcsPctVal < 5) {
+      stLevel = 'safe'; stTitle = '✅ Storage is practically empty';
+      stBody = 'You\'re using ' + gcsMB + ' MB out of 5,000 MB free — that\'s ' + gcsPctVal + '% full. ' +
+        'At this rate, even if you took a photo every single day, it would take years to fill this up. This is not something you need to think about right now.';
+      stAction = 'No action needed. Come back and check this in 6 months.';
+    } else if (gcsPctVal < 40) {
+      stLevel = 'safe'; stTitle = '✅ Storage is in great shape';
+      stBody = 'You\'ve used ' + gcsMB + ' MB (' + gcsPctVal + '% of 5 GB free). Audit photos and PDFs are accumulating slowly. You have plenty of room.';
+      stAction = 'No action needed, but make a habit of checking this monthly.';
+    } else if (gcsPctVal < 75) {
+      stLevel = 'warn'; stTitle = '⚡ Storage is filling up';
+      stBody = 'You\'ve used ' + (gcsBytes / 1073741824).toFixed(2) + ' GB of your 5 GB free storage (' + gcsPctVal + '%). Old audit photos are piling up. ' +
+        'You still have time, but this needs a plan.';
+      stAction = 'Ask your developer about archiving or deleting old audit photos to free up space.';
+    } else {
+      stLevel = 'danger'; stTitle = '🚨 Storage is almost full!';
+      stBody = 'You\'ve used ' + (gcsBytes / 1073741824).toFixed(2) + ' GB of your 5 GB free limit (' + gcsPctVal + '%). When it hits 100%, uploads will fail — ' +
+        'your team won\'t be able to save new audit photos.';
+      stAction = 'Contact your developer immediately to delete old files before the limit is hit.';
+    }
+    setAnalysis('analysis-storage', stLevel, stTitle, stBody, stAction);
+
   } catch (e) {
     console.warn('Quota:', e.message);
   }
