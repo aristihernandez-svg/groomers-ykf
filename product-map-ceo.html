@@ -28,7 +28,8 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; height:3px; b
   background:#05101e; border-right:1px solid rgba(42,126,245,.15);
   display:flex; flex-direction:column; overflow-y:auto;
 }
-.sb-brand { padding:32px 24px 26px; border-bottom:1px solid rgba(42,126,245,.12); }
+.sb-brand { padding:32px 24px 26px; border-bottom:1px solid rgba(42,126,245,.12); position:relative; overflow:hidden; }
+.sb-radar { position:absolute; inset:0; width:100%; height:100%; opacity:0.22; pointer-events:none; }
 .sb-eyebrow { font-family:var(--mono); font-size:9px; letter-spacing:.2em; text-transform:uppercase; color:#f0a020; margin-bottom:10px; }
 .sb-appname { font-size:24px; font-weight:900; color:#ffffff; letter-spacing:-.04em; line-height:1.1; margin-bottom:4px; }
 .sb-sub { font-family:var(--mono); font-size:10px; color:#4a7090; }
@@ -288,6 +289,7 @@ body::before { content:''; position:fixed; top:0; left:0; right:0; height:3px; b
 <!-- ── SIDEBAR ── -->
 <div class="sidebar">
   <div class="sb-brand">
+    <canvas class="sb-radar" id="sidebarRadar"></canvas>
     <div class="sb-eyebrow">Executive Overview · July 2026</div>
     <div class="sb-appname">XXXXXX</div>
     <div class="sb-sub">Ground Operations Platform · CYKF</div>
@@ -964,4 +966,62 @@ function nextCard(){
 
 // ── ROADMAP EXPAND ──
 function toggleNext(el){el.classList.toggle('open');}
+
+// ── SIDEBAR RADAR ANIMATION ──
+(function() {
+  var canvas = document.getElementById('sidebarRadar');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  var angle = 0;
+  var W, H, cx, cy, radius;
+
+  function resize() {
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+    cx = W / 2; cy = H / 2;
+    radius = Math.max(W, H) * 0.9;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Concentric rings
+    ctx.strokeStyle = 'rgba(45,125,210,0.4)';
+    ctx.lineWidth = 1;
+    for (var r = radius * 0.25; r <= radius; r += radius * 0.25) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // Cross hairs
+    ctx.beginPath();
+    ctx.moveTo(cx - radius, cy); ctx.lineTo(cx + radius, cy);
+    ctx.moveTo(cx, cy - radius); ctx.lineTo(cx, cy + radius);
+    ctx.stroke();
+
+    // Sweep wedge
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.arc(0, 0, radius, -0.4, 0);
+    ctx.fillStyle = 'rgba(45,125,210,0.18)';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(radius, 0);
+    ctx.strokeStyle = 'rgba(45,125,210,0.9)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    angle += 0.008;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
 </script>
