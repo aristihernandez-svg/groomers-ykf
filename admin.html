@@ -3,357 +3,500 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Skycare YKF · System Admin</title>
+<title>Skycare · Dashboard</title>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#06101f;--panel:#0c1828;--raised:#111e30;
-  --border:rgba(42,126,245,.13);--border2:rgba(42,126,245,.22);
-  --blue:#2a7ef5;--blue-dim:rgba(42,126,245,.1);
-  --green:#22c55e;--green-dim:rgba(34,197,94,.1);
-  --amber:#f0a020;--amber-dim:rgba(240,160,32,.1);
-  --red:#ef4444;--red-dim:rgba(239,68,68,.1);
-  --purple:#8b5cf6;--purple-dim:rgba(139,92,246,.1);
-  --text:#d8e8f8;--muted:#4a6a8a;
-  --mono:'Courier New',Courier,monospace;
+  --bg:#f0f4f8;
+  --white:#ffffff;
+  --text:#1a2332;
+  --muted:#64748b;
+  --safe:#16a34a;--safe-bg:#dcfce7;--safe-border:#bbf7d0;
+  --warn:#d97706;--warn-bg:#fef3c7;--warn-border:#fde68a;
+  --danger:#dc2626;--danger-bg:#fee2e2;--danger-border:#fecaca;
+  --blue:#2563eb;--blue-bg:#dbeafe;
+  --radius:16px;
+  --shadow:0 2px 12px rgba(0,0,0,.07);
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.6;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:60px}
 
-/* HEADER */
-.hdr{position:relative;overflow:hidden;padding:26px 32px 22px;border-bottom:1px solid var(--border);background:linear-gradient(175deg,#0b1e3c 0%,var(--bg) 80%)}
-.hdr canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.15;pointer-events:none}
-.hdr-in{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
-.hdr-eye{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
-.hdr-title{font-size:24px;font-weight:900;letter-spacing:-.04em;color:#fff;line-height:1;margin-bottom:3px}
-.hdr-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
-.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(34,197,94,.28);border-radius:20px;padding:4px 11px 4px 8px;font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700;letter-spacing:.06em}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:lpulse 2s infinite}
-@keyframes lpulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
-.ts{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:right}
-.refresh-btn{font-family:var(--mono);font-size:9px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(42,126,245,.25);border-radius:6px;padding:4px 10px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
-.refresh-btn:hover{background:rgba(42,126,245,.18)}
+/* TOP BAR */
+.topbar{background:#1a2332;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-size:18px;font-weight:800;letter-spacing:-.03em}
+.topbar-sub{font-size:12px;color:#94a3b8;margin-top:1px}
+.live-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#4ade80;font-weight:700}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.refresh-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer}
+.refresh-btn:hover{background:rgba(255,255,255,.18)}
 
-/* GRID */
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:22px 32px 48px;max-width:1000px;margin:0 auto}
-.wide{grid-column:span 2}
-@media(max-width:680px){.grid{grid-template-columns:1fr;padding:16px}.wide{grid-column:span 1}}
+/* SECTIONS */
+.page{max-width:960px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
+.section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
 
-/* CARD */
-.card{background:var(--panel);border:1px solid var(--border);border-radius:11px;overflow:hidden;display:flex;flex-direction:column;position:relative}
-.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
-.g::before{background:var(--green)}.a::before{background:var(--amber)}.m::before{background:rgba(74,106,138,.4)}.p::before{background:var(--purple)}
+/* BUDGET HERO — the trial/credit warning */
+.budget-hero{background:linear-gradient(135deg,#1a2332 0%,#2d3f5c 100%);border-radius:var(--radius);padding:28px 28px 24px;color:#fff;position:relative;overflow:hidden}
+.budget-hero::after{content:'$';position:absolute;right:24px;top:50%;transform:translateY(-50%);font-size:120px;font-weight:900;color:rgba(255,255,255,.04);line-height:1}
+.bh-top{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:20px}
+.bh-title{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#94a3b8;margin-bottom:4px}
+.bh-big{font-size:52px;font-weight:900;letter-spacing:-.04em;line-height:1;color:#fff}
+.bh-big span{font-size:24px;font-weight:600;color:#94a3b8}
+.bh-caption{font-size:13px;color:#64748b;margin-top:4px}
+.bh-meters{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
+.bh-meter{background:rgba(255,255,255,.06);border-radius:10px;padding:14px 16px}
+.bh-meter-label{font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.bh-meter-val{font-size:22px;font-weight:900;color:#fff;line-height:1;margin-bottom:8px}
+.bh-track{height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}
+.bh-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.fill-safe{background:#4ade80}.fill-warn{background:#fbbf24}.fill-danger{background:#f87171}
+.bh-note{font-size:11px;color:#64748b;margin-top:6px}
+.manual-link{display:inline-flex;align-items:center;gap:5px;margin-top:16px;font-size:12px;color:#60a5fa;text-decoration:none;font-weight:600}
+.manual-link:hover{color:#93c5fd}
 
-/* CARD HEAD */
-.ch{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 12px 19px;border-bottom:1px solid var(--border)}
-.ch-id{display:flex;align-items:center;gap:10px}
-.cicon{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
-.cname{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2}
-.chost{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px}
-.tag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
-.tag.g{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.28)}
-.tag.a{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,160,32,.28)}
-.tag.m{background:rgba(74,106,138,.1);color:var(--muted);border:1px solid rgba(74,106,138,.2)}
-.tag.p{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(139,92,246,.28)}
-.tag.r{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.28)}
+/* TRAFFIC LIGHT CARDS */
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:640px){.cards{grid-template-columns:1fr}}
+.card-wide{grid-column:span 2}
+@media(max-width:640px){.card-wide{grid-column:span 1}}
 
-/* CARD BODY */
-.cb{padding:13px 16px 12px 19px;flex:1}
-.mr{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(42,126,245,.05)}
-.mr:last-child{border-bottom:none}
-.ml{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.mv{font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700;text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.mv.g{color:var(--green)}.mv.a{color:var(--amber)}.mv.m{color:var(--muted)}.mv.r{color:var(--red)}
+.card{background:var(--white);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.card-top{padding:20px 20px 0}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-icon-name{display:flex;align-items:center;gap:10px}
+.card-icon{font-size:24px;width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-name{font-size:15px;font-weight:800;color:var(--text);line-height:1.2}
+.card-system{font-size:11px;color:var(--muted);margin-top:1px}
 
-/* QUOTA BARS */
-.qsec{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:10px 0 8px}
-.qwrap{margin-bottom:9px}
-.qlr{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em}
-.qlr .qval{color:var(--text);font-weight:700}
-.qlr .qval.a{color:var(--amber)}.qlr .qval.r{color:var(--red)}.qlr .qval.g{color:var(--green)}
-.qtrack{height:5px;background:rgba(42,126,245,.08);border-radius:3px;overflow:hidden}
-.qfill{height:100%;border-radius:3px;transition:width 1.2s ease}
-.qfill.b{background:var(--blue)}.qfill.g{background:var(--green)}.qfill.a{background:var(--amber)}.qfill.r{background:var(--red)}
-.worker-note{margin-top:10px;padding:8px 10px;border-radius:6px;background:var(--amber-dim);border:1px solid rgba(240,160,32,.2);font-family:var(--mono);font-size:9px;color:var(--amber)}
+/* STATUS BADGE */
+.status{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.status.safe{background:var(--safe-bg);color:var(--safe);border:1px solid var(--safe-border)}
+.status.warn{background:var(--warn-bg);color:var(--warn);border:1px solid var(--warn-border)}
+.status.danger{background:var(--danger-bg);color:var(--danger);border:1px solid var(--danger-border)}
+.status.muted{background:#f1f5f9;color:var(--muted);border:1px solid #e2e8f0}
 
-/* COLLECTIONS */
-.coll-grid{display:flex;flex-direction:column;gap:3px;margin-top:4px}
-.crow{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:5px;background:rgba(42,126,245,.04);border:1px solid rgba(42,126,245,.06)}
-.cname2{font-family:var(--mono);font-size:10px;color:var(--muted)}
-.ccount{font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700}
+/* BIG METRIC */
+.big-metric{text-align:center;padding:12px 8px 16px}
+.big-num{font-size:56px;font-weight:900;letter-spacing:-.04em;line-height:1}
+.big-num.safe{color:var(--safe)}.big-num.warn{color:var(--warn)}.big-num.danger{color:var(--danger)}.big-num.blue{color:var(--blue)}
+.big-label{font-size:13px;color:var(--muted);margin-top:4px}
 
-/* TWO-COL BODY */
-.two{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
-.two-right{padding-left:18px;border-left:1px solid var(--border)}
-@media(max-width:680px){.two{grid-template-columns:1fr}.two-right{padding-left:0;border-left:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px}}
+/* PLAIN ROWS */
+.rows{display:flex;flex-direction:column;gap:0}
+.row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #f1f5f9}
+.row:first-child{border-top:none}
+.row-q{font-size:13px;color:var(--muted)}
+.row-a{font-size:13px;font-weight:700;color:var(--text);text-align:right;max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-a.safe{color:var(--safe)}.row-a.warn{color:var(--warn)}.row-a.danger{color:var(--danger)}
 
-/* CARD FOOTER */
-.cf{padding:9px 16px 11px 19px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-.clink{font-family:var(--mono);font-size:9px;color:var(--blue);text-decoration:none;letter-spacing:.05em;text-transform:uppercase}
-.clink:hover{color:#60a5fa}
-.cnote{font-family:var(--mono);font-size:9px;color:var(--muted)}
+/* QUOTA BAR inline */
+.quota-block{margin-bottom:14px}
+.quota-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.quota-name{font-size:12px;font-weight:600;color:var(--text)}
+.quota-nums{font-size:12px;font-weight:700}
+.quota-nums.safe{color:var(--safe)}.quota-nums.warn{color:var(--warn)}.quota-nums.danger{color:var(--danger)}
+.quota-track{height:10px;background:#f1f5f9;border-radius:6px;overflow:hidden;margin-bottom:4px}
+.quota-fill{height:100%;border-radius:6px;transition:width 1.2s ease}
+.quota-caption{font-size:11px;color:var(--muted)}
 
-/* USED-FOR */
-.uf{display:flex;flex-direction:column;gap:5px;margin-top:4px}
-.uf span{font-family:var(--mono);font-size:10px;color:var(--text)}
-.uf-sec{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;margin-top:2px}
+/* CARD DIVIDER */
+.card-divider{height:1px;background:#f1f5f9;margin:0 20px}
 
-/* WORKER STATUS BANNER */
-.worker-banner{background:rgba(240,160,32,.06);border:1px solid rgba(240,160,32,.18);border-radius:8px;padding:10px 14px;margin:0 32px 0;font-family:var(--mono);font-size:10px;color:var(--amber);display:none;align-items:center;gap:10px}
-.worker-banner.show{display:flex}
-.worker-banner a{color:var(--blue)}
+/* CARD BODY + FOOTER */
+.card-body{padding:16px 20px;flex:1}
+.card-footer{padding:12px 20px;background:#fafbfc;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.cost-tag{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px}
+.cost-free{background:#dcfce7;color:#15803d}
+.cost-watch{background:#fef3c7;color:#92400e}
+.cost-manual{background:#ede9fe;color:#6d28d9}
+.cf-link{font-size:11px;color:var(--blue);text-decoration:none;font-weight:600}
+.cf-link:hover{text-decoration:underline}
+
+/* COLLECTION MINI GRID */
+.coll-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.coll-item{background:#f8fafc;border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center}
+.coll-name{font-size:11px;color:var(--muted);font-weight:600}
+.coll-count{font-size:13px;font-weight:800;color:var(--text)}
+
+/* EMOJI STATUS BIG */
+.card-emoji-status{text-align:center;padding:8px 20px 0;font-size:36px}
+
+/* LAST UPDATED */
+.last-updated{text-align:center;font-size:11px;color:var(--muted);padding-top:4px;padding-bottom:12px}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
-<div class="hdr">
-  <canvas id="adminRadar"></canvas>
-  <div class="hdr-in">
+<div class="topbar">
+  <div class="topbar-left">
     <div>
-      <div class="hdr-eye">Skycare Aviation · YKF Base</div>
-      <div class="hdr-title">System Admin</div>
-      <div class="hdr-sub">infrastructure &nbsp;·&nbsp; services &nbsp;·&nbsp; quotas</div>
+      <div class="topbar-title">✈ Skycare Dashboard</div>
+      <div class="topbar-sub">Everything that runs the app, in plain English</div>
     </div>
-    <div class="hdr-right">
-      <div class="live-pill"><div class="live-dot"></div>Live</div>
-      <div class="ts" id="tsNow">—</div>
-      <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
-    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div class="live-pill"><div class="live-dot"></div>Live data</div>
+    <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
   </div>
 </div>
 
-<!-- Worker setup banner (shown if Worker hasn't written quota yet) -->
-<div class="worker-banner" id="workerBanner" style="margin-top:14px">
-  ⚠ Quota data not yet available — the Cloudflare Worker hasn't run yet.
-  <a href="https://dash.cloudflare.com" target="_blank">Set up the Worker →</a>
-</div>
+<div class="page">
 
-<div class="grid">
-
-  <!-- ── GITHUB ── -->
-  <div class="card g">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:rgba(255,255,255,.06)">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="#d8e8f8"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
-        </div>
+  <!-- ══ BUDGET SECTION ══ -->
+  <div>
+    <div class="section-label">💰 Money &amp; Free Credits — Read this first</div>
+    <div class="budget-hero">
+      <div class="bh-top">
         <div>
-          <div class="cname">GitHub</div>
-          <div class="chost">aristihernandez-svg / groomers-ykf</div>
+          <div class="bh-title">Google Cloud Free Trial Credit</div>
+          <div class="bh-big" id="gcp-credit-left">$<span id="gcp-dollars">—</span> <span>left</span></div>
+          <div class="bh-caption" id="gcp-days-left">Enter your remaining credit below ↓</div>
         </div>
-      </div>
-      <div class="tag g" id="gh-tag">Fetching…</div>
-    </div>
-    <div class="cb">
-      <div class="mr"><span class="ml">Last commit</span><span class="mv g" id="gh-time">…</span></div>
-      <div class="mr"><span class="ml">Message</span><span class="mv" id="gh-msg">…</span></div>
-      <div class="mr"><span class="ml">Author</span><span class="mv" id="gh-author">…</span></div>
-      <div class="mr"><span class="ml">Branch</span><span class="mv">main</span></div>
-      <div class="mr"><span class="ml">Total commits</span><span class="mv" id="gh-commits">…</span></div>
-      <div class="mr"><span class="ml">Repo size</span><span class="mv" id="gh-size">…</span></div>
-      <div class="mr"><span class="ml">Billing</span><span class="mv g">Free · public repo</span></div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://github.com/aristihernandez-svg/groomers-ykf" target="_blank">↗ Open repo</a>
-      <span class="cnote">No cost risk ever</span>
-    </div>
-  </div>
-
-  <!-- ── GITHUB PAGES ── -->
-  <div class="card g">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:rgba(255,255,255,.06)">🌐</div>
-        <div>
-          <div class="cname">GitHub Pages</div>
-          <div class="chost">aristihernandez-svg.github.io/groomers-ykf</div>
-        </div>
-      </div>
-      <div class="tag g" id="pages-tag">Pinging…</div>
-    </div>
-    <div class="cb">
-      <div class="mr"><span class="ml">App status</span><span class="mv" id="pages-status">checking…</span></div>
-      <div class="mr"><span class="ml">Response time</span><span class="mv" id="pages-rt">…</span></div>
-      <div class="mr"><span class="ml">Last deploy</span><span class="mv" id="gh-deploy">…</span></div>
-      <div class="mr"><span class="ml">Deploy trigger</span><span class="mv">git push → main</span></div>
-      <div class="mr"><span class="ml">Bandwidth</span><span class="mv g">Unlimited · free</span></div>
-      <div class="mr"><span class="ml">Billing</span><span class="mv g">Free forever</span></div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://aristihernandez-svg.github.io/groomers-ykf/" target="_blank">↗ Open live app</a>
-      <span class="cnote">No cost risk ever</span>
-    </div>
-  </div>
-
-  <!-- ── FIRESTORE (wide) ── -->
-  <div class="card a wide">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:var(--amber-dim)">🔥</div>
-        <div>
-          <div class="cname">Firebase Firestore</div>
-          <div class="chost">groomer-ykf · Spark free plan · resets midnight PT</div>
-        </div>
-      </div>
-      <div class="tag a">Watch closely</div>
-    </div>
-    <div class="cb two">
-      <!-- Left: quota bars from Worker -->
-      <div>
-        <div class="qsec">Daily quotas — via Cloudflare Worker</div>
-        <div class="qwrap">
-          <div class="qlr">
-            <span>Reads today</span>
-            <span class="qval" id="q-reads-label">— / 50,000</span>
+        <div style="background:rgba(255,255,255,.06);border-radius:12px;padding:14px 18px;min-width:180px">
+          <div style="font-size:11px;color:#94a3b8;font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:10px">Update my numbers</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div>
+              <div style="font-size:11px;color:#64748b;margin-bottom:3px">$ credit left</div>
+              <input id="inp-dollars" type="number" placeholder="e.g. 475" style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;font-weight:700">
+            </div>
+            <div>
+              <div style="font-size:11px;color:#64748b;margin-bottom:3px">Days left in trial</div>
+              <input id="inp-days" type="number" placeholder="e.g. 70" style="width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:6px;padding:6px 10px;font-size:13px;font-weight:700">
+            </div>
+            <button onclick="saveBudget()" style="background:#3b82f6;border:none;color:#fff;border-radius:6px;padding:7px 12px;font-size:12px;font-weight:700;cursor:pointer">Save</button>
           </div>
-          <div class="qtrack"><div class="qfill b" id="q-reads-bar" style="width:0%"></div></div>
         </div>
-        <div class="qwrap">
-          <div class="qlr">
-            <span>Writes today</span>
-            <span class="qval" id="q-writes-label">— / 20,000</span>
+      </div>
+      <div class="bh-meters">
+        <div class="bh-meter">
+          <div class="bh-meter-label">Trial days used</div>
+          <div class="bh-meter-val" id="bm-days-used">—</div>
+          <div class="bh-track"><div class="bh-fill" id="bm-days-bar" style="width:0%"></div></div>
+          <div class="bh-note" id="bm-days-note">Enter days above</div>
+        </div>
+        <div class="bh-meter">
+          <div class="bh-meter-label">Credit spent estimate</div>
+          <div class="bh-meter-val" id="bm-spent">—</div>
+          <div class="bh-track"><div class="bh-fill" id="bm-spent-bar" style="width:0%"></div></div>
+          <div class="bh-note" id="bm-spent-note">Enter $ above</div>
+        </div>
+        <div class="bh-meter">
+          <div class="bh-meter-label">🔥 Firebase Spark plan</div>
+          <div class="bh-meter-val" style="color:#4ade80">FREE</div>
+          <div class="bh-track"><div class="bh-fill fill-safe" style="width:100%"></div></div>
+          <div class="bh-note">No card needed · forever free</div>
+        </div>
+        <div class="bh-meter">
+          <div class="bh-meter-label">🐙 GitHub &amp; Pages</div>
+          <div class="bh-meter-val" style="color:#4ade80">FREE</div>
+          <div class="bh-track"><div class="bh-fill fill-safe" style="width:100%"></div></div>
+          <div class="bh-note">Free forever · no limits</div>
+        </div>
+      </div>
+      <a class="manual-link" href="https://console.cloud.google.com/billing" target="_blank">→ Check exact GCP billing on Google Cloud Console ↗</a>
+      &nbsp;&nbsp;
+      <a class="manual-link" href="https://console.anthropic.com" target="_blank">→ Check Claude / Anthropic usage ↗</a>
+    </div>
+  </div>
+
+  <!-- ══ DATABASE (FIRESTORE) ══ -->
+  <div>
+    <div class="section-label">🗄️ The App's Database — Firebase Firestore</div>
+    <div class="card card-wide">
+      <div class="card-top">
+        <div class="card-header">
+          <div class="card-icon-name">
+            <div class="card-icon" style="background:#fff7ed;font-size:26px">🔥</div>
+            <div>
+              <div class="card-name">Database (Firestore)</div>
+              <div class="card-system">This is where ALL the app's info is stored — tasks, audits, users, shopping lists, everything.</div>
+            </div>
           </div>
-          <div class="qtrack"><div class="qfill g" id="q-writes-bar" style="width:0%"></div></div>
+          <div class="status muted" id="fs-status-badge">Loading…</div>
         </div>
-        <div class="qwrap">
-          <div class="qlr">
-            <span>Deletes today</span>
-            <span class="qval" id="q-deletes-label">— / 20,000</span>
+
+        <!-- QUOTA BARS -->
+        <div>
+          <div class="quota-block">
+            <div class="quota-header">
+              <div class="quota-name">📖 How many times the app READ something today</div>
+              <div class="quota-nums" id="q-reads-label">— / 50,000</div>
+            </div>
+            <div class="quota-track"><div class="quota-fill" id="q-reads-bar" style="width:0%;background:#3b82f6"></div></div>
+            <div class="quota-caption" id="q-reads-cap">Free limit: 50,000 reads per day. Resets at midnight.</div>
           </div>
-          <div class="qtrack"><div class="qfill b" id="q-deletes-bar" style="width:0%"></div></div>
-        </div>
-        <div class="qwrap">
-          <div class="qlr">
-            <span>Storage (docs + indexes)</span>
-            <span class="qval" id="q-fs-storage-label">— / 1 GB</span>
+          <div class="quota-block">
+            <div class="quota-header">
+              <div class="quota-name">✏️ How many times the app SAVED something today</div>
+              <div class="quota-nums" id="q-writes-label">— / 20,000</div>
+            </div>
+            <div class="quota-track"><div class="quota-fill" id="q-writes-bar" style="width:0%;background:#22c55e"></div></div>
+            <div class="quota-caption" id="q-writes-cap">Free limit: 20,000 writes per day. Resets at midnight.</div>
           </div>
-          <div class="qtrack"><div class="qfill a" id="q-fs-storage-bar" style="width:0%"></div></div>
-        </div>
-        <div class="worker-note" id="workerNote">
-          ⚡ Worker not yet configured — quota bars will populate once the Cloudflare Worker runs.
-        </div>
-        <div class="mr" style="margin-top:10px"><span class="ml">Last worker run</span><span class="mv m" id="q-updated">—</span></div>
-      </div>
-      <!-- Right: live collection counts -->
-      <div class="two-right">
-        <div class="qsec">Collections · live document count</div>
-        <div class="coll-grid">
-          <div class="crow"><span class="cname2">tasks</span><span class="ccount" id="col-tasks">…</span></div>
-          <div class="crow"><span class="cname2">taskState</span><span class="ccount" id="col-taskState">…</span></div>
-          <div class="crow"><span class="cname2">auditCars</span><span class="ccount" id="col-auditCars">…</span></div>
-          <div class="crow"><span class="cname2">auditAircraft</span><span class="ccount" id="col-auditAircraft">…</span></div>
-          <div class="crow"><span class="cname2">auditHistory</span><span class="ccount" id="col-auditHistory">…</span></div>
-          <div class="crow"><span class="cname2">auditArchive</span><span class="ccount" id="col-auditArchive">…</span></div>
-          <div class="crow"><span class="cname2">facilityAudits</span><span class="ccount" id="col-facilityAudits">…</span></div>
-          <div class="crow"><span class="cname2">crewCarData</span><span class="ccount" id="col-crewCarData">…</span></div>
-          <div class="crow"><span class="cname2">appConfig</span><span class="ccount" id="col-appConfig">…</span></div>
-          <div class="crow"><span class="cname2">shoppingCatalog</span><span class="ccount" id="col-shoppingCatalog">…</span></div>
+          <div class="quota-block">
+            <div class="quota-header">
+              <div class="quota-name">🗑️ How many times something was DELETED today</div>
+              <div class="quota-nums" id="q-deletes-label">— / 20,000</div>
+            </div>
+            <div class="quota-track"><div class="quota-fill" id="q-deletes-bar" style="width:0%;background:#8b5cf6"></div></div>
+            <div class="quota-caption" id="q-deletes-cap">Free limit: 20,000 deletes per day.</div>
+          </div>
         </div>
       </div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/firestore" target="_blank">↗ Firestore Console</a>
-      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/usage" target="_blank">↗ Usage &amp; Billing</a>
-      <span class="cnote">Free tier · daily limits reset at midnight Pacific</span>
+
+      <div class="card-body">
+        <div class="rows">
+          <div class="row">
+            <div class="row-q">Last checked</div>
+            <div class="row-a" id="q-updated">—</div>
+          </div>
+          <div class="row">
+            <div class="row-q">Storage used (docs &amp; indexes)</div>
+            <div class="row-a" id="q-fs-storage-label">—</div>
+          </div>
+          <div class="row">
+            <div class="row-q">Free storage limit</div>
+            <div class="row-a safe">1 GB — you're fine</div>
+          </div>
+        </div>
+
+        <!-- COLLECTION COUNTS -->
+        <div style="margin-top:16px">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">What's stored inside</div>
+          <div class="coll-grid">
+            <div class="coll-item"><span class="coll-name">✅ Tasks</span><span class="coll-count" id="col-tasks">…</span></div>
+            <div class="coll-item"><span class="coll-name">🔄 Task State</span><span class="coll-count" id="col-taskState">…</span></div>
+            <div class="coll-item"><span class="coll-name">🚗 Car Audits</span><span class="coll-count" id="col-auditCars">…</span></div>
+            <div class="coll-item"><span class="coll-name">✈ Aircraft Audits</span><span class="coll-count" id="col-auditAircraft">…</span></div>
+            <div class="coll-item"><span class="coll-name">📋 Audit History</span><span class="coll-count" id="col-auditHistory">…</span></div>
+            <div class="coll-item"><span class="coll-name">📦 Audit Archive</span><span class="coll-count" id="col-auditArchive">…</span></div>
+            <div class="coll-item"><span class="coll-name">🏢 Facility Audits</span><span class="coll-count" id="col-facilityAudits">…</span></div>
+            <div class="coll-item"><span class="coll-name">🛒 Shopping</span><span class="coll-count" id="col-shoppingCatalog">…</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="cost-tag cost-watch">⚠ Watch this one — it has daily limits</div>
+        <a class="cf-link" href="https://console.firebase.google.com/project/groomer-ykf/firestore" target="_blank">Open Database Console ↗</a>
+      </div>
     </div>
   </div>
 
-  <!-- ── FIREBASE STORAGE ── -->
-  <div class="card a">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:var(--amber-dim)">🗄️</div>
-        <div>
-          <div class="cname">Firebase Storage</div>
-          <div class="chost">groomer-ykf.firebasestorage.app</div>
+  <!-- ══ ROW: STORAGE + APP STATUS ══ -->
+  <div>
+    <div class="section-label">📂 File Storage &amp; App Status</div>
+    <div class="cards">
+
+      <!-- FIREBASE STORAGE -->
+      <div class="card">
+        <div class="card-emoji-status" id="storage-emoji">📂</div>
+        <div class="card-top">
+          <div class="card-header">
+            <div class="card-icon-name">
+              <div>
+                <div class="card-name">Photo &amp; File Storage</div>
+                <div class="card-system">Where audit photos and PDFs are saved</div>
+              </div>
+            </div>
+            <div class="status" id="storage-badge">Loading…</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="big-metric">
+            <div class="big-num blue" id="storage-used">—</div>
+            <div class="big-label">used out of 5 GB free</div>
+          </div>
+          <div class="quota-block" style="margin-top:4px">
+            <div class="quota-track" style="height:14px"><div class="quota-fill" id="q-gcs-bar" style="width:0%;background:#3b82f6"></div></div>
+            <div class="quota-caption" style="margin-top:6px" id="storage-caption">Free limit is 5 GB. Photos fill this up over time.</div>
+          </div>
+          <div class="rows" style="margin-top:8px">
+            <div class="row"><div class="row-q">Downloads per day</div><div class="row-a safe">1 GB free</div></div>
+            <div class="row"><div class="row-q">What goes here</div><div class="row-a">Audit photos, PDFs</div></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="cost-tag cost-watch">⚠ Check monthly — photos add up</div>
+          <a class="cf-link" href="https://console.firebase.google.com/project/groomer-ykf/storage" target="_blank">Open Storage ↗</a>
         </div>
       </div>
-      <div class="tag a">Watch monthly</div>
-    </div>
-    <div class="cb">
-      <div class="mr"><span class="ml">Free limit</span><span class="mv">5 GB total</span></div>
-      <div class="mr"><span class="ml">Used (via Worker)</span><span class="mv" id="q-gcs-label">—</span></div>
-      <div class="qwrap" style="margin:8px 0">
-        <div class="qlr"><span>Storage used</span><span class="qval" id="q-gcs-pct">— / 5 GB</span></div>
-        <div class="qtrack"><div class="qfill a" id="q-gcs-bar" style="width:0%"></div></div>
+
+      <!-- APP LIVE STATUS -->
+      <div class="card">
+        <div class="card-emoji-status" id="pages-emoji">🌐</div>
+        <div class="card-top">
+          <div class="card-header">
+            <div class="card-icon-name">
+              <div>
+                <div class="card-name">The App (Live Website)</div>
+                <div class="card-system">Is Skycare loading for users right now?</div>
+              </div>
+            </div>
+            <div class="status" id="pages-badge">Checking…</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="big-metric">
+            <div class="big-num" id="pages-speed">—</div>
+            <div class="big-label" id="pages-speed-label">checking response time…</div>
+          </div>
+          <div class="rows">
+            <div class="row"><div class="row-q">Is the app online?</div><div class="row-a" id="pages-online">Checking…</div></div>
+            <div class="row"><div class="row-q">Last code update</div><div class="row-a" id="gh-deploy">…</div></div>
+            <div class="row"><div class="row-q">How to update it</div><div class="row-a">Just push to GitHub</div></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="cost-tag cost-free">✓ Free forever · no limits</div>
+          <a class="cf-link" href="https://aristihernandez-svg.github.io/groomers-ykf/" target="_blank">Open Live App ↗</a>
+        </div>
       </div>
-      <div class="mr"><span class="ml">Download / day</span><span class="mv">1 GB free</span></div>
-      <div class="mr"><span class="ml">Uploads / day</span><span class="mv">20,000 free</span></div>
-      <div class="mr"><span class="ml">Risk</span><span class="mv a">Grows with audit photos</span></div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/storage" target="_blank">↗ Storage Console</a>
-      <span class="cnote">Check monthly — photos accumulate</span>
     </div>
   </div>
 
-  <!-- ── FCM ── -->
-  <div class="card g">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:var(--green-dim)">🔔</div>
-        <div>
-          <div class="cname">Cloud Messaging (FCM)</div>
-          <div class="chost">Firebase · project groomer-ykf</div>
+  <!-- ══ ROW: GITHUB + NOTIFICATIONS ══ -->
+  <div>
+    <div class="section-label">🐙 Code &amp; Notifications</div>
+    <div class="cards">
+
+      <!-- GITHUB -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-header">
+            <div class="card-icon-name">
+              <div class="card-icon" style="background:#f8fafc">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#1a2332"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              </div>
+              <div>
+                <div class="card-name">GitHub — The Code Safe</div>
+                <div class="card-system">Every line of Skycare's code lives here</div>
+              </div>
+            </div>
+            <div class="status safe" id="gh-badge">Loading…</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="rows">
+            <div class="row"><div class="row-q">Last update</div><div class="row-a safe" id="gh-time">…</div></div>
+            <div class="row"><div class="row-q">What was changed</div><div class="row-a" id="gh-msg">…</div></div>
+            <div class="row"><div class="row-q">Changed by</div><div class="row-a" id="gh-author">…</div></div>
+            <div class="row"><div class="row-q">Total saves (commits)</div><div class="row-a" id="gh-commits">…</div></div>
+            <div class="row"><div class="row-q">Repo size</div><div class="row-a" id="gh-size">…</div></div>
+            <div class="row"><div class="row-q">Will this ever cost money?</div><div class="row-a safe">Never — it's free forever</div></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="cost-tag cost-free">✓ Free forever</div>
+          <a class="cf-link" href="https://github.com/aristihernandez-svg/groomers-ykf" target="_blank">Open GitHub ↗</a>
         </div>
       </div>
-      <div class="tag g">Free · No risk</div>
-    </div>
-    <div class="cb">
-      <div class="mr"><span class="ml">Subscribed devices</span><span class="mv g" id="fcm-devices">…</span></div>
-      <div class="mr"><span class="ml">Cost per message</span><span class="mv g">$0.00</span></div>
-      <div class="mr"><span class="ml">Monthly limit</span><span class="mv g">Unlimited</span></div>
-      <div class="mr"><span class="ml">Billing risk</span><span class="mv g">None</span></div>
-      <div class="mr"><span class="ml">Used for</span><span class="mv m">Shift start · Coffee · MX alerts</span></div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/messaging" target="_blank">↗ FCM Console</a>
-      <span class="cnote">Free forever</span>
+
+      <!-- FCM NOTIFICATIONS -->
+      <div class="card">
+        <div class="card-top">
+          <div class="card-header">
+            <div class="card-icon-name">
+              <div class="card-icon" style="background:#f0fdf4;font-size:22px">🔔</div>
+              <div>
+                <div class="card-name">Push Notifications</div>
+                <div class="card-system">The "ding" that alerts your team's phones</div>
+              </div>
+            </div>
+            <div class="status safe">Free forever</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="big-metric">
+            <div class="big-num safe" id="fcm-devices">—</div>
+            <div class="big-label">devices registered</div>
+          </div>
+          <div class="rows">
+            <div class="row"><div class="row-q">Cost per notification</div><div class="row-a safe">$0.00 — completely free</div></div>
+            <div class="row"><div class="row-q">Monthly limit</div><div class="row-a safe">Unlimited</div></div>
+            <div class="row"><div class="row-q">Used for</div><div class="row-a">Shift alerts, coffee, MX</div></div>
+            <div class="row"><div class="row-q">Will this ever cost money?</div><div class="row-a safe">Never</div></div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div class="cost-tag cost-free">✓ Free forever · unlimited</div>
+          <a class="cf-link" href="https://console.firebase.google.com/project/groomer-ykf/messaging" target="_blank">Open FCM ↗</a>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ── ANTHROPIC (wide) ── -->
-  <div class="card p wide">
-    <div class="ch">
-      <div class="ch-id">
-        <div class="cicon" style="background:var(--purple-dim)">✦</div>
-        <div>
-          <div class="cname">Anthropic · Claude Code</div>
-          <div class="chost">Development assistant · aristihernandez@gmail.com</div>
+  <!-- ══ CLAUDE / ANTHROPIC ══ -->
+  <div>
+    <div class="section-label">✦ Claude — The AI that builds Skycare</div>
+    <div class="card card-wide">
+      <div class="card-top">
+        <div class="card-header">
+          <div class="card-icon-name">
+            <div class="card-icon" style="background:#f5f3ff;font-size:22px">✦</div>
+            <div>
+              <div class="card-name">Anthropic · Claude Code</div>
+              <div class="card-system">The AI assistant writing every feature of this app — aristihernandez@gmail.com</div>
+            </div>
+          </div>
+          <div class="status warn">Check manually</div>
         </div>
       </div>
-      <div class="tag p">Manual check</div>
-    </div>
-    <div class="cb two">
-      <div>
-        <div class="mr"><span class="ml">Plan</span><span class="mv">Pro / Max</span></div>
-        <div class="mr"><span class="ml">Model in use</span><span class="mv">claude-sonnet-4-6</span></div>
-        <div class="mr"><span class="ml">Billing API</span><span class="mv m">Not publicly available</span></div>
-        <div class="mr"><span class="ml">Usage this month</span><span class="mv a">→ Check console</span></div>
-        <div class="mr"><span class="ml">Renews</span><span class="mv m">Monthly subscription</span></div>
-      </div>
-      <div class="two-right">
-        <div class="uf-sec">Built with Claude</div>
-        <div class="uf">
-          <span>→ All app features &amp; bug fixes</span>
-          <span>→ PDF generation &amp; audit guides</span>
-          <span>→ Firebase setup &amp; security rules</span>
-          <span>→ Cloudflare Worker &amp; admin page</span>
-          <span>→ Product maps &amp; presentations</span>
+      <div class="card-body">
+        <div style="background:#faf5ff;border-radius:10px;padding:14px 16px;margin-bottom:14px;border:1px solid #e9d5ff">
+          <div style="font-size:13px;font-weight:700;color:#7c3aed;margin-bottom:4px">⚠ I can't read Claude's billing automatically</div>
+          <div style="font-size:13px;color:#6b21a8">The Anthropic API doesn't share billing data publicly. You need to check it yourself at the link below. It shows how many tokens were used and how much was charged this month.</div>
+        </div>
+        <div class="rows">
+          <div class="row"><div class="row-q">Plan</div><div class="row-a">Pro or Max subscription</div></div>
+          <div class="row"><div class="row-q">Model being used</div><div class="row-a">claude-sonnet-4-6 (very capable)</div></div>
+          <div class="row"><div class="row-q">What was built with Claude</div><div class="row-a">The entire app — 100%</div></div>
+          <div class="row"><div class="row-q">Billing type</div><div class="row-a warn">Monthly subscription — check console</div></div>
         </div>
       </div>
-    </div>
-    <div class="cf">
-      <a class="clink" href="https://console.anthropic.com" target="_blank">↗ Anthropic Console · Usage &amp; Billing</a>
-      <span class="cnote">No in-app data — open console to check tokens &amp; spend</span>
+      <div class="card-footer">
+        <div class="cost-tag cost-manual">✦ Monthly — check console for exact spend</div>
+        <a class="cf-link" href="https://console.anthropic.com" target="_blank">Check Claude Billing ↗</a>
+      </div>
     </div>
   </div>
 
-</div>
+  <!-- ══ CLOUDFLARE WORKER ══ -->
+  <div>
+    <div class="section-label">⚡ Background Helper (Cloudflare Worker)</div>
+    <div class="card card-wide">
+      <div class="card-top" style="padding-bottom:16px">
+        <div class="card-header">
+          <div class="card-icon-name">
+            <div class="card-icon" style="background:#fff7ed;font-size:22px">⚡</div>
+            <div>
+              <div class="card-name">Cloudflare Worker — Quota Tracker</div>
+              <div class="card-system">This tiny robot wakes up every 45 min and checks how much of the database has been used, then writes the numbers you see above.</div>
+            </div>
+          </div>
+          <div class="status safe">Free · Running</div>
+        </div>
+        <div class="rows">
+          <div class="row"><div class="row-q">What it does</div><div class="row-a">Checks database usage every 45 minutes</div></div>
+          <div class="row"><div class="row-q">Free limit</div><div class="row-a safe">100,000 runs/day — we use ~32/day</div></div>
+          <div class="row"><div class="row-q">Will this ever cost money?</div><div class="row-a safe">No — we're far below the free limit</div></div>
+          <div class="row"><div class="row-q">Last data update</div><div class="row-a" id="worker-last-run">—</div></div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="cost-tag cost-free">✓ Free forever</div>
+        <a class="cf-link" href="https://dash.cloudflare.com" target="_blank">Cloudflare Dashboard ↗</a>
+        <a class="cf-link" href="https://skycare-quota-tracker.skycare.workers.dev" target="_blank">Force refresh now ↗</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;font-size:11px;color:var(--muted);padding-top:8px" id="page-ts">Last refreshed: —</div>
+
+</div><!-- /page -->
 
 <script>
 firebase.initializeApp({
@@ -366,190 +509,240 @@ firebase.initializeApp({
 });
 var db = firebase.firestore();
 
-// ── TIMESTAMP ──
-function updateTs() {
-  document.getElementById('tsNow').textContent =
-    new Date().toLocaleString('en-CA',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
-}
-updateTs();
+// ── BUDGET (localStorage) ──
+function loadBudgetUI() {
+  var dollars = parseFloat(localStorage.getItem('sky_gcp_dollars') || '');
+  var days    = parseInt(localStorage.getItem('sky_gcp_days') || '');
+  var startDate = localStorage.getItem('sky_gcp_start'); // ISO string when they first entered
 
-// ── RADAR ──
-(function(){
-  var c=document.getElementById('adminRadar'),ctx=c.getContext('2d'),angle=0,W,H,cx,cy,r;
-  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;cx=W*.82;cy=H/2;r=Math.max(W,H)*.55;}
-  resize(); window.addEventListener('resize',resize);
-  function draw(){
-    ctx.clearRect(0,0,W,H);
-    ctx.strokeStyle='rgba(42,126,245,.35)';ctx.lineWidth=1;
-    for(var i=.25;i<=1;i+=.25){ctx.beginPath();ctx.arc(cx,cy,r*i,0,Math.PI*2);ctx.stroke();}
-    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
-    ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
-    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,-0.4,0);ctx.fillStyle='rgba(42,126,245,.12)';ctx.fill();
-    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r,0);ctx.strokeStyle='rgba(42,126,245,.85)';ctx.lineWidth=1.5;ctx.stroke();
-    ctx.restore();angle+=.008;requestAnimationFrame(draw);
+  if (dollars) {
+    // We don't know how much was spent; show the credit remaining they typed
+    document.getElementById('gcp-dollars').textContent = dollars.toFixed(0);
+    document.getElementById('inp-dollars').value = dollars;
   }
-  draw();
-})();
+  if (days) {
+    document.getElementById('inp-days').value = days;
+    if (!startDate) {
+      // First time — set start to today minus nothing (we assume 'days left' was entered today)
+      startDate = new Date().toISOString();
+      localStorage.setItem('sky_gcp_start', startDate);
+    }
+    // Days elapsed since they first entered this
+    var elapsed = Math.round((Date.now() - new Date(startDate)) / 86400000);
+    var total   = days + elapsed; // approximate total trial days
+    var pctDays = Math.min(100, Math.round((elapsed / total) * 100));
+    document.getElementById('bm-days-used').textContent = elapsed + ' days elapsed';
+    document.getElementById('bm-days-bar').style.width = pctDays + '%';
+    document.getElementById('bm-days-bar').className = 'bh-fill ' + (pctDays > 75 ? 'fill-danger' : pctDays > 50 ? 'fill-warn' : 'fill-safe');
+    document.getElementById('bm-days-note').textContent = days + ' days still left in trial';
+    document.getElementById('gcp-days-left').textContent = days + ' days left in trial';
+  }
+  if (dollars) {
+    // Rough: assume linear burn. If they have $475 left and 70 days left, total was maybe $600 over 90 days
+    // We can't know actual spend — just show the credit they have left prominently
+    document.getElementById('bm-spent').textContent = '$' + dollars + ' left';
+    var pctCredit = Math.max(0, Math.min(100, Math.round(((600 - dollars) / 600) * 100)));
+    // simpler: show bar based on how much they have vs a $500 baseline
+    var usedEst = Math.max(0, 500 - dollars);
+    var pctSpent = Math.min(100, Math.round((usedEst / 500) * 100));
+    document.getElementById('bm-spent-bar').style.width = pctSpent + '%';
+    document.getElementById('bm-spent-bar').className = 'bh-fill ' + (pctSpent > 80 ? 'fill-danger' : pctSpent > 50 ? 'fill-warn' : 'fill-safe');
+    document.getElementById('bm-spent-note').textContent = 'Check Google Cloud Console for exact spend';
+  }
+}
+function saveBudget() {
+  var d = parseFloat(document.getElementById('inp-dollars').value);
+  var days = parseInt(document.getElementById('inp-days').value);
+  if (d) localStorage.setItem('sky_gcp_dollars', d);
+  if (days) {
+    localStorage.setItem('sky_gcp_days', days);
+    localStorage.setItem('sky_gcp_start', new Date().toISOString());
+  }
+  loadBudgetUI();
+}
+loadBudgetUI();
 
 // ── HELPERS ──
-function fmt(n){return n===null||n===undefined?'—':Number(n).toLocaleString();}
-function fmtBytes(b){
-  if(!b&&b!==0)return '—';
-  if(b<1024)return b+' B';
-  if(b<1048576)return (b/1024).toFixed(1)+' KB';
-  if(b<1073741824)return (b/1048576).toFixed(1)+' MB';
-  return (b/1073741824).toFixed(2)+' GB';
+function fmt(n) { return n === null || n === undefined ? '—' : Number(n).toLocaleString(); }
+function fmtBytes(b) {
+  if (!b && b !== 0) return '—';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  if (b < 1073741824) return (b / 1048576).toFixed(1) + ' MB';
+  return (b / 1073741824).toFixed(2) + ' GB';
 }
-function pct(val,max){return Math.min(100,Math.round((val/max)*100));}
-function setBar(barId,labelId,val,max,unit,threshAmber,threshRed){
-  var p=pct(val,max);
-  var bar=document.getElementById(barId);
-  var lbl=document.getElementById(labelId);
-  bar.style.width=p+'%';
-  bar.className='qfill '+(p>=threshRed?'r':p>=threshAmber?'a':'b');
-  lbl.textContent=fmt(val)+' / '+fmt(max)+(unit?' '+unit:'');
-  lbl.className='qval '+(p>=threshRed?'r':p>=threshAmber?'a':'g');
+function pct(val, max) { return Math.min(100, Math.round((val / max) * 100)); }
+function timeAgo(iso) {
+  var diff = Math.round((Date.now() - new Date(iso)) / 60000);
+  if (diff < 1) return 'just now';
+  if (diff < 60) return diff + 'm ago';
+  if (diff < 1440) return Math.round(diff / 60) + 'h ago';
+  return Math.round(diff / 1440) + 'd ago';
 }
-function timeAgo(iso){
-  var diff=Math.round((Date.now()-new Date(iso))/60000);
-  if(diff<1)return 'just now';
-  if(diff<60)return diff+'m ago';
-  if(diff<1440)return Math.round(diff/60)+'h ago';
-  return Math.round(diff/1440)+'d ago';
+function colorClass(p, a, r) { return p >= r ? 'danger' : p >= a ? 'warn' : 'safe'; }
+function fillColor(p, a, r) { return p >= r ? '#ef4444' : p >= a ? '#f59e0b' : '#22c55e'; }
+function setQuotaBar(barId, labelId, capId, val, max, unit, warnPct, dangerPct) {
+  var p = pct(val, max);
+  var cl = colorClass(p, warnPct, dangerPct);
+  document.getElementById(barId).style.width = p + '%';
+  document.getElementById(barId).style.background = fillColor(p, warnPct, dangerPct);
+  var lbl = document.getElementById(labelId);
+  lbl.textContent = fmt(val) + ' / ' + fmt(max) + (unit ? ' ' + unit : '');
+  lbl.className = 'quota-nums ' + cl;
+  if (capId) {
+    var pText = p < 40 ? '✅ You\'re well within the free limit — no worries!' :
+                p < 70 ? '⚡ Getting busy — keep an eye on this.' :
+                p < 90 ? '⚠️ This is getting close to the limit!' :
+                '🚨 ALMOST AT THE LIMIT — tell your developer!';
+    document.getElementById(capId).textContent = pText;
+  }
 }
 
 // ── GITHUB ──
-async function loadGitHub(){
-  try{
-    var r1=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
-    var commits=await r1.json();
-    if(commits[0]){
-      var c=commits[0].commit;
-      document.getElementById('gh-time').textContent=timeAgo(c.author.date);
-      document.getElementById('gh-msg').textContent=c.message.split('\n')[0];
-      document.getElementById('gh-author').textContent=c.author.name;
-      document.getElementById('gh-deploy').textContent=timeAgo(c.author.date);
+async function loadGitHub() {
+  try {
+    var r1 = await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
+    var commits = await r1.json();
+    if (commits[0]) {
+      var c = commits[0].commit;
+      document.getElementById('gh-time').textContent = timeAgo(c.author.date);
+      document.getElementById('gh-msg').textContent = c.message.split('\n')[0];
+      document.getElementById('gh-author').textContent = c.author.name;
+      document.getElementById('gh-deploy').textContent = timeAgo(c.author.date);
     }
-    var r2=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf');
-    var repo=await r2.json();
-    document.getElementById('gh-size').textContent=repo.size>1024?(repo.size/1024).toFixed(1)+' MB':repo.size+' KB';
-    document.getElementById('gh-tag').textContent='Live';
-
-    // Commit count from Link header
-    var r3=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
-    var link=r3.headers.get('Link')||'';
-    var m=link.match(/page=(\d+)>; rel="last"/);
-    if(m) document.getElementById('gh-commits').textContent=m[1]+' commits';
-  }catch(e){
-    document.getElementById('gh-tag').textContent='API Error';
-    document.getElementById('gh-tag').className='tag r';
+    var r2 = await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf');
+    var repo = await r2.json();
+    document.getElementById('gh-size').textContent = repo.size > 1024 ? (repo.size / 1024).toFixed(1) + ' MB' : repo.size + ' KB';
+    var r3 = await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
+    var link = r3.headers.get('Link') || '';
+    var m = link.match(/page=(\d+)>; rel="last"/);
+    if (m) document.getElementById('gh-commits').textContent = m[1];
+    document.getElementById('gh-badge').textContent = '✓ Connected';
+    document.getElementById('gh-badge').className = 'status safe';
+  } catch (e) {
+    document.getElementById('gh-badge').textContent = 'Error';
+    document.getElementById('gh-badge').className = 'status danger';
   }
 }
 
-// ── GITHUB PAGES PING ──
-async function loadPages(){
-  var t0=performance.now();
-  try{
-    await fetch('https://aristihernandez-svg.github.io/groomers-ykf/',{mode:'no-cors',cache:'no-store'});
-    var ms=Math.round(performance.now()-t0);
-    document.getElementById('pages-status').textContent='● Online';
-    document.getElementById('pages-status').className='mv g';
-    document.getElementById('pages-rt').textContent=ms+' ms';
-    document.getElementById('pages-rt').className=ms<500?'mv g':'mv a';
-    document.getElementById('pages-tag').textContent='Online';
-    document.getElementById('pages-tag').className='tag g';
-  }catch(e){
-    document.getElementById('pages-status').textContent='● Unreachable';
-    document.getElementById('pages-status').className='mv r';
-    document.getElementById('pages-tag').textContent='Down';
-    document.getElementById('pages-tag').className='tag r';
+// ── PAGES PING ──
+async function loadPages() {
+  var t0 = performance.now();
+  try {
+    await fetch('https://aristihernandez-svg.github.io/groomers-ykf/', { mode: 'no-cors', cache: 'no-store' });
+    var ms = Math.round(performance.now() - t0);
+    var speed = ms < 400 ? 'Fast' : ms < 1000 ? 'Normal' : 'Slow';
+    var cl = ms < 400 ? 'safe' : ms < 1000 ? 'warn' : 'danger';
+    document.getElementById('pages-emoji').textContent = ms < 400 ? '🟢' : ms < 1000 ? '🟡' : '🔴';
+    document.getElementById('pages-speed').textContent = ms + 'ms';
+    document.getElementById('pages-speed').className = 'big-num ' + cl;
+    document.getElementById('pages-speed-label').textContent = speed + ' response — app is online';
+    document.getElementById('pages-online').textContent = '✅ Yes — loading normally';
+    document.getElementById('pages-online').className = 'row-a safe';
+    document.getElementById('pages-badge').textContent = '✓ Online';
+    document.getElementById('pages-badge').className = 'status safe';
+  } catch (e) {
+    document.getElementById('pages-emoji').textContent = '🔴';
+    document.getElementById('pages-speed').textContent = '!!';
+    document.getElementById('pages-speed').className = 'big-num danger';
+    document.getElementById('pages-speed-label').textContent = 'App may be down!';
+    document.getElementById('pages-online').textContent = '❌ Not responding';
+    document.getElementById('pages-online').className = 'row-a danger';
+    document.getElementById('pages-badge').textContent = '✗ Down';
+    document.getElementById('pages-badge').className = 'status danger';
   }
 }
 
-// ── FIRESTORE QUOTA (from Cloudflare Worker) ──
-async function loadQuota(){
-  try{
-    var doc=await db.collection('adminStats').doc('quota').get();
-    if(!doc.exists){
-      document.getElementById('workerNote').style.display='block';
-      document.getElementById('workerBanner').classList.add('show');
+// ── FIRESTORE QUOTA ──
+async function loadQuota() {
+  try {
+    var doc = await db.collection('adminStats').doc('quota').get();
+    if (!doc.exists) {
+      document.getElementById('fs-status-badge').textContent = 'No data yet';
       return;
     }
-    var d=doc.data();
-    document.getElementById('workerNote').style.display='none';
+    var d = doc.data();
 
-    // Reads
-    setBar('q-reads-bar','q-reads-label',d.reads_today,50000,'',60,85);
-    // Writes
-    setBar('q-writes-bar','q-writes-label',d.writes_today,20000,'',60,85);
-    // Deletes
-    setBar('q-deletes-bar','q-deletes-label',d.deletes_today,20000,'',60,85);
-    // Firestore storage (bytes → show vs 1 GB)
-    var fsBytes=d.firestore_bytes||0;
-    setBar('q-fs-storage-bar','q-fs-storage-label',Math.round(fsBytes/1048576),1024,'MB',60,85);
+    setQuotaBar('q-reads-bar', 'q-reads-label', 'q-reads-cap', d.reads_today, 50000, '', 60, 85);
+    setQuotaBar('q-writes-bar', 'q-writes-label', 'q-writes-cap', d.writes_today, 20000, '', 60, 85);
+    setQuotaBar('q-deletes-bar', 'q-deletes-label', 'q-deletes-cap', d.deletes_today, 20000, '', 60, 85);
 
-    // Firebase Storage (GCS)
-    var gcsBytes=d.storage_bytes||0;
-    document.getElementById('q-gcs-label').textContent=fmtBytes(gcsBytes);
-    var gcsPct=pct(gcsBytes,5*1073741824);
-    document.getElementById('q-gcs-bar').style.width=gcsPct+'%';
-    document.getElementById('q-gcs-pct').textContent=fmtBytes(gcsBytes)+' / 5 GB';
+    var fsBytes = d.firestore_bytes || 0;
+    document.getElementById('q-fs-storage-label').textContent = fmtBytes(fsBytes) + ' used of 1 GB free';
 
-    // Updated timestamp
-    if(d.updated_at){
-      document.getElementById('q-updated').textContent=timeAgo(d.updated_at)+' ('+new Date(d.updated_at).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'})+')';
+    // Overall status
+    var maxPct = Math.max(
+      pct(d.reads_today, 50000),
+      pct(d.writes_today, 20000),
+      pct(d.deletes_today, 20000)
+    );
+    var badge = document.getElementById('fs-status-badge');
+    if (maxPct < 50) { badge.textContent = '✅ All good'; badge.className = 'status safe'; }
+    else if (maxPct < 80) { badge.textContent = '⚡ Getting busy'; badge.className = 'status warn'; }
+    else { badge.textContent = '🚨 Close to limit!'; badge.className = 'status danger'; }
+
+    // Storage
+    var gcsBytes = d.storage_bytes || 0;
+    var gcsPct = pct(gcsBytes, 5 * 1073741824);
+    document.getElementById('storage-used').textContent = fmtBytes(gcsBytes);
+    document.getElementById('storage-used').className = 'big-num ' + colorClass(gcsPct, 60, 85);
+    document.getElementById('q-gcs-bar').style.width = gcsPct + '%';
+    document.getElementById('q-gcs-bar').style.background = fillColor(gcsPct, 60, 85);
+    document.getElementById('storage-caption').textContent =
+      gcsPct < 30 ? '✅ You\'re using ' + gcsPct + '% of your free storage. No worries at all.' :
+      gcsPct < 60 ? '⚡ At ' + gcsPct + '% — still fine but keep an eye as photos accumulate.' :
+      '⚠️ ' + gcsPct + '% used — consider cleaning up old audit photos.';
+    var sb = document.getElementById('storage-badge');
+    if (gcsPct < 60) { sb.textContent = '✓ Fine'; sb.className = 'status safe'; }
+    else if (gcsPct < 85) { sb.textContent = '⚡ Watch this'; sb.className = 'status warn'; }
+    else { sb.textContent = '🚨 Almost full!'; sb.className = 'status danger'; }
+    document.getElementById('storage-emoji').textContent = gcsPct < 60 ? '📂' : gcsPct < 85 ? '📁' : '📦';
+
+    if (d.updated_at) {
+      var ts = timeAgo(d.updated_at) + ' (' + new Date(d.updated_at).toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' }) + ')';
+      document.getElementById('q-updated').textContent = ts;
+      document.getElementById('worker-last-run').textContent = ts;
     }
-  }catch(e){
-    console.warn('Quota load failed:',e.message);
+  } catch (e) {
+    console.warn('Quota:', e.message);
   }
 }
 
-// ── FIRESTORE COLLECTION COUNTS ──
-async function loadCollections(){
-  var cols=[
-    ['tasks','col-tasks'],
-    ['taskState','col-taskState'],
-    ['auditCars','col-auditCars'],
-    ['auditAircraft','col-auditAircraft'],
-    ['auditHistory','col-auditHistory'],
-    ['auditArchive','col-auditArchive'],
-    ['facilityAudits','col-facilityAudits'],
-    ['crewCarData','col-crewCarData'],
-    ['appConfig','col-appConfig'],
-    ['shoppingCatalog','col-shoppingCatalog'],
+// ── COLLECTIONS ──
+async function loadCollections() {
+  var cols = [
+    ['tasks','col-tasks'], ['taskState','col-taskState'],
+    ['auditCars','col-auditCars'], ['auditAircraft','col-auditAircraft'],
+    ['auditHistory','col-auditHistory'], ['auditArchive','col-auditArchive'],
+    ['facilityAudits','col-facilityAudits'], ['shoppingCatalog','col-shoppingCatalog'],
   ];
-  await Promise.all(cols.map(async([name,id])=>{
-    try{
-      var snap=await db.collection(name).get();
-      document.getElementById(id).textContent=snap.size+' docs';
-    }catch(e){
-      document.getElementById(id).textContent='—';
+  await Promise.all(cols.map(async ([name, id]) => {
+    try {
+      var snap = await db.collection(name).get();
+      document.getElementById(id).textContent = snap.size;
+    } catch (e) {
+      document.getElementById(id).textContent = '—';
     }
   }));
 }
 
-// ── FCM DEVICE COUNT ──
-async function loadFCM(){
-  try{
-    // Try common token collection names
-    var snap=await db.collection('notifTokens').get();
-    var count=snap.size;
-    if(count===0){
-      snap=await db.collection('fcmTokens').get();
-      count=snap.size;
-    }
-    document.getElementById('fcm-devices').textContent=count>0?count+' devices':'Check console';
-  }catch(e){
-    document.getElementById('fcm-devices').textContent='—';
+// ── FCM ──
+async function loadFCM() {
+  try {
+    var snap = await db.collection('notifTokens').get();
+    var count = snap.size;
+    if (count === 0) { snap = await db.collection('fcmTokens').get(); count = snap.size; }
+    document.getElementById('fcm-devices').textContent = count > 0 ? count : '—';
+  } catch (e) {
+    document.getElementById('fcm-devices').textContent = '—';
   }
 }
 
-// ── LOAD ALL ──
-async function loadAll(){
-  updateTs();
+// ── ALL ──
+async function loadAll() {
+  document.getElementById('page-ts').textContent = 'Last refreshed: ' + new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   await Promise.all([loadGitHub(), loadPages(), loadQuota(), loadCollections(), loadFCM()]);
 }
-
 loadAll();
 </script>
 </body>
