@@ -126,9 +126,99 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 
 /* LAST UPDATED */
 .last-updated{text-align:center;font-size:11px;color:var(--muted);padding-top:4px;padding-bottom:12px}
+/* PIN LOCK */
+#pin-lock{position:fixed;inset:0;z-index:99999;background:#1a2332;display:flex;align-items:center;justify-content:center;flex-direction:column}
+#pin-lock.hidden{display:none}
+.pin-box{background:#0f172a;border-radius:20px;padding:40px 36px;width:320px;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.5)}
+.pin-logo{font-size:36px;margin-bottom:12px}
+.pin-title{font-size:20px;font-weight:900;color:#fff;letter-spacing:-.03em;margin-bottom:4px}
+.pin-sub{font-size:13px;color:#64748b;margin-bottom:28px}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:24px}
+.pin-dot{width:14px;height:14px;border-radius:50%;background:#1e293b;border:2px solid #334155;transition:all .15s}
+.pin-dot.filled{background:#3b82f6;border-color:#3b82f6;transform:scale(1.1)}
+.pin-dot.error{background:#ef4444;border-color:#ef4444}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pin-key{background:#1e293b;border:1px solid #334155;color:#fff;font-size:20px;font-weight:700;border-radius:12px;padding:16px;cursor:pointer;transition:background .1s;-webkit-tap-highlight-color:transparent}
+.pin-key:active,.pin-key:hover{background:#2d3f5c}
+.pin-key.del{color:#94a3b8;font-size:16px}
+.pin-err{font-size:13px;color:#ef4444;margin-top:16px;min-height:20px}
 </style>
 </head>
 <body>
+
+<!-- PIN LOCK OVERLAY -->
+<div id="pin-lock">
+  <div class="pin-box">
+    <div class="pin-logo">✈</div>
+    <div class="pin-title">Skycare Admin</div>
+    <div class="pin-sub">Enter your PIN to continue</div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div>
+      <div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div>
+      <div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <button class="pin-key" onclick="pinKey('1')">1</button>
+      <button class="pin-key" onclick="pinKey('2')">2</button>
+      <button class="pin-key" onclick="pinKey('3')">3</button>
+      <button class="pin-key" onclick="pinKey('4')">4</button>
+      <button class="pin-key" onclick="pinKey('5')">5</button>
+      <button class="pin-key" onclick="pinKey('6')">6</button>
+      <button class="pin-key" onclick="pinKey('7')">7</button>
+      <button class="pin-key" onclick="pinKey('8')">8</button>
+      <button class="pin-key" onclick="pinKey('9')">9</button>
+      <button class="pin-key" style="visibility:hidden"></button>
+      <button class="pin-key" onclick="pinKey('0')">0</button>
+      <button class="pin-key del" onclick="pinDel()">⌫</button>
+    </div>
+    <div class="pin-err" id="pin-err"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var PIN='1984', entered='', locked=false;
+  // Check session
+  if(sessionStorage.getItem('sky_admin_ok')==='1'){
+    document.getElementById('pin-lock').classList.add('hidden');
+    return;
+  }
+  function updateDots(){
+    for(var i=0;i<4;i++){
+      var d=document.getElementById('pd'+i);
+      d.className='pin-dot'+(i<entered.length?' filled':'');
+    }
+  }
+  window.pinKey=function(k){
+    if(locked||entered.length>=4)return;
+    entered+=k;
+    updateDots();
+    document.getElementById('pin-err').textContent='';
+    if(entered.length===4){
+      if(entered===PIN){
+        sessionStorage.setItem('sky_admin_ok','1');
+        document.getElementById('pin-lock').classList.add('hidden');
+      } else {
+        locked=true;
+        for(var i=0;i<4;i++) document.getElementById('pd'+i).className='pin-dot error';
+        document.getElementById('pin-err').textContent='Wrong PIN. Try again.';
+        setTimeout(function(){entered='';locked=false;updateDots();document.getElementById('pin-err').textContent='';},1200);
+      }
+    }
+  };
+  window.pinDel=function(){
+    if(locked)return;
+    entered=entered.slice(0,-1);
+    updateDots();
+  };
+  // Keyboard support
+  document.addEventListener('keydown',function(e){
+    if(e.key>='0'&&e.key<='9') pinKey(e.key);
+    else if(e.key==='Backspace') pinDel();
+  });
+})();
+</script>
 
 <div class="topbar">
   <div class="topbar-left">
