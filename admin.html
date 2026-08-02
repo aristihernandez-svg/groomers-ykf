@@ -20,22 +20,61 @@
   --radius:16px;
   --shadow:0 2px 12px rgba(0,0,0,.07);
   --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  --sb-w:220px;
+  --tb-h:52px;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;min-height:100vh;padding-bottom:60px}
 
-/* TOP BAR */
-.topbar{background:#1a2332;color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-title{font-size:18px;font-weight:800;letter-spacing:-.03em}
-.topbar-sub{font-size:12px;color:#94a3b8;margin-top:1px}
-.live-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:4px 12px;font-size:11px;color:#4ade80;font-weight:700}
-.live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.refresh-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer}
-.refresh-btn:hover{background:rgba(255,255,255,.18)}
+/* ── SIDEBAR ── */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--sb-w);background:#0d1520;display:flex;flex-direction:column;z-index:200;border-right:1px solid rgba(255,255,255,.05)}
+.sb-brand{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.sb-brand-icon{font-size:18px;margin-bottom:6px}
+.sb-brand-name{font-size:14px;font-weight:900;color:#fff;letter-spacing:-.02em;line-height:1}
+.sb-brand-sub{font-size:10px;color:#2a4a6a;text-transform:uppercase;letter-spacing:.12em;margin-top:3px}
+.sb-nav{flex:1;overflow-y:auto;padding:10px 0;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.sb-group-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:#1e3a5f;padding:14px 16px 5px;user-select:none}
+.sb-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;border-left:3px solid transparent;transition:background .12s,border-color .12s,color .12s;text-decoration:none;color:#4a6a8a;font-size:13px;font-weight:600;position:relative}
+.sb-item:hover{background:rgba(255,255,255,.04);color:#94a3b8}
+.sb-item.active{background:linear-gradient(90deg,rgba(37,99,235,.18) 0%,transparent 100%);border-left-color:#3b82f6;color:#fff}
+.sb-item-icon{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.sb-item-label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sb-item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-left:auto}
+.sb-item-dot.safe{background:#22c55e}.sb-item-dot.warn{background:#f59e0b}.sb-item-dot.danger{background:#ef4444}.sb-item-dot.free{background:#1e3a5f}
+.sb-sep{height:1px;background:rgba(255,255,255,.05);margin:8px 16px}
+.sb-footer{padding:12px 16px;border-top:1px solid rgba(255,255,255,.06);flex-shrink:0}
+.sb-refresh{width:100%;background:rgba(37,99,235,.15);border:1px solid rgba(37,99,235,.3);color:#60a5fa;border-radius:8px;padding:8px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.03em;transition:background .12s}
+.sb-refresh:hover{background:rgba(37,99,235,.25)}
+.sb-ts{font-size:10px;color:#1e3a5f;text-align:center;margin-top:6px}
 
-/* SECTIONS */
+/* ── TOPBAR (right of sidebar) ── */
+.topbar{position:fixed;top:0;left:var(--sb-w);right:0;height:var(--tb-h);background:#111e30;color:#fff;padding:0 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:100;border-bottom:1px solid rgba(255,255,255,.06)}
+.tb-title{font-size:15px;font-weight:800;letter-spacing:-.02em;color:#fff}
+.tb-right{display:flex;align-items:center;gap:10px}
+.live-pill{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:20px;padding:3px 10px;font-size:10px;color:#4ade80;font-weight:700}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#4ade80;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.refresh-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#94a3b8;border-radius:7px;padding:6px 12px;font-size:11px;font-weight:600;cursor:pointer;transition:background .12s}
+.refresh-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.ham-btn{display:none;background:none;border:none;color:#94a3b8;font-size:20px;cursor:pointer;padding:4px}
+
+/* ── LAYOUT SHELL ── */
+.layout{margin-left:var(--sb-w);padding-top:var(--tb-h)}
+/* ── SECTIONS ── */
 .page{max-width:960px;margin:0 auto;padding:24px 20px;display:flex;flex-direction:column;gap:20px}
+
+/* ── SIDEBAR OVERLAY (mobile) ── */
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:199}
+.sb-overlay.show{display:block}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  .sidebar{transform:translateX(-100%);transition:transform .22s ease}
+  .sidebar.open{transform:translateX(0)}
+  .topbar{left:0}
+  .layout{margin-left:0}
+  .ham-btn{display:block}
+}
 .section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px}
 
 /* BUDGET HERO — the trial/credit warning */
@@ -230,21 +269,85 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
 })();
 </script>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <div>
-      <div class="topbar-title">✈ Skycare Dashboard</div>
-      <div class="topbar-sub">Everything that runs the app, in plain English</div>
-    </div>
+<!-- SIDEBAR OVERLAY (mobile tap-outside) -->
+<div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+
+<!-- SIDEBAR -->
+<nav class="sidebar" id="sidebar">
+  <div class="sb-brand">
+    <div class="sb-brand-icon">✈</div>
+    <div class="sb-brand-name">Skycare YKF</div>
+    <div class="sb-brand-sub">Admin Dashboard</div>
   </div>
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-    <div class="live-pill"><div class="live-dot"></div>Live data</div>
+
+  <div class="sb-nav">
+    <div class="sb-group-label">Overview</div>
+    <a class="sb-item active" id="sbn-guide" href="#sec-guide" onclick="sbClick(event,this,'sec-guide')">
+      <span class="sb-item-icon">📋</span><span class="sb-item-label">Quick Guide</span>
+    </a>
+    <a class="sb-item" id="sbn-budget" href="#sec-budget" onclick="sbClick(event,this,'sec-budget')">
+      <span class="sb-item-icon">💰</span><span class="sb-item-label">Budget &amp; Trial</span>
+      <span class="sb-item-dot warn"></span>
+    </a>
+
+    <div class="sb-sep"></div>
+    <div class="sb-group-label">App Infrastructure</div>
+    <a class="sb-item" id="sbn-database" href="#sec-database" onclick="sbClick(event,this,'sec-database')">
+      <span class="sb-item-icon">🔥</span><span class="sb-item-label">Database</span>
+      <span class="sb-item-dot warn" id="dot-database"></span>
+    </a>
+    <a class="sb-item" id="sbn-storage" href="#sec-storage" onclick="sbClick(event,this,'sec-storage')">
+      <span class="sb-item-icon">📂</span><span class="sb-item-label">File Storage</span>
+      <span class="sb-item-dot safe" id="dot-storage"></span>
+    </a>
+    <a class="sb-item" id="sbn-app" href="#sec-app" onclick="sbClick(event,this,'sec-app')">
+      <span class="sb-item-icon">🌐</span><span class="sb-item-label">Live App</span>
+      <span class="sb-item-dot safe" id="dot-app"></span>
+    </a>
+
+    <div class="sb-sep"></div>
+    <div class="sb-group-label">Development</div>
+    <a class="sb-item" id="sbn-github" href="#sec-github" onclick="sbClick(event,this,'sec-github')">
+      <span class="sb-item-icon">🐙</span><span class="sb-item-label">GitHub</span>
+      <span class="sb-item-dot safe" id="dot-github"></span>
+    </a>
+    <a class="sb-item" id="sbn-notif" href="#sec-notif" onclick="sbClick(event,this,'sec-notif')">
+      <span class="sb-item-icon">🔔</span><span class="sb-item-label">Notifications</span>
+      <span class="sb-item-dot free"></span>
+    </a>
+    <a class="sb-item" id="sbn-claude" href="#sec-claude" onclick="sbClick(event,this,'sec-claude')">
+      <span class="sb-item-icon">✦</span><span class="sb-item-label">Claude AI</span>
+      <span class="sb-item-dot warn"></span>
+    </a>
+    <a class="sb-item" id="sbn-worker" href="#sec-worker" onclick="sbClick(event,this,'sec-worker')">
+      <span class="sb-item-icon">⚡</span><span class="sb-item-label">Cloudflare Worker</span>
+      <span class="sb-item-dot free"></span>
+    </a>
+  </div>
+
+  <div class="sb-footer">
+    <button class="sb-refresh" onclick="loadAll()">↻ Refresh all data</button>
+    <div class="sb-ts" id="sb-ts">—</div>
+  </div>
+</nav>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <button class="ham-btn" onclick="openSidebar()">☰</button>
+    <div class="tb-title" id="tb-section-name">Quick Guide</div>
+  </div>
+  <div class="tb-right">
+    <div class="live-pill"><div class="live-dot"></div>Live</div>
     <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
   </div>
 </div>
 
+<div class="layout">
+
 <div class="page">
 
+  <div id="sec-guide"></div>
   <!-- ══ QUICK REFERENCE TABLE ══ -->
   <div>
     <div class="section-label">📋 What's running Skycare — quick guide</div>
@@ -317,6 +420,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
     </div>
   </div>
 
+  <div id="sec-budget"></div>
   <!-- ══ BUDGET SECTION ══ -->
   <div>
     <div class="section-label">💰 Money &amp; Free Credits — Read this first</div>
@@ -686,6 +790,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15
   <div style="text-align:center;font-size:11px;color:var(--muted);padding-top:8px" id="page-ts">Last refreshed: —</div>
 
 </div><!-- /page -->
+</div><!-- /layout -->
 
 <script>
 firebase.initializeApp({
@@ -1031,6 +1136,80 @@ async function loadAll() {
   await Promise.all([loadGitHub(), loadPages(), loadQuota(), loadCollections(), loadFCM()]);
 }
 loadAll();
+
+// ── SIDEBAR JS ──
+var SB_SECTIONS = [
+  {id:'sec-guide',   nav:'sbn-guide',    label:'Quick Guide'},
+  {id:'sec-budget',  nav:'sbn-budget',   label:'Budget & Trial'},
+  {id:'sec-database',nav:'sbn-database', label:'Database'},
+  {id:'sec-storage', nav:'sbn-storage',  label:'File Storage'},
+  {id:'sec-app',     nav:'sbn-app',      label:'Live App'},
+  {id:'sec-github',  nav:'sbn-github',   label:'GitHub'},
+  {id:'sec-notif',   nav:'sbn-notif',    label:'Notifications'},
+  {id:'sec-claude',  nav:'sbn-claude',   label:'Claude AI'},
+  {id:'sec-worker',  nav:'sbn-worker',   label:'Cloudflare Worker'},
+];
+
+// Smooth scroll with offset for fixed topbar
+function sbClick(e, el, secId) {
+  e.preventDefault();
+  var target = document.getElementById(secId);
+  if (!target) return;
+  var offset = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--tb-h')) || 52;
+  var top = target.getBoundingClientRect().top + window.scrollY - offset - 12;
+  window.scrollTo({top: top, behavior: 'smooth'});
+  if (window.innerWidth <= 768) closeSidebar();
+}
+
+// Active state via IntersectionObserver
+var activeNav = 'sbn-guide';
+function setActive(navId) {
+  if (navId === activeNav) return;
+  var prev = document.getElementById(activeNav);
+  if (prev) prev.classList.remove('active');
+  var next = document.getElementById(navId);
+  if (next) { next.classList.add('active'); activeNav = navId; }
+  var sec = SB_SECTIONS.find(function(s){ return s.nav === navId; });
+  if (sec) document.getElementById('tb-section-name').textContent = sec.label;
+}
+
+var observer = new IntersectionObserver(function(entries) {
+  entries.forEach(function(entry) {
+    if (entry.isIntersecting) {
+      var sec = SB_SECTIONS.find(function(s){ return s.id === entry.target.id; });
+      if (sec) setActive(sec.nav);
+    }
+  });
+}, { rootMargin: '-52px 0px -60% 0px', threshold: 0 });
+
+SB_SECTIONS.forEach(function(s) {
+  var el = document.getElementById(s.id);
+  if (el) observer.observe(el);
+});
+
+// Status dots — called from load functions
+function setSbDot(dotId, level) {
+  var el = document.getElementById(dotId);
+  if (el) el.className = 'sb-item-dot ' + level;
+}
+
+// Mobile open/close
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('sbOverlay').classList.add('show');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sbOverlay').classList.remove('show');
+}
+
+// Keep sidebar timestamp in sync
+var _origLoadAll = loadAll;
+loadAll = async function() {
+  await _origLoadAll();
+  var ts = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sb-ts').textContent = 'Updated ' + ts;
+};
 </script>
 </body>
 </html>
