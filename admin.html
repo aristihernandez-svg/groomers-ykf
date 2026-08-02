@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Skycare YKF · System Admin</title>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#06101f;--panel:#0c1828;--raised:#111e30;
+  --border:rgba(42,126,245,.13);--border2:rgba(42,126,245,.22);
+  --blue:#2a7ef5;--blue-dim:rgba(42,126,245,.1);
+  --green:#22c55e;--green-dim:rgba(34,197,94,.1);
+  --amber:#f0a020;--amber-dim:rgba(240,160,32,.1);
+  --red:#ef4444;--red-dim:rgba(239,68,68,.1);
+  --purple:#8b5cf6;--purple-dim:rgba(139,92,246,.1);
+  --text:#d8e8f8;--muted:#4a6a8a;
+  --mono:'Courier New',Courier,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.6;min-height:100vh}
+
+/* HEADER */
+.hdr{position:relative;overflow:hidden;padding:26px 32px 22px;border-bottom:1px solid var(--border);background:linear-gradient(175deg,#0b1e3c 0%,var(--bg) 80%)}
+.hdr canvas{position:absolute;inset:0;width:100%;height:100%;opacity:.15;pointer-events:none}
+.hdr-in{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.hdr-eye{font-family:var(--mono);font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin-bottom:6px}
+.hdr-title{font-size:24px;font-weight:900;letter-spacing:-.04em;color:#fff;line-height:1;margin-bottom:3px}
+.hdr-sub{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.hdr-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.live-pill{display:inline-flex;align-items:center;gap:6px;background:var(--green-dim);border:1px solid rgba(34,197,94,.28);border-radius:20px;padding:4px 11px 4px 8px;font-family:var(--mono);font-size:9px;color:var(--green);font-weight:700;letter-spacing:.06em}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:lpulse 2s infinite}
+@keyframes lpulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.5)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(34,197,94,0)}}
+.ts{font-family:var(--mono);font-size:9px;color:var(--muted);text-align:right}
+.refresh-btn{font-family:var(--mono);font-size:9px;color:var(--blue);background:var(--blue-dim);border:1px solid rgba(42,126,245,.25);border-radius:6px;padding:4px 10px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
+.refresh-btn:hover{background:rgba(42,126,245,.18)}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:22px 32px 48px;max-width:1000px;margin:0 auto}
+.wide{grid-column:span 2}
+@media(max-width:680px){.grid{grid-template-columns:1fr;padding:16px}.wide{grid-column:span 1}}
+
+/* CARD */
+.card{background:var(--panel);border:1px solid var(--border);border-radius:11px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%}
+.g::before{background:var(--green)}.a::before{background:var(--amber)}.m::before{background:rgba(74,106,138,.4)}.p::before{background:var(--purple)}
+
+/* CARD HEAD */
+.ch{display:flex;align-items:center;justify-content:space-between;padding:13px 16px 12px 19px;border-bottom:1px solid var(--border)}
+.ch-id{display:flex;align-items:center;gap:10px}
+.cicon{width:31px;height:31px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cname{font-size:13px;font-weight:800;color:#fff;letter-spacing:-.02em;line-height:1.2}
+.chost{font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:1px}
+.tag{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap;flex-shrink:0}
+.tag.g{background:var(--green-dim);color:var(--green);border:1px solid rgba(34,197,94,.28)}
+.tag.a{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,160,32,.28)}
+.tag.m{background:rgba(74,106,138,.1);color:var(--muted);border:1px solid rgba(74,106,138,.2)}
+.tag.p{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(139,92,246,.28)}
+.tag.r{background:var(--red-dim);color:var(--red);border:1px solid rgba(239,68,68,.28)}
+
+/* CARD BODY */
+.cb{padding:13px 16px 12px 19px;flex:1}
+.mr{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(42,126,245,.05)}
+.mr:last-child{border-bottom:none}
+.ml{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.mv{font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700;text-align:right;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mv.g{color:var(--green)}.mv.a{color:var(--amber)}.mv.m{color:var(--muted)}.mv.r{color:var(--red)}
+
+/* QUOTA BARS */
+.qsec{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin:10px 0 8px}
+.qwrap{margin-bottom:9px}
+.qlr{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.07em}
+.qlr .qval{color:var(--text);font-weight:700}
+.qlr .qval.a{color:var(--amber)}.qlr .qval.r{color:var(--red)}.qlr .qval.g{color:var(--green)}
+.qtrack{height:5px;background:rgba(42,126,245,.08);border-radius:3px;overflow:hidden}
+.qfill{height:100%;border-radius:3px;transition:width 1.2s ease}
+.qfill.b{background:var(--blue)}.qfill.g{background:var(--green)}.qfill.a{background:var(--amber)}.qfill.r{background:var(--red)}
+.worker-note{margin-top:10px;padding:8px 10px;border-radius:6px;background:var(--amber-dim);border:1px solid rgba(240,160,32,.2);font-family:var(--mono);font-size:9px;color:var(--amber)}
+
+/* COLLECTIONS */
+.coll-grid{display:flex;flex-direction:column;gap:3px;margin-top:4px}
+.crow{display:flex;align-items:center;justify-content:space-between;padding:4px 8px;border-radius:5px;background:rgba(42,126,245,.04);border:1px solid rgba(42,126,245,.06)}
+.cname2{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.ccount{font-family:var(--mono);font-size:10px;color:var(--text);font-weight:700}
+
+/* TWO-COL BODY */
+.two{display:grid;grid-template-columns:1fr 1fr;gap:0 24px}
+.two-right{padding-left:18px;border-left:1px solid var(--border)}
+@media(max-width:680px){.two{grid-template-columns:1fr}.two-right{padding-left:0;border-left:none;border-top:1px solid var(--border);margin-top:12px;padding-top:12px}}
+
+/* CARD FOOTER */
+.cf{padding:9px 16px 11px 19px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+.clink{font-family:var(--mono);font-size:9px;color:var(--blue);text-decoration:none;letter-spacing:.05em;text-transform:uppercase}
+.clink:hover{color:#60a5fa}
+.cnote{font-family:var(--mono);font-size:9px;color:var(--muted)}
+
+/* USED-FOR */
+.uf{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.uf span{font-family:var(--mono);font-size:10px;color:var(--text)}
+.uf-sec{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:7px;margin-top:2px}
+
+/* WORKER STATUS BANNER */
+.worker-banner{background:rgba(240,160,32,.06);border:1px solid rgba(240,160,32,.18);border-radius:8px;padding:10px 14px;margin:0 32px 0;font-family:var(--mono);font-size:10px;color:var(--amber);display:none;align-items:center;gap:10px}
+.worker-banner.show{display:flex}
+.worker-banner a{color:var(--blue)}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <canvas id="adminRadar"></canvas>
+  <div class="hdr-in">
+    <div>
+      <div class="hdr-eye">Skycare Aviation · YKF Base</div>
+      <div class="hdr-title">System Admin</div>
+      <div class="hdr-sub">infrastructure &nbsp;·&nbsp; services &nbsp;·&nbsp; quotas</div>
+    </div>
+    <div class="hdr-right">
+      <div class="live-pill"><div class="live-dot"></div>Live</div>
+      <div class="ts" id="tsNow">—</div>
+      <button class="refresh-btn" onclick="loadAll()">↻ Refresh</button>
+    </div>
+  </div>
+</div>
+
+<!-- Worker setup banner (shown if Worker hasn't written quota yet) -->
+<div class="worker-banner" id="workerBanner" style="margin-top:14px">
+  ⚠ Quota data not yet available — the Cloudflare Worker hasn't run yet.
+  <a href="https://dash.cloudflare.com" target="_blank">Set up the Worker →</a>
+</div>
+
+<div class="grid">
+
+  <!-- ── GITHUB ── -->
+  <div class="card g">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:rgba(255,255,255,.06)">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="#d8e8f8"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.34-3.369-1.34-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+        </div>
+        <div>
+          <div class="cname">GitHub</div>
+          <div class="chost">aristihernandez-svg / groomers-ykf</div>
+        </div>
+      </div>
+      <div class="tag g" id="gh-tag">Fetching…</div>
+    </div>
+    <div class="cb">
+      <div class="mr"><span class="ml">Last commit</span><span class="mv g" id="gh-time">…</span></div>
+      <div class="mr"><span class="ml">Message</span><span class="mv" id="gh-msg">…</span></div>
+      <div class="mr"><span class="ml">Author</span><span class="mv" id="gh-author">…</span></div>
+      <div class="mr"><span class="ml">Branch</span><span class="mv">main</span></div>
+      <div class="mr"><span class="ml">Total commits</span><span class="mv" id="gh-commits">…</span></div>
+      <div class="mr"><span class="ml">Repo size</span><span class="mv" id="gh-size">…</span></div>
+      <div class="mr"><span class="ml">Billing</span><span class="mv g">Free · public repo</span></div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://github.com/aristihernandez-svg/groomers-ykf" target="_blank">↗ Open repo</a>
+      <span class="cnote">No cost risk ever</span>
+    </div>
+  </div>
+
+  <!-- ── GITHUB PAGES ── -->
+  <div class="card g">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:rgba(255,255,255,.06)">🌐</div>
+        <div>
+          <div class="cname">GitHub Pages</div>
+          <div class="chost">aristihernandez-svg.github.io/groomers-ykf</div>
+        </div>
+      </div>
+      <div class="tag g" id="pages-tag">Pinging…</div>
+    </div>
+    <div class="cb">
+      <div class="mr"><span class="ml">App status</span><span class="mv" id="pages-status">checking…</span></div>
+      <div class="mr"><span class="ml">Response time</span><span class="mv" id="pages-rt">…</span></div>
+      <div class="mr"><span class="ml">Last deploy</span><span class="mv" id="gh-deploy">…</span></div>
+      <div class="mr"><span class="ml">Deploy trigger</span><span class="mv">git push → main</span></div>
+      <div class="mr"><span class="ml">Bandwidth</span><span class="mv g">Unlimited · free</span></div>
+      <div class="mr"><span class="ml">Billing</span><span class="mv g">Free forever</span></div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://aristihernandez-svg.github.io/groomers-ykf/" target="_blank">↗ Open live app</a>
+      <span class="cnote">No cost risk ever</span>
+    </div>
+  </div>
+
+  <!-- ── FIRESTORE (wide) ── -->
+  <div class="card a wide">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:var(--amber-dim)">🔥</div>
+        <div>
+          <div class="cname">Firebase Firestore</div>
+          <div class="chost">groomer-ykf · Spark free plan · resets midnight PT</div>
+        </div>
+      </div>
+      <div class="tag a">Watch closely</div>
+    </div>
+    <div class="cb two">
+      <!-- Left: quota bars from Worker -->
+      <div>
+        <div class="qsec">Daily quotas — via Cloudflare Worker</div>
+        <div class="qwrap">
+          <div class="qlr">
+            <span>Reads today</span>
+            <span class="qval" id="q-reads-label">— / 50,000</span>
+          </div>
+          <div class="qtrack"><div class="qfill b" id="q-reads-bar" style="width:0%"></div></div>
+        </div>
+        <div class="qwrap">
+          <div class="qlr">
+            <span>Writes today</span>
+            <span class="qval" id="q-writes-label">— / 20,000</span>
+          </div>
+          <div class="qtrack"><div class="qfill g" id="q-writes-bar" style="width:0%"></div></div>
+        </div>
+        <div class="qwrap">
+          <div class="qlr">
+            <span>Deletes today</span>
+            <span class="qval" id="q-deletes-label">— / 20,000</span>
+          </div>
+          <div class="qtrack"><div class="qfill b" id="q-deletes-bar" style="width:0%"></div></div>
+        </div>
+        <div class="qwrap">
+          <div class="qlr">
+            <span>Storage (docs + indexes)</span>
+            <span class="qval" id="q-fs-storage-label">— / 1 GB</span>
+          </div>
+          <div class="qtrack"><div class="qfill a" id="q-fs-storage-bar" style="width:0%"></div></div>
+        </div>
+        <div class="worker-note" id="workerNote">
+          ⚡ Worker not yet configured — quota bars will populate once the Cloudflare Worker runs.
+        </div>
+        <div class="mr" style="margin-top:10px"><span class="ml">Last worker run</span><span class="mv m" id="q-updated">—</span></div>
+      </div>
+      <!-- Right: live collection counts -->
+      <div class="two-right">
+        <div class="qsec">Collections · live document count</div>
+        <div class="coll-grid">
+          <div class="crow"><span class="cname2">tasks</span><span class="ccount" id="col-tasks">…</span></div>
+          <div class="crow"><span class="cname2">taskState</span><span class="ccount" id="col-taskState">…</span></div>
+          <div class="crow"><span class="cname2">auditCars</span><span class="ccount" id="col-auditCars">…</span></div>
+          <div class="crow"><span class="cname2">auditAircraft</span><span class="ccount" id="col-auditAircraft">…</span></div>
+          <div class="crow"><span class="cname2">auditHistory</span><span class="ccount" id="col-auditHistory">…</span></div>
+          <div class="crow"><span class="cname2">auditArchive</span><span class="ccount" id="col-auditArchive">…</span></div>
+          <div class="crow"><span class="cname2">facilityAudits</span><span class="ccount" id="col-facilityAudits">…</span></div>
+          <div class="crow"><span class="cname2">crewCarData</span><span class="ccount" id="col-crewCarData">…</span></div>
+          <div class="crow"><span class="cname2">appConfig</span><span class="ccount" id="col-appConfig">…</span></div>
+          <div class="crow"><span class="cname2">shoppingCatalog</span><span class="ccount" id="col-shoppingCatalog">…</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/firestore" target="_blank">↗ Firestore Console</a>
+      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/usage" target="_blank">↗ Usage &amp; Billing</a>
+      <span class="cnote">Free tier · daily limits reset at midnight Pacific</span>
+    </div>
+  </div>
+
+  <!-- ── FIREBASE STORAGE ── -->
+  <div class="card a">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:var(--amber-dim)">🗄️</div>
+        <div>
+          <div class="cname">Firebase Storage</div>
+          <div class="chost">groomer-ykf.firebasestorage.app</div>
+        </div>
+      </div>
+      <div class="tag a">Watch monthly</div>
+    </div>
+    <div class="cb">
+      <div class="mr"><span class="ml">Free limit</span><span class="mv">5 GB total</span></div>
+      <div class="mr"><span class="ml">Used (via Worker)</span><span class="mv" id="q-gcs-label">—</span></div>
+      <div class="qwrap" style="margin:8px 0">
+        <div class="qlr"><span>Storage used</span><span class="qval" id="q-gcs-pct">— / 5 GB</span></div>
+        <div class="qtrack"><div class="qfill a" id="q-gcs-bar" style="width:0%"></div></div>
+      </div>
+      <div class="mr"><span class="ml">Download / day</span><span class="mv">1 GB free</span></div>
+      <div class="mr"><span class="ml">Uploads / day</span><span class="mv">20,000 free</span></div>
+      <div class="mr"><span class="ml">Risk</span><span class="mv a">Grows with audit photos</span></div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/storage" target="_blank">↗ Storage Console</a>
+      <span class="cnote">Check monthly — photos accumulate</span>
+    </div>
+  </div>
+
+  <!-- ── FCM ── -->
+  <div class="card g">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:var(--green-dim)">🔔</div>
+        <div>
+          <div class="cname">Cloud Messaging (FCM)</div>
+          <div class="chost">Firebase · project groomer-ykf</div>
+        </div>
+      </div>
+      <div class="tag g">Free · No risk</div>
+    </div>
+    <div class="cb">
+      <div class="mr"><span class="ml">Subscribed devices</span><span class="mv g" id="fcm-devices">…</span></div>
+      <div class="mr"><span class="ml">Cost per message</span><span class="mv g">$0.00</span></div>
+      <div class="mr"><span class="ml">Monthly limit</span><span class="mv g">Unlimited</span></div>
+      <div class="mr"><span class="ml">Billing risk</span><span class="mv g">None</span></div>
+      <div class="mr"><span class="ml">Used for</span><span class="mv m">Shift start · Coffee · MX alerts</span></div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://console.firebase.google.com/project/groomer-ykf/messaging" target="_blank">↗ FCM Console</a>
+      <span class="cnote">Free forever</span>
+    </div>
+  </div>
+
+  <!-- ── ANTHROPIC (wide) ── -->
+  <div class="card p wide">
+    <div class="ch">
+      <div class="ch-id">
+        <div class="cicon" style="background:var(--purple-dim)">✦</div>
+        <div>
+          <div class="cname">Anthropic · Claude Code</div>
+          <div class="chost">Development assistant · aristihernandez@gmail.com</div>
+        </div>
+      </div>
+      <div class="tag p">Manual check</div>
+    </div>
+    <div class="cb two">
+      <div>
+        <div class="mr"><span class="ml">Plan</span><span class="mv">Pro / Max</span></div>
+        <div class="mr"><span class="ml">Model in use</span><span class="mv">claude-sonnet-4-6</span></div>
+        <div class="mr"><span class="ml">Billing API</span><span class="mv m">Not publicly available</span></div>
+        <div class="mr"><span class="ml">Usage this month</span><span class="mv a">→ Check console</span></div>
+        <div class="mr"><span class="ml">Renews</span><span class="mv m">Monthly subscription</span></div>
+      </div>
+      <div class="two-right">
+        <div class="uf-sec">Built with Claude</div>
+        <div class="uf">
+          <span>→ All app features &amp; bug fixes</span>
+          <span>→ PDF generation &amp; audit guides</span>
+          <span>→ Firebase setup &amp; security rules</span>
+          <span>→ Cloudflare Worker &amp; admin page</span>
+          <span>→ Product maps &amp; presentations</span>
+        </div>
+      </div>
+    </div>
+    <div class="cf">
+      <a class="clink" href="https://console.anthropic.com" target="_blank">↗ Anthropic Console · Usage &amp; Billing</a>
+      <span class="cnote">No in-app data — open console to check tokens &amp; spend</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyA7BHDcP-PVTpsaNu9TTWCnChfI0bnOLi8",
+  authDomain: "groomer-ykf.firebaseapp.com",
+  projectId: "groomer-ykf",
+  storageBucket: "groomer-ykf.firebasestorage.app",
+  messagingSenderId: "384366195372",
+  appId: "1:384366195372:web:35d38ffbc947188d4a6509"
+});
+var db = firebase.firestore();
+
+// ── TIMESTAMP ──
+function updateTs() {
+  document.getElementById('tsNow').textContent =
+    new Date().toLocaleString('en-CA',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+updateTs();
+
+// ── RADAR ──
+(function(){
+  var c=document.getElementById('adminRadar'),ctx=c.getContext('2d'),angle=0,W,H,cx,cy,r;
+  function resize(){W=c.width=c.offsetWidth;H=c.height=c.offsetHeight;cx=W*.82;cy=H/2;r=Math.max(W,H)*.55;}
+  resize(); window.addEventListener('resize',resize);
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(42,126,245,.35)';ctx.lineWidth=1;
+    for(var i=.25;i<=1;i+=.25){ctx.beginPath();ctx.arc(cx,cy,r*i,0,Math.PI*2);ctx.stroke();}
+    ctx.beginPath();ctx.moveTo(cx-r,cy);ctx.lineTo(cx+r,cy);ctx.moveTo(cx,cy-r);ctx.lineTo(cx,cy+r);ctx.stroke();
+    ctx.save();ctx.translate(cx,cy);ctx.rotate(angle);
+    ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,r,-0.4,0);ctx.fillStyle='rgba(42,126,245,.12)';ctx.fill();
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r,0);ctx.strokeStyle='rgba(42,126,245,.85)';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.restore();angle+=.008;requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── HELPERS ──
+function fmt(n){return n===null||n===undefined?'—':Number(n).toLocaleString();}
+function fmtBytes(b){
+  if(!b&&b!==0)return '—';
+  if(b<1024)return b+' B';
+  if(b<1048576)return (b/1024).toFixed(1)+' KB';
+  if(b<1073741824)return (b/1048576).toFixed(1)+' MB';
+  return (b/1073741824).toFixed(2)+' GB';
+}
+function pct(val,max){return Math.min(100,Math.round((val/max)*100));}
+function setBar(barId,labelId,val,max,unit,threshAmber,threshRed){
+  var p=pct(val,max);
+  var bar=document.getElementById(barId);
+  var lbl=document.getElementById(labelId);
+  bar.style.width=p+'%';
+  bar.className='qfill '+(p>=threshRed?'r':p>=threshAmber?'a':'b');
+  lbl.textContent=fmt(val)+' / '+fmt(max)+(unit?' '+unit:'');
+  lbl.className='qval '+(p>=threshRed?'r':p>=threshAmber?'a':'g');
+}
+function timeAgo(iso){
+  var diff=Math.round((Date.now()-new Date(iso))/60000);
+  if(diff<1)return 'just now';
+  if(diff<60)return diff+'m ago';
+  if(diff<1440)return Math.round(diff/60)+'h ago';
+  return Math.round(diff/1440)+'d ago';
+}
+
+// ── GITHUB ──
+async function loadGitHub(){
+  try{
+    var r1=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
+    var commits=await r1.json();
+    if(commits[0]){
+      var c=commits[0].commit;
+      document.getElementById('gh-time').textContent=timeAgo(c.author.date);
+      document.getElementById('gh-msg').textContent=c.message.split('\n')[0];
+      document.getElementById('gh-author').textContent=c.author.name;
+      document.getElementById('gh-deploy').textContent=timeAgo(c.author.date);
+    }
+    var r2=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf');
+    var repo=await r2.json();
+    document.getElementById('gh-size').textContent=repo.size>1024?(repo.size/1024).toFixed(1)+' MB':repo.size+' KB';
+    document.getElementById('gh-tag').textContent='Live';
+
+    // Commit count from Link header
+    var r3=await fetch('https://api.github.com/repos/aristihernandez-svg/groomers-ykf/commits?per_page=1');
+    var link=r3.headers.get('Link')||'';
+    var m=link.match(/page=(\d+)>; rel="last"/);
+    if(m) document.getElementById('gh-commits').textContent=m[1]+' commits';
+  }catch(e){
+    document.getElementById('gh-tag').textContent='API Error';
+    document.getElementById('gh-tag').className='tag r';
+  }
+}
+
+// ── GITHUB PAGES PING ──
+async function loadPages(){
+  var t0=performance.now();
+  try{
+    await fetch('https://aristihernandez-svg.github.io/groomers-ykf/',{mode:'no-cors',cache:'no-store'});
+    var ms=Math.round(performance.now()-t0);
+    document.getElementById('pages-status').textContent='● Online';
+    document.getElementById('pages-status').className='mv g';
+    document.getElementById('pages-rt').textContent=ms+' ms';
+    document.getElementById('pages-rt').className=ms<500?'mv g':'mv a';
+    document.getElementById('pages-tag').textContent='Online';
+    document.getElementById('pages-tag').className='tag g';
+  }catch(e){
+    document.getElementById('pages-status').textContent='● Unreachable';
+    document.getElementById('pages-status').className='mv r';
+    document.getElementById('pages-tag').textContent='Down';
+    document.getElementById('pages-tag').className='tag r';
+  }
+}
+
+// ── FIRESTORE QUOTA (from Cloudflare Worker) ──
+async function loadQuota(){
+  try{
+    var doc=await db.collection('adminStats').doc('quota').get();
+    if(!doc.exists){
+      document.getElementById('workerNote').style.display='block';
+      document.getElementById('workerBanner').classList.add('show');
+      return;
+    }
+    var d=doc.data();
+    document.getElementById('workerNote').style.display='none';
+
+    // Reads
+    setBar('q-reads-bar','q-reads-label',d.reads_today,50000,'',60,85);
+    // Writes
+    setBar('q-writes-bar','q-writes-label',d.writes_today,20000,'',60,85);
+    // Deletes
+    setBar('q-deletes-bar','q-deletes-label',d.deletes_today,20000,'',60,85);
+    // Firestore storage (bytes → show vs 1 GB)
+    var fsBytes=d.firestore_bytes||0;
+    setBar('q-fs-storage-bar','q-fs-storage-label',Math.round(fsBytes/1048576),1024,'MB',60,85);
+
+    // Firebase Storage (GCS)
+    var gcsBytes=d.storage_bytes||0;
+    document.getElementById('q-gcs-label').textContent=fmtBytes(gcsBytes);
+    var gcsPct=pct(gcsBytes,5*1073741824);
+    document.getElementById('q-gcs-bar').style.width=gcsPct+'%';
+    document.getElementById('q-gcs-pct').textContent=fmtBytes(gcsBytes)+' / 5 GB';
+
+    // Updated timestamp
+    if(d.updated_at){
+      document.getElementById('q-updated').textContent=timeAgo(d.updated_at)+' ('+new Date(d.updated_at).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'})+')';
+    }
+  }catch(e){
+    console.warn('Quota load failed:',e.message);
+  }
+}
+
+// ── FIRESTORE COLLECTION COUNTS ──
+async function loadCollections(){
+  var cols=[
+    ['tasks','col-tasks'],
+    ['taskState','col-taskState'],
+    ['auditCars','col-auditCars'],
+    ['auditAircraft','col-auditAircraft'],
+    ['auditHistory','col-auditHistory'],
+    ['auditArchive','col-auditArchive'],
+    ['facilityAudits','col-facilityAudits'],
+    ['crewCarData','col-crewCarData'],
+    ['appConfig','col-appConfig'],
+    ['shoppingCatalog','col-shoppingCatalog'],
+  ];
+  await Promise.all(cols.map(async([name,id])=>{
+    try{
+      var snap=await db.collection(name).get();
+      document.getElementById(id).textContent=snap.size+' docs';
+    }catch(e){
+      document.getElementById(id).textContent='—';
+    }
+  }));
+}
+
+// ── FCM DEVICE COUNT ──
+async function loadFCM(){
+  try{
+    // Try common token collection names
+    var snap=await db.collection('notifTokens').get();
+    var count=snap.size;
+    if(count===0){
+      snap=await db.collection('fcmTokens').get();
+      count=snap.size;
+    }
+    document.getElementById('fcm-devices').textContent=count>0?count+' devices':'Check console';
+  }catch(e){
+    document.getElementById('fcm-devices').textContent='—';
+  }
+}
+
+// ── LOAD ALL ──
+async function loadAll(){
+  updateTs();
+  await Promise.all([loadGitHub(), loadPages(), loadQuota(), loadCollections(), loadFCM()]);
+}
+
+loadAll();
+</script>
+</body>
+</html>
