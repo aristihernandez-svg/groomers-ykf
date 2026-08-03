@@ -7029,17 +7029,47 @@ function resetMsdsAudit() {
   toast('MSDS audit reset ✓');
 }
 
-function checkMonthlyAuditReset() {
-  const currentMonth = new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
-  const lastReset = localStorage.getItem('gykf_last_audit_reset');
-  if(lastReset === currentMonth) return;
+async function checkMonthlyAuditReset() {
+  if (!db) return;
+  const now = new Date();
+  const currentMonth    = now.toLocaleDateString('en-CA',{year:'numeric',month:'long'});
+  const currentMonthKey = now.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit'});
 
+  // Fast path: this device already knows it rolled over this month — skip the Firestore round-trip.
+  if (localStorage.getItem('gykf_last_audit_reset') === currentMonth) return;
+
+  // Slow path: this device is either first-of-the-month or catching up after being offline/unused
+  // for a while. Claim the rollover via a shared Firestore doc so only ONE device — whichever gets
+  // here first — actually archives + wipes live data. Every other device (including stragglers that
+  // open the app days later) sees the month already claimed and just syncs its local flag.
+  const rolloverRef = db.collection('appConfig').doc('auditRollover');
+  let shouldRun = false;
+  try {
+    await db.runTransaction(async (tx) => {
+      const snap = await tx.get(rolloverRef);
+      const lastClaimed = snap.exists ? snap.data().lastRolloverMonth : null;
+      if (lastClaimed === currentMonthKey) { shouldRun = false; return; }
+      shouldRun = true;
+      tx.set(rolloverRef, {lastRolloverMonth: currentMonthKey, rolledOverAt: firebase.firestore.FieldValue.serverTimestamp()});
+    });
+  } catch(e) {
+    console.log('Audit rollover claim failed, skipping to avoid an unsafe wipe:', e);
+    return;
+  }
+
+  if (!shouldRun) {
+    // Another device already handled this month's rollover — just catch up our local flag.
+    localStorage.setItem('gykf_last_audit_reset', currentMonth);
+    return;
+  }
+
+  // We won the claim — this device performs the archive + wipe.
   // Archive before wiping — under the month that just ended, not the month we're rolling into.
   // NEVER touches crew car vehicle data
   const outgoingMonth = new Date();
   outgoingMonth.setDate(1);
   outgoingMonth.setMonth(outgoingMonth.getMonth() - 1);
-  saveAuditSnapshot(outgoingMonth);
+  await saveAuditSnapshot(outgoingMonth);
   // New month — reset all facility audits + monthly car photo audits
   // NEVER touches crew car vehicle data (gykf_ccd / S.crewCarData)
   S.crewHouseAudit   = {items:{}};
@@ -7053,12 +7083,10 @@ function checkMonthlyAuditReset() {
     try { localStorage.removeItem(k); } catch(e){}
   });
 
-  if(db) {
-    ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>
-      db.collection('facilityAudits').doc(doc).delete().catch(()=>{})
-    );
-    db.collection('auditCars').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
-  }
+  ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>
+    db.collection('facilityAudits').doc(doc).delete().catch(()=>{})
+  );
+  db.collection('auditCars').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
 
   localStorage.setItem('gykf_last_audit_reset', currentMonth);
   localStorage.setItem('gykf_audit_reset_ts', Date.now().toString());
