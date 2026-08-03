@@ -1,5 +1,7 @@
 // Skycare YKF — Crew car alert sender
-// Runs daily at 11:00 AM Eastern; checks fuel and service KM, sends push to all subscribers.
+// Runs at 11:00 AM and 4:00 PM Eastern; checks fuel (Bouncie, falling back to the
+// manually-logged gauge), engine (Bouncie MIL/DTC), battery (Bouncie), and service
+// KM. Each car/issue only pushes once per day even if it stays broken.
 
 const admin   = require('firebase-admin');
 const webpush = require('web-push');
@@ -42,7 +44,24 @@ async function fetchBouncieData() {
   }
 }
 
+// The workflow's cron has both an EDT and an EST line for each of 11am/4pm so that
+// whichever offset is currently in effect fires at the right real-world time — but
+// GitHub Actions cron isn't DST-aware, so BOTH lines fire year-round, twice a day
+// each. This guard makes only the pair matching the currently-active offset proceed.
+const TARGET_HOURS_ET = [11, 16]; // 11am and 4pm Eastern
+
 async function main() {
+  const now     = new Date();
+  const eastern = new Date(now.toLocaleString('en-US', { timeZone: 'America/Toronto' }));
+  const h = eastern.getHours();
+  const m = eastern.getMinutes();
+  console.log(`Eastern time: ${h}:${String(m).padStart(2, '0')}`);
+  if (!TARGET_HOURS_ET.includes(h) || m > 15) {
+    console.log('Not this offset\'s scheduled slot — skipping duplicate DST cron entry');
+    process.exit(0);
+  }
+  const dateStr = eastern.toISOString().slice(0, 10);
+
   // Read car data
   const carSnap = await db.collection('crewCarData').doc('all').get();
   if (!carSnap.exists) { console.log('No crewCarData found'); process.exit(0); }
@@ -61,25 +80,25 @@ async function main() {
     const fuelPct = bOk && b.fuelLevel != null ? b.fuelLevel / 100 : FUEL_PCT[d.fuel] ?? null;
     if (fuelPct != null && fuelPct <= FUEL_ALERT_PCT) {
       const fuelLabel = bOk && b.fuelLevel != null ? `${Math.round(b.fuelLevel)}%` : d.fuel;
-      alerts.push({ car: name, type: 'fuel', message: `⛽ ${name} is at ${fuelLabel} — needs fuel!` });
+      alerts.push({ key, car: name, type: 'fuel', message: `⛽ ${name} is at ${fuelLabel} — needs fuel!` });
     }
 
     // Check engine light (Bouncie MIL)
     if (bOk && b.milOn) {
       const codes = (b.dtcList || []).length ? ` (codes: ${b.dtcList.join(', ')})` : '';
-      alerts.push({ car: name, type: 'engine', message: `🚨 ${name} check engine light is ON!${codes}` });
+      alerts.push({ key, car: name, type: 'engine', message: `🚨 ${name} check engine light is ON!${codes}` });
     }
 
     // Battery (Bouncie)
     if (bOk && (b.battery === 'low' || b.battery === 'shutdown')) {
-      alerts.push({ car: name, type: 'battery', message: `🔋 ${name} battery alert — ${b.battery}!` });
+      alerts.push({ key, car: name, type: 'battery', message: `🔋 ${name} battery alert — ${b.battery}!` });
     }
 
     const current = parseFloat(d.currentKm);
     const next    = parseFloat(d.nextServiceKm);
     if (!isNaN(current) && !isNaN(next) && next - current <= 500 && next - current >= 0) {
       const remaining = Math.round(next - current);
-      alerts.push({ car: name, type: 'service', message: `🔧 ${name} needs service in ${remaining} km!` });
+      alerts.push({ key, car: name, type: 'service', message: `🔧 ${name} needs service in ${remaining} km!` });
     }
   }
 
@@ -88,7 +107,16 @@ async function main() {
     process.exit(0);
   }
 
-  console.log(`Found ${alerts.length} alert(s):`, alerts.map(a => a.message));
+  // De-dup — each car/issue only notifies once per day, even across multiple slots today
+  const dedupRefs  = alerts.map(a => db.collection('carAlertSent').doc(`${dateStr}-${a.key}-${a.type}`));
+  const dedupSnaps = await Promise.all(dedupRefs.map(r => r.get()));
+  const toSend = alerts.filter((a, i) => !dedupSnaps[i].exists);
+
+  if (!toSend.length) {
+    console.log(`All ${alerts.length} alert(s) already sent today — skipping`);
+    process.exit(0);
+  }
+  console.log(`${toSend.length} of ${alerts.length} alert(s) are new today:`, toSend.map(a => a.message));
 
   // Read push subscriptions
   const subSnap = await db.collection('pushSubscriptions').get();
@@ -101,14 +129,14 @@ async function main() {
 
   console.log(`Sending to ${subs.length} device(s)`);
 
-  // Send one notification per alert
-  for (const alert of alerts) {
+  // Send one notification per alert, marking each as sent for today
+  for (const alert of toSend) {
     const payload = JSON.stringify({
       title: '✈ Skycare — Car Alert',
       body:  alert.message,
       icon:  'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
       badge: 'https://aristihernandez-svg.github.io/groomers-ykf/cars/Metroliner_logo-removebg-preview.png',
-      tag:   `car-alert-${alert.car}-${alert.type}`,
+      tag:   `car-alert-${alert.key}-${alert.type}`,
       url:   'https://aristihernandez-svg.github.io/groomers-ykf/',
     });
 
@@ -119,6 +147,9 @@ async function main() {
     const ok   = results.filter(r => r.status === 'fulfilled').length;
     const fail = results.filter(r => r.status === 'rejected').length;
     console.log(`"${alert.message}" → ${ok} sent, ${fail} failed`);
+
+    await db.collection('carAlertSent').doc(`${dateStr}-${alert.key}-${alert.type}`)
+      .set({ sentAt: admin.firestore.FieldValue.serverTimestamp(), message: alert.message });
 
     // Remove expired subscriptions
     const stale = [];
