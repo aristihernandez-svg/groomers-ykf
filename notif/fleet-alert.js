@@ -1,6 +1,6 @@
-// Skycare YKF — Fleet 30 nm arrival alert
+// Skycare YKF — Fleet 60 nm arrival alert
 // Runs every 5 minutes via GitHub Actions.
-// Sends a push notification when a fleet aircraft crosses inside 30 nm of CYKF.
+// Sends a push notification when a fleet aircraft crosses inside 60 nm of CYKF.
 // Firestore collection `fleetNotifications/{tail}` tracks last-notified state
 // so each inbound arrival fires exactly once.
 
@@ -149,7 +149,7 @@ async function main() {
     const prev = snap.exists ? snap.data() : null;
 
     if (ac.distNm <= ALERT_NM) {
-      // Within 25 nm — should we notify?
+      // Within 60 nm — should we notify?
       const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
       const alreadyActive = prev?.active === true;
 

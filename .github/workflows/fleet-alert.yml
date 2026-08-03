@@ -1,4 +1,4 @@
-name: Fleet 30 nm Arrival Alert
+name: Fleet 60 nm Arrival Alert
 
 on:
   workflow_dispatch:          # triggered by cron-job.org every 5 minutes
@@ -19,7 +19,7 @@ jobs:
         run: npm install
         working-directory: notif
 
-      - name: Check fleet positions and send 25 nm alerts
+      - name: Check fleet positions and send 60 nm alerts
         run: node fleet-alert.js
         working-directory: notif
         env:
