@@ -2813,10 +2813,11 @@ function loadAuditRecords() {
   }, ()=>{});
 }
 
-async function saveAuditSnapshot() {
+async function saveAuditSnapshot(forDate) {
   if (!db) return;
-  const monthKey   = new Date().toLocaleDateString('en-CA', {year:'numeric', month:'2-digit'});
-  const monthLabel = new Date().toLocaleDateString('en-CA', {year:'numeric', month:'long'});
+  const d = forDate || new Date();
+  const monthKey   = d.toLocaleDateString('en-CA', {year:'numeric', month:'2-digit'});
+  const monthLabel = d.toLocaleDateString('en-CA', {year:'numeric', month:'long'});
   const ts   = firebase.firestore.FieldValue.serverTimestamp();
   const saves = [];
 
@@ -7033,8 +7034,12 @@ function checkMonthlyAuditReset() {
   const lastReset = localStorage.getItem('gykf_last_audit_reset');
   if(lastReset === currentMonth) return;
 
-  // Archive before wiping — NEVER touches crew car vehicle data
-  saveAuditSnapshot();
+  // Archive before wiping — under the month that just ended, not the month we're rolling into.
+  // NEVER touches crew car vehicle data
+  const outgoingMonth = new Date();
+  outgoingMonth.setDate(1);
+  outgoingMonth.setMonth(outgoingMonth.getMonth() - 1);
+  saveAuditSnapshot(outgoingMonth);
   // New month — reset all facility audits + monthly car photo audits
   // NEVER touches crew car vehicle data (gykf_ccd / S.crewCarData)
   S.crewHouseAudit   = {items:{}};
