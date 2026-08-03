@@ -26,23 +26,53 @@ const CAR_NAMES = {
   civic:   'Honda Civic',
 };
 
+// Same worker the app itself calls for live GPS/OBD data — see bouncie-worker/index.js
+const BOUNCIE_WORKER_URL = 'https://bouncie-proxy.skycare.workers.dev';
 const FUEL_PCT = { 'Empty': 0, '1/4': 0.25, '1/2': 0.5, '3/4': 0.75, 'Full': 1 };
-const LOW_FUEL = new Set(['Empty', '1/4']);
+const FUEL_ALERT_PCT = 0.25;
+
+async function fetchBouncieData() {
+  try {
+    const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles');
+    if (!res.ok) { console.log('Bouncie fetch failed:', res.status); return {}; }
+    return await res.json();
+  } catch (e) {
+    console.log('Bouncie fetch error:', e.message);
+    return {};
+  }
+}
 
 async function main() {
   // Read car data
   const carSnap = await db.collection('crewCarData').doc('all').get();
   if (!carSnap.exists) { console.log('No crewCarData found'); process.exit(0); }
   const cars = carSnap.data();
+  const bouncie = await fetchBouncieData();
 
   // Build alerts
   const alerts = [];
   for (const [key, name] of Object.entries(CAR_NAMES)) {
     const d = cars[key];
     if (!d) continue;
+    const b = bouncie[key];
+    const bOk = b && b.status === 'ok';
 
-    if (d.fuel && LOW_FUEL.has(d.fuel)) {
-      alerts.push({ car: name, type: 'fuel', message: `⛽ ${name} is at ${d.fuel} — needs fuel!` });
+    // Fuel — prefer live Bouncie %, fall back to the manually-logged gauge reading
+    const fuelPct = bOk && b.fuelLevel != null ? b.fuelLevel / 100 : FUEL_PCT[d.fuel] ?? null;
+    if (fuelPct != null && fuelPct <= FUEL_ALERT_PCT) {
+      const fuelLabel = bOk && b.fuelLevel != null ? `${Math.round(b.fuelLevel)}%` : d.fuel;
+      alerts.push({ car: name, type: 'fuel', message: `⛽ ${name} is at ${fuelLabel} — needs fuel!` });
+    }
+
+    // Check engine light (Bouncie MIL)
+    if (bOk && b.milOn) {
+      const codes = (b.dtcList || []).length ? ` (codes: ${b.dtcList.join(', ')})` : '';
+      alerts.push({ car: name, type: 'engine', message: `🚨 ${name} check engine light is ON!${codes}` });
+    }
+
+    // Battery (Bouncie)
+    if (bOk && (b.battery === 'low' || b.battery === 'shutdown')) {
+      alerts.push({ car: name, type: 'battery', message: `🔋 ${name} battery alert — ${b.battery}!` });
     }
 
     const current = parseFloat(d.currentKm);
