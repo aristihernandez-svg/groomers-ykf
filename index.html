@@ -2035,10 +2035,20 @@ async function renderHome(el) {
   if([8,9,10].includes(_popDay) && !localStorage.getItem(_popKey)) {
     const _mRegs = [...AIRCRAFT_METRO,...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
     const _wRegs = [...AIRCRAFT_WESTWIND,...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
+    const _aRegs = [...AIRCRAFT_ASTRA].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
     const _pend  = [];
     CREW_CARS.filter(c=>!isCarDisabled(c.key)).forEach(c=>{if(!carAuditData(c.key).done)_pend.push('Crew Car · '+c.name);});
     _mRegs.forEach(r=>{if(!acIsDone(r,'metro'))_pend.push('Metro · '+r);});
     _wRegs.forEach(r=>{if(!acIsDone(r,'westwind'))_pend.push('Westwind · '+r);});
+    _aRegs.forEach(r=>{if(!acIsDone(r,'astra'))_pend.push('Astra · '+r);});
+    (S.customAcTypesList||[]).forEach(ct=>{
+      ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).forEach(r=>{if(!acIsDone(r,ct.id))_pend.push(ct.name+' · '+r);});
+    });
+    if(!chData().done)  _pend.push('Crew House');
+    if(!hoData().done)  _pend.push('Hangar & Office');
+    if(!msData().done)  _pend.push('MSDS');
+    if(!plData().done)  _pend.push('Parking Lot MX');
+    if(!ykfData().done) _pend.push('YKF Base');
     if(_pend.length) setTimeout(()=>showAuditReminderPopup(_pend,_popKey), 800);
   }
 }

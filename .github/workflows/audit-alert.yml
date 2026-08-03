@@ -1,4 +1,4 @@
-name: Crew Car Audit Alert
+name: Audit Alert
 
 on:
   schedule:
