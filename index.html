@@ -2037,8 +2037,8 @@ async function renderHome(el) {
     const _wRegs = [...AIRCRAFT_WESTWIND,...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
     const _pend  = [];
     CREW_CARS.filter(c=>!isCarDisabled(c.key)).forEach(c=>{if(!carAuditData(c.key).done)_pend.push('Crew Car · '+c.name);});
-    _mRegs.forEach(r=>{if(!acIsComplete(r,'metro'))_pend.push('Metro · '+r);});
-    _wRegs.forEach(r=>{if(!acIsComplete(r,'westwind'))_pend.push('Westwind · '+r);});
+    _mRegs.forEach(r=>{if(!acIsDone(r,'metro'))_pend.push('Metro · '+r);});
+    _wRegs.forEach(r=>{if(!acIsDone(r,'westwind'))_pend.push('Westwind · '+r);});
     if(_pend.length) setTimeout(()=>showAuditReminderPopup(_pend,_popKey), 800);
   }
 }
@@ -2743,6 +2743,10 @@ function carAuditData(carKey) {
   if(!S.monthlyCarAudits[k].checks) S.monthlyCarAudits[k].checks={};
   return S.monthlyCarAudits[k];
 }
+function carAuditStarted(carKey) {
+  const cd = carAuditData(carKey);
+  return cd.photos.some(p=>p) || Object.values(cd.checks||{}).some(v=>v) || !!(cd.comments && cd.comments.trim());
+}
 function setCarAuditCheck(carKey, checkKey, status) {
   const cd=carAuditData(carKey);
   if(!cd.checks[checkKey]) cd.checks[checkKey]={status:null,note:''};
@@ -3314,9 +3318,10 @@ function renderCrewCarsList(el) {
       const docBadge=docAlert?`<span style="font-size:10px;background:var(--red);color:#fff;border-radius:5px;padding:1px 5px;font-weight:700;margin-left:4px">⚠️ Docs</span>`:'';
       const carDis=isCarDisabled(car.key);
       const pendingUrgent=!auditCD.done&&!carDis&&urgent;
-      const auditCol=carDis?'var(--t4)':auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':'#E8A000';
-      const statusLabel=carDis?'Skipped':auditCD.done?'Completed':pendingUrgent?(overdue?'Overdue':'Urgent'):'Pending';
-      const dotCol=carDis?'var(--border2)':auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':'#9CA3AF';
+      const inProcess=!auditCD.done&&!carDis&&!pendingUrgent&&carAuditStarted(car.key);
+      const auditCol=carDis?'var(--t4)':auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':inProcess?'#E8A000':'var(--t3)';
+      const statusLabel=carDis?'Skipped':auditCD.done?'Completed':pendingUrgent?(overdue?'Overdue':'Urgent'):inProcess?'In Process':'Pending';
+      const dotCol=carDis?'var(--border2)':auditCD.done?'#27AE60':pendingUrgent?'#E74C3C':inProcess?'#E8A000':'#9CA3AF';
       const lp=`onpointerdown="carAuditLongPress(event,'${car.key}')" onpointerup="carAuditCancelPress()" onpointercancel="carAuditCancelPress()" onpointermove="carAuditCancelPress()"`;
       auditGridCards.push(`
         <div onclick="${carDis?'':'openCarDetail(\''+car.key+'\')'}" ${lp} class="${pendingUrgent?'audit-blink':''}"
@@ -4535,10 +4540,11 @@ function renderCustomAcFolder(el, typeId) {
 
   const cards = ct.regs.map(reg => {
     const disabled = isAcDisabled(reg);
-    const done = !disabled && acIsComplete(reg, typeId);
-    const dotCol = disabled?'var(--border2)':done?'#27AE60':'var(--border2)';
-    const statusLabel = disabled?'Skipped':done?'Completed':'Pending';
-    const statusCol = disabled?'var(--t4)':done?'#27AE60':'var(--t3)';
+    const done = !disabled && acIsDone(reg, typeId);
+    const inProcess = !disabled && !done && acAnsweredCount(reg, typeId) > 0;
+    const dotCol = disabled?'var(--border2)':done?'#27AE60':inProcess?'#E8A000':'var(--border2)';
+    const statusLabel = disabled?'Skipped':done?'Completed':inProcess?'In Process':'Pending';
+    const statusCol = disabled?'var(--t4)':done?'#27AE60':inProcess?'#E8A000':'var(--t3)';
     const longPress = `onpointerdown="acFolderLongPress(event,'${typeId}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"`;
     return `
       <div onclick="${disabled?'':(`openAircraftChecklist('${reg}','${typeId}')`)}" ${longPress}
@@ -4898,9 +4904,9 @@ function renderAuditsLanding(el) {
   const _astraRegs = [...AIRCRAFT_ASTRA].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
   const _audCars   = CREW_CARS.filter(c=>!isCarDisabled(c.key));
   const _carsDone  = _audCars.every(c=>carAuditData(c.key).done);
-  const _metroDone = _metroRegs.every(r=>acIsComplete(r,'metro'));
-  const _wwDone    = _wwRegs.every(r=>acIsComplete(r,'westwind'));
-  const _astraDone = _astraRegs.every(r=>acIsComplete(r,'astra'));
+  const _metroDone = _metroRegs.every(r=>acIsDone(r,'metro'));
+  const _wwDone    = _wwRegs.every(r=>acIsDone(r,'westwind'));
+  const _astraDone = _astraRegs.every(r=>acIsDone(r,'astra'));
   const _allDone   = _carsDone && _metroDone && _wwDone && _astraDone;
 
   // Section label helper
@@ -4933,19 +4939,19 @@ function renderAuditsLanding(el) {
 
   // Aircraft rows
   const metroMonth = acAuditMonthKey();
-  const metroDone  = _metroRegs.filter(r=>acIsComplete(r,'metro')).length;
+  const metroDone  = _metroRegs.filter(r=>acIsDone(r,'metro')).length;
   const metroBadge = _metroDone ? badge('Done','#0F3020','#2ECC71')
     : metroDone>0 ? badge(`${_metroRegs.length-metroDone} left`,'#2A1010','#E74C3C')
     : badge('New','#0F1E40','#4A90D9');
   const metroSub = `${_metroRegs.join(', ')} · ${metroMonth}`;
 
-  const wwDone = _wwRegs.filter(r=>acIsComplete(r,'westwind')).length;
+  const wwDone = _wwRegs.filter(r=>acIsDone(r,'westwind')).length;
   const wwBadge = _wwDone ? badge('Done','#0F3020','#2ECC71')
     : wwDone>0 ? badge(`${_wwRegs.length-wwDone} left`,'#2A1010','#E74C3C')
     : badge('New','#0F1E40','#4A90D9');
   const wwSub = `${_wwRegs.join(', ')} · ${metroMonth}`;
 
-  const astraDoneCount = _astraRegs.filter(r=>acIsComplete(r,'astra')).length;
+  const astraDoneCount = _astraRegs.filter(r=>acIsDone(r,'astra')).length;
   const astraBadge = _astraDone ? badge('Done','#0F3020','#2ECC71')
     : astraDoneCount>0 ? badge(`${_astraRegs.length-astraDoneCount} left`,'#2A1010','#E74C3C')
     : badge('New','#0F1E40','#4A90D9');
@@ -4955,7 +4961,7 @@ function renderAuditsLanding(el) {
   // Custom aircraft types
   const customAcRows = S.customAcTypesList.map(ct=>{
     const regs = ct.regs.filter(r=>!isAcDisabled(r));
-    const done = regs.filter(r=>acIsComplete(r,ct.id)).length;
+    const done = regs.filter(r=>acIsDone(r,ct.id)).length;
     const allD = regs.length>0 && done===regs.length;
     const b = allD ? badge('Done','#0F3020','#2ECC71') : done>0 ? badge(`${regs.length-done} left`,'#2A1010','#E74C3C') : badge('New','#0F1E40','#4A90D9');
     return auditRow(`S.acCustomTypeView='${ct.id}';render()`, `<span style="font-size:26px">🛫</span>`, ct.name, `${regs.join(', ')} · ${metroMonth}`, b);
@@ -4974,7 +4980,7 @@ function renderAuditsLanding(el) {
   const chData = S.crewHouseAudit;
   const chTotal = CREW_HOUSE_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
   const chDone  = Object.values(chData.items||{}).filter(i=>i.score>0).length;
-  const chComplete = chDone === chTotal;
+  const chComplete = !!chData.done;
   const chBadge = chComplete ? badge('Done','#0F3020','#2ECC71')
     : chDone>0 ? badge(`${chDone}/${chTotal}`,'#2A2010','#E8A000')
     : badge('New','#0F1E40','#4A90D9');
@@ -4985,7 +4991,7 @@ function renderAuditsLanding(el) {
   const msAuditData = S.msdsAudit;
   const MSDS_TOTAL = 149;
   const msDone = Object.values(msAuditData.items||{}).filter(v=>v===true).length;
-  const msComplete = msDone === MSDS_TOTAL;
+  const msComplete = !!msAuditData.done;
   const msBadge = msComplete ? badge('Done','#0F3020','#2ECC71')
     : msDone>0 ? badge(`${msDone}/${MSDS_TOTAL}`,'#2A2010','#E8A000')
     : badge('New','#0F1E40','#4A90D9');
@@ -4996,7 +5002,7 @@ function renderAuditsLanding(el) {
   const hoAuditData = S.hangarAudit;
   const hoTotal = HANGAR_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
   const hoDone  = Object.values(hoAuditData.items||{}).filter(i=>i.score>0).length;
-  const hoComplete = hoDone === hoTotal;
+  const hoComplete = !!hoAuditData.done;
   const hoBadge = hoComplete ? badge('Done','#0F3020','#2ECC71')
     : hoDone>0 ? badge(`${hoDone}/${hoTotal}`,'#2A2010','#E8A000')
     : badge('New','#0F1E40','#4A90D9');
@@ -5007,7 +5013,7 @@ function renderAuditsLanding(el) {
   const plAuditData = S.parkingAudit;
   const plTotal = PL_TOTAL;
   const plDone  = Object.values(plAuditData.items||{}).filter(i=>i.score>0).length;
-  const plComplete = plDone === plTotal;
+  const plComplete = !!plAuditData.done;
   const plBadge = plComplete ? badge('Done','#0F3020','#2ECC71')
     : plDone>0 ? badge(`${plDone}/${plTotal}`,'#2A2010','#E8A000')
     : badge('New','#0F1E40','#4A90D9');
@@ -5017,7 +5023,7 @@ function renderAuditsLanding(el) {
   // YKF Base — live audit
   const ykfAuditData = S.ykfBaseAudit;
   const ykfDone = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&(ykfAuditData.items||{})[i.key]&&(ykfAuditData.items||{})[i.key].val).length, 0);
-  const ykfComplete = ykfDone === YKF_TOTAL;
+  const ykfComplete = !!ykfAuditData.done;
   const ykfBadge = ykfComplete ? badge('Done','#0F3020','#2ECC71')
     : ykfDone>0 ? badge(`${ykfDone}/${YKF_TOTAL}`,'#2A2010','#E8A000')
     : badge('New','#0F1E40','#4A90D9');
@@ -5263,6 +5269,16 @@ function chSetField(field, val) {
   saveCrewHouseDebounced();
 }
 
+function chToggleDone() {
+  const d = chData();
+  const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
+  if(!d.done && doneCount < CH_TOTAL) return;
+  d.done = !d.done;
+  saveCrewHouseDebounced();
+  render();
+  toast(d.done ? '✅ Crew House audit marked done' : 'Back to In Process');
+}
+
 function chScoreColor(s) {
   const colors=['','#E03030','#D85018','#CC7010','#C09010','#A8A818','#88B820','#60C030','#30C840','#20C850','#10CC60'];
   const bgs=   ['','#1E0808','#1E0E08','#1E1408','#1A1A08','#161A08','#101A08','#0C1C0C','#0A1E0E','#082010','#062012'];
@@ -5389,6 +5405,20 @@ function renderRecordsView(el) {
   el.innerHTML = html;
 }
 
+// ── SHARED "MARK AUDIT AS DONE" UI ─────────────────────────────
+function markDoneBlock(allAnswered, isDone, toggleFn, doneCount, total) {
+  if (isDone) {
+    return `<div onclick="${toggleFn}" style="margin:8px 14px 4px;padding:11px 13px;border-radius:9px;background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.35);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
+      <span style="font-size:13px;font-weight:700;color:#27AE60">✅ Marked as Done</span>
+      <span style="font-size:10px;color:var(--t3)">· tap to undo</span>
+    </div>`;
+  }
+  if (allAnswered) {
+    return `<button onclick="${toggleFn}" style="margin:8px 14px 4px;width:calc(100% - 28px);padding:12px;border-radius:9px;border:none;background:linear-gradient(135deg,var(--green),#2ECC71);color:#fff;font-size:13px;font-weight:700;cursor:pointer">✅ Mark audit as done</button>`;
+  }
+  return `<div style="margin:8px 14px 4px;padding:10px 13px;border-radius:9px;border:1px dashed var(--border2);text-align:center;font-size:12px;color:var(--t3)">Complete all items to mark as done · ${doneCount}/${total}</div>`;
+}
+
 function renderCrewHouseChecklist(el) {
   const d = chData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
@@ -5451,6 +5481,8 @@ function renderCrewHouseChecklist(el) {
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
       <textarea oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
+
+    ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateCrewHousePDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -5695,6 +5727,16 @@ function hoSetField(field, val) {
   saveHangarDebounced();
 }
 
+function hoToggleDone() {
+  const d = hoData();
+  const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
+  if(!d.done && doneCount < HO_TOTAL) return;
+  d.done = !d.done;
+  saveHangarDebounced();
+  render();
+  toast(d.done ? '✅ Hangar audit marked done' : 'Back to In Process');
+}
+
 function renderHangarChecklist(el) {
   const d = hoData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
@@ -5756,6 +5798,8 @@ function renderHangarChecklist(el) {
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
       <textarea oninput="hoSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
+
+    ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateHangarPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -5994,18 +6038,21 @@ function _wheelDone() {
     const d = chData();
     d.items[key] = d.items[key]||{};
     d.items[key].score = score;
+    d.done = false;
     if(score<=5) _chExpandedComments.add(key); else _chExpandedComments.delete(key);
     saveCrewHouseDebounced();
   } else if(auditType==='ho') {
     const d = hoData();
     d.items[key] = d.items[key]||{};
     d.items[key].score = score;
+    d.done = false;
     if(score<=5) _hoExpandedComments.add(key); else _hoExpandedComments.delete(key);
     saveHangarDebounced();
   } else if(auditType==='pl') {
     const d = plData();
     d.items[key] = d.items[key]||{};
     d.items[key].score = score;
+    d.done = false;
     if(score<=5) _plExpandedComments.add(key); else _plExpandedComments.delete(key);
     saveParkingDebounced();
   }
@@ -6017,11 +6064,11 @@ function _wheelClear() {
   const key = _wheelKey;
   _wheelCancel();
   if(auditType==='ch') {
-    const d = chData(); if(d.items[key]) d.items[key].score=0; _chExpandedComments.delete(key); saveCrewHouseDebounced();
+    const d = chData(); if(d.items[key]) d.items[key].score=0; d.done=false; _chExpandedComments.delete(key); saveCrewHouseDebounced();
   } else if(auditType==='ho') {
-    const d = hoData(); if(d.items[key]) d.items[key].score=0; _hoExpandedComments.delete(key); saveHangarDebounced();
+    const d = hoData(); if(d.items[key]) d.items[key].score=0; d.done=false; _hoExpandedComments.delete(key); saveHangarDebounced();
   } else if(auditType==='pl') {
-    const d = plData(); if(d.items[key]) d.items[key].score=0; _plExpandedComments.delete(key); saveParkingDebounced();
+    const d = plData(); if(d.items[key]) d.items[key].score=0; d.done=false; _plExpandedComments.delete(key); saveParkingDebounced();
   }
   render();
 }
@@ -6118,6 +6165,16 @@ function plExpandComment(key) { _plExpandedComments.add(key); render(); }
 
 function plSetField(field, val) { plData()[field]=val; saveParkingDebounced(); }
 
+function plToggleDone() {
+  const d = plData();
+  const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
+  if(!d.done && doneCount < PL_TOTAL) return;
+  d.done = !d.done;
+  saveParkingDebounced();
+  render();
+  toast(d.done ? '✅ Parking Lot audit marked done' : 'Back to In Process');
+}
+
 function renderParkingChecklist(el) {
   const d = plData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
@@ -6179,6 +6236,8 @@ function renderParkingChecklist(el) {
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
       <textarea oninput="plSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
+
+    ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateParkingPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -6435,6 +6494,7 @@ function ykfSetAnswer(key, val) {
   const d = ykfData();
   if(!d.items[key]) d.items[key]={};
   d.items[key].val = val;
+  d.done = false;
   saveYkfBaseDebounced();
   render();
 }
@@ -6449,6 +6509,16 @@ function ykfSetComment(key, text) {
 function ykfSetField(field, val) { ykfData()[field]=val; saveYkfBaseDebounced(); }
 
 function ykfSetExpiry(val) { ykfData().eyewashExpiry = val; saveYkfBaseDebounced(); render(); }
+
+function ykfToggleDone() {
+  const d = ykfData();
+  const doneCount = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&d.items[i.key]&&d.items[i.key].val).length, 0);
+  if(!d.done && doneCount < YKF_TOTAL) return;
+  d.done = !d.done;
+  saveYkfBaseDebounced();
+  render();
+  toast(d.done ? '✅ YKF Base audit marked done' : 'Back to In Process');
+}
 
 function renderYkfBaseChecklist(el) {
   const d = ykfData();
@@ -6518,6 +6588,8 @@ function renderYkfBaseChecklist(el) {
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
       <textarea oninput="ykfSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
+
+    ${markDoneBlock(done===YKF_TOTAL, !!d.done, 'ykfToggleDone()', done, YKF_TOTAL)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateYkfBasePDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -6855,7 +6927,9 @@ function saveMsdsDebounced() {
 }
 
 function msSetCheck(key, val) {
-  msData().items[key] = val;
+  const d = msData();
+  d.items[key] = val;
+  d.done = false;
   saveMsdsDebounced();
   render();
 }
@@ -6865,6 +6939,7 @@ function msSelectAll() {
   const allKeys = MSDS_CHECKLIST.flatMap(s=>s.items.map(i=>i.key));
   const allChecked = allKeys.every(k=>d.items[k]===true);
   allKeys.forEach(k=>{ d.items[k] = !allChecked; });
+  d.done = false;
   saveMsdsDebounced();
   render();
 }
@@ -6872,6 +6947,17 @@ function msSelectAll() {
 function msSetField(field, val) {
   msData()[field] = val;
   saveMsdsDebounced();
+}
+
+function msToggleDone() {
+  const d = msData();
+  const allKeys = MSDS_CHECKLIST.flatMap(s=>s.items.map(i=>i.key));
+  const doneCount = allKeys.filter(k=>d.items[k]===true).length;
+  if(!d.done && doneCount < allKeys.length) return;
+  d.done = !d.done;
+  saveMsdsDebounced();
+  render();
+  toast(d.done ? '✅ MSDS audit marked done' : 'Back to In Process');
 }
 
 function renderMsdsChecklist(el) {
@@ -6934,6 +7020,8 @@ function renderMsdsChecklist(el) {
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Notes</div>
       <textarea oninput="msSetField('notes',this.value)" placeholder="Add general audit notes…" style="width:100%;min-height:60px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.notes||''}</textarea>
     </div>
+
+    ${markDoneBlock(done===total, !!d.done, 'msToggleDone()', done, total)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateMsdsPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -7609,8 +7697,24 @@ function toggleAcItem(reg, key, val) {
   const already = (val==='yes' && d.items[key].yes) || (val==='no' && d.items[key].no);
   d.items[key].yes = already ? false : val==='yes';
   d.items[key].no  = already ? false : val==='no';
+  d.done = false;
   saveAcAuditDebounced(reg);
   render();
+}
+
+function acToggleDone(reg, type) {
+  const d = acAuditData(reg);
+  const total = acTotalCount(type);
+  const answered = acAnsweredCount(reg, type);
+  if(!d.done && answered < total) return;
+  d.done = !d.done;
+  saveAcAuditDebounced(reg);
+  render();
+  toast(d.done ? '✅ Audit marked done' : 'Back to In Process');
+}
+
+function acIsDone(reg, type) {
+  return !!acAuditData(reg).done;
 }
 
 function setAcField(reg, key, field, value) {
@@ -7708,11 +7812,12 @@ function renderAircraftFolder(el, type) {
   const cards = visibleRegs.map(reg => {
     const isCustom  = customRegs.includes(reg);
     const disabled  = isAcDisabled(reg);
-    const done      = !disabled && acIsComplete(reg, type);
+    const done      = !disabled && acIsDone(reg, type);
     const pendingUrgent = !done && !disabled && urgent;
-    const dotCol    = disabled ? 'var(--border2)' : done ? '#27AE60' : pendingUrgent ? '#E74C3C' : 'var(--border2)';
-    const statusLabel = disabled ? 'Skipped' : done ? 'Completed' : pendingUrgent ? (overdue?'Overdue':'Urgent') : 'Pending';
-    const statusCol   = disabled ? 'var(--t4)' : done ? '#27AE60' : pendingUrgent ? '#E74C3C' : 'var(--t3)';
+    const inProcess = !done && !disabled && !pendingUrgent && acAnsweredCount(reg, type) > 0;
+    const dotCol    = disabled ? 'var(--border2)' : done ? '#27AE60' : pendingUrgent ? '#E74C3C' : inProcess ? '#E8A000' : 'var(--border2)';
+    const statusLabel = disabled ? 'Skipped' : done ? 'Completed' : pendingUrgent ? (overdue?'Overdue':'Urgent') : inProcess ? 'In Process' : 'Pending';
+    const statusCol   = disabled ? 'var(--t4)' : done ? '#27AE60' : pendingUrgent ? '#E74C3C' : inProcess ? '#E8A000' : 'var(--t3)';
     const longPress = `onpointerdown="acFolderLongPress(event,'${type}','${reg}')" onpointerup="acFolderCancelPress()" onpointercancel="acFolderCancelPress()" onpointermove="acFolderCancelPress()"`;
     return `
       <div onclick="${disabled?'':(`openAircraftChecklist('${reg}','${type}')`)}" ${longPress} class="${pendingUrgent?'audit-blink':''}"
@@ -7897,6 +8002,9 @@ function renderAircraftChecklist(el, reg, type) {
           oninput="setAcHeader('${reg}','auditorName',this.value)"
           style="flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px">
       </div>
+    </div>
+    ${markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total)}
+    <div style="padding:0 14px 14px">
       ${pdfBtn}
     </div>
     <div style="height:80px"></div>`;
