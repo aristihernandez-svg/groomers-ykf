@@ -5627,7 +5627,7 @@ function generateCrewHousePDF(silent) {
     }).join('')}
   `).join('');
 
-  const logoSrc = 'cars/Skycare_logo-removebg-preview.png';
+  const logoSrc = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>Crew House Inspection — ${todayFmt}</title>
   <style>
@@ -5950,7 +5950,7 @@ function generateHangarPDF(silent) {
     }).join('')}
   `).join('');
 
-  const logoSrc = 'cars/Skycare_logo-removebg-preview.png';
+  const logoSrc = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>Hangar & Office Inspection — ${todayFmt}</title>
   <style>
@@ -6373,7 +6373,7 @@ function generateParkingPDF(silent) {
   const todayFmt = new Date((d.date||new Date().toISOString().split('T')[0])+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const inspector = d.inspector||'';
   const comments  = d.comments||'';
-  const logoSrc   = 'cars/Skycare_logo-removebg-preview.png';
+  const logoSrc   = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
 
   const pill = (s)=>{
     if(!s) return '<span style="color:#aaa;font-size:8px">—</span>';
@@ -6733,7 +6733,7 @@ function generateYkfBasePDF(silent) {
   const todayFmt = new Date((d.date||new Date().toISOString().split('T')[0])+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const inspector = d.inspector||'';
   const comments  = d.comments||'';
-  const logoSrc   = 'cars/Skycare_logo-removebg-preview.png';
+  const logoSrc   = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
 
   const yn = (v) => {
     if(!v) return '<span style="color:#aaa;font-size:8px">—</span>';
@@ -7173,7 +7173,7 @@ function generateMsdsPDF(silent) {
   const todayFmt = new Date((d.date||new Date().toISOString().split('T')[0])+'T12:00:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const auditor = d.auditor || '';
   const notes = d.notes || '';
-  const logoSrc = 'cars/Skycare_logo-removebg-preview.png';
+  const logoSrc = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
 
   const bodyRows = MSDS_CHECKLIST.map(sec=>`
     <tr><td colspan="3" style="background:#D8E4F5;padding:3px 6px;border-top:1px solid #B8CCE8;border-bottom:1px solid #B8CCE8">
