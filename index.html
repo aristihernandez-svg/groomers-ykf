@@ -3737,6 +3737,7 @@ function refreshAuditPhotos(key) {
 function auditSectionHTML(key) {
   const cd=carAuditData(key);
   const month=auditMonth();
+  const locked=!!cd.done;
 
   // ── checklist progress ────────────────────────────────────────
   const totalChecks=CAR_AUDIT_CHECKS.length;
@@ -3761,12 +3762,12 @@ function auditSectionHTML(key) {
       <div id="cacard-${key}-${item.key}" style="background:${cardBg};border:1px solid ${cardBorder};border-radius:10px;padding:10px 11px;display:flex;flex-direction:column;gap:7px">
         <div class="cacard-label" style="font-size:11px;font-weight:600;color:${labelColor}">${item.label}</div>
         <div style="display:flex;gap:5px">
-          <button class="cacard-ok" onclick="setCarAuditCheck('${key}','${item.key}','OK')"
-            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isOK?'rgba(39,174,96,0.85)':'var(--border2)'};background:${isOK?'rgba(39,174,96,0.85)':'var(--glass2)'};color:${isOK?'#fff':'var(--t3)'}">OK</button>
-          <button class="cacard-issue" onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
-            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;border:1px solid ${isIssue?'rgba(232,64,64,0.85)':'var(--border2)'};background:${isIssue?'rgba(232,64,64,0.85)':'var(--glass2)'};color:${isIssue?'#fff':'var(--t3)'}">Issue</button>
+          <button class="cacard-ok" ${locked?'disabled':''} onclick="setCarAuditCheck('${key}','${item.key}','OK')"
+            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:${locked?'default':'pointer'};border:1px solid ${isOK?'rgba(39,174,96,0.85)':'var(--border2)'};background:${isOK?'rgba(39,174,96,0.85)':'var(--glass2)'};color:${isOK?'#fff':'var(--t3)'}">OK</button>
+          <button class="cacard-issue" ${locked?'disabled':''} onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
+            style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:${locked?'default':'pointer'};border:1px solid ${isIssue?'rgba(232,64,64,0.85)':'var(--border2)'};background:${isIssue?'rgba(232,64,64,0.85)':'var(--glass2)'};color:${isIssue?'#fff':'var(--t3)'}">Issue</button>
         </div>
-        ${isIssue?`<textarea class="cacard-note" placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
+        ${isIssue?`<textarea class="cacard-note" ${locked?'readonly':''} placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
           style="width:100%;padding:5px 7px;border-radius:7px;border:1px solid rgba(232,64,64,0.35);background:rgba(232,64,64,0.07);color:var(--t1);font-size:10px;font-family:inherit;resize:none;outline:none" rows="2">${chk.note||''}</textarea>`:''}
       </div>`;
   });
@@ -3781,8 +3782,8 @@ function auditSectionHTML(key) {
           <div style="font-size:12px;font-weight:600;color:${isDone?'#27AE60':'var(--t1)'}">Bouncie re-synced</div>
           <div style="font-size:10px;color:var(--t3)">${isDone?'GPS data refreshed':'Tap to confirm sync'}</div>
         </div>
-        <button onclick="setCarAuditCheck('${key}','${item.key}',${isDone?"null":"'done'"});if(!${isDone})fetchBouncieData()"
-          style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ${isDone?'rgba(39,174,96,0.5)':'var(--border2)'};background:${isDone?'rgba(39,174,96,0.15)':'var(--glass2)'};color:${isDone?'#27AE60':'var(--t3)'}">
+        <button ${locked?'disabled':''} onclick="setCarAuditCheck('${key}','${item.key}',${isDone?"null":"'done'"});if(!${isDone})fetchBouncieData()"
+          style="padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;cursor:${locked?'default':'pointer'};border:1px solid ${isDone?'rgba(39,174,96,0.5)':'var(--border2)'};background:${isDone?'rgba(39,174,96,0.15)':'var(--glass2)'};color:${isDone?'#27AE60':'var(--t3)'}">
           ${isDone?'✓ Done':'— Not yet'}
         </button>
       </div>`;
@@ -3792,7 +3793,7 @@ function auditSectionHTML(key) {
   <div id="auditSection_${key}" style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📋 Monthly Audit — ${month}</div>
 
-    <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
+    <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." ${locked?'disabled':''} oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
       style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:14px">
 
     <!-- Vehicle Inspection checklist -->
@@ -3816,10 +3817,10 @@ function auditSectionHTML(key) {
       h+=`<div style="position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--glass)">
         <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer">
         <div class="audit-rating ${rc}" style="position:absolute;bottom:28px;left:4px">${p.rating}</div>
-        <button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:1">✕</button>
+        ${locked?'':`<button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:1">✕</button>`}
         <div style="padding:4px 6px 6px;display:flex;gap:4px;align-items:center">
           <span style="font-size:10px;font-weight:700;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${label}</span>
-          <select onchange="setAuditRating('${key}',${i},this.value)" style="padding:2px 4px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);font-size:10px;color:var(--t1)">
+          <select ${locked?'disabled':''} onchange="setAuditRating('${key}',${i},this.value)" style="padding:2px 4px;border-radius:8px;border:1px solid var(--border2);background:var(--glass2);font-size:10px;color:var(--t1)">
             <option value="Good" ${p.rating==='Good'?'selected':''}>✅</option>
             <option value="Fair" ${p.rating==='Fair'?'selected':''}>⚠️</option>
             <option value="Poor" ${p.rating==='Poor'?'selected':''}>🔴</option>
@@ -3827,7 +3828,7 @@ function auditSectionHTML(key) {
         </div>
       </div>`;
     } else {
-      h+=`<div onclick="triggerAuditPhoto('${key}',${i})" style="border-radius:var(--radius-sm);border:2px dashed var(--border2);background:var(--glass);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:4/3;padding:8px">
+      h+=`<div ${locked?'':`onclick="triggerAuditPhoto('${key}',${i})"`} style="border-radius:var(--radius-sm);border:2px dashed var(--border2);background:var(--glass);cursor:${locked?'default':'pointer'};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:4/3;padding:8px">
         <span style="font-size:22px;color:var(--t4);line-height:1">+</span>
         <span style="font-size:10px;font-weight:600;color:var(--t3);text-align:center;line-height:1.2">${label}</span>
       </div>`;
@@ -3844,7 +3845,7 @@ function auditSectionHTML(key) {
       h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
         <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;cursor:pointer">
         <span style="font-size:10px;color:var(--t3);flex-shrink:0;font-weight:600">${AUDIT_PHOTO_SLOTS[i]}</span>
-        <input value="${p.note||''}" placeholder="Note..." oninput="setAuditPhotoNote('${key}',${i},this.value)"
+        <input value="${p.note||''}" placeholder="Note..." ${locked?'disabled':''} oninput="setAuditPhotoNote('${key}',${i},this.value)"
           style="flex:1;min-width:0;padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:11px;font-family:inherit;color:var(--t1);outline:none">
       </div>`;
     });
@@ -3854,7 +3855,7 @@ function auditSectionHTML(key) {
   // Overall report
   h+=`
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">📝 Overall Report</div>
-    <textarea placeholder="General condition, issues found, follow-up needed..." oninput="setAuditComments('${key}',this.value)"
+    <textarea placeholder="General condition, issues found, follow-up needed..." ${locked?'readonly':''} oninput="setAuditComments('${key}',this.value)"
       style="width:100%;min-height:80px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:12px">${cd.comments||''}</textarea>
 
   <button onclick="markCarAuditDone('${key}')"
@@ -5385,6 +5386,7 @@ function markDoneBlock(allAnswered, isDone, toggleFn, doneCount, total) {
 function renderCrewHouseChecklist(el) {
   const d = chData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
+  const locked = !!d.done;
   setBar({title:'Crew House', back:'Audits', backFn:()=>{S.crewHouseView=false;render();}});
   document.getElementById('fab').style.display='none';
 
@@ -5398,17 +5400,17 @@ function renderCrewHouseChecklist(el) {
       const hasScore = it.score > 0;
       const isConcerning = hasScore && it.score <= 5;
       const showComment = hasScore && (isConcerning || it.comment || _chExpandedComments.has(item.key));
-      const showHint    = hasScore && !isConcerning && !it.comment && !_chExpandedComments.has(item.key);
+      const showHint    = !locked && hasScore && !isConcerning && !it.comment && !_chExpandedComments.has(item.key);
       const {color} = hasScore ? chScoreColor(it.score) : {color:'#444'};
       const badge = hasScore
-        ? `<div onclick="openWheelPicker('ch','${item.key}',${it.score})" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:pointer;background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
+        ? `<div ${locked?'':`onclick="openWheelPicker('ch','${item.key}',${it.score})"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:${locked?'default':'pointer'};opacity:${locked?'0.7':'1'};background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
             <span style="font-size:16px;font-weight:900;color:${color}">${it.score}</span><span style="font-size:9px;color:${color};opacity:.7">/10</span>
            </div>`
-        : `<div onclick="openWheelPicker('ch','${item.key}',0)" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+        : `<div ${locked?'':`onclick="openWheelPicker('ch','${item.key}',0)"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:${locked?'default':'pointer'};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea oninput="chSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} oninput="chSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="chExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -5430,11 +5432,11 @@ function renderCrewHouseChecklist(el) {
     <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
-        <input type="date" value="${d.date}" onchange="chSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="date" value="${d.date}" ${locked?'disabled':''} onchange="chSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
-        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="chSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" ${locked?'disabled':''} oninput="chSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
     </div>
 
@@ -5442,7 +5444,7 @@ function renderCrewHouseChecklist(el) {
 
     <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
-      <textarea oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+      <textarea ${locked?'readonly':''} oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
     ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL)}
@@ -5455,9 +5457,9 @@ function renderCrewHouseChecklist(el) {
       </div>
       <span style="color:var(--border2);font-size:18px">›</span>
     </div>
-    <div onclick="resetCrewHouseAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+    ${locked?'':`<div onclick="resetCrewHouseAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
       <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
-    </div>
+    </div>`}
     <div style="height:80px"></div>`;
 }
 
@@ -5703,6 +5705,7 @@ function hoToggleDone() {
 function renderHangarChecklist(el) {
   const d = hoData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
+  const locked = !!d.done;
   setBar({title:'Hangar & Office', back:'Audits', backFn:()=>{S.hangarView=false;render();}});
   document.getElementById('fab').style.display='none';
 
@@ -5719,17 +5722,17 @@ function renderHangarChecklist(el) {
       const hasScore = it.score > 0;
       const isConcerning = hasScore && it.score <= 5;
       const showComment = hasScore && (isConcerning || it.comment || _hoExpandedComments.has(item.key));
-      const showHint    = hasScore && !isConcerning && !it.comment && !_hoExpandedComments.has(item.key);
+      const showHint    = !locked && hasScore && !isConcerning && !it.comment && !_hoExpandedComments.has(item.key);
       const {color} = hasScore ? chScoreColor(it.score) : {color:'#444'};
       const badge = hasScore
-        ? `<div onclick="openWheelPicker('ho','${item.key}',${it.score})" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:pointer;background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
+        ? `<div ${locked?'':`onclick="openWheelPicker('ho','${item.key}',${it.score})"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:${locked?'default':'pointer'};opacity:${locked?'0.7':'1'};background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
             <span style="font-size:16px;font-weight:900;color:${color}">${it.score}</span><span style="font-size:9px;color:${color};opacity:.7">/10</span>
            </div>`
-        : `<div onclick="openWheelPicker('ho','${item.key}',0)" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+        : `<div ${locked?'':`onclick="openWheelPicker('ho','${item.key}',0)"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:${locked?'default':'pointer'};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea oninput="hoSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} oninput="hoSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="hoExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -5747,11 +5750,11 @@ function renderHangarChecklist(el) {
     <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
-        <input type="date" value="${d.date}" onchange="hoSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="date" value="${d.date}" ${locked?'disabled':''} onchange="hoSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
-        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="hoSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" ${locked?'disabled':''} oninput="hoSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
     </div>
 
@@ -5759,7 +5762,7 @@ function renderHangarChecklist(el) {
 
     <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
-      <textarea oninput="hoSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+      <textarea ${locked?'readonly':''} oninput="hoSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
     ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL)}
@@ -5772,9 +5775,9 @@ function renderHangarChecklist(el) {
       </div>
       <span style="color:var(--border2);font-size:18px">›</span>
     </div>
-    <div onclick="resetHangarAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+    ${locked?'':`<div onclick="resetHangarAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
       <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
-    </div>
+    </div>`}
     <div style="height:80px"></div>`;
 }
 
@@ -6141,6 +6144,7 @@ function plToggleDone() {
 function renderParkingChecklist(el) {
   const d = plData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
+  const locked = !!d.done;
   setBar({title:'Parking Lot MX', back:'Audits', backFn:()=>{S.parkingView=false;render();}});
   document.getElementById('fab').style.display='none';
 
@@ -6157,17 +6161,17 @@ function renderParkingChecklist(el) {
       const hasScore = it.score > 0;
       const isConcerning = hasScore && it.score <= 5;
       const showComment = hasScore && (isConcerning || it.comment || _plExpandedComments.has(item.key));
-      const showHint    = hasScore && !isConcerning && !it.comment && !_plExpandedComments.has(item.key);
+      const showHint    = !locked && hasScore && !isConcerning && !it.comment && !_plExpandedComments.has(item.key);
       const {color} = hasScore ? chScoreColor(it.score) : {color:'#444'};
       const badge = hasScore
-        ? `<div onclick="openWheelPicker('pl','${item.key}',${it.score})" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:pointer;background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
+        ? `<div ${locked?'':`onclick="openWheelPicker('pl','${item.key}',${it.score})"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;gap:1px;cursor:${locked?'default':'pointer'};opacity:${locked?'0.7':'1'};background:rgba(0,0,0,0.25);border:1.5px solid ${color}">
             <span style="font-size:16px;font-weight:900;color:${color}">${it.score}</span><span style="font-size:9px;color:${color};opacity:.7">/10</span>
            </div>`
-        : `<div onclick="openWheelPicker('pl','${item.key}',0)" style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
+        : `<div ${locked?'':`onclick="openWheelPicker('pl','${item.key}',0)"`} style="flex-shrink:0;min-width:56px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:${locked?'default':'pointer'};background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1)">
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea oninput="plSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} oninput="plSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="plExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -6185,11 +6189,11 @@ function renderParkingChecklist(el) {
     <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
-        <input type="date" value="${d.date}" onchange="plSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="date" value="${d.date}" ${locked?'disabled':''} onchange="plSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
-        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="plSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" ${locked?'disabled':''} oninput="plSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
     </div>
 
@@ -6197,7 +6201,7 @@ function renderParkingChecklist(el) {
 
     <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
-      <textarea oninput="plSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+      <textarea ${locked?'readonly':''} oninput="plSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
     ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL)}
@@ -6210,9 +6214,9 @@ function renderParkingChecklist(el) {
       </div>
       <span style="color:var(--border2);font-size:18px">›</span>
     </div>
-    <div onclick="resetParkingAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+    ${locked?'':`<div onclick="resetParkingAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
       <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
-    </div>
+    </div>`}
     <div style="height:80px"></div>`;
 }
 
@@ -6486,6 +6490,7 @@ function ykfToggleDone() {
 function renderYkfBaseChecklist(el) {
   const d = ykfData();
   const done = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&d.items[i.key]&&d.items[i.key].val).length, 0);
+  const locked = !!d.done;
   setBar({title:'YKF Base', back:'Audits', backFn:()=>{S.ykfBaseView=false;render();}});
   document.getElementById('fab').style.display='none';
 
@@ -6507,7 +6512,7 @@ function renderYkfBaseChecklist(el) {
         return `<div style="margin:0 14px 5px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 12px">
           <div style="display:flex;align-items:center;gap:10px">
             <div style="flex:1;font-size:13px;color:var(--t1);line-height:1.35;font-weight:500">${item.label}</div>
-            <div onclick="openCalPicker('${expVal}',ykfSetExpiry)" style="flex-shrink:0;padding:5px 10px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,0.04);border:1px solid ${hasVal?'rgba(74,144,217,0.5)':'rgba(255,255,255,0.1)'};font-size:11px;font-weight:700;color:${hasVal?'#5BA3F5':'#444'};white-space:nowrap">${expLabel}</div>
+            <div ${locked?'':`onclick="openCalPicker('${expVal}',ykfSetExpiry)"`} style="flex-shrink:0;padding:5px 10px;border-radius:8px;cursor:${locked?'default':'pointer'};background:rgba(255,255,255,0.04);border:1px solid ${hasVal?'rgba(74,144,217,0.5)':'rgba(255,255,255,0.1)'};font-size:11px;font-weight:700;color:${hasVal?'#5BA3F5':'#444'};white-space:nowrap">${expLabel}</div>
           </div>
         </div>`;
       }
@@ -6515,7 +6520,7 @@ function renderYkfBaseChecklist(el) {
       const answered = it.val === 'yes' || it.val === 'no';
       const isNo = it.val === 'yes' ? false : it.val === 'no' ? true : false;
       const commentHtml = answered
-        ? `<textarea oninput="ykfSetComment('${item.key}',this.value)" placeholder="Add a note…" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:46px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} oninput="ykfSetComment('${item.key}',this.value)" placeholder="Add a note…" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:46px;box-sizing:border-box">${it.comment||''}</textarea>`
         : '';
       return `<div style="margin:0 14px 5px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 12px">
         <div style="display:flex;align-items:center;gap:10px">
@@ -6524,8 +6529,8 @@ function renderYkfBaseChecklist(el) {
             ${item.loc?`<div style="font-size:10px;color:var(--t3);margin-top:2px">${item.loc}</div>`:''}
           </div>
           <div style="display:flex;gap:5px;flex-shrink:0">
-            <div onclick="ykfSetAnswer('${item.key}','yes')" style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;background:${it.val==='yes'?'rgba(46,204,113,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='yes'?'#2ECC71':'rgba(255,255,255,0.1)'};color:${it.val==='yes'?'#2ECC71':'#444'}">Yes</div>
-            <div onclick="ykfSetAnswer('${item.key}','no')" style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;background:${it.val==='no'?'rgba(232,64,64,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='no'?'#E84040':'rgba(255,255,255,0.1)'};color:${it.val==='no'?'#E84040':'#444'}">No</div>
+            <div ${locked?'':`onclick="ykfSetAnswer('${item.key}','yes')"`} style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:${locked?'default':'pointer'};background:${it.val==='yes'?'rgba(46,204,113,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='yes'?'#2ECC71':'rgba(255,255,255,0.1)'};color:${it.val==='yes'?'#2ECC71':'#444'}">Yes</div>
+            <div ${locked?'':`onclick="ykfSetAnswer('${item.key}','no')"`} style="padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:${locked?'default':'pointer'};background:${it.val==='no'?'rgba(232,64,64,0.15)':'rgba(255,255,255,0.04)'};border:1px solid ${it.val==='no'?'#E84040':'rgba(255,255,255,0.1)'};color:${it.val==='no'?'#E84040':'#444'}">No</div>
           </div>
         </div>
         ${commentHtml}
@@ -6537,11 +6542,11 @@ function renderYkfBaseChecklist(el) {
     <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
-        <input type="date" value="${d.date}" onchange="ykfSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="date" value="${d.date}" ${locked?'disabled':''} onchange="ykfSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">INSPECTOR</span>
-        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" oninput="ykfSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" value="${(d.inspector||'').replace(/"/g,'&quot;')}" ${locked?'disabled':''} oninput="ykfSetField('inspector',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
     </div>
 
@@ -6549,7 +6554,7 @@ function renderYkfBaseChecklist(el) {
 
     <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Comments</div>
-      <textarea oninput="ykfSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
+      <textarea ${locked?'readonly':''} oninput="ykfSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
     ${markDoneBlock(done===YKF_TOTAL, !!d.done, 'ykfToggleDone()', done, YKF_TOTAL)}
@@ -6562,9 +6567,9 @@ function renderYkfBaseChecklist(el) {
       </div>
       <span style="color:var(--border2);font-size:18px">›</span>
     </div>
-    <div onclick="resetYkfBaseAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+    ${locked?'':`<div onclick="resetYkfBaseAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
       <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
-    </div>
+    </div>`}
     <div style="height:80px"></div>`;
 }
 
@@ -6929,6 +6934,7 @@ function renderMsdsChecklist(el) {
   const total = allKeys.length;
   const done = allKeys.filter(k=>d.items[k]===true).length;
   const allChecked = done === total;
+  const locked = !!d.done;
   setBar({title:'MSDS Audit', back:'Audits', backFn:()=>{S.msdsView=false;render();}});
   document.getElementById('fab').style.display='none';
 
@@ -6945,7 +6951,7 @@ function renderMsdsChecklist(el) {
       ${sec.items.map((item,i)=>{
         const checked = d.items[item.key]===true;
         const bg = i%2===0 ? 'transparent' : 'rgba(255,255,255,0.02)';
-        return `<div onclick="msSetCheck('${item.key}',${!checked})" style="display:flex;align-items:center;gap:10px;padding:8px 11px;background:${bg};border-bottom:${i<sec.items.length-1?'1px solid var(--border2)':'none'};cursor:pointer">
+        return `<div ${locked?'':`onclick="msSetCheck('${item.key}',${!checked})"`} style="display:flex;align-items:center;gap:10px;padding:8px 11px;background:${bg};border-bottom:${i<sec.items.length-1?'1px solid var(--border2)':'none'};cursor:${locked?'default':'pointer'}">
           <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${checked?'#4CAF50':'var(--border2)'};background:${checked?'rgba(76,175,80,0.2)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s">
             ${checked?'<span style="font-size:12px;color:#4CAF50;font-weight:800">✓</span>':''}
           </div>
@@ -6962,13 +6968,13 @@ function renderMsdsChecklist(el) {
     <div style="padding:12px 14px 8px;display:flex;flex-direction:column;gap:7px">
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">DATE</span>
-        <input type="date" value="${d.date}" onchange="msSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="date" value="${d.date}" ${locked?'disabled':''} onchange="msSetField('date',this.value)" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:8px 11px">
         <span style="font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.06em;flex-shrink:0">AUDITOR</span>
-        <input type="text" value="${(d.auditor||'').replace(/"/g,'&quot;')}" oninput="msSetField('auditor',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" value="${(d.auditor||'').replace(/"/g,'&quot;')}" ${locked?'disabled':''} oninput="msSetField('auditor',this.value)" placeholder="Enter name" style="flex:1;background:transparent;border:none;color:var(--t1);font-size:13px;font-family:inherit;outline:none">
       </div>
-      <div onclick="msSelectAll()" style="display:flex;align-items:center;gap:10px;background:${allChecked?'rgba(76,175,80,0.1)':'var(--glass2)'};border:1px solid ${allChecked?'rgba(76,175,80,0.3)':'var(--border2)'};border-radius:9px;padding:8px 11px;cursor:pointer">
+      <div ${locked?'':'onclick="msSelectAll()"'} style="display:flex;align-items:center;gap:10px;background:${allChecked?'rgba(76,175,80,0.1)':'var(--glass2)'};border:1px solid ${allChecked?'rgba(76,175,80,0.3)':'var(--border2)'};border-radius:9px;padding:8px 11px;cursor:${locked?'default':'pointer'}">
         <div style="width:20px;height:20px;border-radius:5px;border:1.5px solid ${allChecked?'#4CAF50':'var(--border2)'};background:${allChecked?'rgba(76,175,80,0.2)':'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
           ${allChecked?'<span style="font-size:12px;color:#4CAF50;font-weight:800">✓</span>':''}
         </div>
@@ -6981,7 +6987,7 @@ function renderMsdsChecklist(el) {
 
     <div style="margin:10px 14px 6px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:10px 11px">
       <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:7px">Notes</div>
-      <textarea oninput="msSetField('notes',this.value)" placeholder="Add general audit notes…" style="width:100%;min-height:60px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.notes||''}</textarea>
+      <textarea ${locked?'readonly':''} oninput="msSetField('notes',this.value)" placeholder="Add general audit notes…" style="width:100%;min-height:60px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.notes||''}</textarea>
     </div>
 
     ${markDoneBlock(done===total, !!d.done, 'msToggleDone()', done, total)}
@@ -6994,9 +7000,9 @@ function renderMsdsChecklist(el) {
       </div>
       <span style="color:var(--border2);font-size:18px">›</span>
     </div>
-    <div onclick="resetMsdsAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
+    ${locked?'':`<div onclick="resetMsdsAudit()" style="margin:0 14px 8px;padding:11px 13px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;border-radius:9px;border:1px solid rgba(232,64,64,0.25);background:rgba(232,64,64,0.07)">
       <span style="font-size:13px;font-weight:600;color:var(--red)">Reset all fields</span>
-    </div>
+    </div>`}
     <div style="height:80px"></div>`;
 }
 
@@ -7810,6 +7816,7 @@ function renderAircraftChecklist(el, reg, type) {
   const pct     = Math.round(answered/total*100);
   const { urgent, overdue, daysLeft } = auditDeadlineStatus();
   const editMode = S.acEditLabelsMode;
+  const locked = !!d.done;
 
   const deadlineBanner = overdue && !allDone
     ? `<div style="margin:10px 14px 0;padding:8px 10px;border-radius:var(--radius-sm);background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.4);font-size:12px;font-weight:700;color:#E74C3C;text-align:center">🚨 OVERDUE — was due the 10th</div>`
@@ -7837,14 +7844,14 @@ function renderAircraftChecklist(el, reg, type) {
             ${labelHtml}
             ${hasComment?`<div style="font-size:10px;color:var(--t2);font-style:italic;background:var(--glass2);padding:3px 8px;border-radius:5px;border-left:2px solid var(--accent)">${it.comments}</div>`:''}
             ${editMode?'':`<div style="display:flex;align-items:center;gap:7px;justify-content:flex-end">
-              <button onclick="toggleAcItem('${reg}','${item.key}','yes')"
-                style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasYes?'#27AE60':'var(--border2)'};background:${hasYes?'rgba(39,174,96,0.18)':'transparent'};color:${hasYes?'#27AE60':'var(--t4)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</button>
-              <button onclick="toggleAcItem('${reg}','${item.key}','no')"
-                style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasNo?'#E74C3C':'var(--border2)'};background:${hasNo?'rgba(231,76,60,0.18)':'transparent'};color:${hasNo?'#E74C3C':'var(--t4)'};font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0">✗</button>
-              <div onclick="openAcExpiryCal('${reg}','${item.key}','${it.expires||''}')"
-                style="width:60px;padding:4px 2px;border:none;border-bottom:1.5px solid ${it.expires?'var(--accent-border)':'var(--border2)'};background:transparent;color:${it.expires?'var(--accent)':'var(--t3)'};font-size:10px;text-align:center;cursor:pointer;white-space:nowrap;flex-shrink:0">${it.expires?fmtDate(it.expires):'Expires'}</div>
-              <button onclick="openAcCommentModal('${reg}','${item.key}','${(it.comments||'').replace(/'/g,'&#39;')}')"
-                style="padding:4px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid ${hasComment?'var(--accent-border)':'var(--border2)'};background:transparent;color:${hasComment?'var(--accent)':'var(--t3)'};cursor:pointer;white-space:nowrap">Notes</button>
+              <button ${locked?'disabled':''} onclick="toggleAcItem('${reg}','${item.key}','yes')"
+                style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasYes?'#27AE60':'var(--border2)'};background:${hasYes?'rgba(39,174,96,0.18)':'transparent'};color:${hasYes?'#27AE60':'var(--t4)'};font-size:14px;cursor:${locked?'default':'pointer'};display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</button>
+              <button ${locked?'disabled':''} onclick="toggleAcItem('${reg}','${item.key}','no')"
+                style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasNo?'#E74C3C':'var(--border2)'};background:${hasNo?'rgba(231,76,60,0.18)':'transparent'};color:${hasNo?'#E74C3C':'var(--t4)'};font-size:14px;cursor:${locked?'default':'pointer'};display:flex;align-items:center;justify-content:center;flex-shrink:0">✗</button>
+              <div ${locked?'':`onclick="openAcExpiryCal('${reg}','${item.key}','${it.expires||''}')"`}
+                style="width:60px;padding:4px 2px;border:none;border-bottom:1.5px solid ${it.expires?'var(--accent-border)':'var(--border2)'};background:transparent;color:${it.expires?'var(--accent)':'var(--t3)'};font-size:10px;text-align:center;cursor:${locked?'default':'pointer'};white-space:nowrap;flex-shrink:0">${it.expires?fmtDate(it.expires):'Expires'}</div>
+              <button ${locked?'disabled':''} onclick="openAcCommentModal('${reg}','${item.key}','${(it.comments||'').replace(/'/g,'&#39;')}')"
+                style="padding:4px 9px;border-radius:20px;font-size:10px;font-weight:600;border:1px solid ${hasComment?'var(--accent-border)':'var(--border2)'};background:transparent;color:${hasComment?'var(--accent)':'var(--t3)'};cursor:${locked?'default':'pointer'};white-space:nowrap">Notes</button>
             </div>`}
           </div>
         </div>`;
@@ -7879,13 +7886,13 @@ function renderAircraftChecklist(el, reg, type) {
         <div style="display:flex;gap:0">
           <div style="flex:1;padding:10px 12px;border-right:1px solid var(--border)">
             <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Configuration</div>
-            <input type="text" value="${d.configuration||''}" placeholder="e.g. SW3"
+            <input type="text" value="${d.configuration||''}" placeholder="e.g. SW3" ${locked?'disabled':''}
               oninput="setAcHeader('${reg}','configuration',this.value)"
               style="width:100%;background:transparent;border:none;color:var(--t1);font-size:13px;font-weight:600;outline:none">
           </div>
           <div style="flex:1;padding:10px 12px">
             <div style="font-size:10px;color:var(--t3);margin-bottom:4px">Date</div>
-            <input type="date" value="${d.date||new Date().toLocaleDateString('en-CA')}"
+            <input type="date" value="${d.date||new Date().toLocaleDateString('en-CA')}" ${locked?'disabled':''}
               oninput="setAcHeader('${reg}','date',this.value)"
               style="width:100%;background:transparent;border:none;color:var(--t1);font-size:13px;font-weight:600;outline:none">
           </div>
@@ -7906,7 +7913,7 @@ function renderAircraftChecklist(el, reg, type) {
     <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
       <div style="display:flex;align-items:center;gap:10px">
         <span style="font-size:12px;color:var(--t3);flex-shrink:0">Auditor</span>
-        <input type="text" value="${d.auditorName||''}" placeholder="Your name"
+        <input type="text" value="${d.auditorName||''}" placeholder="Your name" ${locked?'disabled':''}
           oninput="setAcHeader('${reg}','auditorName',this.value)"
           style="flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px">
       </div>
