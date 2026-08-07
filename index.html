@@ -8234,7 +8234,7 @@ function generateAircraftPDF(reg, type, month, silent) {
   if(db && storage) {
     try {
       const blob = new Blob([html], {type:'text/html'});
-      const path = `acPDFs/${month}/${reg}.html`;
+      const path = `audits/${month}/aircraft-${reg}.html`;
       const ref = storage.ref(path);
       ref.put(blob, {contentType:'text/html'}).then(()=>ref.getDownloadURL()).then(url=>{
         const now = new Date();
