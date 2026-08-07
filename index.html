@@ -5413,9 +5413,14 @@ function renderRecordsView(el) {
           html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-radius:8px;margin-bottom:2px;background:var(--accent-dim)">
               <div style="font-size:12px;font-weight:700;color:var(--accent)">📋 Flagged Items Summary</div>
               <a href="${summary.pdfUrl}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;background:var(--navy2,#0B1628);border:1px solid var(--accent-border,#1a3050);font-size:10px;font-weight:700;color:var(--accent);text-decoration:none;flex-shrink:0">📄 PDF</a>
-            </div>
-            <div style="height:0.5px;background:var(--border2);margin:0 8px 2px"></div>`;
+            </div>`;
         }
+        if (monthLabel === auditMonth()) {
+          html += `<div style="padding:0 8px 8px">
+              <button onclick="event.stopPropagation();shareAllRecords()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:8px;border:1px solid var(--accent-border,#1a3050);background:var(--accent);color:var(--navy2,#0B1628);font-size:12px;font-weight:700;cursor:pointer">📤 Share all</button>
+            </div>`;
+        }
+        html += `<div style="height:0.5px;background:var(--border2);margin:0 8px 2px"></div>`;
 
         // Facility rows
         facilityDocs.forEach((type, i) => {
@@ -8119,8 +8124,12 @@ function buildFlaggedSummaryHTML() {
   const todayFmt = new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const logoSrc = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
 
-  const scoreSection = (title, checklist, data) => {
-    const items = (data||{}).items||{};
+  // Each group is one of three states: not started (audit never marked done —
+  // never confused with "all clear", which means it WAS checked and passed),
+  // all clear (done, nothing flagged), or flagged (done, with items to fix).
+  const scoreGroup = (title, checklist, data) => {
+    if (!data || !data.done) return {title, notStarted:true};
+    const items = data.items||{};
     const flagged = [];
     checklist.forEach(sec=>sec.items.forEach(item=>{
       const it = items[item.key];
@@ -8128,8 +8137,9 @@ function buildFlaggedSummaryHTML() {
     }));
     return {title, flagged};
   };
-  const yesNoSection = (title, checklist, data) => {
-    const items = (data||{}).items||{};
+  const yesNoGroup = (title, checklist, data) => {
+    if (!data || !data.done) return {title, notStarted:true};
+    const items = data.items||{};
     const flagged = [];
     checklist.forEach(sec=>sec.items.forEach(item=>{
       if (item.type==='date') return;
@@ -8138,19 +8148,13 @@ function buildFlaggedSummaryHTML() {
     }));
     return {title, flagged};
   };
-
-  const sections = [
-    scoreSection('Crew House', CREW_HOUSE_CHECKLIST, S.crewHouseAudit),
-    scoreSection('Hangar', HANGAR_CHECKLIST, S.hangarAudit),
-    scoreSection('Parking Lot', PARKING_LOT_CHECKLIST, S.parkingAudit),
-    yesNoSection('YKF Base', YKF_BASE_CHECKLIST, S.ykfBaseAudit),
-    {title:'MSDS', flagged:[], skip:true},
-  ];
-
-  const audCars = CREW_CARS.filter(c=>!isCarDisabled(c.key));
-  const carGroups = [];
-  audCars.forEach(c=>{
+  const msdsGroup = () => {
+    if (!S.msdsAudit || !S.msdsAudit.done) return {title:'MSDS', notStarted:true};
+    return {title:'MSDS', flagged:[], skip:true};
+  };
+  const carGroup = (c) => {
     const cd = carAuditData(c.key);
+    if (!cd.done) return {title:c.name, notStarted:true};
     const flagged = [];
     CAR_AUDIT_CHECKS.filter(ch=>ch.type==='condition').forEach(ch=>{
       const chk = (cd.checks||{})[ch.key];
@@ -8159,8 +8163,29 @@ function buildFlaggedSummaryHTML() {
     (cd.photos||[]).forEach((p,i)=>{
       if (p && p.rating==='Poor') flagged.push({label:AUDIT_PHOTO_SLOTS[i], value:'Poor photo', note:p.note||''});
     });
-    if (flagged.length) carGroups.push({title:c.name, flagged});
-  });
+    return {title:c.name, flagged};
+  };
+  const acGroup = (reg, type) => {
+    if (!acIsComplete(reg,type)) return {title:reg, notStarted:true};
+    const d = acAuditData(reg);
+    const flagged = [];
+    acAllItems(type).forEach(item=>{
+      const it = (d.items||{})[item.key];
+      if (it && it.no) flagged.push({label:item.label, value:'No', note:it.comments||''});
+    });
+    return {title:reg, flagged};
+  };
+
+  const facilitySections = [
+    scoreGroup('Crew House', CREW_HOUSE_CHECKLIST, S.crewHouseAudit),
+    scoreGroup('Hangar', HANGAR_CHECKLIST, S.hangarAudit),
+    scoreGroup('Parking Lot', PARKING_LOT_CHECKLIST, S.parkingAudit),
+    yesNoGroup('YKF Base', YKF_BASE_CHECKLIST, S.ykfBaseAudit),
+    msdsGroup(),
+  ];
+
+  const audCars = CREW_CARS.filter(c=>!isCarDisabled(c.key));
+  const carSections = audCars.map(carGroup);
 
   const metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
   const wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
@@ -8171,63 +8196,32 @@ function buildFlaggedSummaryHTML() {
     ...astraRegs.map(r=>({reg:r,type:'astra'})),
     ...S.customAcTypesList.flatMap(ct=>ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).map(r=>({reg:r,type:ct.id}))),
   ];
-  const acGroups = [];
-  acList.forEach(({reg,type})=>{
-    const d = acAuditData(reg);
-    const flagged = [];
-    acAllItems(type).forEach(item=>{
-      const it = (d.items||{})[item.key];
-      if (it && it.no) flagged.push({label:item.label, value:'No', note:it.comments||''});
-    });
-    if (flagged.length) acGroups.push({title:reg, flagged});
-  });
+  const acSections = acList.map(({reg,type})=>acGroup(reg,type));
 
-  const renderGroup = (g) => `
+  const statusBody = (g) => g.notStarted
+    ? `<div style="font-size:9px;color:#B08900;font-weight:700">⏳ Not completed yet</div>`
+    : g.skip ? `<div style="font-size:9px;color:#999;font-style:italic">Checklist only — nothing to flag</div>`
+    : !g.flagged.length ? `<div style="font-size:9px;color:#2E9E4F;font-weight:700">✅ All clear</div>`
+    : `<table style="border:1px solid #C8D4E8">
+        <tbody>${g.flagged.map(f=>`
+          <tr>
+            <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#1a1a1a;width:55%">${f.label}</td>
+            <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;font-weight:700;color:#E84040;width:15%">${f.value}</td>
+            <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;font-style:italic">${f.note}</td>
+          </tr>`).join('')}</tbody>
+      </table>`;
+
+  const renderFacility = (g) => `
     <div style="margin-bottom:10px">
       <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:5px">${g.title}</div>
-      ${g.skip ? `<div style="font-size:9px;color:#999;font-style:italic">Checklist only — nothing to flag</div>`
-        : !g.flagged.length ? `<div style="font-size:9px;color:#2E9E4F;font-weight:700">✅ All clear</div>`
-        : `<table style="border:1px solid #C8D4E8">
-            <tbody>${g.flagged.map(f=>`
-              <tr>
-                <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#1a1a1a;width:55%">${f.label}</td>
-                <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;font-weight:700;color:#E84040;width:15%">${f.value}</td>
-                <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;font-style:italic">${f.note}</td>
-              </tr>`).join('')}</tbody>
-          </table>`}
+      ${statusBody(g)}
     </div>`;
 
-  const carsBlock = carGroups.length
-    ? `<div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:5px">Crew Cars</div>
-        ${carGroups.map(g=>`<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:#333;margin-bottom:2px">${g.title}</div>
-          <table style="border:1px solid #C8D4E8"><tbody>${g.flagged.map(f=>`
-            <tr>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#1a1a1a;width:55%">${f.label}</td>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;font-weight:700;color:#E84040;width:15%">${f.value}</td>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;font-style:italic">${f.note}</td>
-            </tr>`).join('')}</tbody></table></div>`).join('')}
-      </div>`
-    : `<div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:5px">Crew Cars</div>
-        <div style="font-size:9px;color:#2E9E4F;font-weight:700">✅ All clear</div>
-      </div>`;
-
-  const acBlock = acGroups.length
-    ? `<div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:5px">Aircraft</div>
-        ${acGroups.map(g=>`<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:#333;margin-bottom:2px">${g.title}</div>
-          <table style="border:1px solid #C8D4E8"><tbody>${g.flagged.map(f=>`
-            <tr>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;color:#1a1a1a;width:70%">${f.label}</td>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8.5px;font-weight:700;color:#E84040;width:15%">${f.value}</td>
-              <td style="padding:3px 6px;border-bottom:0.5px solid #EEF1F8;font-size:8px;color:#555;font-style:italic">${f.note}</td>
-            </tr>`).join('')}</tbody></table></div>`).join('')}
-      </div>`
-    : `<div style="margin-bottom:10px">
-        <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:5px">Aircraft</div>
-        <div style="font-size:9px;color:#2E9E4F;font-weight:700">✅ All clear</div>
-      </div>`;
+  const renderCategory = (title, groups) => `
+    <div style="margin-bottom:10px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:#1A3A6A;padding-bottom:3px;border-bottom:1px solid #C8D4E8;margin-bottom:6px">${title}</div>
+      ${groups.map(g=>`<div style="margin-bottom:6px"><div style="font-size:9px;font-weight:700;color:#333;margin-bottom:2px">${g.title}</div>${statusBody(g)}</div>`).join('')}
+    </div>`;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
   <title>Flagged Items Summary — ${month}</title>
@@ -8247,15 +8241,60 @@ function buildFlaggedSummaryHTML() {
     </tr>
   </table>
   <div style="height:1.5px;background:#1A3A6A;margin-bottom:8px"></div>
-  ${sections.map(renderGroup).join('')}
-  ${carsBlock}
-  ${acBlock}
+  ${facilitySections.map(renderFacility).join('')}
+  ${renderCategory('Crew Cars', carSections)}
+  ${renderCategory('Aircraft', acSections)}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
     <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
     <span>Generated ${todayFmt}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
   </body></html>`;
+}
+
+// "Share all" — bundles every already-saved file for the current month (whatever's
+// actually done — nothing forces completion) plus a freshly-built summary, and hands
+// them to the device's native share sheet so they land as real email attachments.
+async function shareAllRecords() {
+  const month = auditMonth();
+  const files = [];
+
+  const summaryHtml = buildFlaggedSummaryHTML();
+  files.push(new File([new Blob([summaryHtml],{type:'text/html'})], `Flagged Summary - ${month}.html`, {type:'text/html'}));
+  // Keep Records in sync even if "Generate all PDFs" was never run this month.
+  uploadAuditPDF(summaryHtml, `audits/${month}/summary.html`).then(url => {
+    if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
+  });
+
+  const facilityNames = {crewhouse:'Crew House', hangar:'Hangar', parking:'Parking Lot', ykfbase:'YKF Base', msds:'MSDS'};
+  const sources = [];
+  Object.values(S.auditRecords).forEach(rec => {
+    if (rec.monthLabel !== month || !rec.pdfUrl) return;
+    let name;
+    if (rec.type === 'cars') name = (CREW_CARS.find(c=>c.key===rec.carKey)||{}).name || rec.carKey;
+    else if (rec.type === 'aircraft') name = rec.reg;
+    else name = facilityNames[rec.type] || rec.type;
+    sources.push({name, url: rec.pdfUrl});
+  });
+
+  if (!sources.length) {
+    toast('No completed audits saved yet this month — sharing the summary only');
+  }
+
+  for (const {name, url} of sources) {
+    try {
+      const blob = await (await fetch(url)).blob();
+      files.push(new File([blob], `${name} - ${month}.html`, {type:'text/html'}));
+    } catch(e) { console.error('Share fetch failed for', name, e); }
+  }
+
+  if (navigator.canShare && navigator.canShare({files})) {
+    try { await navigator.share({files, title:`${month} Audits`}); }
+    catch(e) { if (e.name !== 'AbortError') toast('Share cancelled or failed'); }
+  } else {
+    openModal('Share All',
+      `<p style="font-size:13px;color:var(--t2);line-height:1.5">Your browser can't share multiple files directly. Open each file from its card or Records and share/save it individually instead.</p>`, null);
+  }
 }
 
 function generateAllAuditPDFs() {
