@@ -3906,7 +3906,7 @@ function markCarAuditDone(key) {
   saveCarAudit(key); render();
   if(cd.done) {
     toast('✅ '+CREW_CARS.find(c=>c.key===key)?.name+' audit done');
-    uploadAuditPDF(generateSingleCarPDF(key, true), `auditPDFs/${auditMonth()}/car-${key}.html`).then(url => {
+    uploadAuditPDF(generateSingleCarPDF(key, true), `audits/${auditMonth()}/${key}/report.html`).then(url => {
       if (url) { cd.pdfUrl = url; saveCarAudit(key); render(); }
     });
   }
@@ -5314,7 +5314,7 @@ function chToggleDone() {
   render();
   toast(d.done ? '✅ Crew House audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateCrewHousePDF(true), `auditPDFs/${auditMonth()}/crewhouse.html`).then(url => {
+    uploadAuditPDF(generateCrewHousePDF(true), `audits/${auditMonth()}/facility-crewhouse.html`).then(url => {
       if (url) { d.pdfUrl = url; saveCrewHouseDebounced(); render(); }
     });
   }
@@ -5823,7 +5823,7 @@ function hoToggleDone() {
   render();
   toast(d.done ? '✅ Hangar audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateHangarPDF(true), `auditPDFs/${auditMonth()}/hangar.html`).then(url => {
+    uploadAuditPDF(generateHangarPDF(true), `audits/${auditMonth()}/facility-hangar.html`).then(url => {
       if (url) { d.pdfUrl = url; saveHangarDebounced(); render(); }
     });
   }
@@ -6268,7 +6268,7 @@ function plToggleDone() {
   render();
   toast(d.done ? '✅ Parking Lot audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateParkingPDF(true), `auditPDFs/${auditMonth()}/parking.html`).then(url => {
+    uploadAuditPDF(generateParkingPDF(true), `audits/${auditMonth()}/facility-parking.html`).then(url => {
       if (url) { d.pdfUrl = url; saveParkingDebounced(); render(); }
     });
   }
@@ -6620,7 +6620,7 @@ function ykfToggleDone() {
   render();
   toast(d.done ? '✅ YKF Base audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateYkfBasePDF(true), `auditPDFs/${auditMonth()}/ykfbase.html`).then(url => {
+    uploadAuditPDF(generateYkfBasePDF(true), `audits/${auditMonth()}/facility-ykfbase.html`).then(url => {
       if (url) { d.pdfUrl = url; saveYkfBaseDebounced(); render(); }
     });
   }
@@ -7067,7 +7067,7 @@ function msToggleDone() {
   render();
   toast(d.done ? '✅ MSDS audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateMsdsPDF(true), `auditPDFs/${auditMonth()}/msds.html`).then(url => {
+    uploadAuditPDF(generateMsdsPDF(true), `audits/${auditMonth()}/facility-msds.html`).then(url => {
       if (url) { d.pdfUrl = url; saveMsdsDebounced(); render(); }
     });
   }
