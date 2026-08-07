@@ -2833,42 +2833,46 @@ function monthLabelToMonthKey(label) {
   return isNaN(d) ? label : d.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit'});
 }
 
-async function loadAllAuditRecords() {
-  if (!db) return;
+// Live listeners (not a one-time fetch) — Records reflects a done/pdfUrl change
+// the instant it happens, anywhere, without needing to be reopened to refresh.
+let _recordsListenersAttached = false;
+function loadAllAuditRecords() {
+  if (!db || _recordsListenersAttached) { if (S.recordsView) render(); return; }
+  _recordsListenersAttached = true;
   const FACILITY_TYPES = ['crewhouse','hangar','msds','parking','ykfbase'];
-  try {
-    const [faSnap, carSnap, acSnap] = await Promise.all([
-      db.collection('facilityAudits').get(),
-      db.collection('auditCars').get(),
-      db.collection('auditAircraft').get(),
-    ]);
 
-    const records = {};
-
-    faSnap.docs.forEach(doc => {
+  db.collection('facilityAudits').onSnapshot(snap => {
+    Object.keys(S.auditRecords).forEach(k => { if (k.startsWith('fa-')) delete S.auditRecords[k]; });
+    snap.docs.forEach(doc => {
       const type = FACILITY_TYPES.find(t => doc.id.startsWith(t + '-'));
       if (!type) return;
       const monthLabel = doc.id.slice(type.length + 1);
       const data = doc.data();
       if (!Object.keys(data.items||{}).length) return; // never-touched month, nothing to show
-      records['fa-'+doc.id] = {monthKey: monthLabelToMonthKey(monthLabel), monthLabel, type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+      S.auditRecords['fa-'+doc.id] = {monthKey: monthLabelToMonthKey(monthLabel), monthLabel, type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
     });
+    if (S.recordsView) render();
+  }, e => console.log('facilityAudits records listener failed:', e));
 
-    carSnap.docs.forEach(doc => {
+  db.collection('auditCars').onSnapshot(snap => {
+    Object.keys(S.auditRecords).forEach(k => { if (k.startsWith('car-')) delete S.auditRecords[k]; });
+    snap.docs.forEach(doc => {
       const data = doc.data();
       if (!data.month || !data.carKey) return;
-      records['car-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'cars', carKey: data.carKey, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+      S.auditRecords['car-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'cars', carKey: data.carKey, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
     });
+    if (S.recordsView) render();
+  }, e => console.log('auditCars records listener failed:', e));
 
-    acSnap.docs.forEach(doc => {
+  db.collection('auditAircraft').onSnapshot(snap => {
+    Object.keys(S.auditRecords).forEach(k => { if (k.startsWith('ac-')) delete S.auditRecords[k]; });
+    snap.docs.forEach(doc => {
       const data = doc.data();
       if (!data.month || !data.reg) return;
-      records['ac-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'aircraft', reg: data.reg, acType: data.type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+      S.auditRecords['ac-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'aircraft', reg: data.reg, acType: data.type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
     });
-
-    S.auditRecords = records;
     if (S.recordsView) render();
-  } catch(e) { console.log('loadAllAuditRecords failed:', e); }
+  }, e => console.log('auditAircraft records listener failed:', e));
 }
 
 function toggleRecordsMonth(mk) {
@@ -3880,6 +3884,7 @@ function auditSectionHTML(key) {
     style="width:100%;padding:12px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
     ${cd.done?'✅ Audit complete — tap to undo':'✓ Mark audit done for this car'}
   </button>
+  ${cd.pdfUrl?`<a href="${cd.pdfUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;padding:10px 13px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:700;text-decoration:none">📄 View saved PDF</a>`:''}
   </div>`;
   return h;
 }
@@ -5504,6 +5509,13 @@ function markDoneBlock(allAnswered, isDone, toggleFn, doneCount, total) {
   return `<div style="margin:8px 14px 4px;padding:10px 13px;border-radius:9px;border:1px dashed var(--border2);text-align:center;font-size:12px;color:var(--t3)">Complete all items to mark as done · ${doneCount}/${total}</div>`;
 }
 
+// Same "View PDF" link style already used on aircraft folder cards — shown on a
+// checklist/audit view once that record's pdfUrl is saved.
+function pdfViewLink(url) {
+  if (!url) return '';
+  return `<a href="${url}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;justify-content:center;gap:6px;margin:6px 14px 0;padding:9px 13px;border-radius:9px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:700;text-decoration:none">📄 View saved PDF</a>`;
+}
+
 function renderCrewHouseChecklist(el) {
   const d = chData();
   const done = Object.values(d.items).filter(i=>i.score>0).length;
@@ -5569,6 +5581,7 @@ function renderCrewHouseChecklist(el) {
     </div>
 
     ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL)}
+    ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateCrewHousePDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -5893,6 +5906,7 @@ function renderHangarChecklist(el) {
     </div>
 
     ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL)}
+    ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateHangarPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -6338,6 +6352,7 @@ function renderParkingChecklist(el) {
     </div>
 
     ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL)}
+    ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateParkingPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -6697,6 +6712,7 @@ function renderYkfBaseChecklist(el) {
     </div>
 
     ${markDoneBlock(done===YKF_TOTAL, !!d.done, 'ykfToggleDone()', done, YKF_TOTAL)}
+    ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateYkfBasePDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -7136,6 +7152,7 @@ function renderMsdsChecklist(el) {
     </div>
 
     ${markDoneBlock(done===total, !!d.done, 'msToggleDone()', done, total)}
+    ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateMsdsPDF()">
       <span style="font-size:20px;flex-shrink:0">📄</span>
@@ -8066,6 +8083,7 @@ function renderAircraftChecklist(el, reg, type) {
       </div>
     </div>
     ${markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total)}
+    ${pdfViewLink(d.pdfUrl)}
     <div style="padding:0 14px 14px">
       ${pdfBtn}
     </div>
