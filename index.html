@@ -1400,7 +1400,6 @@ async function bootApp() {
           {title:'Audits',icon:'📁',warn:'',video:'',steps:[],isAuditsHub:true},
           {merge:true}
         ).catch(()=>{});
-        checkMonthlyAuditReset();
         loadPastAudits();
         loadAcAudits();
         loadAcAuditLabels();
@@ -2710,6 +2709,11 @@ function auditMonth() {
   return new Date().toLocaleDateString('en-CA',{year:'numeric',month:'long'});
 }
 function auditDocKey(carKey) { return auditMonth()+'-'+carKey; }
+// Facility audits (crewhouse/hangar/msds/parking/ykfbase) get one permanent doc per
+// month, same pattern as car/aircraft audits — a new month is just a new, blank doc
+// key, never a delete of an existing one. See feedback_no_live_prod_testing memory
+// and the Aug 5 2026 incident for why nothing here ever deletes a live doc again.
+function facilityDocKey(type) { return type + '-' + auditMonth(); }
 function loadCarAudits() {
   try { S.monthlyCarAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.monthlyCarAudits={}; }
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
@@ -2827,60 +2831,9 @@ function loadAuditRecords() {
   }, ()=>{});
 }
 
-async function saveAuditSnapshot(forDate) {
-  if (!db) return;
-  const d = forDate || new Date();
-  const monthKey   = d.toLocaleDateString('en-CA', {year:'numeric', month:'2-digit'});
-  const monthLabel = d.toLocaleDateString('en-CA', {year:'numeric', month:'long'});
-  const ts   = firebase.firestore.FieldValue.serverTimestamp();
-  const saves = [];
-
-  // Facility audits — capture data references NOW before any state clear
-  const facilities = [
-    {id:'crewhouse', data:S.crewHouseAudit},
-    {id:'hangar',    data:S.hangarAudit},
-    {id:'msds',      data:S.msdsAudit},
-    {id:'parking',   data:S.parkingAudit},
-    {id:'ykfbase',   data:S.ykfBaseAudit},
-  ];
-  facilities.forEach(f => {
-    if (f.data && Object.keys(f.data.items||{}).length > 0)
-      saves.push(db.collection('auditHistory').doc(`${monthKey}-${f.id}`)
-        .set({monthKey, monthLabel, type:f.id, data:f.data, savedAt:ts}).catch(()=>{}));
-  });
-
-  // Monthly car photo audits
-  if (Object.keys(S.monthlyCarAudits||{}).length > 0)
-    saves.push(db.collection('auditHistory').doc(`${monthKey}-cars`)
-      .set({monthKey, monthLabel, type:'cars', data:S.monthlyCarAudits, savedAt:ts}).catch(()=>{}));
-
-  // Aircraft — per tail
-  const allTails = [
-    ...AIRCRAFT_METRO.map(r=>({reg:r,acType:'metro'})),
-    ...(S.acCustomAircraft.metro||[]).map(r=>({reg:r,acType:'metro'})),
-    ...AIRCRAFT_WESTWIND.map(r=>({reg:r,acType:'westwind'})),
-    ...(S.acCustomAircraft.westwind||[]).map(r=>({reg:r,acType:'westwind'})),
-    ...AIRCRAFT_ASTRA.map(r=>({reg:r,acType:'astra'})),
-    ...(S.customAcTypesList||[]).flatMap(t=>(t.regs||[]).map(r=>({reg:r,acType:t.id}))),
-  ];
-  allTails.forEach(({reg, acType}) => {
-    const data = S.acAudits[acAuditDocKey(reg)];
-    if (data && Object.keys(data.items||{}).length > 0) {
-      const safeReg = reg.replace(/[^a-zA-Z0-9]/g,'-');
-      saves.push(db.collection('auditHistory').doc(`${monthKey}-ac-${safeReg}`)
-        .set({monthKey, monthLabel, type:'aircraft', acType, reg, data, savedAt:ts}).catch(()=>{}));
-    }
-  });
-
-  await Promise.all(saves);
-
-  // Prune records older than 24 months
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 24);
-  const cutoffKey = cutoff.toLocaleDateString('en-CA', {year:'numeric', month:'2-digit'});
-  db.collection('auditHistory').where('monthKey','<',cutoffKey).get()
-    .then(snap => snap.forEach(d => d.ref.delete())).catch(()=>{});
-}
+// saveAuditSnapshot() was removed 2026-08-06 along with checkMonthlyAuditReset() —
+// see the note above that function's old location. Records will be rebuilt to read
+// the permanent per-month documents directly instead of this archive-copy system.
 
 function toggleRecordsMonth(mk) {
   if (_recordsExpandedMonths.has(mk)) _recordsExpandedMonths.delete(mk);
@@ -5229,7 +5182,7 @@ function loadCrewHouseAudit() {
   try { S.crewHouseAudit = JSON.parse(localStorage.getItem('gykf_crewhouse')||'{}'); } catch(e){}
   if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
   if(!db) return;
-  db.collection('facilityAudits').doc('crewhouse').onSnapshot(doc=>{
+  db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).onSnapshot(doc=>{
     if(doc.exists){ S.crewHouseAudit=doc.data(); if(!S.crewHouseAudit.items) S.crewHouseAudit.items={}; }
     else { S.crewHouseAudit={items:{}}; }
     try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
@@ -5239,7 +5192,7 @@ function loadCrewHouseAudit() {
 
 function saveCrewHouseAudit() {
   try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('crewhouse').set(S.crewHouseAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).set(S.crewHouseAudit,{merge:true}).catch(()=>{});
 }
 
 let _chSaveTimer = null;
@@ -5589,11 +5542,11 @@ function generateCrewHousePDF() {
 }
 
 function resetCrewHouseAudit() {
-  if(!confirm('Reset all Crew House audit fields? This clears all scores, comments, and the inspector name on every device.')) return;
+  if(!confirm('Reset this month\'s Crew House audit fields? This clears all scores, comments, and the inspector name on every device. Only affects this month — past months are untouched.')) return;
   S.crewHouseAudit = {items:{}};
   _chExpandedComments.clear();
   try { localStorage.removeItem('gykf_crewhouse'); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('crewhouse').delete().catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).delete().catch(()=>{});
   render();
   toast('Crew House audit reset ✓');
 }
@@ -5687,7 +5640,7 @@ function loadHangarAudit() {
   try { S.hangarAudit = JSON.parse(localStorage.getItem('gykf_hangar')||'{}'); } catch(e){}
   if(!S.hangarAudit.items) S.hangarAudit.items={};
   if(!db) return;
-  db.collection('facilityAudits').doc('hangar').onSnapshot(doc=>{
+  db.collection('facilityAudits').doc(facilityDocKey('hangar')).onSnapshot(doc=>{
     if(doc.exists){ S.hangarAudit=doc.data(); if(!S.hangarAudit.items) S.hangarAudit.items={}; }
     else { S.hangarAudit={items:{}}; }
     try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
@@ -5697,7 +5650,7 @@ function loadHangarAudit() {
 
 function saveHangarAudit() {
   try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('hangar').set(S.hangarAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('hangar')).set(S.hangarAudit,{merge:true}).catch(()=>{});
 }
 
 let _hoSaveTimer = null;
@@ -5904,11 +5857,11 @@ function generateHangarPDF() {
 }
 
 function resetHangarAudit() {
-  if(!confirm('Reset all Hangar & Office audit fields? This clears all scores, comments, and the inspector name on every device.')) return;
+  if(!confirm('Reset this month\'s Hangar & Office audit fields? This clears all scores, comments, and the inspector name on every device. Only affects this month — past months are untouched.')) return;
   S.hangarAudit = {items:{}};
   _hoExpandedComments.clear();
   try { localStorage.removeItem('gykf_hangar'); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('hangar').delete().catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('hangar')).delete().catch(()=>{});
   render();
   toast('Hangar & Office audit reset ✓');
 }
@@ -6143,7 +6096,7 @@ function loadParkingAudit() {
   try { S.parkingAudit = JSON.parse(localStorage.getItem('gykf_parking')||'{}'); } catch(e){}
   if(!S.parkingAudit.items) S.parkingAudit.items={};
   if(!db) return;
-  db.collection('facilityAudits').doc('parking').onSnapshot(doc=>{
+  db.collection('facilityAudits').doc(facilityDocKey('parking')).onSnapshot(doc=>{
     if(doc.exists){ S.parkingAudit=doc.data(); if(!S.parkingAudit.items) S.parkingAudit.items={}; }
     else { S.parkingAudit={items:{}}; }
     try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
@@ -6153,7 +6106,7 @@ function loadParkingAudit() {
 
 function saveParkingAudit() {
   try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('parking').set(S.parkingAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('parking')).set(S.parkingAudit,{merge:true}).catch(()=>{});
 }
 
 let _plSaveTimer = null;
@@ -6337,11 +6290,11 @@ function generateParkingPDF() {
 }
 
 function resetParkingAudit() {
-  if(!confirm('Reset all Parking Lot audit fields? This clears all scores, comments, and the inspector name on every device.')) return;
+  if(!confirm('Reset this month\'s Parking Lot audit fields? This clears all scores, comments, and the inspector name on every device. Only affects this month — past months are untouched.')) return;
   S.parkingAudit={items:{}};
   _plExpandedComments.clear();
   try{localStorage.removeItem('gykf_parking');}catch(e){}
-  if(db) db.collection('facilityAudits').doc('parking').delete().catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('parking')).delete().catch(()=>{});
   render();
   toast('Parking Lot audit reset ✓');
 }
@@ -6484,7 +6437,7 @@ function loadYkfBaseAudit() {
   try { S.ykfBaseAudit = JSON.parse(localStorage.getItem('gykf_ykfbase')||'{}'); } catch(e){}
   if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={};
   if(!db) return;
-  db.collection('facilityAudits').doc('ykfbase').onSnapshot(doc=>{
+  db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).onSnapshot(doc=>{
     if(doc.exists){ S.ykfBaseAudit=doc.data(); if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={}; }
     else { S.ykfBaseAudit={items:{}}; }
     try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
@@ -6494,7 +6447,7 @@ function loadYkfBaseAudit() {
 
 function saveYkfBaseAudit() {
   try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('ykfbase').set(S.ykfBaseAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).set(S.ykfBaseAudit,{merge:true}).catch(()=>{});
 }
 
 let _ykfSaveTimer = null;
@@ -6697,10 +6650,10 @@ function generateYkfBasePDF() {
 }
 
 function resetYkfBaseAudit() {
-  if(!confirm('Reset all YKF Base audit fields? This clears everything on every device.')) return;
+  if(!confirm('Reset this month\'s YKF Base audit fields? This clears everything on every device. Only affects this month — past months are untouched.')) return;
   S.ykfBaseAudit={items:{}};
   try{localStorage.removeItem('gykf_ykfbase');}catch(e){}
-  if(db) db.collection('facilityAudits').doc('ykfbase').delete().catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).delete().catch(()=>{});
   render();
   toast('YKF Base audit reset ✓');
 }
@@ -6917,7 +6870,7 @@ function loadMsdsAudit() {
   try { S.msdsAudit = JSON.parse(localStorage.getItem('gykf_msds')||'{}'); } catch(e){}
   if(!S.msdsAudit.items) S.msdsAudit.items={};
   if(!db) return;
-  db.collection('facilityAudits').doc('msds').onSnapshot(doc=>{
+  db.collection('facilityAudits').doc(facilityDocKey('msds')).onSnapshot(doc=>{
     if(doc.exists){ S.msdsAudit=doc.data(); if(!S.msdsAudit.items) S.msdsAudit.items={}; }
     else { S.msdsAudit={items:{}}; }
     try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
@@ -6927,7 +6880,7 @@ function loadMsdsAudit() {
 
 function saveMsdsAudit() {
   try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('msds').set(S.msdsAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('msds')).set(S.msdsAudit,{merge:true}).catch(()=>{});
 }
 
 let _msSaveTimer = null;
@@ -7119,83 +7072,27 @@ function generateMsdsPDF() {
 }
 
 function resetMsdsAudit() {
-  if(!confirm('Reset all MSDS audit fields? This clears all checkmarks and the auditor name on every device.')) return;
+  if(!confirm('Reset this month\'s MSDS audit fields? This clears all checkmarks and the auditor name on every device. Only affects this month — past months are untouched.')) return;
   S.msdsAudit = {items:{}};
   try { localStorage.removeItem('gykf_msds'); } catch(e){}
-  if(db) db.collection('facilityAudits').doc('msds').delete().catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('msds')).delete().catch(()=>{});
   render();
   toast('MSDS audit reset ✓');
 }
 
-async function checkMonthlyAuditReset() {
-  if (!db) return;
-  const now = new Date();
-  const currentMonth    = now.toLocaleDateString('en-CA',{year:'numeric',month:'long'});
-  const currentMonthKey = now.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit'});
-
-  // Fast path: this device already knows it rolled over this month — skip the Firestore round-trip.
-  if (localStorage.getItem('gykf_last_audit_reset') === currentMonth) return;
-
-  // Slow path: this device is either first-of-the-month or catching up after being offline/unused
-  // for a while. Claim the rollover via a shared Firestore doc so only ONE device — whichever gets
-  // here first — actually archives + wipes live data. Every other device (including stragglers that
-  // open the app days later) sees the month already claimed and just syncs its local flag.
-  const rolloverRef = db.collection('appConfig').doc('auditRollover');
-  let shouldRun = false;
-  try {
-    await db.runTransaction(async (tx) => {
-      const snap = await tx.get(rolloverRef);
-      const lastClaimed = snap.exists ? snap.data().lastRolloverMonth : null;
-      if (lastClaimed === currentMonthKey) { shouldRun = false; return; }
-      shouldRun = true;
-      tx.set(rolloverRef, {lastRolloverMonth: currentMonthKey, rolledOverAt: firebase.firestore.FieldValue.serverTimestamp()});
-    });
-  } catch(e) {
-    console.log('Audit rollover claim failed, skipping to avoid an unsafe wipe:', e);
-    return;
-  }
-
-  if (!shouldRun) {
-    // Another device already handled this month's rollover — just catch up our local flag.
-    localStorage.setItem('gykf_last_audit_reset', currentMonth);
-    return;
-  }
-
-  // We won the claim — this device performs the archive + wipe.
-  // Archive before wiping — under the month that just ended, not the month we're rolling into.
-  // NEVER touches crew car vehicle data
-  const outgoingMonth = new Date();
-  outgoingMonth.setDate(1);
-  outgoingMonth.setMonth(outgoingMonth.getMonth() - 1);
-  await saveAuditSnapshot(outgoingMonth);
-  // New month — reset all facility audits + monthly car photo audits
-  // NEVER touches crew car vehicle data (gykf_ccd / S.crewCarData)
-  S.crewHouseAudit   = {items:{}};
-  S.hangarAudit      = {items:{}};
-  S.msdsAudit        = {items:{}};
-  S.parkingAudit     = {items:{}};
-  S.ykfBaseAudit     = {items:{}};
-  S.monthlyCarAudits = {};
-
-  ['gykf_crewhouse','gykf_hangar','gykf_msds','gykf_parking','gykf_ykfbase','gykf_caudits'].forEach(k=>{
-    try { localStorage.removeItem(k); } catch(e){}
-  });
-
-  ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>
-    db.collection('facilityAudits').doc(doc).delete().catch(()=>{})
-  );
-  db.collection('auditCars').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
-
-  localStorage.setItem('gykf_last_audit_reset', currentMonth);
-  localStorage.setItem('gykf_audit_reset_ts', Date.now().toString());
-  console.log('Monthly audit reset fired for', currentMonth);
-}
+// checkMonthlyAuditReset() and saveAuditSnapshot() were removed 2026-08-06. They
+// existed to wipe the single shared facilityAudits/{type} doc at the start of each
+// month, archiving a copy first. On Aug 5 2026 the "only one device should wipe"
+// claim logic failed — nobody had claimed the month yet because every device that
+// already knew it was fine skipped the check entirely — so a straggler device that
+// opened the app days into the month "won" the claim and deleted a full week of
+// real, live audit data with no usable archive of it. Facility audits now use one
+// permanent document per month (facilityDocKey()), same as car/aircraft audits
+// always have, so there is nothing left to wipe or archive-before-wiping: a new
+// month is just a new, blank document key.
 
 function resetAllAcAudits() {
-  if(!confirm('Reset ALL audits? This clears all aircraft checklists, all facility audits, and crew car monthly photo audits. Crew car vehicle data (fuel, odometer, oil, registration, insurance, wash dates) is NEVER touched.')) return;
-
-  // Archive current data BEFORE wiping anything
-  saveAuditSnapshot();
+  if(!confirm('Reset ALL of THIS MONTH\'s audits? This clears all aircraft checklists, all facility audits, and crew car monthly photo audits for the current month only — past months are untouched. Crew car vehicle data (fuel, odometer, oil, registration, insurance, wash dates) is NEVER touched.')) return;
 
   // Aircraft audits (metro, westwind, astra, custom types)
   const allRegs = [
@@ -7211,19 +7108,20 @@ function resetAllAcAudits() {
   });
   try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
 
-  // Monthly car photo audits (photos, done status per car) — NOT crew car vehicle data
-  S.monthlyCarAudits = {};
-  try { localStorage.removeItem('gykf_caudits'); } catch(e){}
-  if(db) db.collection('carAudits').get().then(snap=>snap.forEach(d=>d.ref.delete())).catch(()=>{});
+  // Monthly car photo audits (photos, done status per car) — NOT crew car vehicle data.
+  // Only this month's docs (auditDocKey embeds the month) — past months are untouched.
+  CREW_CARS.forEach(c => { delete S.monthlyCarAudits[auditDocKey(c.key)]; });
+  try { localStorage.setItem('gykf_caudits', JSON.stringify(S.monthlyCarAudits)); } catch(e){}
+  if(db) CREW_CARS.forEach(c => db.collection('auditCars').doc(auditDocKey(c.key)).delete().catch(()=>{}));
 
-  // Facility audits
+  // Facility audits — only this month's docs; past months are untouched
   S.crewHouseAudit = {items:{}};
   S.hangarAudit    = {items:{}};
   S.msdsAudit      = {items:{}};
   S.parkingAudit   = {items:{}};
   S.ykfBaseAudit   = {items:{}};
   ['gykf_crewhouse','gykf_hangar','gykf_msds','gykf_parking','gykf_ykfbase'].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
-  if(db) ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>db.collection('facilityAudits').doc(doc).delete().catch(()=>{}));
+  if(db) ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>db.collection('facilityAudits').doc(facilityDocKey(doc)).delete().catch(()=>{}));
 
   render();
   localStorage.setItem('gykf_audit_reset_ts', Date.now().toString());
