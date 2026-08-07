@@ -1412,7 +1412,7 @@ async function bootApp() {
         loadAcDisabled();
         loadAcHidden();
         loadCarDisabled();
-        loadAuditRecords();
+        loadAllAuditRecords();
       })
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
@@ -2821,19 +2821,55 @@ function setCarAuditCheckNote(carKey, checkKey, note) {
 }
 const _recordsExpandedMonths   = new Set();
 const _recordsExpandedAcMonths = new Set();
+const _recordsExpandedCarMonths = new Set();
 
-function loadAuditRecords() {
-  if (!db) return;
-  db.collection('auditHistory').onSnapshot(snap => {
-    S.auditRecords = {};
-    snap.docs.forEach(d => { S.auditRecords[d.id] = d.data(); });
-    if (S.recordsView) render();
-  }, ()=>{});
+// Records reads the real, permanent per-month documents directly — there is no
+// separate archive copy anymore (see the Aug 6 2026 redesign). A "record" for a
+// past month is just that month's own facilityAudits/auditCars/auditAircraft
+// document, which is never deleted. PDF links point straight to the file saved
+// in Storage when that audit was marked done — nothing needs to be regenerated.
+function monthLabelToMonthKey(label) {
+  const d = new Date(label + ' 1');
+  return isNaN(d) ? label : d.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit'});
 }
 
-// saveAuditSnapshot() was removed 2026-08-06 along with checkMonthlyAuditReset() —
-// see the note above that function's old location. Records will be rebuilt to read
-// the permanent per-month documents directly instead of this archive-copy system.
+async function loadAllAuditRecords() {
+  if (!db) return;
+  const FACILITY_TYPES = ['crewhouse','hangar','msds','parking','ykfbase'];
+  try {
+    const [faSnap, carSnap, acSnap] = await Promise.all([
+      db.collection('facilityAudits').get(),
+      db.collection('auditCars').get(),
+      db.collection('auditAircraft').get(),
+    ]);
+
+    const records = {};
+
+    faSnap.docs.forEach(doc => {
+      const type = FACILITY_TYPES.find(t => doc.id.startsWith(t + '-'));
+      if (!type) return;
+      const monthLabel = doc.id.slice(type.length + 1);
+      const data = doc.data();
+      if (!Object.keys(data.items||{}).length) return; // never-touched month, nothing to show
+      records['fa-'+doc.id] = {monthKey: monthLabelToMonthKey(monthLabel), monthLabel, type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+    });
+
+    carSnap.docs.forEach(doc => {
+      const data = doc.data();
+      if (!data.month || !data.carKey) return;
+      records['car-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'cars', carKey: data.carKey, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+    });
+
+    acSnap.docs.forEach(doc => {
+      const data = doc.data();
+      if (!data.month || !data.reg) return;
+      records['ac-'+doc.id] = {monthKey: monthLabelToMonthKey(data.month), monthLabel: data.month, type:'aircraft', reg: data.reg, acType: data.type, data, pdfUrl: data.pdfUrl||null, done: !!data.done};
+    });
+
+    S.auditRecords = records;
+    if (S.recordsView) render();
+  } catch(e) { console.log('loadAllAuditRecords failed:', e); }
+}
 
 function toggleRecordsMonth(mk) {
   if (_recordsExpandedMonths.has(mk)) _recordsExpandedMonths.delete(mk);
@@ -2845,28 +2881,10 @@ function toggleRecordsAc(mk) {
   else _recordsExpandedAcMonths.add(mk);
   render();
 }
-
-function replayFacilityPDF(docId) {
-  const rec = S.auditRecords[docId];
-  if (!rec || !rec.data) return;
-  const origCH = S.crewHouseAudit, origH = S.hangarAudit, origM = S.msdsAudit,
-        origP  = S.parkingAudit,   origYB = S.ykfBaseAudit, origCA = S.monthlyCarAudits;
-  if      (rec.type==='crewhouse') { S.crewHouseAudit=rec.data; generateCrewHousePDF(); setTimeout(()=>{S.crewHouseAudit=origCH;},200); }
-  else if (rec.type==='hangar')    { S.hangarAudit=rec.data;    generateHangarPDF();    setTimeout(()=>{S.hangarAudit=origH;},200); }
-  else if (rec.type==='msds')      { S.msdsAudit=rec.data;      generateMsdsPDF();      setTimeout(()=>{S.msdsAudit=origM;},200); }
-  else if (rec.type==='parking')   { S.parkingAudit=rec.data;   generateParkingPDF();   setTimeout(()=>{S.parkingAudit=origP;},200); }
-  else if (rec.type==='ykfbase')   { S.ykfBaseAudit=rec.data;   generateYkfBasePDF();   setTimeout(()=>{S.ykfBaseAudit=origYB;},200); }
-  else if (rec.type==='cars')      { S.monthlyCarAudits=rec.data; generateAuditPDF(rec.monthLabel||rec.monthKey); setTimeout(()=>{S.monthlyCarAudits=origCA;},200); }
-}
-
-function replayAircraftPDF(docId) {
-  const rec = S.auditRecords[docId];
-  if (!rec || !rec.data || !rec.reg) return;
-  const key  = acAuditDocKey(rec.reg);
-  const orig = S.acAudits[key];
-  S.acAudits[key] = rec.data;
-  generateAircraftPDF(rec.reg, rec.acType, rec.monthLabel||rec.monthKey);
-  setTimeout(()=>{ if (orig!==undefined) S.acAudits[key]=orig; else delete S.acAudits[key]; }, 200);
+function toggleRecordsCars(mk) {
+  if (_recordsExpandedCarMonths.has(mk)) _recordsExpandedCarMonths.delete(mk);
+  else _recordsExpandedCarMonths.add(mk);
+  render();
 }
 
 function loadPastAudits() {
@@ -5113,7 +5131,7 @@ function renderAuditsLanding(el) {
       </button>
     </div>
     <div style="margin:0 16px 8px">
-      <button onclick="S.recordsView=true;render()"
+      <button onclick="S.recordsView=true;render();loadAllAuditRecords()"
         style="width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--border2);background:var(--glass2);cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
         <span style="font-size:20px;line-height:1;flex-shrink:0">🗂</span>
         <span style="flex:1">
@@ -5322,7 +5340,7 @@ function renderRecordsView(el) {
     el.innerHTML = `<div style="padding:80px 24px;text-align:center">
       <div style="font-size:36px;margin-bottom:12px">🗂</div>
       <div style="font-size:15px;font-weight:700;color:var(--t1);margin-bottom:6px">No records yet</div>
-      <div style="font-size:13px;color:var(--t3)">Audits are archived automatically at the end of each month before they reset.</div>
+      <div style="font-size:13px;color:var(--t3)">Once an audit is marked done, it shows up here — permanently, for that month.</div>
     </div>`;
     return;
   }
@@ -5334,12 +5352,14 @@ function renderRecordsView(el) {
     byYear[yr].push(m);
   });
 
-  const facilityOrder = ['crewhouse','hangar','msds','parking','ykfbase','cars'];
-  const facilityNames = {crewhouse:'Crew House', hangar:'Hangar & Office', msds:'MSDS', parking:'Parking Lot MX', ykfbase:'YKF Base', cars:'Crew Cars'};
+  const facilityOrder = ['crewhouse','hangar','msds','parking','ykfbase'];
+  const facilityNames = {crewhouse:'Crew House', hangar:'Hangar & Office', msds:'MSDS', parking:'Parking Lot MX', ykfbase:'YKF Base'};
   const typeLabels    = {metro:'Metro SW3/SW4', westwind:'Westwind WW24', astra:'Astra AJ25'};
+  const carNames      = Object.fromEntries(CREW_CARS.map(c=>[c.key,c.name]));
 
-  const pdfBtn = (onclick) =>
-    `<button onclick="${onclick}" style="display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;background:var(--navy2,#0B1628);border:1px solid var(--accent-border,#1a3050);font-size:10px;font-weight:700;color:var(--accent);cursor:pointer;flex-shrink:0">📄 PDF</button>`;
+  const pdfLink = (rec) => rec.pdfUrl
+    ? `<a href="${rec.pdfUrl}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;background:var(--navy2,#0B1628);border:1px solid var(--accent-border,#1a3050);font-size:10px;font-weight:700;color:var(--accent);text-decoration:none;flex-shrink:0">📄 PDF</a>`
+    : `<span style="font-size:10px;font-weight:600;color:var(--t4);flex-shrink:0">${rec.done?'Done · no PDF':'Not done yet'}</span>`;
 
   let html = `<div style="padding:8px 0 40px">`;
 
@@ -5347,11 +5367,13 @@ function renderRecordsView(el) {
     html += `<div style="padding:12px 16px 4px;font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)">${yr}</div>`;
 
     byYear[yr].forEach(({monthKey, monthLabel, docs}) => {
-      const isExp   = _recordsExpandedMonths.has(monthKey);
-      const isAcExp = _recordsExpandedAcMonths.has(monthKey);
-      const facilityDocs  = facilityOrder.filter(type => Object.values(docs).some(d=>d.type===type));
-      const aircraftDocs  = Object.entries(docs).filter(([,d])=>d.type==='aircraft');
-      const totalSections = facilityDocs.length + (aircraftDocs.length>0?1:0);
+      const isExp    = _recordsExpandedMonths.has(monthKey);
+      const isAcExp  = _recordsExpandedAcMonths.has(monthKey);
+      const isCarExp = _recordsExpandedCarMonths.has(monthKey);
+      const facilityDocs = facilityOrder.filter(type => Object.values(docs).some(d=>d.type===type));
+      const aircraftDocs = Object.entries(docs).filter(([,d])=>d.type==='aircraft');
+      const carDocs       = Object.entries(docs).filter(([,d])=>d.type==='cars');
+      const totalSections = facilityDocs.length + (aircraftDocs.length>0?1:0) + (carDocs.length>0?1:0);
       const label = monthLabel || monthKey;
 
       html += `<div style="margin:0 12px 8px;background:var(--glass2);border:1px solid var(--border2);border-radius:12px;overflow:hidden">
@@ -5360,13 +5382,10 @@ function renderRecordsView(el) {
             <div style="width:32px;height:32px;border-radius:8px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-size:15px">📁</div>
             <div>
               <div style="font-size:13px;font-weight:700;color:var(--t1)">${label}</div>
-              <div style="font-size:11px;color:var(--t3);margin-top:1px">${totalSections} audit${totalSections!==1?'s':''} archived</div>
+              <div style="font-size:11px;color:var(--t3);margin-top:1px">${totalSections} audit${totalSections!==1?'s':''} recorded</div>
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:var(--accent-dim);color:var(--accent)">Saved</span>
-            <span style="color:var(--t3);font-size:16px;display:inline-block;transform:rotate(${isExp?'90':'0'}deg)">&rsaquo;</span>
-          </div>
+          <span style="color:var(--t3);font-size:16px;display:inline-block;transform:rotate(${isExp?'90':'0'}deg)">&rsaquo;</span>
         </div>`;
 
       if (isExp) {
@@ -5376,16 +5395,42 @@ function renderRecordsView(el) {
         facilityDocs.forEach((type, i) => {
           const entry = Object.entries(docs).find(([,d])=>d.type===type);
           if (!entry) return;
-          const [docId] = entry;
+          const [,rec] = entry;
           html += `${i>0?`<div style="height:0.5px;background:var(--border2);margin:0 8px"></div>`:''}
             <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-radius:8px">
               <div style="display:flex;align-items:center;gap:10px">
-                <div style="width:6px;height:6px;border-radius:50%;background:var(--green,#34d399);flex-shrink:0"></div>
+                <div style="width:6px;height:6px;border-radius:50%;background:${rec.done?'var(--green,#34d399)':'var(--t4)'};flex-shrink:0"></div>
                 <div style="font-size:12px;color:var(--t2)">${facilityNames[type]}</div>
               </div>
-              ${pdfBtn(`replayFacilityPDF('${docId}')`)}
+              ${pdfLink(rec)}
             </div>`;
         });
+
+        // Crew Cars group
+        if (carDocs.length > 0) {
+          html += `<div style="height:0.5px;background:var(--border2);margin:0 8px"></div>
+            <div onclick="toggleRecordsCars('${monthKey}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--t2)">Crew Cars &middot; ${carDocs.length} car${carDocs.length!==1?'s':''}</div>
+                <div style="font-size:11px;color:var(--t3);margin-top:1px">Tap to see each car</div>
+              </div>
+              <span style="color:var(--t3);font-size:15px;display:inline-block;transform:rotate(${isCarExp?'90':'0'}deg)">&rsaquo;</span>
+            </div>`;
+
+          if (isCarExp) {
+            html += `<div style="background:var(--navy2,#0B1628);border-radius:8px;margin:2px 4px 4px;padding:4px 6px">`;
+            carDocs.sort((a,b)=>(carNames[a[1].carKey]||'').localeCompare(carNames[b[1].carKey]||'')).forEach(([,rec]) => {
+              html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 6px;border-radius:7px">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <div style="width:5px;height:5px;border-radius:50%;background:${rec.done?'var(--green,#34d399)':'var(--accent)'};flex-shrink:0"></div>
+                  <div style="font-size:12px;font-weight:700;color:var(--t2)">${carNames[rec.carKey]||rec.carKey}</div>
+                </div>
+                ${pdfLink(rec)}
+              </div>`;
+            });
+            html += `</div>`;
+          }
+        }
 
         // Aircraft group
         if (aircraftDocs.length > 0) {
@@ -5393,25 +5438,25 @@ function renderRecordsView(el) {
             <div onclick="toggleRecordsAc('${monthKey}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 8px;border-radius:8px;cursor:pointer;-webkit-tap-highlight-color:transparent">
               <div>
                 <div style="font-size:12px;font-weight:700;color:var(--t2)">Aircraft &middot; ${aircraftDocs.length} tail${aircraftDocs.length!==1?'s':''}</div>
-                <div style="font-size:11px;color:var(--t3);margin-top:1px">Tap a tail to generate PDF</div>
+                <div style="font-size:11px;color:var(--t3);margin-top:1px">Tap to see each tail</div>
               </div>
               <span style="color:var(--t3);font-size:15px;display:inline-block;transform:rotate(${isAcExp?'90':'0'}deg)">&rsaquo;</span>
             </div>`;
 
           if (isAcExp) {
             html += `<div style="background:var(--navy2,#0B1628);border-radius:8px;margin:2px 4px 4px;padding:4px 6px">`;
-            aircraftDocs.sort((a,b)=>a[1].reg.localeCompare(b[1].reg)).forEach(([docId, rec]) => {
+            aircraftDocs.sort((a,b)=>a[1].reg.localeCompare(b[1].reg)).forEach(([,rec]) => {
               const ct = (S.customAcTypesList||[]).find(t=>t.id===rec.acType);
               const tLabel = typeLabels[rec.acType] || (ct?ct.name:rec.acType);
               html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 6px;border-radius:7px">
                 <div style="display:flex;align-items:center;gap:8px">
-                  <div style="width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0"></div>
+                  <div style="width:5px;height:5px;border-radius:50%;background:${rec.done?'var(--green,#34d399)':'var(--accent)'};flex-shrink:0"></div>
                   <div>
                     <div style="font-size:12px;font-weight:700;color:var(--t2)">${rec.reg}</div>
                     <div style="font-size:10px;color:var(--t3);margin-top:1px">${tLabel}</div>
                   </div>
                 </div>
-                ${pdfBtn(`replayAircraftPDF('${docId}')`)}
+                ${pdfLink(rec)}
               </div>`;
             });
             html += `</div>`;
