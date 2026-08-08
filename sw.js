@@ -1,4 +1,4 @@
-const CACHE = 'skycare-v10';
+const CACHE = 'skycare-v11';
 const SHELL = ['/', '/index.html', '/manifest.json'];
 
 self.addEventListener('install', e => {

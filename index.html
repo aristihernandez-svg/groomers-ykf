@@ -20,6 +20,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+<!-- html2canvas + jsPDF (Share All — real PDF conversion for email attachments) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -8252,19 +8255,50 @@ function buildFlaggedSummaryHTML() {
   </body></html>`;
 }
 
+// Renders a saved audit's HTML into a hidden iframe (so its own CSS/images apply
+// exactly as when printed) and rasterizes it into a real, paginated PDF via
+// html2canvas + jsPDF. Needed because mail apps commonly block raw .html
+// attachments outright (phishing precaution) — a real PDF just opens.
+async function htmlToPdfFile(html, filename) {
+  const stripped = html.replace(/<div class="pdf-back-btn"[\s\S]*?<\/script>/, '');
+  const iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:absolute;left:-99999px;top:0;width:850px;height:1100px;border:none';
+  document.body.appendChild(iframe);
+  try {
+    await new Promise(resolve => { iframe.onload = resolve; iframe.srcdoc = stripped; });
+    await new Promise(resolve => setTimeout(resolve, 400)); // let images finish loading
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({unit:'pt', format:'letter'});
+    await pdf.html(iframe.contentDocument.body, {
+      html2canvas: {scale:2, useCORS:true, windowWidth:850},
+      autoPaging: 'text',
+      width: 572,
+      windowWidth: 850,
+      margin: [20,20,20,20],
+    });
+    return new File([pdf.output('blob')], filename, {type:'application/pdf'});
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+
 // "Share all" — bundles every already-saved file for the current month (whatever's
-// actually done — nothing forces completion) plus a freshly-built summary, and hands
-// them to the device's native share sheet so they land as real email attachments.
+// actually done — nothing forces completion) plus a freshly-built summary, converts
+// each to a real PDF, and hands them to the device's native share sheet so they land
+// as real email attachments.
 async function shareAllRecords() {
   const month = auditMonth();
   const files = [];
+  toast('Preparing PDFs…');
 
   const summaryHtml = buildFlaggedSummaryHTML();
-  files.push(new File([new Blob([summaryHtml],{type:'text/html'})], `Flagged Summary - ${month}.html`, {type:'text/html'}));
   // Keep Records in sync even if "Generate all PDFs" was never run this month.
   uploadAuditPDF(summaryHtml, `audits/${month}/summary.html`).then(url => {
     if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
   });
+  try {
+    files.push(await htmlToPdfFile(summaryHtml, `Flagged Summary - ${month}.pdf`));
+  } catch(e) { console.error('Summary PDF conversion failed:', e); }
 
   const facilityNames = {crewhouse:'Crew House', hangar:'Hangar', parking:'Parking Lot', ykfbase:'YKF Base', msds:'MSDS'};
   const sources = [];
@@ -8283,9 +8317,9 @@ async function shareAllRecords() {
 
   for (const {name, url} of sources) {
     try {
-      const blob = await (await fetch(url)).blob();
-      files.push(new File([blob], `${name} - ${month}.html`, {type:'text/html'}));
-    } catch(e) { console.error('Share fetch failed for', name, e); }
+      const html = await (await fetch(url)).text();
+      files.push(await htmlToPdfFile(html, `${name} - ${month}.pdf`));
+    } catch(e) { console.error('PDF conversion failed for', name, e); }
   }
 
   if (navigator.canShare && navigator.canShare({files})) {
