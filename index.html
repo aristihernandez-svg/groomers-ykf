@@ -8267,15 +8267,27 @@ async function htmlToPdfFile(html, filename) {
   try {
     await new Promise(resolve => { iframe.onload = resolve; iframe.srcdoc = stripped; });
     await new Promise(resolve => setTimeout(resolve, 400)); // let images finish loading
+    const canvas = await html2canvas(iframe.contentDocument.body, {scale:2, useCORS:true, windowWidth:850});
+    // jsPDF's built-in html()+autoPaging badly over-estimates page count on these
+    // documents (7 pages for content that's really 2) — slice the rendered canvas
+    // into real letter-page-height chunks ourselves for predictable pagination.
+    const marginPt = 28, pageWpt = 612, pageHpt = 792;
+    const usableWpt = pageWpt - 2*marginPt, usableHpt = pageHpt - 2*marginPt;
+    const pxPerPt = canvas.width / usableWpt;
+    const pageHpx = Math.floor(usableHpt * pxPerPt);
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({unit:'pt', format:'letter'});
-    await pdf.html(iframe.contentDocument.body, {
-      html2canvas: {scale:2, useCORS:true, windowWidth:850},
-      autoPaging: 'text',
-      width: 572,
-      windowWidth: 850,
-      margin: [20,20,20,20],
-    });
+    let y = 0, page = 0;
+    while (y < canvas.height) {
+      const sliceH = Math.min(pageHpx, canvas.height - y);
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width; tmp.height = sliceH;
+      tmp.getContext('2d').drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+      const imgData = tmp.toDataURL('image/jpeg', 0.85);
+      if (page>0) pdf.addPage();
+      pdf.addImage(imgData, 'JPEG', marginPt, marginPt, usableWpt, sliceH/pxPerPt);
+      y += sliceH; page++;
+    }
     return new File([pdf.output('blob')], filename, {type:'application/pdf'});
   } finally {
     document.body.removeChild(iframe);
