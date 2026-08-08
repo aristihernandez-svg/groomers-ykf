@@ -1407,6 +1407,11 @@ async function bootApp() {
         loadPastAudits();
         loadAcAudits();
         loadAcAuditLabels();
+        // The line-1356 loadCarAudits() call runs before initFirebase() sets `db`,
+        // so its per-car onSnapshot listeners never actually attach — this repeats
+        // it here, after Firebase is ready, so cars get real live sync same as
+        // every other audit type instead of only ever reflecting stale localStorage.
+        loadCarAudits();
         loadCrewHouseAudit();
         loadHangarAudit();
         loadMsdsAudit();
@@ -1417,6 +1422,7 @@ async function bootApp() {
         loadAcHidden();
         loadCarDisabled();
         loadAllAuditRecords();
+        setTimeout(healMissingPDFs, 4000); // give live listeners a moment to settle first
       })
       .catch(e => console.log('Boot fetch error:', e))
     ); // closes _bootTasksSource.then
@@ -3894,10 +3900,11 @@ function auditSectionHTML(key) {
     <textarea placeholder="General condition, issues found, follow-up needed..." ${locked?'readonly':''} oninput="setAuditComments('${key}',this.value)"
       style="width:100%;min-height:80px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:12px">${cd.comments||''}</textarea>
 
+  ${_pdfSavingKeys.has('car-'+key) ? `<div style="width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--glass2);border:1px solid var(--border2);text-align:center;font-size:14px;font-weight:700;color:var(--t2)">⏳ Saving PDF…</div>` : `
   <button onclick="markCarAuditDone('${key}')"
     style="width:100%;padding:12px;border-radius:var(--radius-sm);background:${cd.done?'var(--green-dim)':'linear-gradient(135deg,var(--accent),var(--accent2))'};color:${cd.done?'var(--green)':'var(--bg)'};font-size:14px;font-weight:700;border:${cd.done?'1px solid var(--green)':'none'};cursor:pointer">
     ${cd.done?'✅ Audit complete — tap to undo':'✓ Mark audit done for this car'}
-  </button>
+  </button>`}
   ${cd.pdfUrl?`<a href="${cd.pdfUrl}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;padding:10px 13px;border-radius:var(--radius-sm);border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:13px;font-weight:700;text-decoration:none">📄 View saved PDF</a>`:''}
   </div>`;
   return h;
@@ -3918,17 +3925,22 @@ function removeAuditPhoto(key,i) {
 function setAuditRating(key,i,val) { carAuditData(key).photos[i].rating=val; saveCarAudit(key); }
 function setAuditPhotoNote(key,i,val) { carAuditData(key).photos[i].note=val; saveCarAudit(key); }
 function setAuditComments(key,val) { carAuditData(key).comments=val; saveCarAudit(key); }
-function markCarAuditDone(key) {
+async function markCarAuditDone(key) {
   const cd=carAuditData(key);
   cd.done=!cd.done;
   if(cd.done) { cd.completedAt=new Date().toISOString(); cd.groomer=S.auditGroomer||''; }
-  saveCarAudit(key); render();
-  if(cd.done) {
-    toast('✅ '+CREW_CARS.find(c=>c.key===key)?.name+' audit done');
-    uploadAuditPDF(generateSingleCarPDF(key, true), `audits/${auditMonth()}/${key}/report.html`).then(url => {
-      if (url) { cd.pdfUrl = url; saveCarAudit(key); render(); }
-    });
+  saveCarAudit(key);
+  if (cd.done) {
+    _pdfSavingKeys.add('car-'+key);
+    render();
+    const url = await uploadAuditPDF(generateSingleCarPDF(key, true), `audits/${auditMonth()}/${key}/report.html`);
+    _pdfSavingKeys.delete('car-'+key);
+    if (url) { cd.pdfUrl = url; saveCarAudit(key); }
+    toast(url ? '✅ '+CREW_CARS.find(c=>c.key===key)?.name+' audit done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
 }
 
 // ── ARCHIVE AUDIT ─────────────────────────────────────────────
@@ -5324,19 +5336,24 @@ function chSetField(field, val) {
   saveCrewHouseDebounced();
 }
 
-function chToggleDone() {
+async function chToggleDone() {
   const d = chData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < CH_TOTAL) return;
   d.done = !d.done;
   saveCrewHouseDebounced();
-  render();
-  toast(d.done ? '✅ Crew House audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateCrewHousePDF(true), `audits/${auditMonth()}/facility-crewhouse.html`).then(url => {
-      if (url) { d.pdfUrl = url; saveCrewHouseDebounced(); render(); }
-    });
+    _pdfSavingKeys.add('crewhouse');
+    render();
+    const url = await uploadAuditPDF(generateCrewHousePDF(true), `audits/${auditMonth()}/facility-crewhouse.html`);
+    _pdfSavingKeys.delete('crewhouse');
+    if (url) { d.pdfUrl = url; saveCrewHouseDebounced(); }
+    toast(url ? '✅ Crew House audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
+  toast('Back to In Process');
 }
 
 function chScoreColor(s) {
@@ -5524,8 +5541,117 @@ async function uploadAuditPDF(html, storagePath) {
   }
 }
 
+// Self-healing safety net — runs once at boot. Reads each current-month audit
+// document FRESH and DIRECTLY from Firestore (never through S/local cache, which
+// is exactly what caused the August 8 2026 incident), and for any audit that's
+// done but has no saved pdfUrl, regenerates and re-uploads it, writing back only
+// the pdfUrl field with a targeted .update() — never a full-object .set() that
+// could clobber anything else. This exists because the "wait for upload" fix in
+// markCarAuditDone/xxToggleDone/acToggleDone reduces but can't fully guarantee
+// against a backgrounded-tab upload getting cut off — this catches whatever
+// still slips through, automatically, without anyone needing to notice or ask.
+async function healMissingPDFs() {
+  if (!db || !storage) return;
+  const month = auditMonth();
+  const acMonth = acAuditMonthKey();
+
+  const facilityTypes = [
+    ['crewhouse', generateCrewHousePDF, 'facility-crewhouse.html', 'crewHouseAudit'],
+    ['hangar',    generateHangarPDF,    'facility-hangar.html',    'hangarAudit'],
+    ['parking',   generateParkingPDF,   'facility-parking.html',   'parkingAudit'],
+    ['ykfbase',   generateYkfBasePDF,   'facility-ykfbase.html',   'ykfBaseAudit'],
+    ['msds',      generateMsdsPDF,      'facility-msds.html',      'msdsAudit'],
+  ];
+  for (const [type, genFn, filename, sKey] of facilityTypes) {
+    try {
+      const ref = db.collection('facilityAudits').doc(facilityDocKey(type));
+      const doc = await ref.get();
+      if (!doc.exists) continue;
+      const data = doc.data();
+      if (!data.done || data.pdfUrl) continue;
+      const backup = S[sKey];
+      S[sKey] = data; // synchronous swap — safe, nothing else runs between set and restore
+      const html = genFn(true);
+      S[sKey] = backup;
+      const url = await uploadAuditPDF(html, `audits/${month}/${filename}`);
+      if (url) { await ref.update({pdfUrl: url}); console.log('Healed missing PDF:', type); }
+    } catch(e) { console.log('Heal failed for', type, e); }
+  }
+
+  for (const car of CREW_CARS.filter(c=>!isCarDisabled(c.key))) {
+    try {
+      const ref = db.collection('auditCars').doc(month+'-'+car.key);
+      const doc = await ref.get();
+      if (!doc.exists) continue;
+      const data = doc.data();
+      if (!data.done || data.pdfUrl) continue;
+      const logoSrc = location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <title>${car.name} Audit — ${month}</title>
+      <style>*{box-sizing:border-box;margin:0;padding:0}@page{size:letter;margin:10mm 10mm 10mm 10mm}body{font-family:Arial,Helvetica,sans-serif;font-size:8.5px;color:#1a1a1a;background:#fff}table{width:100%;border-collapse:collapse}</style>
+      </head><body>
+      <table style="margin-bottom:7px"><tr>
+        <td style="width:100px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block" onerror="this.style.display='none'"></td>
+        <td style="text-align:right;vertical-align:middle">
+          <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew Car Monthly Audit — ${car.name}</div>
+          <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+        </td>
+      </tr></table>
+      <div style="height:1.5px;background:#1A3A6A;margin-bottom:7px"></div>
+      ${buildCarSectionHtml(car, data)}
+      <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
+        <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+        <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
+      </div>
+      </body></html>`;
+      const url = await uploadAuditPDF(html, `audits/${month}/${car.key}/report.html`);
+      if (url) { await ref.update({pdfUrl: url}); console.log('Healed missing PDF: car', car.key); }
+    } catch(e) { console.log('Heal failed for car', car.key, e); }
+  }
+
+  const metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
+  const wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
+  const astraRegs = AIRCRAFT_ASTRA.filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
+  const acList = [
+    ...metroRegs.map(r=>({reg:r,type:'metro'})),
+    ...wwRegs.map(r=>({reg:r,type:'westwind'})),
+    ...astraRegs.map(r=>({reg:r,type:'astra'})),
+    ...S.customAcTypesList.flatMap(ct=>ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).map(r=>({reg:r,type:ct.id}))),
+  ];
+  for (const {reg,type} of acList) {
+    try {
+      const k = acAuditDocKey(reg);
+      const ref = db.collection('auditAircraft').doc(k);
+      const doc = await ref.get();
+      if (!doc.exists) continue;
+      const data = doc.data();
+      if (!data.done || data.pdfUrl) continue;
+      const backup = S.acAudits[k];
+      S.acAudits[k] = data; // generateAircraftPDF reads+writes via acAuditData(), so this
+                            // stays swapped for the whole await — nothing else touches
+                            // S.acAudits[k] during a boot-time heal pass.
+      await generateAircraftPDF(reg, type, acMonth, true); // saves pdfUrl itself
+      S.acAudits[k] = backup;
+      console.log('Healed missing PDF: aircraft', reg);
+    } catch(e) { console.log('Heal failed for aircraft', reg, e); }
+  }
+}
+
 // ── SHARED "MARK AUDIT AS DONE" UI ─────────────────────────────
-function markDoneBlock(allAnswered, isDone, toggleFn, doneCount, total) {
+// Tracks which audits are mid-upload right now (e.g. 'crewhouse', 'car-elantra',
+// 'ac-IOJ-metro') so the UI can hold the user on a visible "Saving PDF…" state
+// instead of instantly saying "done" while the upload is still fire-and-forget
+// in the background — that gap is exactly what let a done status save while its
+// PDF silently never did, on August 8 2026 (see feedback_no_destructive_shared_state
+// and project_audit_status_states memory for that incident).
+const _pdfSavingKeys = new Set();
+
+function markDoneBlock(allAnswered, isDone, toggleFn, doneCount, total, isSaving) {
+  if (isSaving) {
+    return `<div style="margin:8px 14px 4px;padding:11px 13px;border-radius:9px;background:var(--glass2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;gap:8px">
+      <span style="font-size:13px;font-weight:700;color:var(--t2)">⏳ Saving PDF…</span>
+    </div>`;
+  }
   if (isDone) {
     return `<div onclick="${toggleFn}" style="margin:8px 14px 4px;padding:11px 13px;border-radius:9px;background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.35);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer">
       <span style="font-size:13px;font-weight:700;color:#27AE60">✅ Marked as Done</span>
@@ -5609,7 +5735,7 @@ function renderCrewHouseChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL)}
+    ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL, _pdfSavingKeys.has('crewhouse'))}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateCrewHousePDF()">
@@ -5856,19 +5982,24 @@ function hoSetField(field, val) {
   saveHangarDebounced();
 }
 
-function hoToggleDone() {
+async function hoToggleDone() {
   const d = hoData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < HO_TOTAL) return;
   d.done = !d.done;
   saveHangarDebounced();
-  render();
-  toast(d.done ? '✅ Hangar audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateHangarPDF(true), `audits/${auditMonth()}/facility-hangar.html`).then(url => {
-      if (url) { d.pdfUrl = url; saveHangarDebounced(); render(); }
-    });
+    _pdfSavingKeys.add('hangar');
+    render();
+    const url = await uploadAuditPDF(generateHangarPDF(true), `audits/${auditMonth()}/facility-hangar.html`);
+    _pdfSavingKeys.delete('hangar');
+    if (url) { d.pdfUrl = url; saveHangarDebounced(); }
+    toast(url ? '✅ Hangar audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
+  toast('Back to In Process');
 }
 
 function renderHangarChecklist(el) {
@@ -5934,7 +6065,7 @@ function renderHangarChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="hoSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL)}
+    ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL, _pdfSavingKeys.has('hangar'))}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateHangarPDF()">
@@ -6302,19 +6433,24 @@ function plExpandComment(key) { _plExpandedComments.add(key); render(); }
 
 function plSetField(field, val) { plData()[field]=val; saveParkingDebounced(); }
 
-function plToggleDone() {
+async function plToggleDone() {
   const d = plData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < PL_TOTAL) return;
   d.done = !d.done;
   saveParkingDebounced();
-  render();
-  toast(d.done ? '✅ Parking Lot audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateParkingPDF(true), `audits/${auditMonth()}/facility-parking.html`).then(url => {
-      if (url) { d.pdfUrl = url; saveParkingDebounced(); render(); }
-    });
+    _pdfSavingKeys.add('parking');
+    render();
+    const url = await uploadAuditPDF(generateParkingPDF(true), `audits/${auditMonth()}/facility-parking.html`);
+    _pdfSavingKeys.delete('parking');
+    if (url) { d.pdfUrl = url; saveParkingDebounced(); }
+    toast(url ? '✅ Parking Lot audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
+  toast('Back to In Process');
 }
 
 function renderParkingChecklist(el) {
@@ -6380,7 +6516,7 @@ function renderParkingChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="plSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL)}
+    ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL, _pdfSavingKeys.has('parking'))}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateParkingPDF()">
@@ -6655,19 +6791,24 @@ function ykfSetField(field, val) { ykfData()[field]=val; saveYkfBaseDebounced();
 
 function ykfSetExpiry(val) { ykfData().eyewashExpiry = val; saveYkfBaseDebounced(); render(); }
 
-function ykfToggleDone() {
+async function ykfToggleDone() {
   const d = ykfData();
   const doneCount = YKF_BASE_CHECKLIST.reduce((a,s)=>a+s.items.filter(i=>i.type!=='date'&&d.items[i.key]&&d.items[i.key].val).length, 0);
   if(!d.done && doneCount < YKF_TOTAL) return;
   d.done = !d.done;
   saveYkfBaseDebounced();
-  render();
-  toast(d.done ? '✅ YKF Base audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateYkfBasePDF(true), `audits/${auditMonth()}/facility-ykfbase.html`).then(url => {
-      if (url) { d.pdfUrl = url; saveYkfBaseDebounced(); render(); }
-    });
+    _pdfSavingKeys.add('ykfbase');
+    render();
+    const url = await uploadAuditPDF(generateYkfBasePDF(true), `audits/${auditMonth()}/facility-ykfbase.html`);
+    _pdfSavingKeys.delete('ykfbase');
+    if (url) { d.pdfUrl = url; saveYkfBaseDebounced(); }
+    toast(url ? '✅ YKF Base audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
+  toast('Back to In Process');
 }
 
 function renderYkfBaseChecklist(el) {
@@ -6740,7 +6881,7 @@ function renderYkfBaseChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="ykfSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===YKF_TOTAL, !!d.done, 'ykfToggleDone()', done, YKF_TOTAL)}
+    ${markDoneBlock(done===YKF_TOTAL, !!d.done, 'ykfToggleDone()', done, YKF_TOTAL, _pdfSavingKeys.has('ykfbase'))}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateYkfBasePDF()">
@@ -7102,20 +7243,25 @@ function msSetField(field, val) {
   saveMsdsDebounced();
 }
 
-function msToggleDone() {
+async function msToggleDone() {
   const d = msData();
   const allKeys = MSDS_CHECKLIST.flatMap(s=>s.items.map(i=>i.key));
   const doneCount = allKeys.filter(k=>d.items[k]===true).length;
   if(!d.done && doneCount < allKeys.length) return;
   d.done = !d.done;
   saveMsdsDebounced();
-  render();
-  toast(d.done ? '✅ MSDS audit marked done' : 'Back to In Process');
   if (d.done) {
-    uploadAuditPDF(generateMsdsPDF(true), `audits/${auditMonth()}/facility-msds.html`).then(url => {
-      if (url) { d.pdfUrl = url; saveMsdsDebounced(); render(); }
-    });
+    _pdfSavingKeys.add('msds');
+    render();
+    const url = await uploadAuditPDF(generateMsdsPDF(true), `audits/${auditMonth()}/facility-msds.html`);
+    _pdfSavingKeys.delete('msds');
+    if (url) { d.pdfUrl = url; saveMsdsDebounced(); }
+    toast(url ? '✅ MSDS audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
   }
+  render();
+  toast('Back to In Process');
 }
 
 function renderMsdsChecklist(el) {
@@ -7180,7 +7326,7 @@ function renderMsdsChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="msSetField('notes',this.value)" placeholder="Add general audit notes…" style="width:100%;min-height:60px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.notes||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===total, !!d.done, 'msToggleDone()', done, total)}
+    ${markDoneBlock(done===total, !!d.done, 'msToggleDone()', done, total, _pdfSavingKeys.has('msds'))}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateMsdsPDF()">
@@ -7808,16 +7954,24 @@ function toggleAcItem(reg, key, val) {
   render();
 }
 
-function acToggleDone(reg, type) {
+async function acToggleDone(reg, type) {
   const d = acAuditData(reg);
   const total = acTotalCount(type);
   const answered = acAnsweredCount(reg, type);
   if(!d.done && answered < total) return;
   d.done = !d.done;
   saveAcAuditDebounced(reg);
+  if (d.done) {
+    _pdfSavingKeys.add('ac-'+reg+'-'+type);
+    render();
+    const ok = await generateAircraftPDF(reg, type, acAuditMonthKey(), true);
+    _pdfSavingKeys.delete('ac-'+reg+'-'+type);
+    toast(ok ? '✅ Audit marked done' : '⚠️ Marked done, but PDF failed to save — it will retry automatically');
+    render();
+    return;
+  }
   render();
-  toast(d.done ? '✅ Audit marked done' : 'Back to In Process');
-  if (d.done) generateAircraftPDF(reg, type, acAuditMonthKey(), true);
+  toast('Back to In Process');
 }
 
 function acIsDone(reg, type) {
@@ -8111,7 +8265,7 @@ function renderAircraftChecklist(el, reg, type) {
           style="flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px">
       </div>
     </div>
-    ${markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total)}
+    ${markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total, _pdfSavingKeys.has('ac-'+reg+'-'+type))}
     ${pdfViewLink(d.pdfUrl)}
     <div style="padding:0 14px 14px">
       ${pdfBtn}
@@ -8406,7 +8560,7 @@ function triggerPdfFromQueue(i) {
   }
 }
 
-function generateAircraftPDF(reg, type, month, silent) {
+async function generateAircraftPDF(reg, type, month, silent) {
   const d = acAuditData(reg);
   const ct = S.customAcTypesList.find(t=>t.id===type);
   const sections = AIRCRAFT_CHECKLIST[type] || (ct ? ct.checklist : []);
@@ -8511,23 +8665,29 @@ function generateAircraftPDF(reg, type, month, silent) {
       const blob = new Blob([html], {type:'text/html'});
       const path = `audits/${month}/aircraft-${reg}.html`;
       const ref = storage.ref(path);
-      ref.put(blob, {contentType:'text/html'}).then(()=>ref.getDownloadURL()).then(url=>{
-        const now = new Date();
-        db.collection('auditAircraft').doc(acAuditDocKey(reg)).set({
-          completedAt: now, pdfUrl: url, pdfGeneratedBy: S.auditGroomer||'', pdfGeneratedAt: now
-        }, {merge:true}).catch(()=>{});
-        acAuditData(reg).completedAt = now;
-        acAuditData(reg).pdfUrl = url;
-        saveAcAudit(reg);
-        toast('PDF saved & shared ✓');
-      }).catch(e=>{ console.log('PDF upload failed:',e); saveAcAudit(reg); });
-    } catch(e) { saveAcAudit(reg); }
+      await ref.put(blob, {contentType:'text/html'});
+      const url = await ref.getDownloadURL();
+      const now = new Date();
+      await db.collection('auditAircraft').doc(acAuditDocKey(reg)).set({
+        completedAt: now, pdfUrl: url, pdfGeneratedBy: S.auditGroomer||'', pdfGeneratedAt: now
+      }, {merge:true}).catch(()=>{});
+      acAuditData(reg).completedAt = now;
+      acAuditData(reg).pdfUrl = url;
+      saveAcAudit(reg);
+      if (!silent) toast('PDF saved & shared ✓');
+      return true;
+    } catch(e) {
+      console.log('PDF upload failed:', e);
+      saveAcAudit(reg);
+      return false;
+    }
   } else {
     if(db) {
       db.collection('auditAircraft').doc(acAuditDocKey(reg)).set({completedAt: new Date()}, {merge:true}).catch(()=>{});
       acAuditData(reg).completedAt = new Date();
       saveAcAudit(reg);
     }
+    return false;
   }
 }
 
