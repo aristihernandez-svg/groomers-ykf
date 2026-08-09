@@ -1,5 +1,5 @@
-const CACHE = 'skycare-v14';
-const SHELL = ['/', '/index.html', '/manifest.json', '/baseConfig.js'];
+const CACHE = 'skycare-v15';
+const SHELL = ['./', './index.html', './manifest.json', './baseConfig.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
