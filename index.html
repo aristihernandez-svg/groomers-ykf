@@ -14,6 +14,8 @@
 <link rel="apple-touch-icon" href="cars/skycare-icon-192.png">
 <link rel="apple-touch-icon" sizes="192x192" href="cars/skycare-icon-192.png">
 <link rel="apple-touch-icon" sizes="512x512" href="cars/skycare-icon-512.png">
+<!-- Per-base config — must load before the app script below -->
+<script src="baseConfig.js"></script>
 <!-- Leaflet (fleet map) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <!-- Firebase -->
@@ -1000,16 +1002,7 @@ const PROC_VIDEOS = {
   o2:'',westwind:'',metro:'', // paste YouTube URLs here
 };
 
-const CREW_CARS = [
-  {key:'escape',  name:'Ford Escape',      fuel:'gasoline', color:'#3A6BC4', color2:'#5B8FE8', label:'SUV',        img:'cars/escape-removebg-preview.png',  plate:''},
-  {key:'elantra', name:'Hyundai Elantra',  fuel:'gasoline', color:'#B89A60', color2:'#D4BB82', label:'Sedan',      img:'cars/elantra-removebg-preview.png', plate:'DANF 068', facesRight:true},
-  {key:'micra',   name:'Nissan Micra',     fuel:'gasoline', color:'#2E7D7B', color2:'#4AA8A6', label:'Hatchback',  img:'cars/micra-removebg-preview.png',   plate:'DCYZ 952',  facesRight:true},
-  {key:'impala',  name:'Chevrolet Impala', fuel:'gasoline', color:'#9E9278', color2:'#C0B49A', label:'Sedan',      img:'cars/impala-removebg-preview.png',  plate:'DDET 939'},
-  {key:'whtruck', name:'White MX Truck',   fuel:'gasoline', color:'#7A8A96', color2:'#B0C0CC', label:'Pickup',     img:'cars/whtruck-removebg-preview.png', plate:'CB 70643'},
-  {key:'brtruck', name:'Brown MX Truck',   fuel:'gasoline', color:'#8B7355', color2:'#B09470', label:'Pickup',     img:'cars/brtruck-removebg-preview.png', plate:'BP 61870'},
-  {key:'kubota',  name:'Kubota',           fuel:'diesel',   color:'#C85F10', color2:'#F07A30', label:'UTV · Diesel', img:'cars/kubota-removebg-preview.png'},
-  {key:'civic',   name:'Honda Civic',      fuel:'gasoline', color:'#8A8A8A', color2:'#C0C0C0', label:'Sedan',      img:'cars/civic-removebg-preview.png'},
-];
+const CREW_CARS = BASE_CONFIG.crewCars;
 
 // Bouncie GPS proxy — set this once the Cloudflare Worker is deployed
 // Leave empty to disable Bouncie tracking (no errors, chip just won't appear)
@@ -1029,9 +1022,9 @@ const CAR_AUDIT_CHECKS = [
   { key:'damage',        label:'Visible damage',     type:'condition' },
 ];
 
-const AIRCRAFT_METRO    = ['CPX','TIM','IOC','IOB','IOJ','IOA','IOH','KKC'];
-const AIRCRAFT_WESTWIND = ['IAW','XDP','XAW'];
-const AIRCRAFT_ASTRA    = ['FDAX'];
+const AIRCRAFT_METRO    = BASE_CONFIG.aircraftFleet.metro;
+const AIRCRAFT_WESTWIND = BASE_CONFIG.aircraftFleet.westwind;
+const AIRCRAFT_ASTRA    = BASE_CONFIG.aircraftFleet.astra;
 
 const AIRCRAFT_CHECKLIST = {
   // Sub-lines separated by ;; so that | can appear freely within a line (e.g. W&B pairs)
@@ -1273,7 +1266,7 @@ function clearSplash() {
 setTimeout(clearSplash, 6000);
 
 // ── PIN GATE ─────────────────────────────────────────────────────────────────
-const PIN_CORRECT = '0704';
+const PIN_CORRECT = BASE_CONFIG.pinCorrect;
 let _pinEntry = '';
 
 function pinKey(k) {
@@ -4062,7 +4055,7 @@ function generateAuditPDF(month, silent) {
       <td style="width:100px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block" onerror="this.style.display='none'"></td>
       <td style="text-align:right;vertical-align:middle">
         <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew Car Monthly Audit</div>
-        <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+        <div style="font-size:8px;color:#666;margin-top:2px">${BASE_ADDRESS}</div>
       </td>
     </tr>
   </table>
@@ -4089,7 +4082,7 @@ function generateAuditPDF(month, silent) {
   </table>
   ${carSections}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · ${BASE_ADDRESS}</span>
     <span>Generated ${generatedFmt}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -4123,14 +4116,14 @@ function generateSingleCarPDF(key, silent) {
       <td style="width:100px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block" onerror="this.style.display='none'"></td>
       <td style="text-align:right;vertical-align:middle">
         <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew Car Monthly Audit — ${car.name}</div>
-        <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+        <div style="font-size:8px;color:#666;margin-top:2px">${BASE_ADDRESS}</div>
       </td>
     </tr>
   </table>
   <div style="height:1.5px;background:#1A3A6A;margin-bottom:7px"></div>
   ${buildCarSectionHtml(car, d)}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · ${BASE_ADDRESS}</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -5594,13 +5587,13 @@ async function healMissingPDFs() {
         <td style="width:100px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block" onerror="this.style.display='none'"></td>
         <td style="text-align:right;vertical-align:middle">
           <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew Car Monthly Audit — ${car.name}</div>
-          <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+          <div style="font-size:8px;color:#666;margin-top:2px">${BASE_ADDRESS}</div>
         </td>
       </tr></table>
       <div style="height:1.5px;background:#1A3A6A;margin-bottom:7px"></div>
       ${buildCarSectionHtml(car, data)}
       <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-        <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+        <span>${COMPANY_NAME} · YKF Base · ${BASE_ADDRESS}</span>
         <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
       </div>
       </body></html>`;
@@ -5796,7 +5789,7 @@ function generateCrewHousePDF(silent) {
       <td style="width:80px;vertical-align:middle"><img src="${logoSrc}" style="height:28px;display:block"></td>
       <td style="text-align:right;vertical-align:middle">
         <div style="font-size:13px;font-weight:800;color:#1A3A6A;line-height:1.2">YKF Crew House Inspection Safety Checklist</div>
-        <div style="font-size:8px;color:#666;margin-top:2px">220 Thomas Slee Drive, Kitchener ON</div>
+        <div style="font-size:8px;color:#666;margin-top:2px">${BASE_ADDRESS}</div>
       </td>
     </tr>
   </table>
@@ -5821,7 +5814,7 @@ function generateCrewHousePDF(silent) {
     <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:36px;font-size:8.5px;color:${comments?'#1a1a1a':'#bbb'};font-style:${comments?'normal':'italic'}">${comments||'(none)'}</div>
   </div>
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · ${BASE_ADDRESS}</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -6149,7 +6142,7 @@ function generateHangarPDF(silent) {
     <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:36px;font-size:8.5px;color:${comments?'#1a1a1a':'#bbb'};font-style:${comments?'normal':'italic'}">${comments||'(none)'}</div>
   </div>
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -6595,7 +6588,7 @@ function generateParkingPDF(silent) {
     <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:36px;font-size:8.5px;color:#1a1a1a">${comments}</div>
   </div>`:''}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -6968,7 +6961,7 @@ function generateYkfBasePDF(silent) {
     <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:36px;font-size:8.5px;color:#1a1a1a">${comments}</div>
   </div>`:''}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -7403,7 +7396,7 @@ function generateMsdsPDF(silent) {
     <div style="border:1px solid #C8D4E8;padding:5px 8px;min-height:28px;font-size:8.5px;color:#1a1a1a">${notes}</div>
   </div>`:''}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · Kitchener ON</span>
     <span>Generated ${new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -8402,7 +8395,7 @@ function buildFlaggedSummaryHTML() {
   ${renderCategory('Crew Cars', carSections)}
   ${renderCategory('Aircraft', acSections)}
   <div style="margin-top:8px;padding-top:6px;border-top:1px solid #C8D4E8;display:flex;justify-content:space-between;font-size:7.5px;color:#999">
-    <span>Skycare Aviation Services · YKF Base · 220 Thomas Slee Drive, Kitchener ON</span>
+    <span>${COMPANY_NAME} · YKF Base · ${BASE_ADDRESS}</span>
     <span>Generated ${todayFmt}</span>
   </div>
   <div class="pdf-back-btn" style="position:fixed;top:12px;left:12px;z-index:9999"><button onclick="window.close()" style="background:#1A3A6A;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.3)">← Close</button></div><style>@media print{.pdf-back-btn{display:none!important}}</style>
@@ -10370,7 +10363,7 @@ Tighten fittings"></textarea>`,
 
 // Lightweight deterrent against accidental/casual edits by regular crew —
 // not real security (the PIN lives in the client source), just a speed bump.
-const ADMIN_PIN = '0000';
+const ADMIN_PIN = BASE_CONFIG.adminPin;
 function checkAdminPin(actionLabel) {
   const pin = prompt(`Enter admin PIN to ${actionLabel}:`);
   if(pin === null) return false; // cancelled
@@ -11277,15 +11270,10 @@ function restoreNavOrder() {
 }
 
 // ── FIREBASE PUSH NOTIFICATIONS ──────────────────────────────
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyA7BHDcP-PVTpsaNu9TTWCnChfI0bnOLi8",
-  authDomain: "groomer-ykf.firebaseapp.com",
-  projectId: "groomer-ykf",
-  storageBucket: "groomer-ykf.firebasestorage.app",
-  messagingSenderId: "384366195372",
-  appId: "1:384366195372:web:35d38ffbc947188d4a6509"
-};
-const VAPID_PUBLIC_KEY = "BIqy0tnx4xBbmSKqyucc0mnLZtTtfkpEfsf0RAH9LRwu1ZQ_aSDVpv_lJmfVq8QWQA7eKMKBgrIe2MHYS5NcOiU";
+const FIREBASE_CONFIG = BASE_CONFIG.firebaseConfig;
+const VAPID_PUBLIC_KEY = BASE_CONFIG.vapidPublicKey;
+const BASE_ADDRESS = BASE_CONFIG.baseAddress;
+const COMPANY_NAME = BASE_CONFIG.companyName;
 
 // Coffee notification times: 9:40, 11:40, 15:40
 const COFFEE_TIMES = [
