@@ -1251,7 +1251,7 @@ const NAV_ITEMS = [
   {id:'contacts',    icon:'📞', label:'Contacts'},
   {id:'fleet',       icon:'✈️',  label:'Fleet'},
   {id:'bored',       icon:'💡', label:'Bored'},
-];
+].filter(item => item.id !== 'fleet' || BASE_CONFIG.features?.fleet !== false);
 
 // ── BOOT ───────────────────────────────────────────────────────────
 // Hard failsafe: no matter what throws or hangs above, force the splash
@@ -1971,7 +1971,7 @@ async function renderHome(el) {
     {id:'audits',     svg:ICONS.audits,     label:'Audits'},
     {id:'cars',       svg:ICONS.cars,       label:'Crew Cars'},
     {id:'week',       svg:ICONS.week,       label:'Week'},
-  ];
+  ].filter(item => item.id !== 'fleet' || BASE_CONFIG.features?.fleet !== false);
 
   el.innerHTML = `
     <style>
@@ -5120,7 +5120,8 @@ function renderAuditsLanding(el) {
       </button>
     </div>
 
-    ${(Object.keys(S.auditTiles).length || true) ? sectionLabel('🏢','Facility &amp; Base') : ''}
+    ${BASE_CONFIG.features?.facilityAudits === false ? '' : `
+    ${sectionLabel('🏢','Facility &amp; Base')}
     ${crewHouseRow}
     ${hangarRow}
     ${msdsRow}
@@ -5128,6 +5129,7 @@ function renderAuditsLanding(el) {
     ${ykfBaseRow}
     ${facilityRows}
     ${facilityPlaceholders}
+    `}
 
     ${sectionLabel('🚗','Crew Cars')}
     ${auditRow('openCrewCars()', carIconHtml, 'Crew Cars', `${CREW_CARS.length} vehicles · tap to manage`, carsBadge)}
