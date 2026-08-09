@@ -1,0 +1,23 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Every file this app writes lives under audits/{month}/... — PDFs
+    // (text/html today, see the html2canvas/jsPDF Share All work) and crew
+    // car photos (image/jpeg). Nothing else should ever be written here.
+    match /audits/{month}/{allPaths=**} {
+      allow read: if true;
+      allow write: if (request.resource.contentType == 'text/html'
+                        || request.resource.contentType.matches('image/.*'))
+                   && request.resource.size < 15 * 1024 * 1024; // 15MB — generous for a photo, still a real cap
+      allow delete: if false; // matches "nothing here ever deletes" — same standing rule as Firestore
+    }
+
+    // Everything else — deny by default (the bucket's own default when
+    // created in production mode already does this; this just makes it
+    // explicit instead of relying on the console's default).
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

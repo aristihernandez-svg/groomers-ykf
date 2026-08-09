@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Shared helpers ──────────────────────────────────────────────
+    function isMap(v)   { return v is map; }
+    function isBool(v)  { return v is bool; }
+    function isString(v){ return v is string; }
+
+    // What these rules actually protect against: malformed or unexpected
+    // writes (wrong types, missing required fields) — the class of bug this
+    // catches. What they do NOT protect against: a validly-shaped but stale
+    // write (e.g. an empty checks map on a document that used to have real
+    // data) — that's indistinguishable in shape from a legitimate reset, and
+    // no rule can tell the difference. That protection lives in the app's
+    // coding discipline (fresh reads, targeted updates) and the self-heal
+    // safety net, not here. See project_audit_status_states memory for the
+    // August 8 2026 incident this reasoning comes from.
+    //
+    // Also note: with no login system, these rules validate *shape*, not
+    // *identity* — they can't tell a legitimate write from a malicious one,
+    // only a well-formed one from a malformed one. Real access control would
+    // need Firebase Auth or App Check, neither of which exists yet.
+
+    // ── Audit collections — the ones this session actually hardened ────
+    match /facilityAudits/{docId} {
+      allow read: if true;
+      allow create, update: if isMap(request.resource.data.items)
+                    && (!('done' in request.resource.data) || isBool(request.resource.data.done))
+                    && (!('pdfUrl' in request.resource.data) || isString(request.resource.data.pdfUrl));
+      allow delete: if false; // never — matches "nothing here ever deletes a live doc" from the Aug 5 incident
+    }
+
+    match /auditCars/{docId} {
+      allow read: if true;
+      allow create, update: if ('month' in request.resource.data) && isString(request.resource.data.month)
+                    && ('carKey' in request.resource.data) && isString(request.resource.data.carKey)
+                    && (!('done' in request.resource.data) || isBool(request.resource.data.done))
+                    && (!('pdfUrl' in request.resource.data) || isString(request.resource.data.pdfUrl));
+      allow delete: if false;
+    }
+
+    match /auditAircraft/{docId} {
+      allow read: if true;
+      allow create, update: if (!('done' in request.resource.data) || isBool(request.resource.data.done))
+                    && (!('pdfUrl' in request.resource.data) || isString(request.resource.data.pdfUrl));
+      allow delete: if false;
+    }
+
+    match /monthSummaries/{docId} {
+      allow read: if true;
+      allow create, update: if ('pdfUrl' in request.resource.data) && isString(request.resource.data.pdfUrl)
+                    && ('month' in request.resource.data) && isString(request.resource.data.month);
+      allow delete: if false;
+    }
+
+    // ── Everything else — real shape validation, not a full per-field
+    // schema. Requires a genuine map under a reasonable size, and blocks
+    // deletes app-wide (matches the "nothing auto-deletes" standing rule)
+    // even without a per-collection field list for all ~24 remaining
+    // collections (contacts, shopping, notifications, tasks, etc.).
+    //
+    // IMPORTANT: Firestore evaluates every matching rule block for a path
+    // and allows the request if ANY of them say yes — it does not pick the
+    // "most specific" match like a router would. Since {collection} matches
+    // literally everything, including facilityAudits/auditCars/etc, this
+    // block must explicitly exclude those four or it silently becomes a
+    // backdoor around their strict rules above (found by testing against
+    // real staging — the strict rules alone looked correct on paper but
+    // weren't actually being enforced).
+    match /{collection}/{docId} {
+      allow read: if true;
+      allow create, update: if !(collection in ['facilityAudits','auditCars','auditAircraft','monthSummaries'])
+                    && isMap(request.resource.data)
+                    && request.resource.data.size() < 200; // guards against a wildly malformed write
+      allow delete: if false;
+    }
+  }
+}
