@@ -36,4 +36,6 @@ const BASE_CONFIG = {
     westwind: ['IAW','XDP','XAW'],
     astra:    ['FDAX'],
   },
+
+  bouncieWorkerUrl: 'https://bouncie-proxy.skycare.workers.dev',
 };

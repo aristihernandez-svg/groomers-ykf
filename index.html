@@ -1004,9 +1004,9 @@ const PROC_VIDEOS = {
 
 const CREW_CARS = BASE_CONFIG.crewCars;
 
-// Bouncie GPS proxy — set this once the Cloudflare Worker is deployed
+// Bouncie GPS proxy — per-base Cloudflare Worker URL, set in baseConfig.js
 // Leave empty to disable Bouncie tracking (no errors, chip just won't appear)
-const BOUNCIE_WORKER_URL = 'https://bouncie-proxy.skycare.workers.dev';
+const BOUNCIE_WORKER_URL = BASE_CONFIG.bouncieWorkerUrl || '';
 
 const FUEL_LEVELS = ['Full','¾','Half','¼','Empty'];
 
