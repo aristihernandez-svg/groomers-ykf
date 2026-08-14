@@ -3998,9 +3998,9 @@ function buildCarSectionHtml(car, d, isFirst=true) {
         ?`<span style="display:inline-flex;align-items:center;justify-content:center;padding:1px 8px;border-radius:8px;font-size:7.5px;font-weight:800;background:#d4edda;color:#1a7a40">✓ Done</span>`
         :`<span style="color:#bbb;font-size:8px">—</span>`;
       return `<tr style="background:${rowBg}">
-        <td style="padding:3px 8px;font-size:8.5px;color:#333;border-bottom:0.5px solid #EEF1F8;width:58%">${c.label}</td>
-        <td style="padding:3px 8px;text-align:center;border-bottom:0.5px solid #EEF1F8;width:14%">${pill}</td>
-        <td style="padding:3px 8px;font-size:7.5px;color:#666;font-style:italic;border-bottom:0.5px solid #EEF1F8">${note}</td>
+        <td style="padding:2px 8px;font-size:8.5px;color:#333;border-bottom:0.5px solid #EEF1F8;width:58%">${c.label}</td>
+        <td style="padding:2px 8px;text-align:center;border-bottom:0.5px solid #EEF1F8;width:14%">${pill}</td>
+        <td style="padding:2px 8px;font-size:7.5px;color:#666;font-style:italic;border-bottom:0.5px solid #EEF1F8">${note}</td>
       </tr>`;
     }).join('');
     const statusBadge=d.done
@@ -4012,16 +4012,16 @@ function buildCarSectionHtml(car, d, isFirst=true) {
     const photoGrid=AUDIT_PHOTO_SLOTS.map((label,i)=>{
       const p=photos[i];
       return p
-        ?`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-            <img src="${p.src}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:3px;display:block">
-            <div style="font-size:6px;font-weight:700;color:#444;text-align:center;line-height:1.2">${label}</div>
-            <div style="font-size:6.5px;font-weight:700;text-align:center;padding:0 3px;border-radius:2px;${p.rating==='Good'?'background:#d4edda;color:#1a7a40':p.rating==='Fair'?'background:#fff3cd;color:#856404':'background:#f8d7da;color:#842029'}">${p.rating||'—'}</div>
-            ${p.note?`<div style="font-size:6px;color:#555;text-align:center">${p.note}</div>`:''}
+        ?`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <img src="${p.src}" style="width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;display:block">
+            <div style="font-size:7.5px;font-weight:700;color:#444;text-align:center;line-height:1.2">${label}</div>
+            <div style="font-size:8px;font-weight:700;text-align:center;padding:1px 4px;border-radius:3px;${p.rating==='Good'?'background:#d4edda;color:#1a7a40':p.rating==='Fair'?'background:#fff3cd;color:#856404':'background:#f8d7da;color:#842029'}">${p.rating||'—'}</div>
+            ${p.note?`<div style="font-size:7px;color:#555;text-align:center">${p.note}</div>`:''}
           </div>`
-        :`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-            <div style="width:100%;aspect-ratio:4/3;background:#f0f0f0;border:1px dashed #C8D4E8;border-radius:3px"></div>
-            <div style="font-size:6px;font-weight:700;color:#aaa;text-align:center;line-height:1.2">${label}</div>
-            <div style="font-size:6.5px;color:#bbb;text-align:center">—</div>
+        :`<div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+            <div style="width:100%;aspect-ratio:4/3;background:#f0f0f0;border:1px dashed #C8D4E8;border-radius:4px"></div>
+            <div style="font-size:7.5px;font-weight:700;color:#aaa;text-align:center;line-height:1.2">${label}</div>
+            <div style="font-size:8px;color:#bbb;text-align:center">—</div>
           </div>`;
     }).join('');
     return `
@@ -4048,7 +4048,7 @@ function buildCarSectionHtml(car, d, isFirst=true) {
         <div style="padding:4px 10px;background:#D8E4F5;border-top:1px solid #C8D4E8;border-bottom:1px solid #C8D4E8">
           <span style="font-size:7.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">Condition Photos</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 10px">${photoGrid}</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:6px 10px">${photoGrid}</div>
         ${d.comments?`<div style="padding:6px 10px;background:#FAFBFD;border-top:1px solid #C8D4E8;font-size:8px;color:#444"><strong>Comments:</strong> ${d.comments}</div>`:''}
         ${d.groomer?`<div style="padding:4px 10px 6px;font-size:7.5px;color:#888;font-style:italic;border-top:1px solid #EEF1F8">Audited by: ${d.groomer}</div>`:''}
       </div>`;
