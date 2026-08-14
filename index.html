@@ -3981,7 +3981,7 @@ async function archiveAudit() {
 // Builds one car's audit card HTML — shared between the combined monthly PDF
 // (generateAuditPDF, all cars) and the single-car PDF (generateSingleCarPDF,
 // auto-uploaded to records when that car's audit is marked done).
-function buildCarSectionHtml(car, d) {
+function buildCarSectionHtml(car, d, isFirst=true) {
     const photos=Array.isArray(d.photos)&&d.photos.length===8?d.photos:Array.from({length:8},(_,i)=>(d.photos||[])[i]||null);
     const poorCount=photos.filter(p=>p&&p.rating==='Poor').length;
     const checks=d.checks||{};
@@ -4025,7 +4025,7 @@ function buildCarSectionHtml(car, d) {
           </div>`;
     }).join('');
     return `
-      <div style="border:1px solid #C8D4E8;margin-bottom:10px;break-inside:avoid">
+      <div style="border:1px solid #C8D4E8;margin-bottom:10px;break-inside:avoid${isFirst?'':';page-break-before:always;break-before:page'}">
         <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#F0F4FA;border-bottom:1px solid #C8D4E8">
           <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" style="width:50px;height:34px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">
           <div style="flex:1">
@@ -4048,7 +4048,7 @@ function buildCarSectionHtml(car, d) {
         <div style="padding:4px 10px;background:#D8E4F5;border-top:1px solid #C8D4E8;border-bottom:1px solid #C8D4E8">
           <span style="font-size:7.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#1A3A6A">Condition Photos</span>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(8,1fr);gap:5px;padding:8px 10px">${photoGrid}</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:8px 10px">${photoGrid}</div>
         ${d.comments?`<div style="padding:6px 10px;background:#FAFBFD;border-top:1px solid #C8D4E8;font-size:8px;color:#444"><strong>Comments:</strong> ${d.comments}</div>`:''}
         ${d.groomer?`<div style="padding:4px 10px 6px;font-size:7.5px;color:#888;font-style:italic;border-top:1px solid #EEF1F8">Audited by: ${d.groomer}</div>`:''}
       </div>`;
@@ -4059,9 +4059,9 @@ function generateAuditPDF(month, silent) {
   const generatedFmt=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const logoSrc=location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
   let carSections='';
-  CREW_CARS.forEach(car=>{
+  CREW_CARS.forEach((car,i)=>{
     const d=S.monthlyCarAudits[month+'-'+car.key]||{};
-    carSections+=buildCarSectionHtml(car, d);
+    carSections+=buildCarSectionHtml(car, d, i===0);
   });
 
   const html=`<!DOCTYPE html><html><head><meta charset="utf-8">
