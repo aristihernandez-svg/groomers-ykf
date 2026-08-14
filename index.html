@@ -3071,7 +3071,9 @@ async function fetchBouncieData() {
 
 function applyBouncieOdometer() {
   let changed = false;
+  const ownKeys = new Set(CREW_CARS.map(c => c.key));
   for (const [key, b] of Object.entries(S.bouncieData)) {
+    if (!ownKeys.has(key)) continue; // Bouncie response now covers every base -- only touch our own
     if (b.status !== 'ok' || b.odometer == null) continue;
     const d = carData(key);
     if (d.bouncieBaseline == null || d.bouncieBaseline === '') continue;
@@ -11672,7 +11674,7 @@ function openShareInstallSheet() {
   // Build QR once
   const img = document.getElementById('shareQrImg');
   if (!img.src || img.src === window.location.href) {
-    const url = 'https://aristihernandez-svg.github.io/groomers-ykf';
+    const url = window.location.origin + window.location.pathname;
     img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=' + encodeURIComponent(url);
   }
   // Show/hide install button depending on prompt availability
