@@ -1,5 +1,25 @@
 /**
- * Bouncie GPS Proxy — Cloudflare Worker
+ * Bouncie GPS Proxy — Cloudflare Worker (SHARED across all Skycare bases)
+ *
+ * One Bouncie account/app (client_id: skycare-yk) covers every base's
+ * vehicles. This is the single Worker that ever calls Bouncie's OAuth —
+ * every base's app (YKF, YAV, and later YQT/YXL) points its
+ * bouncieWorkerUrl at THIS SAME Worker, not a separate one per base.
+ *
+ * Why: two independent Workers each refreshing their own copy of the same
+ * underlying refresh token collide — Bouncie rotates the token on every
+ * refresh, so whichever Worker refreshes first invalidates the other's
+ * copy. One Worker, one refresh cycle, no race. (This is also why a
+ * re-authorization on 2026-08-10 broke both YKF's and YAV's separate
+ * Workers simultaneously — there was never really an isolated token per
+ * base to begin with, just separate copies of the one that already existed.)
+ *
+ * Each base's app only ever reads the keys listed in its own CREW_CARS
+ * (baseConfig.js) — so even though this Worker returns every base's
+ * vehicles in one response, a given base's UI only displays its own.
+ * Only odometer/fuel/battery/engine-fault fields are exposed below —
+ * never GPS location — so this cross-base visibility is low-sensitivity
+ * by design, not just by convention.
  *
  * Secrets (Worker Settings > Variables & Secrets):
  *   BOUNCIE_CLIENT_ID     = skycare-yk
@@ -13,6 +33,7 @@
  */
 
 const VEHICLE_MAP = {
+  // YKF
   escape:  { imei: '864486065705564', name: 'Ford Escape'      },
   elantra: { imei: '864486065704609', name: 'Hyundai Elantra'  },
   micra:   { imei: '864486067025912', name: 'Nissan Micra'     },
@@ -21,6 +42,27 @@ const VEHICLE_MAP = {
   brtruck: { imei: '864486065705507', name: 'Brown MX Truck'   },
   kubota:  { imei: null,              name: 'Kubota'           },
   civic:   { imei: '864486064882232', name: 'Honda Civic'      },
+
+  // YAV
+  caravan: { imei: '864486066542313', name: 'Dodge Caravan' },
+
+  // YQT — keys are provisional; align them with YQT's real CREW_CARS keys
+  // once that base's baseConfig.js is actually built (Phase 6)
+  yqtBlueVan:  { imei: '864486065699221', name: '013 Blue Van YQT'  },
+  yqtWhiteVan: { imei: '864486065833440', name: '011 White Van YQT' },
+  yqtSpark:    { imei: '866392065193629', name: '005 Spark YQT'     },
+
+  // YXL — same caveat as YQT above (Phase 7)
+  yxlShopTruck: { imei: '864486065700979', name: '001 YXL Shop Truck' },
+  yxlWhiteVan:  { imei: '864486065700987', name: '003 White Van YXL'  },
+  yxlSonic:     { imei: '864486065704740', name: '020 Sonic YXL'      },
+  yxlFocus:     { imei: '864486065823144', name: '010 Focus YXL'      },
+  yxlGrandPrix: { imei: '864486065885663', name: '006 Grand Prix YXL' },
+  yxlBlackVan:  { imei: '864486065913341', name: '004 Black Van YXL'  },
+  yxlSilverVan: { imei: '864486066507225', name: '008 Silver Van YXL' },
+
+  // Unlabeled in Bouncie ("15", 2010 Mazda3, imei 864486067872552) —
+  // excluded until someone confirms which base it actually belongs to.
 };
 
 const CORS = {
