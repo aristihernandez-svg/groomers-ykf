@@ -3175,7 +3175,7 @@ function renderCrewCarsList(el) {
       const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
       const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
       return (ckm>0&&nsKm>0&&(nsKm-ckm)<=500)||(fuelPct!==null&&fuelPct<=0.25)||
-             (bOk&&b.milOn)||(bOk&&(b.battery==='low'||b.battery==='shutdown'))||
+             (bOk&&b.milOn)||(bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown'))||
              !!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
     };
     const _buildCard=car=>{
@@ -3190,7 +3190,7 @@ function renderCrewCarsList(el) {
       const fuelAlert=fuelPct!==null&&fuelPct<=0.25;
       const fuelLabel=bOk&&b.fuelLevel!=null?Math.round(b.fuelLevel)+'%':(d.fuel||'—');
       const milAlert=bOk&&b.milOn;
-      const battAlert=bOk&&(b.battery==='low'||b.battery==='shutdown');
+      const battAlert=bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown');
       const anyAlert=oilWarn||fuelAlert||milAlert||battAlert||!!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
       const svcRemain=ckm>0&&nsKm>0?Math.max(0,nsKm-ckm):null;
       const svcPct=svcRemain!==null?Math.min(100,Math.max(0,Math.round((10000-(nsKm-ckm))/10000*100))):0;
@@ -3395,6 +3395,15 @@ function renderCarDetail(el, key) {
   const _fuelDisplayLabel=_bFuel?Math.round(_b.fuelLevel)+'%':(fuelLog?fuelLog.value:'—');
   const _fuelDisplaySub=_bFuel?'Bouncie live':(fuelLog?fmtDate(fuelLog.date):'No record');
   const _fuelLevel=_bFuel?(_b.fuelLevel<=5?'Empty':_b.fuelLevel<=37.5?'1/4':_b.fuelLevel<=62.5?'1/2':_b.fuelLevel<=87.5?'3/4':'Full'):(fuelLog?.value||'');
+  const _milAlert=_bOk&&_b.milOn;
+  const _battAlert=_bOk&&(_b.battery==='low'||_b.battery==='critical'||_b.battery==='shutdown');
+  const _problemTags=[];
+  if(_milAlert) _problemTags.push(`⚠️ Check engine${_b.dtcList?.length?': '+_b.dtcList.join(', '):''}`);
+  if(_battAlert) _problemTags.push(`🔋 Battery ${_b.battery}`);
+  const _problemBanner=_problemTags.length?`
+    <div style="margin:12px 14px 0;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);display:flex;flex-direction:column;gap:4px">
+      ${_problemTags.map(t=>`<span style="font-size:13px;font-weight:700;color:#F87171">${t}</span>`).join('')}
+    </div>`:'';
 
   let html=`
     <!-- Car hero banner -->
@@ -3411,6 +3420,7 @@ function renderCarDetail(el, key) {
         </div>
       </div>
     </div>
+    ${_problemBanner}
 
     <!-- Action cards -->
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
