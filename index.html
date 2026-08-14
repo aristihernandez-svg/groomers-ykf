@@ -3056,11 +3056,17 @@ async function fetchBouncieData() {
   if (!BOUNCIE_WORKER_URL) return;
   try {
     const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles');
-    if (!res.ok) return;
+    if (!res.ok) throw new Error('HTTP ' + res.status);
     S.bouncieData = await res.json();
+    S.bouncieSyncFailed = false;
     applyBouncieOdometer();
     render();
-  } catch(e) { console.log('Bouncie fetch failed:', e); }
+  } catch(e) {
+    console.log('Bouncie fetch failed:', e);
+    S.bouncieSyncFailed = true;
+    toast('⚠️ GPS sync unavailable — showing last known values');
+    render();
+  }
 }
 
 function applyBouncieOdometer() {
@@ -3114,6 +3120,11 @@ function renderCrewCarsList(el) {
     <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
       style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
   </div>`;
+  if (BOUNCIE_WORKER_URL && S.bouncieSyncFailed) {
+    html += `<div style="margin:0 14px 8px;padding:8px 12px;border-radius:8px;background:var(--red-dim);border:1px solid var(--red);color:var(--red);font-size:12px;font-weight:600">
+      ⚠️ GPS sync unavailable — odometer/fuel/battery below may be out of date
+    </div>`;
+  }
 
   // ── Monthly audit progress (audits tab only) ──
   const month=auditMonth();
