@@ -3980,11 +3980,140 @@ const QUIZ_DB = [
 {doc:'com',type:'MC',q:'What are the immediate corrective actions if tail plane stall symptoms occur shortly after flap extension?',a:'Immediately retract the flaps to the previous setting, increase airspeed, and make pitch changes slowly',ref:'COM · Section 4',options:'A) Retract flaps and pull nose down aggressively | B) Immediately retract the flaps to the previous setting, increase airspeed, and make pitch changes slowly | C) Close throttles and pitch down | D) Land with partial flaps only',correct:'B'},
 {doc:'com',type:'MC',q:'What is the maximum number of resets allowed for a popped in-flight circuit breaker protecting essential equipment?',a:'Limited to one (1) reset and only after a 90 second cooling period',ref:'COM · Section 4',options:'A) Unlimited resets | B) Limited to one (1) reset and only after a 90 second cooling period | C) Two resets allowed | D) Do not reset any breakers under any circumstance',correct:'B'},
 {doc:'com',type:'MC',q:'Are in-flight emergency simulations permitted when passengers are on board?',a:'No, simulating emergency situations affecting flight characteristics with passengers on board is strictly prohibited.',ref:'COM · Section 4',options:'A) Yes, with Chief Pilot permission | B) Yes, during day VFR only | C) No, simulating emergency situations affecting flight characteristics with passengers on board is strictly prohibited. | D) Only on ferry flights',correct:'C'},
-{doc:'com',type:'MC',q:'What descent angle is preferred for SCDA (Stabilized Constant Descent Angle) NPA approaches?',a:'Not less than 2.9 degrees and not more than 3.5 degrees',ref:'COM · Section 4',options:'A) 2.0 to 3.0 degrees | B) Not less than 2.9 degrees and not more than 3.5 degrees | C) 3.5 to 4.5 degrees | D) Exact 3.0 degrees always',correct:'B'},
+{doc:'com',type:'MC',q:'What descent angle is preferred for SCDA (Stabilized Constant Descent Angle) NPA approaches?',a:'Not less than 2.9 degrees and not more than 3.5 degrees',ref:'COM · Section 4',options:'A) 2.0 to 3.0 degrees | B) Not less than 2.9 degrees and not more than 3.5 degrees | C) 3.5 to 4.5 degrees | D) Exact 3.0 degrees always',correct:'B'},,
+{doc:'ifrcapgen',type:'FC',q:'Define Decision Altitude (DA).',a:'DA is an altitude specified on a precision approach procedure or an approach procedure with vertical guidance at which the missed approach procedure must be initiated if the required visual reference has not been established.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define Decision Height (DH).',a:'DH is the height of the Decision Altitude (DA) above the touchdown zone elevation or runway threshold.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is Runway Visual Range (RVR)?',a:'RVR is the range over which the pilot of an aircraft on the centre line of a runway can see the runway surface markings or the lights delineating the runway or identifying its centre line.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the hierarchy for aerodrome operating visibility at a site with an active ATC tower?',a:'The hierarchy for arrivals and departures is 1. RVR for the runway of intended use, 2. Ground visibility (METAR), 3. Tower visibility, and 4. Pilot visibility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'At a site without an active tower, what is the hierarchy for arrival visibility?',a:'The hierarchy for arrivals is 1. RVR for the runway of intended use, 2. Ground visibility (METAR), and 3. Pilot visibility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'For departures at a site without an active tower, how is operating visibility determined?',a:'It is the lowest of the reported ground visibility (METAR), any reported RVR, or pilot visibility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the absolute minimum RVR for authorized arrivals and departures?',a:'Arrivals and departures below RVR 600 are not authorized.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When are Low Visibility Procedures (LVP) implemented at an airport?',a:'LVP is implemented when weather conditions indicate visibility below RVR 2600 is imminent.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What RVR value triggers the restriction of ground movements for aircraft starting or taxiing?',a:'Start and taxi restrictions apply when the reported RVR is below 1200, 1000, or 600 depending on specific operator/aircraft requirements.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When is a \'Follow Me\' vehicle service provided?',a:'The service is provided on pilot request when visibility conditions are below RVR 2600 (1/2 SM).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How is take-off visibility defined in order of precedence?',a:'It is defined as 1. Reported RVR of the runway, 2. Reported ground visibility (if RVR is unavailable or fluctuating), or 3. Pilot-observed visibility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What are the three standard premises for an IFR departure procedure to ensure obstacle clearance?',a:'An aircraft must cross at least 35 feet above the departure end of the runway, climb on runway heading to 400 feet AAE before turning, and maintain a climb gradient of at least 200 feet per NM.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'SPEC VIS\' indicate in a departure procedure?',a:'SPEC VIS is the Specified Take-off Minimum Visibility used in conjunction with a \'visual climb over airport\' procedure to avoid obstacles.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Under General Aviation rules, what is the minimum RVR for a CAT I approach if RVR \'A\' and \'B\' are both available?',a:'The minimum is RVR 1200/600 for aeroplanes.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the approach ban exception for General Aviation if RVR is below minima?',a:'An approach may be completed if the RVR is fluctuating, or if the ground visibility is reported to be at least 1/4 mile.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'At what altitude does the approach ban no longer apply if a lower visibility report is received?',a:'The ban does not apply if the aircraft has passed the FAF inbound or the point where the final approach course is intercepted.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the minimum RVR for a CAT III A precision approach for aeroplanes?',a:'The minimum is RVR 600/600/600.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What visibility report takes precedence for a commercial operator\'s approach ban?',a:'An RVR report takes precedence over a runway visibility report or a ground visibility report.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'If a commercial operator has an Ops Spec, what is the visibility report requirement for an advisory visibility of 1/2 SM (RVR 26)?',a:'The required visibility report is 1/4 SM or RVR/Runway Visibility 1200.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How is a certified precision runway affected if the HIAL system is inoperative?',a:'It is downgraded to a non-precision runway, and minima below 250 feet DH and 1 SM visibility must be increased to those values.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'If an approach has a HAT of 500 feet and the HIAL is inoperative, how much must the 1 SM advisory visibility be increased?',a:'The visibility must be increased to 1 1/2 SM.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What visual references are required to continue an approach below DH or MDA?',a:'References include the runway, threshold, touchdown zone, approach lights, or runway lights, and they must be distinctly visible and identifiable.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Are published landing visibilities limiting for the purpose of landing?',a:'No, they are advisory only and intended to help pilots judge the probability of a successful landing, subject to the Approach Ban.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the maximum age for an altimeter setting to be considered current?',a:'Readings are considered current up to 90 minutes from the time of observation.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What correction should be applied to DH/MDA if the pressure is falling rapidly?',a:'A value of 10 feet should be added for every 0.01 inches of mercury drop.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the primary requirement for using straight-in landing minima?',a:'The pilot must have current wind direction, speed, and runway condition reports.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What must be verified regarding satellite integrity for a GPS approach at an alternate?',a:'The pilot must verify that approach-level RAIM or WAAS integrity is expected at the proposed ETA.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the required separation between a destination and alternate if both plan to use satellite-based approaches in most of Canada?',a:'They must be separated by a minimum of 100 NM.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What are the standard alternate minima for an aerodrome with one usable precision approach?',a:'The standard minima are 600-2 or 300-1 above the lowest usable HAT and visibility, whichever is greater.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Can an aerodrome with only a GFA forecast qualify as an alternate?',a:'Yes, provided the forecast contains no cloud lower than 1000 feet above HAT/HAA, no cumulonimbus, and visibility is at least 3 miles.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'In a TAF, when is a BECMG condition for improving weather applicable?',a:'It is applicable as of the end of the BECMG time period.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How does a TEMPO condition in a TAF affect alternate suitability?',a:'The forecast TEMPO condition must not be below the published alternate minima requirements.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the difference between NADP 1 and NADP 2?',a:'NADP 1 reduces noise close to the departure end of the runway, while NADP 2 reduces noise over areas more distant.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'At what altitude does the altitude correction for cold temperatures typically begin?',a:'It begins at 0°C or, if the MDA/DA is 1000 feet HAA or higher, at +10°C.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Do ATC assigned vectoring altitudes require pilot temperature correction?',a:'No, vectoring altitudes assigned by ATC are already temperature corrected.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'If a pilot applies an altitude correction to a mandatory altitude, what must they do?',a:'They should advise ATC of the temperature corrected altitude prior to crossing the associated waypoint.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the standard transition altitude within the Southern Domestic Airspace (SDA)?',a:'The transition altitude is 18,000 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What color are smoothed contour lines and tints on procedure charts?',a:'They are printed in brown.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does a circle over a radio aid, intersection, or waypoint symbol denote?',a:'It denotes an RNAV flyover point.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the standard radius for a Minimum Sector Altitude (MSA)?',a:'The radius is 25 NM unless otherwise specified.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the objective of a Terminal Arrival Area (TAA)?',a:'The objective is to provide a seamless transition from the enroute structure to the terminal environment for GNSS-equipped aircraft.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What are the three main areas of a TAA?',a:'They are the straight-in area, the left base area, and the right base area.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the standard radius of the straight-in area of a TAA?',a:'It is a 30 NM arc from the IAWPC/IWP.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'NoPT\' indicate in a TAA sector?',a:'It indicates that no procedure turn or course reversal is required when arriving from that sector.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When is an \'Attention All Users Page\' (AAUP) provided?',a:'It is provided for specific operational requirements like PRM approaches or established RNP AR procedures.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the temperature limit shown for uncompensated Baro VNAV systems?',a:'It indicates the range outside of which the LNAV/VNAV procedure is not authorized.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does the note \'RF Required\' mean?',a:'It means the procedure requires aircraft capable of flying radius-to-fix segments.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define Constant Descent Angle (CDA).',a:'CDA is a technique for flying the final approach segment as a constant descent from an altitude at or above the FAF.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What point is the CDA normally projected from for straight-in alignments?',a:'It is projected from a point 50 feet above the runway threshold.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does the bold distance and altitude in a CDA table represent?',a:'It is the initial descent altitude, representing where the highest initial segment altitude meets the constant descent angle.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How are distances typically referenced in a CDA distance/altitude table?',a:'They are normally referenced from the MAP or MAWP.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is Height Above Aerodrome (HAA) used for?',a:'HAA is the height of the MDA above the aerodrome elevation and is charted for all circling minima.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is Height Above Touchdown (HAT) used for?',a:'HAT is the height of the DA or MDA above the Touchdown Zone Elevation (TDZE).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define Touchdown Zone (TDZ).',a:'TDZ is the first 3000 feet of the runway or the first third of the runway, whichever is less.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is a \'Duplicate Procedure\'?',a:'It is one of two or more approach procedures to the same runway that cannot be uniquely distinguished by navigation type alone, identified by a suffix like \'Z\' or \'Y\'.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the first part of an instrument procedure identification?',a:'It indicates the primary navigation type required for final approach lateral guidance.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does the suffix \'(TRUE)\' indicate on an approach chart?',a:'It identifies the procedure as existing in Northern Domestic Airspace (NDA).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How often are the CAP and RCAP issued?',a:'They are issued every 56 days.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Who is responsible for all Canadian civil aeronautical information?',a:'NAV CANADA is responsible.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Accelerate Stop Distance Available\' (ASDA).',a:'It is the length of the take-off run available plus the length of the stopway, if provided.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is a \'Clearway\'?',a:'A defined rectangular area on the ground or water under the control of the appropriate authority selected as a suitable area for initial climb.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'Dead Reckoning\' mean in the context of an approach?',a:'It is the estimating of position by advancing an earlier known position using direction, time, and speed data.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is a \'Hazard Beacon\'?',a:'An aeronautical beacon used to designate a danger to air navigation.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Landing Distance Available\' (LDA).',a:'The length of runway declared available and suitable for the ground run of an aeroplane landing.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Take Off Run Available\' (TORA).',a:'The length of runway declared available and suitable for the ground run of an aeroplane taking off.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the \'Threshold Crossing Height\' (TCH)?',a:'The height of the glide path above the runway threshold.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Transition Altitude\'.',a:'The altitude at or below which the vertical position of an aircraft is defined by reference to altitudes.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the \'Vertical Path Angle\' (VPA)?',a:'A constant flight path angle defined by Barometric Vertical Navigation or WAAS.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Waypoint\'.',a:'A specified geographical location used to define an area navigation route or flight path.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the purpose of \'Designated Mountainous Regions\'?',a:'They establish higher minimum IFR altitudes for obstacle clearance.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the minimum obstacle clearance in Mountainous Areas 1 and 5?',a:'The clearance is at least 2000 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the minimum obstacle clearance in Mountainous Areas 2, 3, and 4?',a:'The clearance is at least 1500 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'In winter, what altitude should be flown on designated airways in mountainous regions?',a:'At least 1000 feet higher than the published MEA/MOCA.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Can tower observed visibility take precedence over METAR ground visibility?',a:'No, it is generally considered advisory only if ground visibility is reported.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'If an aerodrome\'s operating visibility is below the level of service in the CFS, are taxi operations authorized?',a:'Generally no, with specific exceptions like if visibility deteriorates after taxi has commenced.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the RVR hierarchy for departures at a site with an active tower?',a:'1. RVR for the runway of use, 2. METAR ground visibility, 3. Tower visibility, 4. Pilot visibility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What RVR sensor is \'RVR A\'?',a:'The one located adjacent to the runway threshold.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What RVR sensor is \'RVR B\'?',a:'The one located adjacent to the runway mid-point.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When can a pilot depart IFR if no visibility is published for a runway?',a:'They can use a visibility that allows obstacle avoidance, but not less than 1/2 SM.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does an asterisk next to a runway in the take-off minima refer to?',a:'It refers the pilot to specific procedures or SPEC VIS required for obstacle clearance.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Is an approach authorized if RVR is below minima but fluctuating above and below?',a:'Yes, an approach is authorized.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'For commercial operators, what is the \'CAP Advisory Visibility\' for a CAT I approach?',a:'It is typically 1/2 SM or RVR 26.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Does a runway visibility report take precedence over a ground visibility report?',a:'Yes, it does.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When does ground visibility impose an approach ban for commercial operators?',a:'It only imposes a ban at aerodromes south of 60°N latitude.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Can a commercial operator authorized by Ops Spec 019 conduct an approach at lower visibility than the general ban?',a:'Yes, they are permitted if they meet all conditions.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the DH for a precision approach if the HIAL is inoperative?',a:'It must be increased to at least 250 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Is a circling approach minima adjusted if HIAL is inoperative?',a:'No, no adjustment is required for circling minima.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How long is a current altimeter setting valid?',a:'It is valid for 90 minutes.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What should a pilot do if they lack wind or runway condition reports before landing?',a:'They are expected to make an aerial visual inspection of the runway.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When can LNAV/VNAV minima be used at an alternate?',a:'When the aircraft is certified for barometric LNAV/VNAV.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the alternate minima requirement if no IFR approach is available?',a:'Forecast weather must be no lower than 500 feet above a minimum IFR altitude permitting VFR landing.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'In an alternate forecast, how is a ceiling of 621 feet HAA rounded?',a:'It is rounded up to the next higher 100 foot increment, which is 700 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Does a TEMPO condition for deteriorating weather need to be above alternate minima?',a:'Yes, it shall not be below the published alternate minima requirements.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What speed is maintained during NADP 1 initial climb?',a:'Not less than V2 + 10 kt.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'When does a pilot transition to enroute climb speed in NADP 2?',a:'At 3000 feet AAE.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Why must altimeter settings be corrected for cold temperatures?',a:'Because pressure altimeters can over-read significantly in cold air, potentially compromising obstacle clearance.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Are altitudes underlined in a missed approach instruction considered minimums?',a:'Yes, they represent minimum altitudes even if not underlined.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does a \'Hot Spot\' on an aerodrome chart indicate?',a:'A location with a history or potential risk of collisions or runway incursions.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does a scale break and \'NOT TO SCALE\' box mean in the plan view?',a:'It means that part of the chart is not drawn to scale.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the maximum holding speed at 5000 feet ASL?',a:'The maximum assessed indicated airspeed is 200 KIAS.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the maximum holding speed for a shuttle climb?',a:'It is 310 KIAS for all altitudes.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'In which domestic airspace is the transition altitude always 18,000 feet?',a:'Southern Domestic Airspace (SDA).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How are MSA quadrants delineated?',a:'By standard cardinal bearings (090, 180, 270, 360) to the facility.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the purpose of an \'Aerodrome Operator Attestation\'?',a:'It is required for non-certified aerodromes with instrument approaches to ensure visual surfaces are assessed.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'RF Required\' on an RNAV chart mean?',a:'The aircraft must be capable of flying radius-to-fix segment types.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Is an approach authorized during LVP if it is a CAT II approach?',a:'No, low-visibility procedures restrict CAT II operations when RVR is below 1200.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Is a pilot responsible for obstacle clearance if flying a CDA?',a:'Yes, the pilot must ensure the aircraft is always at or above any minimum segment altitude.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Where is timing information found on an approach chart?',a:'In the rate of descent and timing block, usually for specific ground speeds.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does a Terrain Profile View on an ILS CAT II chart show?',a:'It shows the terrain profile along the final approach path to the touchdown point.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'SID (VECTOR)\' identify?',a:'It identifies the procedure as a vector SID.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the \'Validity Number\' in a SID name like \'WINNIPEG TWO DEP\'?',a:'A number from 1 to 9 assigned after a significant qualifying procedure amendment.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Jet Aircraft\' according to the CAP GEN.',a:'An aircraft powered by jet engines, excluding propeller powered aircraft.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the database/flight planning identification for a transition?',a:'The \'Coded Designator\', such as (BOMET6.MIVOK).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the purpose of a \'Lead Bearing/Radial\'?',a:'To assist in intercepting the intermediate course when the turn exceeds 90 degrees.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What must D/D/I equipped aircraft confirm before a PBN SID take-off roll?',a:'That the navigation system position is confirmed within 1,000 feet.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'STAR (RNAV)\' identify?',a:'It identifies the procedure as a PBN STAR.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does the coded designator (HE.HE9) represent in a STAR?',a:'The significant point (HE), the indicator (HE), and the validity number (9).',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What PBN requirements might be listed for a PBN STAR?',a:'Navigation specification (like RNAV 1), sensor limitations, and functional requirements.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What are \'Runway Guard Lights\'?',a:'Lights depicted on aerodrome charts to protect against runway incursions.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does \'AS\' represent in an approach lighting code?',a:'Visual Alignment Guidance System and Runway Identification Lights.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How is ARCAL Type J operated?',a:'Key the microphone 5 times within 5 seconds.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'How is ARCAL Type K operated for high intensity?',a:'Key the microphone 7 times initially.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What eye-to-wheel height is a PAPI for aircraft up to 45\' identified with?',a:'It is a standard civil PAPI.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What does two red lights on a PAPI indicate?',a:'The aircraft is \'slightly low\'.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Define \'Aerodrome Traffic Frequency Area\' (ATF).',a:'An area where a VHF frequency is designated to ensure all radio-equipped aircraft are listening and reporting on a common frequency.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Under what condition can a pilot\'s visibility determination replace a METAR?',a:'When neither RVR nor ground visibility is available.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'Is an approach ban applicable if the RVR is Varying?',a:'No, an approach can be completed if RVR is varying above and below minima.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What happens if an RVR report is less than ground visibility?',a:'A local phenomenon is deemed to be occurring, and ground visibility may be used for take-off minima.',ref:'IFR CAP GEN'},
+{doc:'ifrcapgen',type:'FC',q:'What is the maximum allowed indicated airspeed in a terminal segment for Category D?',a:'250 knots.',ref:'IFR CAP GEN'},
 ];
 
 // ── QUIZ FUNCTIONS ───────────────────────────────────────────────────────────
-const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH',com:'COM'};
+const DOC_LABELS = {cheatsheet:'Cheat Sheet',capgen:'CAP GEN',afm:'AFM',qrh:'QRH',com:'COM',ifrcapgen:'IFR CAP GEN'};
 let _backTarget = null;
 function goBack() {
   if (_backTarget) {
@@ -4098,20 +4227,24 @@ function openHub(){
 let GAME = null;
 const GAME_COLORS = ['#3b82f6','#f59e0b','#22c55e','#a78bfa','#ec4899','#14b8a6'];
 const GAME_CATEGORIES = [
-  {id:'navajo', label:'Navajo Systems', icon:'✈️', desc:'Cheat Sheet, CAP GEN, AFM & QRH combined.', docs:['cheatsheet','capgen','afm','qrh'], available:true},
-  {id:'com',    label:'Company Ops Manual', icon:'📘', desc:'Dispatch, duty times, weather minima & approach policy.', docs:['com'], available:true},
-  {id:'sop',    label:'SOP', icon:'📖', desc:'Standard Operating Procedures -- coming once that batch is in.', docs:['sop'], available:false},
+  {id:'navajo',    label:'Navajo Systems', icon:'✈️', desc:'Cheat Sheet, CAP GEN, AFM & QRH combined.', docs:['cheatsheet','capgen','afm','qrh'], available:true},
+  {id:'com',       label:'Company Ops Manual', icon:'📘', desc:'Dispatch, duty times, weather minima & approach policy.', docs:['com'], available:true},
+  {id:'ifrcapgen', label:'IFR CAP GEN', icon:'🧭', desc:'Decision altitudes, visibility minima, charts & procedures.', docs:['ifrcapgen'], available:true},
+  {id:'sop',       label:'SOP', icon:'📖', desc:'Standard Operating Procedures -- coming once that batch is in.', docs:['sop'], available:false},
 ];
 
 function gamePool(catId){
   const cat = GAME_CATEGORIES.find(c=>c.id===catId);
   if(!cat) return [];
-  return QUIZ_DB.filter(q=>cat.docs.includes(q.doc));
+  // Multiple-choice is excluded from Game Night: tapping an option never
+  // showed whether it was right or what the correct answer was, so every
+  // question here plays as a flashcard (question + answer, self-reported).
+  return QUIZ_DB.filter(q=>cat.docs.includes(q.doc) && q.type!=='MC');
 }
 
 function openGamePicker(){
   switchView('view-game','Game Night');
-  GAME = {step:'category', category:null, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0};
+  GAME = {step:'category', category:null, mode:null, setupStep:1, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0};
   renderGame();
 }
 
@@ -4148,6 +4281,8 @@ function renderGameCategory(){
 function selectGameCategory(id){
   GAME.category = id;
   GAME.step = 'setup';
+  GAME.setupStep = 1;
+  GAME.mode = null;
   GAME.players = [];
   GAME.questionsPerPlayer = 10;
   GAME.consequence = '';
@@ -4166,51 +4301,129 @@ function removeGamePlayer(i){ GAME.players.splice(i,1); renderGame(); }
 function setGameQCount(v){ GAME.questionsPerPlayer=v; renderGame(); }
 function backToGameCategory(){ GAME.step='category'; renderGame(); }
 
-function renderGameSetup(){
-  const cat = GAME_CATEGORIES.find(c=>c.id===GAME.category);
-  const n = GAME.players.length;
-  const isSolo = n<=1;
+// Setup is a step-by-step wizard, and how many steps there are depends
+// on the mode: solo skips both the Players step and the Stakes step
+// (neither means anything when you're playing alone), so it's just
+// Mode -> Length. Party is the full Mode -> Players -> Length -> Stakes.
+function gameSetupSteps(){ return GAME.mode==='solo' ? ['Mode','Length'] : ['Mode','Players','Length','Stakes']; }
+
+function setGameMode(mode){
+  GAME.mode = mode;
+  GAME.players = mode==='solo' ? [{name:'You', color:GAME_COLORS[0], score:0}] : [];
+  GAME.setupStep = 2;
+  renderGame();
+}
+
+function gameSetupNext(){
+  const steps = gameSetupSteps();
+  if(GAME.mode==='party' && GAME.setupStep===2 && GAME.players.length<1) return;
+  if(GAME.setupStep>=steps.length){ startGame(); return; }
+  GAME.setupStep++;
+  renderGame();
+}
+function gameSetupBack(){
+  if(GAME.setupStep<=1){ backToGameCategory(); return; }
+  GAME.setupStep--;
+  renderGame();
+}
+
+function renderGameStepTrail(){
+  const steps = GAME.mode ? gameSetupSteps() : ['Mode','Players','Length','Stakes'];
+  const current = GAME.setupStep;
+  let dots = '';
+  steps.forEach((label,idx)=>{
+    const n = idx+1;
+    const active = n===current, done = n<current;
+    dots += `<div style="width:24px;height:24px;border-radius:50%;background:${active||done?'var(--accent)':'var(--bg2)'};border:${active||done?'none':'1.5px solid rgba(255,255,255,0.15)'};color:${active||done?'#fff':'var(--t3)'};font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div>`;
+    if(n<steps.length) dots += `<div style="flex:1;height:2px;background:${n<current?'var(--accent)':'rgba(255,255,255,0.1)'}"></div>`;
+  });
+  const labels = steps.map((l,idx)=>`<span style="${idx+1===current?'color:#93c5fd':''}">${l}</span>`).join('');
   return `
-  <div class="hero" style="margin-bottom:16px">
-    <div class="hero-icon" style="font-size:28px;margin-bottom:8px">${cat.icon}</div>
-    <div class="hero-title" style="font-size:20px">${cat.label}</div>
-    <div class="hero-sub">Set up your round</div>
-  </div>
-  <div style="max-width:480px">
-    <div class="quiz-filter-label">Players</div>
-    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-      ${GAME.players.map((p,i)=>`
-        <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid ${p.color};border-radius:20px;padding:6px 10px 6px 6px">
-          <div style="width:22px;height:22px;border-radius:50%;background:${p.color};color:#08111f;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.name.charAt(0).toUpperCase()}</div>
-          <span style="font-size:13px;font-weight:600;color:var(--t1)">${p.name}</span>
-          <span onclick="removeGamePlayer(${i})" style="color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px">&#10005;</span>
-        </div>`).join('')}
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:6px">
-      <input id="gameNewPlayer" placeholder="Player name..." maxlength="16" onkeydown="if(event.key==='Enter'){event.preventDefault();addGamePlayer();}" style="flex:1;background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px">
-      <button onclick="addGamePlayer()" ${n>=6?'disabled':''} style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:700;cursor:pointer">Add</button>
-    </div>
-    <div style="font-size:11px;color:var(--t3);margin-bottom:20px">${isSolo? '1 player &mdash; solo practice mode' : n+' players &mdash; party mode'}${n>=6?' &middot; max 6 players':''}</div>
+  <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;max-width:420px">${dots}</div>
+  <div style="display:flex;justify-content:space-between;margin-bottom:24px;font-size:9px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.3px;max-width:420px">${labels}</div>`;
+}
 
-    <div class="quiz-filter-label">Questions per player</div>
-    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-      ${[5,10,15,'all'].map(v=>{
-        const active = GAME.questionsPerPlayer===v;
-        const arg = v==='all' ? "'all'" : v;
-        return `<div onclick="setGameQCount(${arg})" style="padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700;background:${active?'var(--accent)':'var(--bg2)'};border:1px solid ${active?'var(--accent)':'rgba(255,255,255,0.1)'};color:${active?'#fff':'var(--t2)'}">${v==='all'?'All':v}</div>`;
-      }).join('')}
-    </div>
-
-    ${!isSolo?`
-    <div class="quiz-filter-label">Loser's consequence</div>
-    <textarea id="gameConsequence" placeholder="e.g. Buys coffee for everyone tomorrow" oninput="GAME.consequence=this.value" style="width:100%;min-height:60px;background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;color:var(--t1);font-size:13px;margin-bottom:22px;font-family:inherit;resize:vertical">${GAME.consequence||''}</textarea>
-    `:''}
-
-    <div style="display:flex;gap:10px">
-      <button onclick="backToGameCategory()" style="flex:none;padding:13px 18px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Back</button>
-      <button onclick="startGame()" ${n<1?'disabled':''} style="flex:1;padding:13px;border-radius:12px;background:var(--accent);color:#fff;font-size:14px;font-weight:800;cursor:pointer;border:none;opacity:${n<1?0.5:1}">Start ${isSolo?'practice':'game'}</button>
-    </div>
+function renderGameStepNav(nextDisabled, isFinal){
+  const label = isFinal ? (GAME.mode==='solo'?'Start practice':'Start game') : 'Next &rarr;';
+  return `
+  <div style="display:flex;gap:10px">
+    <button onclick="gameSetupBack()" style="flex:none;padding:13px 18px;border-radius:12px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Back</button>
+    <button onclick="gameSetupNext()" ${nextDisabled?'disabled':''} style="flex:1;padding:13px;border-radius:12px;background:var(--accent);color:#fff;font-size:14px;font-weight:800;cursor:pointer;border:none;opacity:${nextDisabled?0.5:1}">${label}</button>
   </div>`;
+}
+
+function renderGameSetup(){
+  if(!GAME.setupStep) GAME.setupStep = 1;
+  const cat = GAME_CATEGORIES.find(c=>c.id===GAME.category);
+  const trail = renderGameStepTrail();
+
+  if(GAME.setupStep===1) return trail + `
+    <div style="text-align:center;margin-bottom:10px"><span style="font-size:32px">${cat.icon}</span></div>
+    <div style="font-size:17px;font-weight:800;color:var(--t1);text-align:center;margin-bottom:4px">How do you want to play?</div>
+    <div style="font-size:12px;color:var(--t2);text-align:center;margin-bottom:22px">${cat.label}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;max-width:420px;margin:0 auto">
+      <div onclick="setGameMode('solo')" style="background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:12px;padding:14px;text-align:center;font-size:14px;font-weight:800;color:#fff;cursor:pointer">🎯 Just me &mdash; solo</div>
+      <div onclick="setGameMode('party')" style="background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;text-align:center;font-size:14px;font-weight:700;color:var(--t1);cursor:pointer">🎉 With others</div>
+    </div>`;
+
+  if(GAME.mode==='party' && GAME.setupStep===2){
+    const n = GAME.players.length;
+    return trail + `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:800;color:var(--t1)">Who's playing?</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:2px">Add everyone taking a turn</div>
+    </div>
+    <div style="max-width:420px;margin:0 auto">
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+        ${GAME.players.map((p,i)=>`
+          <div style="display:flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid ${p.color};border-radius:20px;padding:6px 10px 6px 6px">
+            <div style="width:22px;height:22px;border-radius:50%;background:${p.color};color:#08111f;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.name.charAt(0).toUpperCase()}</div>
+            <span style="font-size:13px;font-weight:600;color:var(--t1)">${p.name}</span>
+            <span onclick="removeGamePlayer(${i})" style="color:var(--t3);cursor:pointer;font-size:13px;padding:0 2px">&#10005;</span>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:6px">
+        <input id="gameNewPlayer" placeholder="Player name..." maxlength="16" onkeydown="if(event.key==='Enter'){event.preventDefault();addGamePlayer();}" style="flex:1;background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;color:var(--t1);font-size:13px">
+        <button onclick="addGamePlayer()" ${n>=6?'disabled':''} style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:0 16px;font-size:13px;font-weight:700;cursor:pointer">Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--t3);margin-bottom:24px">${n} player${n===1?'':'s'}${n>=6?' &middot; max 6 players':''}</div>
+      ${renderGameStepNav(n<1, false)}
+    </div>`;
+  }
+
+  const isLengthStep = (GAME.mode==='solo' && GAME.setupStep===2) || (GAME.mode==='party' && GAME.setupStep===3);
+  if(isLengthStep){
+    const isFinal = GAME.mode==='solo';
+    return trail + `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:800;color:var(--t1)">How many questions?</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:2px">${GAME.mode==='solo'?'Per round':'Per player'}</div>
+    </div>
+    <div style="max-width:420px;margin:0 auto">
+      <div style="display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;justify-content:center">
+        ${[5,10,15,'all'].map(v=>{
+          const active = GAME.questionsPerPlayer===v;
+          const arg = v==='all' ? "'all'" : v;
+          return `<div onclick="setGameQCount(${arg})" style="padding:10px 20px;border-radius:20px;cursor:pointer;font-size:14px;font-weight:700;background:${active?'var(--accent)':'var(--bg2)'};border:1px solid ${active?'var(--accent)':'rgba(255,255,255,0.1)'};color:${active?'#fff':'var(--t2)'}">${v==='all'?'All':v}</div>`;
+        }).join('')}
+      </div>
+      ${renderGameStepNav(false, isFinal)}
+    </div>`;
+  }
+
+  if(GAME.mode==='party' && GAME.setupStep===4){
+    return trail + `
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="font-size:17px;font-weight:800;color:var(--t1)">What's the stakes?</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:2px">Whoever scores lowest owes this</div>
+    </div>
+    <div style="max-width:420px;margin:0 auto">
+      <textarea id="gameConsequence" placeholder="e.g. Buys coffee for everyone tomorrow" oninput="GAME.consequence=this.value" style="width:100%;min-height:70px;background:var(--bg2);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px;color:var(--t1);font-size:13px;margin-bottom:24px;font-family:inherit;resize:vertical">${GAME.consequence||''}</textarea>
+      ${renderGameStepNav(false, true)}
+    </div>`;
+  }
+
+  return trail;
 }
 
 function startGame(){
@@ -4256,7 +4469,6 @@ function renderGameQuestion(){
   const q = GAME.queue[GAME.qIndex];
   const isSolo = GAME.players.length<=1;
   const player = GAME.players[GAME.qIndex % GAME.players.length];
-  const isMC = q.type==='MC' && q.options;
 
   const header = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -4273,36 +4485,17 @@ function renderGameQuestion(){
   const tagRow = `<div style="margin-bottom:12px"><span class="quiz-doc-tag">${DOC_LABELS[q.doc]||q.doc}</span></div>`;
   const questionText = `<div style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:20px">${q.q}</div>`;
 
-  let body;
-  if(isMC){
-    const opts = q.options.split('|').map(o=>o.trim());
-    body = `<div style="display:flex;flex-direction:column;gap:9px">
-      ${opts.map(o=>{
-        const letter = o.charAt(0);
-        const rest = o.slice(3);
-        return `<div onclick="answerGameMC('${letter}')" style="display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:10px;background:var(--bg2);border:1px solid rgba(255,255,255,0.1);color:var(--t1);font-size:13px;font-weight:600;cursor:pointer">
-          <span style="width:22px;height:22px;border-radius:6px;background:var(--bg3);color:var(--t2);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${letter}</span>${rest}
-        </div>`;
-      }).join('')}
+  const body = `
+    <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:16px;margin-bottom:16px">
+      <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px">Answer</div>
+      <div style="font-size:15px;font-weight:600;color:var(--t1)">${q.a}</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div onclick="answerGameReveal(true)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--green);font-weight:800;font-size:13px;cursor:pointer">&#10003; Got it right</div>
+      <div onclick="answerGameReveal(false)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);font-weight:800;font-size:13px;cursor:pointer">&#10005; Missed it</div>
     </div>`;
-  } else {
-    body = `
-      <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:16px;margin-bottom:16px">
-        <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px">Answer</div>
-        <div style="font-size:15px;font-weight:600;color:var(--t1)">${q.a}</div>
-      </div>
-      <div style="display:flex;gap:10px">
-        <div onclick="answerGameReveal(true)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--green);font-weight:800;font-size:13px;cursor:pointer">&#10003; Got it right</div>
-        <div onclick="answerGameReveal(false)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);font-weight:800;font-size:13px;cursor:pointer">&#10005; Missed it</div>
-      </div>`;
-  }
 
   return header + tagRow + questionText + body + (isSolo?'':renderGameScoreboardStrip());
-}
-
-function answerGameMC(letter){
-  const q = GAME.queue[GAME.qIndex];
-  handleGameAnswerResult(letter===q.correct);
 }
 function answerGameReveal(correct){
   handleGameAnswerResult(correct);
