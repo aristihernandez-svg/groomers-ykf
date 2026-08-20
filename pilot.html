@@ -4244,7 +4244,7 @@ function gamePool(catId){
 
 function openGamePicker(){
   switchView('view-game','Trivia');
-  GAME = {step:'category', category:null, mode:null, setupStep:1, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0, revealed:false};
+  GAME = {step:'category', category:null, mode:null, setupStep:1, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0, revealed:false, missed:[]};
   renderGame();
 }
 
@@ -4434,6 +4434,7 @@ function startGame(){
   for(let i=0;i<total;i++) GAME.queue.push(pool[i % pool.length]);
   GAME.qIndex = 0;
   GAME.revealed = false;
+  GAME.missed = [];
   GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
 }
@@ -4505,6 +4506,7 @@ function answerGameReveal(correct){
 function handleGameAnswerResult(correct){
   const player = GAME.players[GAME.qIndex % GAME.players.length];
   if(correct) player.score++;
+  else GAME.missed.push(GAME.queue[GAME.qIndex]);
   advanceGameQuestion();
 }
 function advanceGameQuestion(){
@@ -4513,6 +4515,30 @@ function advanceGameQuestion(){
   if(GAME.qIndex >= GAME.queue.length) GAME.step = 'results';
   else GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
+}
+
+// Quick "what to study next" recap -- groups every missed question by its
+// existing ref tag (e.g. "COM · Section 4") so the takeaway is a handful
+// of topics, not a re-listing of every question that went wrong.
+function renderGameMissedSummary(){
+  if(!GAME.missed.length) return '';
+  const counts = {};
+  GAME.missed.forEach(q=>{
+    const key = q.ref || DOC_LABELS[q.doc] || q.doc;
+    counts[key] = (counts[key]||0) + 1;
+  });
+  const sorted = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  return `
+  <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left">
+    <div style="font-size:11px;font-weight:800;letter-spacing:.5px;color:var(--amber);text-transform:uppercase;margin-bottom:10px">Worth a review</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${sorted.map(([topic,count])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--t1)">
+          <span>${topic}</span>
+          <span style="color:var(--t3);font-weight:700;flex-shrink:0">${count} missed</span>
+        </div>`).join('')}
+    </div>
+  </div>`;
 }
 
 function renderGameResults(){
@@ -4524,6 +4550,7 @@ function renderGameResults(){
       <div style="font-size:34px">🎯</div>
       <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin:8px 0 2px">Your score</div>
       <div style="font-size:32px;font-weight:800;color:var(--t1);margin-bottom:22px">${p.score} / ${GAME.queue.length}</div>
+      ${renderGameMissedSummary()}
       <div style="display:flex;gap:8px">
         <button onclick="playGameAgain()" style="flex:1;padding:12px;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border:none;cursor:pointer">Play again</button>
         <button onclick="openHub()" style="flex:1;padding:12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Back to hub</button>
@@ -4548,11 +4575,12 @@ function renderGameResults(){
           <span style="font-size:13px;font-weight:800;color:var(--t1)">${p.score} pt${p.score===1?'':'s'}</span>
         </div>`).join('')}
     </div>
-    ${(!allTied && GAME.consequence)?`
+    ${!allTied?`
     <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:16px;margin-bottom:20px">
       <div style="font-size:11px;font-weight:800;letter-spacing:.5px;color:#fca5a5;text-transform:uppercase;margin-bottom:6px">${loser.name}'s consequence</div>
-      <div style="font-size:15px;font-weight:700;color:var(--t1)">${GAME.consequence}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--t1)">${GAME.consequence||''}</div>
     </div>`:''}
+    ${renderGameMissedSummary()}
     <div style="display:flex;gap:8px">
       <button onclick="playGameAgain()" style="flex:1;padding:12px;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border:none;cursor:pointer">Play again</button>
       <button onclick="openHub()" style="flex:1;padding:12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Back to hub</button>
