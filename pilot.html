@@ -4111,7 +4111,7 @@ function gamePool(catId){
 
 function openGamePicker(){
   switchView('view-game','Game Night');
-  GAME = {step:'category', category:null, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0, revealed:false, missedAnswer:''};
+  GAME = {step:'category', category:null, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0};
   renderGame();
 }
 
@@ -4122,7 +4122,6 @@ function renderGame(){
   else if(GAME.step==='setup') root.innerHTML = renderGameSetup();
   else if(GAME.step==='passing') root.innerHTML = renderGamePassing();
   else if(GAME.step==='question') root.innerHTML = renderGameQuestion();
-  else if(GAME.step==='steal') root.innerHTML = renderGameSteal();
   else if(GAME.step==='results') root.innerHTML = renderGameResults();
 }
 
@@ -4194,8 +4193,12 @@ function renderGameSetup(){
     <div style="font-size:11px;color:var(--t3);margin-bottom:20px">${isSolo? '1 player &mdash; solo practice mode' : n+' players &mdash; party mode'}${n>=6?' &middot; max 6 players':''}</div>
 
     <div class="quiz-filter-label">Questions per player</div>
-    <div style="display:flex;gap:8px;margin-bottom:20px">
-      ${[5,10,15].map(v=>`<div onclick="setGameQCount(${v})" style="padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700;background:${GAME.questionsPerPlayer===v?'var(--accent)':'var(--bg2)'};border:1px solid ${GAME.questionsPerPlayer===v?'var(--accent)':'rgba(255,255,255,0.1)'};color:${GAME.questionsPerPlayer===v?'#fff':'var(--t2)'}">${v}</div>`).join('')}
+    <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+      ${[5,10,15,'all'].map(v=>{
+        const active = GAME.questionsPerPlayer===v;
+        const arg = v==='all' ? "'all'" : v;
+        return `<div onclick="setGameQCount(${arg})" style="padding:8px 16px;border-radius:20px;cursor:pointer;font-size:13px;font-weight:700;background:${active?'var(--accent)':'var(--bg2)'};border:1px solid ${active?'var(--accent)':'rgba(255,255,255,0.1)'};color:${active?'#fff':'var(--t2)'}">${v==='all'?'All':v}</div>`;
+      }).join('')}
     </div>
 
     ${!isSolo?`
@@ -4213,11 +4216,10 @@ function renderGameSetup(){
 function startGame(){
   const pool = shuffle(gamePool(GAME.category).slice());
   if(!pool.length){ toastGame('No questions available for this set yet.'); return; }
-  const total = GAME.players.length * GAME.questionsPerPlayer;
+  const total = GAME.questionsPerPlayer==='all' ? pool.length : GAME.players.length * GAME.questionsPerPlayer;
   GAME.queue = [];
   for(let i=0;i<total;i++) GAME.queue.push(pool[i % pool.length]);
   GAME.qIndex = 0;
-  GAME.revealed = false;
   GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
 }
@@ -4238,13 +4240,12 @@ function renderGameScoreboardStrip(){
 
 function renderGamePassing(){
   const player = GAME.players[GAME.qIndex % GAME.players.length];
-  const turnNum = Math.floor(GAME.qIndex / GAME.players.length) + 1;
   return `
   <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;min-height:300px">
     <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px">Pass the device to</div>
     <div style="width:84px;height:84px;border-radius:50%;background:${player.color};color:#08111f;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center">${player.name.charAt(0).toUpperCase()}</div>
     <div style="font-size:26px;font-weight:800;color:var(--t1)">${player.name}</div>
-    <div style="font-size:12px;color:var(--t2)">Question ${turnNum} of ${GAME.questionsPerPlayer}</div>
+    <div style="font-size:12px;color:var(--t2)">Question ${GAME.qIndex+1} of ${GAME.queue.length}</div>
     <button onclick="beginGameQuestion()" style="margin-top:10px;background:var(--accent);color:#fff;padding:13px 34px;border-radius:12px;font-size:14px;font-weight:800;border:none;cursor:pointer">I'm ready &rarr;</button>
   </div>
   ${renderGameScoreboardStrip()}`;
@@ -4255,7 +4256,6 @@ function renderGameQuestion(){
   const q = GAME.queue[GAME.qIndex];
   const isSolo = GAME.players.length<=1;
   const player = GAME.players[GAME.qIndex % GAME.players.length];
-  const turnNum = Math.floor(GAME.qIndex / GAME.players.length) + 1;
   const isMC = q.type==='MC' && q.options;
 
   const header = `
@@ -4264,7 +4264,7 @@ function renderGameQuestion(){
         <div style="width:20px;height:20px;border-radius:50%;background:${player.color};color:#08111f;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${player.name.charAt(0).toUpperCase()}</div>
         <span style="font-size:12px;font-weight:700;color:var(--t1)">${player.name}'s turn</span>
       </div>`}
-      <span style="font-size:11px;color:var(--t3);font-weight:700">Q${turnNum} / ${GAME.questionsPerPlayer}</span>
+      <span style="font-size:11px;color:var(--t3);font-weight:700">Q${GAME.qIndex+1} / ${GAME.queue.length}</span>
     </div>
     <div style="height:3px;background:var(--bg3);border-radius:3px;margin-bottom:18px;overflow:hidden">
       <div style="height:100%;width:${(GAME.qIndex/GAME.queue.length)*100}%;background:var(--accent)"></div>
@@ -4285,7 +4285,7 @@ function renderGameQuestion(){
         </div>`;
       }).join('')}
     </div>`;
-  } else if(GAME.revealed){
+  } else {
     body = `
       <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px">Answer</div>
@@ -4295,69 +4295,28 @@ function renderGameQuestion(){
         <div onclick="answerGameReveal(true)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--green);font-weight:800;font-size:13px;cursor:pointer">&#10003; Got it right</div>
         <div onclick="answerGameReveal(false)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);font-weight:800;font-size:13px;cursor:pointer">&#10005; Missed it</div>
       </div>`;
-  } else {
-    body = `<div onclick="revealGameAnswer()" style="text-align:center;padding:14px;border-radius:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.35);color:var(--accent);font-weight:800;font-size:14px;cursor:pointer">Reveal answer</div>`;
   }
 
   return header + tagRow + questionText + body + (isSolo?'':renderGameScoreboardStrip());
 }
 
-function revealGameAnswer(){ GAME.revealed = true; renderGame(); }
 function answerGameMC(letter){
   const q = GAME.queue[GAME.qIndex];
-  handleGameAnswerResult(letter===q.correct, q.a);
+  handleGameAnswerResult(letter===q.correct);
 }
 function answerGameReveal(correct){
-  const q = GAME.queue[GAME.qIndex];
-  handleGameAnswerResult(correct, q.a);
+  handleGameAnswerResult(correct);
 }
-function handleGameAnswerResult(correct, answerText){
+function handleGameAnswerResult(correct){
   const player = GAME.players[GAME.qIndex % GAME.players.length];
-  if(correct){
-    player.score++;
-    advanceGameQuestion();
-  } else if(GAME.players.length>1){
-    GAME.missedAnswer = answerText;
-    GAME.step = 'steal';
-    renderGame();
-  } else {
-    advanceGameQuestion();
-  }
+  if(correct) player.score++;
+  advanceGameQuestion();
 }
 function advanceGameQuestion(){
   GAME.qIndex++;
-  GAME.revealed = false;
   if(GAME.qIndex >= GAME.queue.length) GAME.step = 'results';
   else GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
-}
-
-function renderGameSteal(){
-  const missedIdx = GAME.qIndex % GAME.players.length;
-  const player = GAME.players[missedIdx];
-  const others = GAME.players.filter((p,i)=>i!==missedIdx);
-  return `
-  <div style="text-align:center;max-width:420px;margin:0 auto">
-    <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.35);color:#fca5a5;font-size:11px;font-weight:800;letter-spacing:.5px;padding:5px 12px;border-radius:14px;margin-bottom:14px">&#10005; ${player.name.toUpperCase()} MISSED IT</div>
-    <div style="background:var(--bg2);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left">
-      <div style="font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;margin-bottom:6px">Correct answer</div>
-      <div style="font-size:15px;font-weight:700;color:var(--t1)">${GAME.missedAnswer}</div>
-    </div>
-    <div style="font-size:13px;font-weight:700;color:var(--t2);margin-bottom:12px">Anyone want to steal it?</div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      ${others.map(p=>{
-        const idx = GAME.players.indexOf(p);
-        return `<div onclick="stealGamePoint(${idx})" style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;background:var(--bg2);border:1px solid ${p.color};color:var(--t1);font-size:14px;font-weight:700;cursor:pointer">
-          <div style="width:24px;height:24px;border-radius:50%;background:${p.color};color:#08111f;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${p.name.charAt(0).toUpperCase()}</div>${p.name} steals it
-        </div>`;
-      }).join('')}
-      <div onclick="advanceGameQuestion()" style="padding:12px 14px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.1);color:var(--t3);font-size:13px;font-weight:700;margin-top:4px;cursor:pointer">No one &mdash; move on</div>
-    </div>
-  </div>`;
-}
-function stealGamePoint(idx){
-  GAME.players[idx].score++;
-  advanceGameQuestion();
 }
 
 function renderGameResults(){
@@ -4368,7 +4327,7 @@ function renderGameResults(){
     <div style="text-align:center;max-width:420px;margin:0 auto">
       <div style="font-size:34px">🎯</div>
       <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin:8px 0 2px">Your score</div>
-      <div style="font-size:32px;font-weight:800;color:var(--t1);margin-bottom:22px">${p.score} / ${GAME.questionsPerPlayer}</div>
+      <div style="font-size:32px;font-weight:800;color:var(--t1);margin-bottom:22px">${p.score} / ${GAME.queue.length}</div>
       <div style="display:flex;gap:8px">
         <button onclick="playGameAgain()" style="flex:1;padding:12px;border-radius:10px;background:var(--accent);color:#fff;font-size:13px;font-weight:800;border:none;cursor:pointer">Play again</button>
         <button onclick="openHub()" style="flex:1;padding:12px;border-radius:10px;background:transparent;border:1px solid rgba(255,255,255,0.12);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">Back to hub</button>
