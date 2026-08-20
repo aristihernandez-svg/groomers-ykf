@@ -1,0 +1,46 @@
+Set Name,Type (Flashcard/Quiz),Question / Front,Answer / Back,Options (for Quiz),Correct Answer (for Quiz)
+Flashcards - General,Flashcard,What is the legal name of the company doing business as SkyCare Air Ambulance & Charters?,2080061 Ontario Inc.,,
+Flashcards - General,Flashcard,How are significant changes in content indicated within the Company Operations Manual?,By change bars in the right-hand margin horizontally aligned with the respective change.,,
+Flashcards - General,Flashcard,"Once an amendment is approved by Transport Canada, within how many days must it be inserted into the Manual?",Within 30 days of approval.,,
+Flashcards - General,Flashcard,Flight crew members must advise the company if they have not received a new license document within how many days of an endorsement?,By no later than sixty (60) days after the date of endorsement.,,
+Flashcards - General,Flashcard,"What operational conditions always require Chief Pilot approval, regardless of release level?","1) No PAPI and/or VNAV, 2) IMC Circling Approach, 3) Slush runway conditions, 4) Lodge runways, 5) Any non-standard operations.",,
+Flashcards - General,Flashcard,Where is the current information on aircraft locations maintained at the main base?,At the flight follower's desk.,,
+Flashcards - General,Flashcard,Who is responsible for passing landing and departure messages to the Company Flight Follower?,The Pilot-in-Command (PIC).,,
+Flashcards - General,Flashcard,What are the Sat Tracker reporting intervals for airborne versus stationary aircraft?,10 minutes while airborne and 1 hour when stationary.,,
+Flashcards - General,Flashcard,Flight followers must provide advance written notice of international flights to the FAA using which form?,FAA Form A001.,,
+Flashcards - General,Flashcard,What is the prohibited practice for revenue passengers during international operations in the USA?,They may not be transported from point to point within the U.S.A.,,
+Flashcards - General,Flashcard,For how long must Operational Flight Plans (OFPs) be retained?,For a period of six months.,,
+Flashcards - General,Flashcard,If a Medevac delay exceeds how many minutes must a reason be recorded in the Pilot notes?,Exceeding 60 minutes (on all legs).,,
+Flashcards - General,Flashcard,"If a passenger refuses to be weighed, how is their 'volunteered weight' adjusted for calculation?","10 lbs is added to the volunteered weight, plus clothing allowance (8 lbs in summer, 14 lbs in winter).",,
+Flashcards - General,Flashcard,What are the clothing weight allowances for Summer and Winter?,"Summer: 8 lbs, Winter: 14 lbs.",,
+Flashcards - General,Flashcard,"According to the segmented weight chart, what is the standard weight used for an infant (under 2)?",30 lbs.,,
+Flashcards - General,Flashcard,Which type of company communication provides rapid dissemination of 'operationally critical' information?,Operational (Ops) Directive.,,
+Flashcards - General,Flashcard,What is the primary difference between an Ops Directive and an Ops Bulletin?,Ops Directives are for operationally critical info and require electronic sign-off. Bulletins are for non-critical info and have no sign-off.,,
+Flashcards - General,Flashcard,What is used as the primary means for the Technical Dispatch of an aircraft?,The aircraft Journey Logbook.,,
+Flashcards - General,Flashcard,Where are the due dates for deferred defects located in the aircraft Journey Logbook?,On the inside cover on the 'Deferred Defect List'.,,
+Flashcards - Section 5,Flashcard,Mnemonic for Charter Flight Time Limits: 10-3-1. What does '10' represent?,"1,000 hours in 365 consecutive days.",,
+Flashcards - Section 5,Flashcard,Mnemonic for Charter Flight Time Limits: 10-3-1. What does '3' represent?,300 hours in 90 consecutive days.,,
+Flashcards - Section 5,Flashcard,Mnemonic for Charter Flight Time Limits: 10-3-1. What does '1' represent?,112 hours in 30 consecutive days (reminder of the 100+ threshold).,,
+Flashcards - Section 5,Flashcard,What is the maximum flight time limit for a single-pilot IFR charter operation in 24 hours?,8 hours in any 24 consecutive hours.,,
+Flashcards - Section 5,Flashcard,What is the definition of a 'Green' Captain under the Green-on-Green Policy?,A Captain with less than 100 hours PIC on type and less than 100 hours at the Company.,,
+Flashcards - Section 5,Flashcard,What are the maximum work hours in any 28 consecutive days for charter crew?,192 hours of work.,,
+Flashcards - Section 5,Flashcard,What is the standard minimum rest period at home base?,"12 hours, or 11 hours plus travel time, or 10 hours if suitable accommodation is provided.",,
+Flashcards - Section 5,Flashcard,What is the standard minimum rest period away from home base?,10 hours in suitable accommodation.,,
+Flashcards - Section 5,Flashcard,How are flight crew reserve availability periods restricted in duration?,A reserve availability period must not exceed 14 consecutive hours.,,
+Flashcards - Section 5,Flashcard,"What are the Medevac flight time limitations for 365, 90, and 30 days?","1,200 hours in 365 days; 300 hours in 90 days; 120 hours in 30 days (100 hours if on call).",,
+Flashcards - Section 5,Flashcard,What is the maximum flight duty period for any Medevac flight assignment?,14 hours.,,
+Quiz - Section 4,Quiz,"Under SkyCare Stabilized Approach Policy, by what altitude must the aircraft be stabilized on track, slope, speed, and configuration in VFR conditions?",500 feet AGL,A) 1000 feet AGL | B) 500 feet AGL | C) 300 feet AGL | D) 200 feet AGL,B
+Quiz - Section 4,Quiz,"Under IFR conditions, what is the height above airport elevation by which the aircraft must be stabilized?",1000 feet above airport elevation,A) 500 feet | B) 1000 feet above airport elevation | C) 1500 feet | D) Final Approach Fix,B
+Quiz - Section 4,Quiz,"If a pilot loses situational awareness or becomes confused during an approach, what specific vocal call is mandated?",'CRM overshoot',A) 'Go-around' | B) 'Missed approach' | C) 'CRM overshoot' | D) 'Abort approach',C
+Quiz - Section 4,Quiz,What is the maximum wind top limit for a severe thunderstorm?,"Tops 35,000 ft or higher","A) Tops 25,000 ft | B) Tops 30,000 ft | C) Tops 35,000 ft or higher | D) Tops 50,000 ft",C
+Quiz - Section 4,Quiz,What distance must be maintained from any severe thunderstorm or intense radar return?,Avoid by at least 20 NM,A) 5 NM | B) 10 NM | C) 15 NM | D) At least 20 NM,D
+Quiz - Section 4,Quiz,"According to the clear air turbulence rules of thumb, what is the best flight level change strategy if severe CAT is encountered in a crosswind with a rising temperature?",Climb,A) Descend | B) Climb | C) Turn right | D) Fly parallel to the trough,B
+Quiz - Section 4,Quiz,"If symptoms of an incipient tail plane stall occur shortly after flap extension, what is the immediate recovery action?",Immediately retract the flaps to the previous setting and increase airspeed,A) Deploy full flaps and pull nose up | B) Immediately retract the flaps to the previous setting and increase airspeed | C) Close the throttles completely | D) Engage autopilot,B
+Quiz - Section 4,Quiz,"What atmospheric phenomenon is characterized by an unbroken snow cover and a uniformly overcast sky where light from the sky is about equal to that from the snow surface, leading to loss of depth and orientation?",Whiteout,A) Ground fog | B) Ice fog | C) Whiteout | D) Snowblink,C
+Quiz - Section 4,Quiz,What is the day VFR visibility and cloud clearance minima for a Control Zone (Controlled Airspace)?,"Visibility >= 3 miles, cloud clearance 500 ft vertically and 1 mile horizontally","A) Visibility >= 1 mile, clear of cloud | B) Visibility >= 3 miles, cloud clearance 500 ft vertically and 1 mile horizontally | C) Visibility >= 1 mile, 500 ft vertically and 2000 ft horizontally | D) Visibility >= 2 miles, clear of cloud",B
+Quiz - Section 4,Quiz,"For day VFR operations conducted in uncontrolled airspace below 1,000 feet AGL, what is the required visibility?",Not less than 2 miles,A) 1 mile | B) 1.5 miles | C) 2 miles | D) 3 miles,C
+Quiz - Section 4,Quiz,"Except during take-off or landing, what is the day VFR obstacle clearance height and horizontal distance limit?",Not less than 300 feet AGL / horizontal distance of 300 feet,A) 500 feet AGL / 500 feet horizontal | B) 300 feet AGL / 300 feet horizontal | C) 1000 feet AGL / 1 mile horizontal | D) 1500 feet AGL / 2 miles horizontal,B
+Quiz - Section 4,Quiz,What is the maximum crosswind component allowed for conducting a Category C Low Visibility Approach?,15 knots,A) 10 knots | B) 12 knots | C) 15 knots | D) 20 knots,C
+Quiz - Section 4,Quiz,What is the maximum allowable Flight Technical Error (FTE) during normal RNP 1 operations?,0.5 NM,A) 0.1 NM | B) 0.3 NM | C) 0.5 NM | D) 1.0 NM,C
+Quiz - Section 4,Quiz,How far prior to the Final Approach Point (FAP) must the crew verify that the GNSS approach mode indicates LP or LPV?,2 NM,A) 1 NM | B) 2 NM | C) 5 NM | D) 10 NM,B
+Quiz - Section 4,Quiz,Are flight crews permitted to conduct the Radius to Fix (RF) leg portion of RNP 1 procedures?,"No, they are not permitted to conduct RF legs.","A) Yes, with autopilot | B) Yes, by day only | C) No, they are not permitted to conduct RF legs. | D) Only with Chief Pilot verbal approval",C
