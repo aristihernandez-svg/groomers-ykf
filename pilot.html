@@ -441,7 +441,7 @@ body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSyst
       <span style="font-size:26px">🎮</span>
       <span style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;background:rgba(255,255,255,0.18);color:#fff;padding:3px 9px;border-radius:10px">NEW</span>
     </div>
-    <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:4px">Game Night</div>
+    <div style="font-size:19px;font-weight:800;color:#fff;margin-bottom:4px">Trivia</div>
     <div style="font-size:12.5px;color:rgba(255,255,255,0.85);line-height:1.5;margin-bottom:14px">Play solo to practice, or pass the device around with your crew &mdash; loser picks up a consequence.</div>
     <div style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#1d4ed8;font-size:13px;font-weight:800;padding:9px 16px;border-radius:10px">Start a round <span aria-hidden="true">&rarr;</span></div>
   </div>
@@ -4236,15 +4236,15 @@ const GAME_CATEGORIES = [
 function gamePool(catId){
   const cat = GAME_CATEGORIES.find(c=>c.id===catId);
   if(!cat) return [];
-  // Multiple-choice is excluded from Game Night: tapping an option never
+  // Multiple-choice is excluded from Trivia: tapping an option never
   // showed whether it was right or what the correct answer was, so every
   // question here plays as a flashcard (question + answer, self-reported).
   return QUIZ_DB.filter(q=>cat.docs.includes(q.doc) && q.type!=='MC');
 }
 
 function openGamePicker(){
-  switchView('view-game','Game Night');
-  GAME = {step:'category', category:null, mode:null, setupStep:1, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0};
+  switchView('view-game','Trivia');
+  GAME = {step:'category', category:null, mode:null, setupStep:1, players:[], questionsPerPlayer:10, consequence:'', queue:[], qIndex:0, revealed:false};
   renderGame();
 }
 
@@ -4262,7 +4262,7 @@ function renderGameCategory(){
   return `
   <div class="hero" style="margin-bottom:20px">
     <div class="hero-icon" style="font-size:32px;margin-bottom:10px">🎮</div>
-    <div class="hero-title">Game Night</div>
+    <div class="hero-title">Trivia</div>
     <div class="hero-sub">Pick what to play -- solo, or pass the device around</div>
   </div>
   <div style="display:flex;flex-direction:column;gap:12px;max-width:480px">
@@ -4433,6 +4433,7 @@ function startGame(){
   GAME.queue = [];
   for(let i=0;i<total;i++) GAME.queue.push(pool[i % pool.length]);
   GAME.qIndex = 0;
+  GAME.revealed = false;
   GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
 }
@@ -4485,7 +4486,7 @@ function renderGameQuestion(){
   const tagRow = `<div style="margin-bottom:12px"><span class="quiz-doc-tag">${DOC_LABELS[q.doc]||q.doc}</span></div>`;
   const questionText = `<div style="font-size:17px;font-weight:700;color:var(--t1);line-height:1.5;margin-bottom:20px">${q.q}</div>`;
 
-  const body = `
+  const body = GAME.revealed ? `
     <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:16px;margin-bottom:16px">
       <div style="font-size:10px;font-weight:800;color:var(--green);text-transform:uppercase;margin-bottom:6px">Answer</div>
       <div style="font-size:15px;font-weight:600;color:var(--t1)">${q.a}</div>
@@ -4493,10 +4494,11 @@ function renderGameQuestion(){
     <div style="display:flex;gap:10px">
       <div onclick="answerGameReveal(true)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.35);color:var(--green);font-weight:800;font-size:13px;cursor:pointer">&#10003; Got it right</div>
       <div onclick="answerGameReveal(false)" style="flex:1;text-align:center;padding:13px;border-radius:10px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);font-weight:800;font-size:13px;cursor:pointer">&#10005; Missed it</div>
-    </div>`;
+    </div>` : `<div onclick="revealGameAnswer()" style="text-align:center;padding:14px;border-radius:12px;background:rgba(37,99,235,0.12);border:1px solid rgba(37,99,235,0.35);color:var(--accent);font-weight:800;font-size:14px;cursor:pointer">Tap to show answer</div>`;
 
   return header + tagRow + questionText + body + (isSolo?'':renderGameScoreboardStrip());
 }
+function revealGameAnswer(){ GAME.revealed = true; renderGame(); }
 function answerGameReveal(correct){
   handleGameAnswerResult(correct);
 }
@@ -4507,6 +4509,7 @@ function handleGameAnswerResult(correct){
 }
 function advanceGameQuestion(){
   GAME.qIndex++;
+  GAME.revealed = false;
   if(GAME.qIndex >= GAME.queue.length) GAME.step = 'results';
   else GAME.step = GAME.players.length>1 ? 'passing' : 'question';
   renderGame();
