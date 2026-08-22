@@ -11522,7 +11522,10 @@ function setupLiveSync() {
     db.collection('shoppingCatalog').onSnapshot(snap => {
       if(snap.empty) return; // nothing imported/added yet — keep Sheets-sourced fallback
       const prevChecked = {}; S.shopping.forEach(i=>prevChecked[i.item]={checked:i.checked,status:i.status,source:i.source||''});
-      S.shopping = snap.docs.map(d=>{
+      S.shopping = snap.docs.filter(d=>{
+        const v=d.data();
+        return v.item && !v.deleted; // skip malformed docs and soft-deleted ones (swipe-delete on satellite pages)
+      }).map(d=>{
         const v=d.data();
         const prior = prevChecked[v.item];
         return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'', url:v.url||'',

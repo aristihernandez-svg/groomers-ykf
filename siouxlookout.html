@@ -10,9 +10,15 @@
 body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:100px}
 .bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
 .bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
-.item-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s}
+.swipe-wrap{position:relative;overflow:hidden}
+.swipe-action-left,.swipe-action-right{position:absolute;top:0;bottom:0;width:90px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;cursor:pointer;text-align:center;padding:0 6px}
+.swipe-action-left{left:0;background:linear-gradient(135deg,#8B1A1A,#E74C3C)}
+.swipe-action-right{right:0;background:linear-gradient(135deg,#1d4ed8,#2563eb)}
+.item-row{display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s,transform 0.2s ease;position:relative;background:var(--bg)}
 .item-row:active{background:var(--glass)}
 .item-row.tobuy .item-name{color:var(--accent)}
+.swipe-wrap.open-left .item-row{transform:translateX(90px)}
+.swipe-wrap.open-right .item-row{transform:translateX(-90px)}
 .cb{width:24px;height:24px;border-radius:6px;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;flex-shrink:0;transition:all 0.15s}
 .cb.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .item-name{font-size:15px;font-weight:600;color:var(--t1)}
@@ -34,6 +40,13 @@ textarea{resize:none;min-height:60px;font-size:14px}
 .save-btn:active{opacity:0.8}
 .cancel-btn{display:block;width:100%;margin-top:10px;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
 .section-header{padding:10px 16px 4px;font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid var(--border)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center;padding:24px}
+.modal-overlay.open{display:flex}
+.modal-card{background:var(--bg2);border-radius:var(--radius);padding:22px;width:100%;max-width:320px}
+.modal-card h3{font-size:16px;font-weight:800;margin-bottom:8px}
+.modal-card p{font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.5}
+.modal-del-btn{display:block;width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:var(--red);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px}
+.modal-cancel-btn{display:block;width:100%;padding:12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:transparent;color:var(--t2);font-size:14px;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -48,6 +61,15 @@ textarea{resize:none;min-height:60px;font-size:14px}
 <div id="app"></div>
 <button class="fab" onclick="showAddForm()" title="Add item">+</button>
 <div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="delModal">
+  <div class="modal-card">
+    <h3>Remove item?</h3>
+    <p id="delModalMsg"></p>
+    <button class="modal-del-btn" onclick="confirmDelete()">🗑 Yes, remove it</button>
+    <button class="modal-cancel-btn" onclick="closeDelModal()">Cancel</button>
+  </div>
+</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -65,6 +87,8 @@ const db = firebase.firestore();
 let catalog = [];   // {id, item, notes, store}  — only Sioux Lookout items
 let shopState = {}; // {fsKey: {checked, status, qty, source}}
 let view = 'list';  // 'list' | 'add'
+let editingId = null;   // set while the add/edit form is editing an existing item
+let pendingDelId = null; // set while the delete-confirm modal is open
 
 // Same stores as Kitchener — items get bought here and shipped up on a
 // company flight, Sioux Lookout doesn't have these stores locally.
@@ -74,7 +98,7 @@ const STORES = ['Zehrs','Costco','A1 Cash & Carry','Home Depot','Canadian Tire',
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
     .map(d => ({id:d.id, ...d.data()}))
-    .filter(i => i.cabinet === 'Sioux Lookout' && i.item);
+    .filter(i => i.cabinet === 'Sioux Lookout' && i.item && !i.deleted);
   render();
 });
 
@@ -127,9 +151,10 @@ function renderList() {
     rest.forEach(i => html += itemHtml(i, false));
   }
 
-  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to add it to the shopping cart ·<br>Tap again to remove it</div>`;
+  html += `<div style="padding:16px;text-align:center;font-size:12px;color:var(--t3)">Tap an item to add it to the shopping cart ·<br>Swipe right to delete, swipe left to edit</div>`;
 
   document.getElementById('app').innerHTML = html;
+  document.querySelectorAll('.swipe-wrap').forEach(setupSwipe);
 }
 
 function itemHtml(item, checked) {
@@ -138,18 +163,61 @@ function itemHtml(item, checked) {
   const safeName = item.item.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
   const qty = shopState[key]?.qty || 1;
   const notes = item.notes && String(item.notes) !== 'false' && String(item.notes).trim() ? item.notes : '';
-  return `<div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
-    <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
-    <div style="flex:1;min-width:0">
-      <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
-      ${notes?`<div class="item-notes">${notes}</div>`:''}
+  return `<div class="swipe-wrap">
+    <div class="swipe-action-left" onclick="askDelete('${item.id}')">🗑 Delete</div>
+    <div class="swipe-action-right" onclick="editItemPrompt('${item.id}')">✏️ Edit</div>
+    <div class="item-row ${checked?'tobuy':''}" data-key="${safeKey}" data-name="${safeName}" onclick="toggleItem(this.dataset.key,this.dataset.name)">
+      <div class="cb ${checked?'on':''}">${checked?'✓':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="item-name">${item.item}${checked?'<span class="badge">To Buy</span>':''}</div>
+        ${notes?`<div class="item-notes">${notes}</div>`:''}
+      </div>
+      ${checked ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(46,204,138,0.4);border-radius:20px;overflow:hidden">
+        <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,-1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">−</button>
+        <span style="min-width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)">${qty}</span>
+        <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">+</button>
+      </div>` : ''}
     </div>
-    ${checked ? `<div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:0;flex-shrink:0;border:1px solid rgba(46,204,138,0.4);border-radius:20px;overflow:hidden">
-      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,-1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">−</button>
-      <span style="min-width:22px;text-align:center;font-size:14px;font-weight:700;color:var(--t1)">${qty}</span>
-      <button data-key="${safeKey}" onclick="event.stopPropagation();changeQty(this.dataset.key,1)" style="background:none;border:none;color:var(--accent);font-size:18px;font-weight:700;width:32px;height:32px;cursor:pointer;line-height:1">+</button>
-    </div>` : ''}
   </div>`;
+}
+
+// Reveal-then-tap swipe, ported from the main app's setupSwipeTwoWay:
+// dragging right reveals Delete (left panel), dragging left reveals Edit
+// (right panel). Tapping an already-open row closes it instead of acting.
+function setupSwipe(el) {
+  let startX=0, currentX=0, active=false;
+  const inner = el.querySelector('.item-row');
+  if(!inner) return;
+
+  el.addEventListener('touchstart', e=>{
+    document.querySelectorAll('.swipe-wrap.open-left,.swipe-wrap.open-right').forEach(w=>{
+      if(w!==el) w.classList.remove('open-left','open-right');
+    });
+    startX = e.touches[0].clientX; active = true;
+  }, {passive:true});
+
+  el.addEventListener('touchmove', e=>{
+    if(!active) return;
+    currentX = e.touches[0].clientX - startX;
+    if(Math.abs(currentX) > 8) e.preventDefault();
+    inner.style.transform = `translateX(${Math.max(-90,Math.min(90,currentX))}px)`;
+  }, {passive:false});
+
+  el.addEventListener('touchend', ()=>{
+    if(!active) return; active = false;
+    inner.style.transform = '';
+    const isOpen = el.classList.contains('open-left') || el.classList.contains('open-right');
+    if(isOpen && Math.abs(currentX) < 20) {
+      el.classList.remove('open-left','open-right');
+    } else if(currentX > 70) {
+      el.classList.add('open-left'); el.classList.remove('open-right');
+    } else if(currentX < -70) {
+      el.classList.add('open-right'); el.classList.remove('open-left');
+    } else {
+      el.classList.remove('open-left','open-right');
+    }
+    currentX = 0;
+  });
 }
 
 function toggleItem(key, name) {
@@ -191,26 +259,67 @@ function changeQty(key, delta) {
 }
 
 function showAddForm() {
+  editingId = null;
   view = 'add';
   render();
 }
 
+function editItemPrompt(id) {
+  editingId = id;
+  view = 'add';
+  render();
+}
+
+function askDelete(id) {
+  const item = catalog.find(i => i.id === id);
+  if(!item) return;
+  pendingDelId = id;
+  document.getElementById('delModalMsg').textContent = `"${item.item}" will be removed from the Sioux Lookout list.`;
+  document.getElementById('delModal').classList.add('open');
+}
+
+function closeDelModal() {
+  pendingDelId = null;
+  document.getElementById('delModal').classList.remove('open');
+}
+
+function confirmDelete() {
+  if(!pendingDelId) return;
+  const id = pendingDelId;
+  const item = catalog.find(i => i.id === id);
+  const name = item ? item.item : '';
+  closeDelModal();
+  catalog = catalog.filter(i => i.id !== id);
+  render();
+  // Firestore blocks real deletes app-wide (allow delete: if false) --
+  // soft-delete instead, same pattern used everywhere else in this app.
+  db.collection('shoppingCatalog').doc(id).update({deleted: true})
+    .then(() => toast('🗑 Removed'))
+    .catch(() => toast('❌ Could not remove — check connection'));
+  if(name) {
+    const key = fsKey(name);
+    db.collection('shopState').doc('state').update({[key]: firebase.firestore.FieldValue.delete()}).catch(() => {});
+  }
+}
+
 function renderAdd() {
-  const storeOpts = STORES.map(s=>`<option value="${s}">${s}</option>`).join('');
+  const editing = !!editingId;
+  const editItem = editing ? catalog.find(i => i.id === editingId) : null;
+  const storeOpts = STORES.map(s=>`<option value="${s}" ${editItem && editItem.store===s ? 'selected' : ''}>${s}</option>`).join('');
   document.getElementById('app').innerHTML = `
     <div class="form-wrap">
-      <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">Add Item to List</div>
-      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">This will appear in the Groomers' shopping list under <b style="color:var(--t2)">Sioux Lookout</b>, bought in Kitchener and shipped up on the next flight.</div>
+      <div style="font-size:16px;font-weight:800;color:var(--t1);margin-bottom:4px">${editing ? 'Edit Item' : 'Add Item to List'}</div>
+      <div style="font-size:12px;color:var(--t3);margin-bottom:16px">${editing ? 'Changes sync to the shared shopping list right away.' : `This will appear in the Groomers' shopping list under <b style="color:var(--t2)">Sioux Lookout</b>, bought in Kitchener and shipped up on the next flight.`}</div>
       <label>Item name *</label>
-      <input type="text" id="inName" placeholder="e.g. Dish soap" autofocus>
+      <input type="text" id="inName" placeholder="e.g. Dish soap" value="${editItem ? editItem.item.replace(/"/g,'&quot;') : ''}" autofocus>
       <label>Where to buy *</label>
       <select id="inStore" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px 13px;color:var(--t1);font-size:15px;font-family:inherit;outline:none;appearance:none;-webkit-appearance:none">
-        <option value="" disabled selected>Select a store…</option>
+        <option value="" disabled ${editItem ? '' : 'selected'}>Select a store…</option>
         ${storeOpts}
       </select>
       <label>Notes (optional)</label>
-      <textarea id="inNotes" placeholder="Brand, size, any details for the groomer..."></textarea>
-      <button class="save-btn" onclick="saveItem()">➕ Add to Shopping List</button>
+      <textarea id="inNotes" placeholder="Brand, size, any details for the groomer...">${editItem ? (editItem.notes||'') : ''}</textarea>
+      <button class="save-btn" onclick="saveItem()">${editing ? '💾 Save Changes' : '➕ Add to Shopping List'}</button>
       <button class="cancel-btn" onclick="cancelAdd()">Cancel</button>
     </div>`;
   setTimeout(()=>document.getElementById('inName')?.focus(), 80);
@@ -222,6 +331,20 @@ async function saveItem() {
   const notes = (document.getElementById('inNotes')?.value||'').trim();
   if(!name)  { toast('⚠️ Please enter an item name'); return; }
   if(!store) { toast('⚠️ Please select a store'); return; }
+
+  if(editingId) {
+    const id = editingId;
+    try {
+      await db.collection('shoppingCatalog').doc(id).update({item: name, notes: notes || '', store});
+      toast('✅ Item updated!');
+      editingId = null;
+      view = 'list';
+      render();
+    } catch(e) {
+      toast('❌ Could not save — check connection');
+    }
+    return;
+  }
 
   const id = name.replace(/[^a-zA-Z0-9]/g,'_').toLowerCase().slice(0,60) + '_' + Date.now();
   try {
@@ -247,6 +370,7 @@ async function saveItem() {
 }
 
 function cancelAdd() {
+  editingId = null;
   view = 'list';
   render();
 }
