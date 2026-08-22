@@ -74,7 +74,7 @@ const STORES = ['Zehrs','Costco','A1 Cash & Carry','Home Depot','Canadian Tire',
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
     .map(d => ({id:d.id, ...d.data()}))
-    .filter(i => i.cabinet === 'Sioux Lookout');
+    .filter(i => i.cabinet === 'Sioux Lookout' && i.item);
   render();
 });
 

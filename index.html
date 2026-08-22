@@ -2435,7 +2435,7 @@ function renderShopping(el) {
     const mStore = S.shopFilter==='all'?true:S.shopFilter==='tobuy'?i.checked:i.store===S.shopFilter;
     const normCab = (s) => s.toLowerCase().replace(/\s+/g,' ').trim();
     const mLoc   = S.shopLocFilter==='all'||(i.cabinet||'').toLowerCase().includes(S.shopLocFilter.toLowerCase());
-    const mSearch= !q||i.item.toLowerCase().includes(q)||(i.store||'').toLowerCase().includes(q)||(i.cabinet||'').toLowerCase().includes(q);
+    const mSearch= !q||(i.item||'').toLowerCase().includes(q)||(i.store||'').toLowerCase().includes(q)||(i.cabinet||'').toLowerCase().includes(q);
     return mStore&&mLoc&&mSearch;
   });
 

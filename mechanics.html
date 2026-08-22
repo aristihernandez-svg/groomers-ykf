@@ -100,7 +100,7 @@ let pendingDelName = '';
 db.collection('shoppingCatalog').onSnapshot(snap => {
   catalog = snap.docs
     .map(d => ({id:d.id, ...d.data()}))
-    .filter(i => i.cabinet === 'Mechanics');
+    .filter(i => i.cabinet === 'Mechanics' && i.item);
   render();
 });
 
