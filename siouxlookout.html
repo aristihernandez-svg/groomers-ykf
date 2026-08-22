@@ -252,8 +252,12 @@ function cancelAdd() {
 }
 
 function goBack() {
-  if(view !== 'list') { view = 'list'; render(); }
-  else { try{window.close();}catch(e){} history.back(); }
+  // No fallback navigation on purpose -- this page must never be able to
+  // walk someone back into the main app's browser history. If the tab
+  // can't be closed (most can't, since it wasn't opened by script), the
+  // close button simply does nothing further.
+  if(view !== 'list') { view = 'list'; render(); return; }
+  try{window.close();}catch(e){}
 }
 
 render();
