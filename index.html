@@ -1195,6 +1195,7 @@ const S = {
   calendarEvents: [], // {id,date,title,notes}
   calAnchor: null,     // Date — anchor day/month/year for the Calendar tab's current view
   calZoom: 'week',     // 'week' | 'month' | 'year'
+  calSelectedDay: null, // ISO date — which day's events show below the week grid
   pendingHandoffAudio: null,
   crewCarStatus: {}, // legacy — replaced by crewCarData
   bouncieData: {},   // {carKey: {lat,lng,speed,isMoving,updatedAt,status}}
@@ -2462,33 +2463,64 @@ function renderCalWeek() {
   start.setHours(0,0,0,0);
   start.setDate(start.getDate() - start.getDay());
   const days = [...Array(7)].map((_,i)=>{ const d=new Date(start); d.setDate(start.getDate()+i); return d; });
+  const dayIsos = days.map(d=>localDateISO(d));
   const todayIso = localDateISO();
+  if(!S.calSelectedDay || !dayIsos.includes(S.calSelectedDay)) {
+    S.calSelectedDay = dayIsos.includes(todayIso) ? todayIso : dayIsos[0];
+  }
   const rangeLabel = `${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${days[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
+  const DOW = ['S','M','T','W','T','F','S'];
+
   let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 12px">
       <span onclick="calShiftWeek(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
       <span style="font-size:14px;font-weight:800;color:var(--t1)">${rangeLabel}</span>
       <span onclick="calShiftWeek(1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">›</span>
     </div>
-    <div style="padding:0 14px 4px;display:flex;flex-direction:column;gap:10px">`;
-  days.forEach(d=>{
-    const iso = localDateISO(d);
+    <div style="padding:0 14px 4px">
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:18px">`;
+
+  days.forEach((d,i)=>{
+    const iso = dayIsos[i];
     const isToday = iso===todayIso;
+    const isSel = iso===S.calSelectedDay;
     const dayEvents = S.calendarEvents.filter(e=>e.date===iso);
-    const dow = d.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase();
-    html += `<div style="display:flex;gap:10px;align-items:${dayEvents.length?'flex-start':'center'}">
-      <div style="width:38px;text-align:center;flex-shrink:0;padding-top:${dayEvents.length?'6px':'0'}">
-        <div style="font-size:9px;font-weight:700;color:${isToday?'var(--accent)':'var(--t3)'}">${dow}</div>
-        <div style="width:26px;height:26px;border-radius:50%;background:${isToday?'var(--accent)':'transparent'};color:${isToday?'#fff':'var(--t1)'};font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:2px auto 0">${d.getDate()}</div>
-      </div>
-      <div style="flex:1;min-width:0">
-        ${dayEvents.length ? dayEvents.map(ev=>calEventNoteHtml(ev)).join('') : `<div style="height:1px;background:var(--border2);margin-top:13px"></div>`}
+    html += `<div onclick="selectCalDay('${iso}')" style="text-align:center;cursor:pointer">
+      <div style="font-size:9px;margin-bottom:3px;font-weight:${isToday?'800':'700'};color:${isToday?'var(--accent)':'var(--t3)'}">${DOW[i]}</div>
+      <div style="border-radius:8px;min-height:52px;padding:5px 3px;border:${isSel?'1.5px solid var(--accent)':'1px solid var(--border2)'};background:${isSel?'var(--accent-dim)':'transparent'}">
+        <div style="font-size:12px;font-weight:${isToday?'800':'700'};color:var(--t1);margin-bottom:4px">${d.getDate()}</div>
+        ${dayEvents.length?`<div style="width:100%;height:16px;background:${CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`:''}
       </div>
     </div>`;
   });
   html += `</div>`;
+
+  const selIdx = dayIsos.indexOf(S.calSelectedDay);
+  const selDate = days[selIdx];
+  const selEvents = S.calendarEvents.filter(e=>e.date===S.calSelectedDay);
+  const selLabel = selDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const numColor = S.calSelectedDay===todayIso ? 'var(--accent)' : 'var(--t1)';
+
+  html += `<div style="border-top:1px solid var(--border2);padding-top:14px">
+    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">${selLabel}</div>`;
+  if(!selEvents.length) {
+    html += `<div style="display:flex;align-items:baseline;gap:14px">
+      <span style="font-size:34px;font-weight:800;color:var(--t4);width:42px;flex-shrink:0">${selDate.getDate()}</span>
+      <span style="font-size:13px;color:var(--t4)">No events</span>
+    </div>`;
+  } else {
+    selEvents.forEach((ev,i)=>{
+      html += `<div onclick="askDeleteEvent('${ev.id}')" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
+        <span style="font-size:34px;font-weight:800;color:${numColor};width:42px;flex-shrink:0">${i===0?selDate.getDate():''}</span>
+        <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${ev.title}</div>
+        ${ev.notes?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${ev.notes}</div>`:''}</div>
+      </div>`;
+    });
+  }
+  html += `</div></div>`;
   return html;
 }
+function selectCalDay(iso) { S.calSelectedDay = iso; render(); }
 
 function renderCalMonth() {
   const anchor = new Date(S.calAnchor);
@@ -2554,13 +2586,6 @@ function renderCalYear() {
   return html;
 }
 
-function calEventNoteHtml(ev) {
-  return `<div onclick="askDeleteEvent('${ev.id}')" style="background:${CAL_NOTE_BG};border-radius:10px;padding:10px 12px;margin-bottom:6px;transform:rotate(-1deg);box-shadow:0 4px 14px rgba(0,0,0,0.25);cursor:pointer">
-    <div style="font-size:12.5px;font-weight:800;color:${CAL_NOTE_INK}">${ev.title}</div>
-    ${ev.notes?`<div style="font-size:10.5px;color:${CAL_NOTE_INK2};margin-top:2px">${ev.notes}</div>`:''}
-  </div>`;
-}
-
 function renderTodayEventsHtml() {
   const todayIso = localDateISO();
   const todayEvents = (S.calendarEvents||[]).filter(e=>e.date===todayIso);
@@ -2576,7 +2601,9 @@ function renderTodayEventsHtml() {
 }
 
 function openAddEvent() {
-  const defaultIso = S.tab==='calendar' ? localDateISO(S.calAnchor) : localDateISO();
+  const defaultIso = (S.tab==='calendar' && S.calZoom==='week' && S.calSelectedDay)
+    ? S.calSelectedDay
+    : (S.tab==='calendar' ? localDateISO(S.calAnchor) : localDateISO());
   openModal('Add Event',
     `<label>Date</label>
      <input type="date" id="mEvDate" value="${defaultIso}">
