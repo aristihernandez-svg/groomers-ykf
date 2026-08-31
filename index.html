@@ -1196,6 +1196,7 @@ const S = {
   calAnchor: null,     // Date — anchor day/month/year for the Calendar tab's current view
   calZoom: 'week',     // 'week' | 'month' | 'year'
   calSelectedDay: null, // ISO date — which day's events show below the week grid
+  calCharterView: null, // calendarEvents doc id — when set, shows that Group Charter's checklist screen
   pendingHandoffAudio: null,
   crewCarStatus: {}, // legacy — replaced by crewCarData
   bouncieData: {},   // {carKey: {lat,lng,speed,isMoving,updatedAt,status}}
@@ -2434,6 +2435,7 @@ const CAL_MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','
 const CAL_NOTE_BG = '#CDE8FF', CAL_NOTE_INK = '#0C4A80', CAL_NOTE_INK2 = '#0C3A66';
 
 function renderCalendar(el) {
+  if(S.calCharterView) { renderCalCharterDetail(el, S.calCharterView); return; }
   setBar({title:'Calendar'});
   showFab(openAddEvent);
   if(!S.calAnchor) S.calAnchor = new Date();
@@ -2485,11 +2487,12 @@ function renderCalWeek() {
     const isToday = iso===todayIso;
     const isSel = iso===S.calSelectedDay;
     const dayEvents = S.calendarEvents.filter(e=>e.date===iso);
+    const hasCharter = dayEvents.some(e=>e.type==='charter');
     html += `<div onclick="selectCalDay('${iso}')" style="text-align:center;cursor:pointer">
       <div style="font-size:9px;margin-bottom:3px;font-weight:${isToday?'800':'700'};color:${isToday?'var(--accent)':'var(--t3)'}">${DOW[i]}</div>
       <div style="border-radius:8px;min-height:52px;padding:5px 3px;border:${isSel?'1.5px solid var(--accent)':'1px solid var(--border2)'};background:${isSel?'var(--accent-dim)':'transparent'}">
         <div style="font-size:12px;font-weight:${isToday?'800':'700'};color:var(--t1);margin-bottom:4px">${d.getDate()}</div>
-        ${dayEvents.length?`<div style="width:100%;height:16px;background:${CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`:''}
+        ${dayEvents.length?(hasCharter?`<div style="font-size:11px">✈️</div>`:`<div style="width:100%;height:16px;background:${CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`):''}
       </div>
     </div>`;
   });
@@ -2510,10 +2513,16 @@ function renderCalWeek() {
     </div>`;
   } else {
     selEvents.forEach((ev,i)=>{
-      html += `<div onclick="askDeleteEvent('${ev.id}')" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
+      const isCharter = ev.type==='charter';
+      const items = ev.items||[];
+      const doneCount = items.filter(x=>x.done).length;
+      const sub = isCharter
+        ? (items.length ? `${doneCount} of ${items.length} items done` : 'Tap to add requested items')
+        : ev.notes;
+      html += `<div onclick="${isCharter?`openCharterDetail('${ev.id}')`:`askDeleteEvent('${ev.id}')`}" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
         <span style="font-size:34px;font-weight:800;color:${numColor};width:42px;flex-shrink:0">${i===0?selDate.getDate():''}</span>
-        <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${ev.title}</div>
-        ${ev.notes?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${ev.notes}</div>`:''}</div>
+        <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${isCharter?'✈️ ':''}${ev.title}</div>
+        ${sub?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${sub}</div>`:''}</div>
       </div>`;
     });
   }
@@ -2590,28 +2599,55 @@ function renderTodayEventsHtml() {
   const todayIso = localDateISO();
   const todayEvents = (S.calendarEvents||[]).filter(e=>e.date===todayIso);
   if(!todayEvents.length) return '';
-  return todayEvents.map(ev=>`
-    <div style="margin:12px 14px;padding:14px 16px;background:${CAL_NOTE_BG};border-radius:10px;
+  return todayEvents.map(ev=>{
+    const isCharter = ev.type==='charter';
+    const openItems = isCharter ? (ev.items||[]).filter(x=>!x.done) : [];
+    const sub = isCharter
+      ? (openItems.length ? `${openItems.length} item${openItems.length===1?'':'s'} still open — ${openItems.slice(0,2).map(x=>x.text).join(', ')}` : (ev.items||[]).length ? 'All items done' : 'No requested items yet')
+      : ev.notes;
+    return `
+    <div ${isCharter?`onclick="openCalendarToCharter('${ev.id}')" style="cursor:pointer;`:'style="'}margin:12px 14px;padding:14px 16px;background:${CAL_NOTE_BG};border-radius:10px;
                 box-shadow:0 4px 14px rgba(0,0,0,0.25);transform:rotate(1deg);
                 border:1px solid rgba(0,0,0,0.06)">
-      <div style="font-size:11px;font-weight:700;color:${CAL_NOTE_INK};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">📆 Today — ${ev.title}</div>
-      ${ev.notes?`<div style="font-size:14px;color:${CAL_NOTE_INK2};line-height:1.4">${ev.notes}</div>`:''}
-    </div>
-  `).join('');
+      <div style="font-size:11px;font-weight:700;color:${CAL_NOTE_INK};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">${isCharter?'✈️':'📆'} Today — ${ev.title}</div>
+      ${sub?`<div style="font-size:14px;color:${CAL_NOTE_INK2};line-height:1.4">${sub}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function openCalendarToCharter(id) {
+  S.calCharterView = id;
+  goTab('calendar');
 }
 
+let _addEventType = 'event';
 function openAddEvent() {
+  _addEventType = 'event';
   const defaultIso = (S.tab==='calendar' && S.calZoom==='week' && S.calSelectedDay)
     ? S.calSelectedDay
     : (S.tab==='calendar' ? localDateISO(S.calAnchor) : localDateISO());
   openModal('Add Event',
-    `<label>Date</label>
+    `<label>Type</label>
+     <div style="display:flex;gap:8px;margin-bottom:14px">
+       <div id="mEvTypeEvent" onclick="setAddEventType('event')" style="flex:1;text-align:center;padding:10px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;background:var(--accent);color:#fff">Event</div>
+       <div id="mEvTypeCharter" onclick="setAddEventType('charter')" style="flex:1;text-align:center;padding:10px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;background:var(--glass2);color:var(--t2)">✈️ Group Charter</div>
+     </div>
+     <label>Date</label>
      <input type="date" id="mEvDate" value="${defaultIso}">
      <label>Title</label>
      <input id="mEvTitle" placeholder="e.g. Fire extinguisher inspection">
      <label>Notes (optional)</label>
      <textarea id="mEvNotes" placeholder="Any details..."></textarea>`,
     saveEvent);
+}
+function setAddEventType(type) {
+  _addEventType = type;
+  const evBtn = document.getElementById('mEvTypeEvent'), chBtn = document.getElementById('mEvTypeCharter');
+  evBtn.style.background = type==='event' ? 'var(--accent)' : 'var(--glass2)';
+  evBtn.style.color = type==='event' ? '#fff' : 'var(--t2)';
+  chBtn.style.background = type==='charter' ? 'var(--accent)' : 'var(--glass2)';
+  chBtn.style.color = type==='charter' ? '#fff' : 'var(--t2)';
+  const titleEl = document.getElementById('mEvTitle');
+  if(type==='charter' && !titleEl.value.trim()) titleEl.value = 'Group Charter';
 }
 function saveEvent() {
   const date = document.getElementById('mEvDate').value;
@@ -2621,8 +2657,10 @@ function saveEvent() {
   if(!title) { toast('Enter a title'); return; }
   closeModal();
   if(!db) { toast('No connection — not saved'); return; }
-  db.collection('calendarEvents').add({date, title, notes, deleted:false, createdAt:Date.now()})
-    .then(()=>toast('📆 Event added'))
+  const doc = {date, title, notes, deleted:false, createdAt:Date.now()};
+  if(_addEventType==='charter') { doc.type='charter'; doc.seriesId='group-charter'; doc.items=[]; }
+  db.collection('calendarEvents').add(doc)
+    .then(()=>toast(_addEventType==='charter' ? '✈️ Group Charter added' : '📆 Event added'))
     .catch(e=>{ console.log('Add event failed:', e); toast('⚠️ Failed to save — check connection'); });
 }
 function askDeleteEvent(id) {
@@ -2633,6 +2671,61 @@ function askDeleteEvent(id) {
   db.collection('calendarEvents').doc(id).update({deleted:true})
     .then(()=>toast('Event deleted'))
     .catch(e=>{ console.log('Delete event failed:', e); toast('⚠️ Failed — check connection'); });
+}
+
+// ── GROUP CHARTER CHECKLIST ───────────────────────────────────────
+function openCharterDetail(id) { S.calCharterView = id; render(); }
+function closeCharterDetail() { S.calCharterView = null; render(); }
+function renderCalCharterDetail(el, id) {
+  const ev = S.calendarEvents.find(e=>e.id===id);
+  if(!ev) { closeCharterDetail(); return; }
+  setBar({title:'Group Charter', back:'Calendar', backFn: closeCharterDetail});
+  document.getElementById('fab').style.display='none';
+  const dateLabel = new Date(ev.date+'T00:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  const items = ev.items||[];
+  let html = `<div style="padding:16px 14px 4px">
+    <div style="font-size:12px;color:var(--t3);margin-bottom:2px">${dateLabel}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--t1);margin-bottom:16px">✈️ ${ev.title}</div>`;
+  if(!items.length) {
+    html += `<div style="font-size:13px;color:var(--t4);padding:8px 0 16px">No requested items yet — add one below as charter groups ask for things.</div>`;
+  } else {
+    items.forEach((it,i)=>{
+      html += `<div onclick="toggleCharterItem('${id}',${i})" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);cursor:pointer">
+        <span style="font-size:20px;color:${it.done?'var(--accent)':'var(--t4)'}">${it.done?'☑️':'⬜'}</span>
+        <span style="font-size:13px;color:${it.done?'var(--t4)':'var(--t1)'};text-decoration:${it.done?'line-through':'none'}">${it.text}</span>
+      </div>`;
+    });
+  }
+  html += `<div style="display:flex;align-items:center;gap:8px;margin-top:14px">
+    <input id="charterNewItem" placeholder="Add a requested item" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter')addCharterItem('${id}')">
+    <div onclick="addCharterItem('${id}')" style="width:40px;height:40px;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer">+</div>
+  </div>
+  <div style="font-size:11px;color:var(--t4);margin-top:16px">Part of a recurring series · every other Thursday · each date keeps its own list</div>
+  </div>`;
+  el.innerHTML = html;
+}
+function toggleCharterItem(id, idx) {
+  const ev = S.calendarEvents.find(e=>e.id===id);
+  if(!ev) return;
+  const items = (ev.items||[]).map((it,i)=> i===idx ? {...it, done:!it.done} : it);
+  if(!db) { toast('No connection'); return; }
+  db.collection('calendarEvents').doc(id).update({items})
+    .catch(e=>{ console.log('Toggle charter item failed:', e); toast('⚠️ Failed — check connection'); });
+  ev.items = items;
+  render();
+}
+function addCharterItem(id) {
+  const inp = document.getElementById('charterNewItem');
+  const text = inp.value.trim();
+  if(!text) return;
+  const ev = S.calendarEvents.find(e=>e.id===id);
+  if(!ev) return;
+  const items = [...(ev.items||[]), {text, done:false}];
+  if(!db) { toast('No connection'); return; }
+  db.collection('calendarEvents').doc(id).update({items})
+    .catch(e=>{ console.log('Add charter item failed:', e); toast('⚠️ Failed — check connection'); });
+  ev.items = items;
+  render();
 }
 
 // ── SHOPPING ───────────────────────────────────────────────────────
