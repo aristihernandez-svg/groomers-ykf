@@ -93,6 +93,37 @@ export default {
       }
     }
 
+    // One-time re-authorization endpoint. Exchanges a fresh authorization
+    // code (from https://auth.bouncie.com/dialog/grant, redirect_uri must be
+    // https://localhost to match) for a new token pair, using the client
+    // secret already stored in this Worker's env — the secret never needs to
+    // be typed anywhere else. Remove this route once re-auth is confirmed
+    // working, since it's an unauthenticated write to shared KV otherwise.
+    if (url.pathname === '/authorize') {
+      const code = url.searchParams.get('code');
+      if (!code) return Response.json({ error: 'missing ?code=' }, { status: 400, headers: CORS });
+      try {
+        const res = await fetch('https://auth.bouncie.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id:     env.BOUNCIE_CLIENT_ID,
+            client_secret: env.BOUNCIE_CLIENT_SECRET,
+            grant_type:    'authorization_code',
+            code,
+            redirect_uri:  'https://localhost',
+          }),
+        });
+        const data = await res.json();
+        if (!data.refresh_token) throw new Error('No refresh_token in response: ' + JSON.stringify(data));
+        await env.BOUNCIE_KV.put('refresh_token', data.refresh_token);
+        cachedToken = null; tokenExpiresAt = 0; // force a fresh access-token fetch next call
+        return Response.json({ ok: true, message: 'refresh_token saved to KV' }, { headers: CORS });
+      } catch (e) {
+        return Response.json({ error: e.message }, { status: 502, headers: CORS });
+      }
+    }
+
     return new Response('Not found', { status: 404, headers: CORS });
   },
 };
