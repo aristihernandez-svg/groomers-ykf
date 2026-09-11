@@ -11665,11 +11665,46 @@ function ttlTimestamp(days) {
   return firebase.firestore.Timestamp.fromMillis(Date.now() + days*24*60*60*1000);
 }
 
-function setupLiveSync() {
+// Clears a day's stale leftover fields once its own weekly cycle has passed,
+// so they can never silently resurface once _date/_flDate finally refreshes.
+// Task fields and flight-log fields are cleared independently, each gated by
+// its own date stamp — clearing one must never touch the other's still-fresh
+// data (a day can have a fresh flight log entry before any task is checked).
+async function clearStaleDayState(tabName) {
+  if(!db) return;
+  const ref = db.collection('taskState').doc(tabName);
+  try {
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      if(!snap.exists) return;
+      const data = snap.data();
+      const today = new Date().toDateString();
+      const FL_FIELDS = ['_arr','_dep','_grm','_o2','_flDate'];
+      const patch = {};
+      let needsWrite = false;
+      if(data._date && data._date !== today) {
+        Object.keys(data).forEach(k => {
+          if(k === '_date' || FL_FIELDS.includes(k)) return;
+          patch[k] = firebase.firestore.FieldValue.delete();
+        });
+        patch._date = firebase.firestore.FieldValue.delete();
+        needsWrite = true;
+      }
+      if(data._flDate && data._flDate !== today) {
+        FL_FIELDS.forEach(k => { patch[k] = firebase.firestore.FieldValue.delete(); });
+        needsWrite = true;
+      }
+      if(needsWrite) tx.update(ref, patch);
+    });
+  } catch(e) { console.log('clearStaleDayState failed:', e); }
+}
+
+async function setupLiveSync() {
   if(!db) return;
   try {
     // Today's task done-state, shared live across every groomer's phone.
     const tabName = DAYS[getToday()];
+    await clearStaleDayState(tabName);
 
     // When source is Firestore, attach a live listener on today's task content
     // so edits made by a manager on another device appear instantly.
@@ -11707,14 +11742,18 @@ function setupLiveSync() {
       const data = snap.data();
       _cachedTaskState = data; // always cache so task content listener can use it
       if(!data || !S.tasks[tabName]) return;
-      // Ignore states written on a different calendar day (weekly cycle fix —
-      // last Monday's done-flags must not re-appear this Monday).
+      // Ignore task done/hidden states written on a different calendar day
+      // (weekly cycle fix — last Monday's done-flags must not re-appear this
+      // Monday). Flight log has its own independent _flDate guard inside
+      // flightLogFromFirestore, so it must never be gated behind this check —
+      // a day can get a fresh flight log entry before anyone checks a task.
       const today = new Date().toDateString();
-      if(data._date && data._date !== today) return;
-      S.tasks[tabName].forEach(t => {
-        const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v;
-        const h=data[fsKey(t.task)+'_hidden']; t.hidden=h===true;
-      });
+      if(!data._date || data._date === today) {
+        S.tasks[tabName].forEach(t => {
+          const v=data[fsKey(t.task)]; if(v!==undefined) t.done=v;
+          const h=data[fsKey(t.task)+'_hidden']; t.hidden=h===true;
+        });
+      }
       flightLogFromFirestore(tabName, data);
       // Skip re-render if this snapshot is echoing our own write (< 600ms ago)
       if(Date.now() - _lastSelfWrite < 600) return;
