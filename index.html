@@ -8948,7 +8948,7 @@ async function generateAircraftPDF(reg, type, month, silent) {
     .aud-row td{background:#c8c8c8;padding:3px 6px;border:1px solid #999;font-size:7.5px;font-weight:700}
     .aud-line{display:inline-block;min-width:120px;border-bottom:1px solid #555;margin-left:4px;font-weight:400}
     .footer{display:flex;justify-content:space-between;font-size:7px;color:#555;margin-top:4px;border-top:1px solid #ccc;padding-top:3px}
-    @media print{@page{size:letter portrait;margin:0 0 0 0}body{padding:1mm 6mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:0!important;padding-bottom:0!important;font-size:9.5px!important;line-height:1.1!important}.content{padding-top:1px!important;padding-bottom:2px!important}.top-row{margin-bottom:5px!important;padding-bottom:5px!important}.back-btn{display:none}}
+    @media print{@page{size:letter portrait;margin:0 0 0 0}body{padding:${type==='westwind'?'9mm 6mm 6mm 6mm':'1mm 6mm'};-webkit-print-color-adjust:exact;print-color-adjust:exact}td,th{padding-top:${type==='westwind'?'1px':'0'}!important;padding-bottom:${type==='westwind'?'1px':'0'}!important;font-size:${type==='westwind'?'9.75px':'9.5px'}!important;line-height:1.1!important}.content{padding-top:1px!important;padding-bottom:2px!important}.top-row{margin-bottom:5px!important;padding-bottom:5px!important}.back-btn{display:none}}
   </style>
   </head><body>
   <div class="page">
