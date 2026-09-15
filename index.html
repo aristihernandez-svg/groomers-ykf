@@ -5473,12 +5473,12 @@ function renderAuditsLanding(el) {
     ${auditRow('openCrewCars()', carIconHtml, 'Crew Cars', `${CREW_CARS.length} vehicles · tap to manage`, carsBadge)}
 
     <div style="margin:14px 16px 8px">
-      <button onclick="generateAllAuditPDFs()"
+      <button onclick="${_allDone?'shareAllRecords()':''}"
         style="width:100%;padding:14px 16px;border-radius:12px;border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'var(--accent-dim)':'var(--glass2)'};cursor:${_allDone?'pointer':'default'};display:flex;align-items:center;gap:13px;text-align:left;opacity:${_allDone?'1':'0.45'}">
-        <span style="font-size:22px;line-height:1;flex-shrink:0">📦</span>
+        <span style="font-size:22px;line-height:1;flex-shrink:0">📧</span>
         <span style="flex:1">
-          <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Generate all PDFs</span>
-          <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate':'Complete all audits to enable'}</span>
+          <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Send PDFs via e-mail</span>
+          <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate & send':'Complete all audits to enable'}</span>
         </span>
         <span style="color:${_allDone?'var(--accent)':'var(--border2)'};font-size:20px;opacity:0.7">›</span>
       </button>
@@ -5760,17 +5760,12 @@ function renderRecordsView(el) {
       if (isExp) {
         html += `<div style="border-top:1px solid var(--border2);padding:4px 8px 8px">`;
 
-        // Flagged-items summary (built automatically by "Generate all PDFs")
+        // Flagged-items summary (built automatically by "Send PDFs via e-mail")
         const summary = S.monthSummaries[monthKey];
         if (summary) {
           html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 8px;border-radius:8px;margin-bottom:2px;background:var(--accent-dim)">
               <div style="font-size:12px;font-weight:700;color:var(--accent)">📋 Flagged Items Summary</div>
               <a href="${summary.pdfUrl}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;background:var(--navy2,#0B1628);border:1px solid var(--accent-border,#1a3050);font-size:10px;font-weight:700;color:var(--accent);text-decoration:none;flex-shrink:0">📄 PDF</a>
-            </div>`;
-        }
-        if (monthLabel === auditMonth()) {
-          html += `<div style="padding:0 8px 8px">
-              <button onclick="event.stopPropagation();shareAllRecords()" style="width:100%;display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:8px;border:1px solid var(--accent-border,#1a3050);background:var(--accent);color:var(--navy2,#0B1628);font-size:12px;font-weight:700;cursor:pointer">📤 Share all</button>
             </div>`;
         }
         html += `<div style="height:0.5px;background:var(--border2);margin:0 8px 2px"></div>`;
@@ -8791,7 +8786,7 @@ async function shareAllRecords() {
   toast('Preparing PDFs…');
 
   const summaryHtml = buildFlaggedSummaryHTML();
-  // Keep Records in sync even if "Generate all PDFs" was never run this month.
+  // Keep Records' Flagged Items Summary in sync every time this runs.
   uploadAuditPDF(summaryHtml, `audits/${month}/summary.html`).then(url => {
     if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
   });
@@ -8814,13 +8809,17 @@ async function shareAllRecords() {
     toast('No completed audits saved yet this month — sharing the summary only');
   }
 
+  let i = 0;
   for (const {name, url} of sources) {
+    i++;
+    toast(`Converting ${i} of ${sources.length} — ${name}…`);
     try {
       const html = await (await fetch(url)).text();
       files.push(await htmlToPdfFile(html, `${name} - ${month}.pdf`));
     } catch(e) { console.error('PDF conversion failed for', name, e); }
   }
 
+  toast('Opening share sheet…');
   if (navigator.canShare && navigator.canShare({files})) {
     try { await navigator.share({files, title:`${month} Audits`}); }
     catch(e) { if (e.name !== 'AbortError') toast('Share cancelled or failed'); }
@@ -8830,69 +8829,6 @@ async function shareAllRecords() {
   }
 }
 
-function generateAllAuditPDFs() {
-  const month   = auditMonth();
-  const acMonth = acAuditMonthKey();
-  const metroRegs = [...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-  const wwRegs    = [...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-  const astraRegs = AIRCRAFT_ASTRA.filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-  const audCars   = CREW_CARS.filter(c=>!isCarDisabled(c.key));
-  const pending = [];
-  audCars.forEach(c=>{ if(!carAuditData(c.key).done) pending.push('Crew Car: '+c.name); });
-  metroRegs.forEach(r=>{ if(!acIsComplete(r,'metro')) pending.push('Metro: '+r); });
-  wwRegs.forEach(r=>{ if(!acIsComplete(r,'westwind')) pending.push('Westwind: '+r); });
-  astraRegs.forEach(r=>{ if(!acIsComplete(r,'astra')) pending.push('Astra: '+r); });
-  S.customAcTypesList.forEach(ct=>{ ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).forEach(r=>{ if(!acIsComplete(r,ct.id)) pending.push(ct.name+': '+r); }); });
-  if(pending.length) {
-    openModal('Pending Audits',
-      `<div style="padding:4px 0">
-        <p style="font-size:13px;color:var(--t2);margin-bottom:10px">Complete these before generating all PDFs:</p>
-        ${pending.map(p=>`<div style="padding:8px 12px;border-radius:8px;background:var(--glass2);border:1px solid var(--border);margin-bottom:6px;font-size:13px;color:var(--t1)">${p}</div>`).join('')}
-      </div>`, null);
-    return;
-  }
-  // Build + save the flagged-items summary silently — no extra tap, no separate button.
-  uploadAuditPDF(buildFlaggedSummaryHTML(), `audits/${month}/summary.html`).then(url => {
-    if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
-  });
-  // Build PDF queue — each PDF requires its own tap (browser blocks multiple popups from one gesture)
-  const pdfQueue = [
-    { label:'📋 Crew Car Audit',   fn:()=>generateAuditPDF(month) },
-    { label:'🏠 Crew House',        fn:()=>generateCrewHousePDF() },
-    { label:'🔧 Hangar',            fn:()=>generateHangarPDF() },
-    { label:'🅿️ Parking Lot',      fn:()=>generateParkingPDF() },
-    { label:'🏢 YKF Base',          fn:()=>generateYkfBasePDF() },
-    { label:'⚗️ MSDS',              fn:()=>generateMsdsPDF() },
-    ...metroRegs.map(r=>({ label:`✈️ Metro · ${r}`,     fn:()=>generateAircraftPDF(r,'metro',acMonth) })),
-    ...wwRegs.map(r=>({    label:`✈️ Westwind · ${r}`,  fn:()=>generateAircraftPDF(r,'westwind',acMonth) })),
-    ...astraRegs.map(r=>({ label:`✈️ Astra · ${r}`,    fn:()=>generateAircraftPDF(r,'astra',acMonth) })),
-    ...S.customAcTypesList.flatMap(ct=>ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).map(r=>({ label:`✈️ ${ct.name} · ${r}`, fn:()=>generateAircraftPDF(r,ct.id,acMonth) }))),
-  ];
-  window._pdfQueue = pdfQueue;
-  openModal('Generate All PDFs',
-    `<p style="font-size:12px;color:var(--t2);margin:0 0 10px">Tap each button to open and print. Browsers require a separate tap per file.</p>
-     <div id="pdfQueueList" style="display:flex;flex-direction:column;gap:6px">
-       ${pdfQueue.map((p,i)=>`
-         <div id="pdfq${i}" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;background:var(--glass2);border:1px solid var(--border)">
-           <span style="flex:1;font-size:13px;color:var(--t1)">${p.label}</span>
-           <button onclick="triggerPdfFromQueue(${i})" style="padding:6px 14px;border-radius:6px;border:1px solid var(--accent-border);background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Open PDF</button>
-         </div>`).join('')}
-     </div>`,
-    null
-  );
-  document.getElementById('mSave').style.display='none';
-}
-function triggerPdfFromQueue(i) {
-  const q = window._pdfQueue;
-  if(!q||!q[i]) return;
-  q[i].fn();
-  const el = document.getElementById('pdfq'+i);
-  if(el) {
-    el.style.opacity='0.5';
-    const btn = el.querySelector('button');
-    if(btn){ btn.textContent='✓ Done'; btn.disabled=true; btn.style.opacity='0.6'; }
-  }
-}
 
 async function generateAircraftPDF(reg, type, month, silent) {
   const d = acAuditData(reg);
