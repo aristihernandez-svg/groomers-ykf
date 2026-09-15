@@ -149,7 +149,10 @@ async function getAccessToken(env) {
     // Whoever held the lock didn't leave us anything usable — fall through
     // and refresh ourselves rather than fail outright.
   }
-  await env.BOUNCIE_KV.put(lockKey, '1', { expirationTtl: 15 });
+  // Cloudflare KV rejects any expirationTtl below 60 seconds (400 error) --
+  // 60 is the floor, not a real design choice; the lock is only ever meant
+  // to live a few seconds in practice.
+  await env.BOUNCIE_KV.put(lockKey, '1', { expirationTtl: 60 });
 
   const refreshToken = await env.BOUNCIE_KV.get('refresh_token');
   if (!refreshToken) throw new Error('No refresh_token in KV — add key "refresh_token" to BOUNCIE_TOKENS namespace');
