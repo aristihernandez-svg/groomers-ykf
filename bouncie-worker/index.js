@@ -128,13 +128,21 @@ async function getAccessToken(env) {
   //    read the same refresh_token from KV and both redeem it near-
   //    simultaneously, Bouncie honors whichever arrives first and rejects
   //    the other with invalid_grant, which is exactly the failure this
-  //    project hit twice. A short KV-based lock closes most of that window:
-  //    if another isolate is already mid-refresh, wait for it and use what
-  //    it saves instead of racing it. Not a true atomic lock (Workers KV has
+  //    project hit. A short KV-based lock closes most of that window: if
+  //    another isolate is already mid-refresh, wait for it and use what it
+  //    saves instead of racing it. Not a true atomic lock (Workers KV has
   //    no compare-and-swap), but combined with step 2 above the real race
   //    window shrinks from "constant" to "a couple seconds, once an hour."
+  //
+  //    Retried up to 3 times (not just once) — a single 1.5s wait meant a
+  //    slow-but-still-working refresh would get raced by every isolate that
+  //    gave up too early, which is exactly the scenario this lock exists to
+  //    prevent. Still bounded (max ~4.5s added latency) so a genuinely
+  //    abandoned lock (the holder crashed without releasing it) doesn't
+  //    block requests for its full 60s TTL.
   const lockKey = 'refresh_lock';
-  if (await env.BOUNCIE_KV.get(lockKey)) {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (!(await env.BOUNCIE_KV.get(lockKey))) break;
     await new Promise(r => setTimeout(r, 1500));
     const [freshToken, freshExpiresAtStr] = await Promise.all([
       env.BOUNCIE_KV.get('access_token'),
@@ -146,8 +154,8 @@ async function getAccessToken(env) {
       tokenExpiresAt = freshExpiresAt;
       return cachedToken;
     }
-    // Whoever held the lock didn't leave us anything usable — fall through
-    // and refresh ourselves rather than fail outright.
+    // Whoever held the lock didn't leave us anything usable this round —
+    // loop again (if attempts remain) or fall through to refresh ourselves.
   }
   // Cloudflare KV rejects any expirationTtl below 60 seconds (400 error) --
   // 60 is the floor, not a real design choice; the lock is only ever meant
@@ -173,21 +181,39 @@ async function getAccessToken(env) {
 
   const expiresAt = now + (data.expires_in ?? 3600) * 1000;
 
-  // Save the new access token (shared cache for every isolate) and the
-  // rotated refresh token together, then release the lock.
-  const writes = [
-    env.BOUNCIE_KV.put('access_token', data.access_token),
-    env.BOUNCIE_KV.put('access_token_expires_at', String(expiresAt)),
-  ];
+  // Bouncie has already rotated the refresh token server-side by this point
+  // — if we fail to persist data.refresh_token anywhere, it's gone for good
+  // and the next refresh cycle hits invalid_grant using the now-stale one
+  // still in KV. So: save it first, alone, with its own retries, before
+  // anything else. The access token and lock-release are comparatively
+  // cheap to redo if they fail (this isolate still has the access token in
+  // memory either way), so they stay batched together afterward.
   if (data.refresh_token) {
-    writes.push(env.BOUNCIE_KV.put('refresh_token', data.refresh_token));
+    await putWithRetry(env.BOUNCIE_KV, 'refresh_token', data.refresh_token);
   }
-  writes.push(env.BOUNCIE_KV.delete(lockKey));
-  await Promise.all(writes);
+  await Promise.all([
+    putWithRetry(env.BOUNCIE_KV, 'access_token', data.access_token),
+    putWithRetry(env.BOUNCIE_KV, 'access_token_expires_at', String(expiresAt)),
+    env.BOUNCIE_KV.delete(lockKey),
+  ]);
 
   cachedToken = data.access_token;
   tokenExpiresAt = expiresAt;
   return cachedToken;
+}
+
+// Workers KV writes are normally reliable, but a transient failure on the
+// refresh_token write specifically would lose a token Bouncie has already
+// rotated past recovery — a couple of quick retries costs nothing in the
+// common case and meaningfully reduces that one-in-a-blue-moon risk.
+async function putWithRetry(kv, key, value, retries = 2) {
+  for (let i = 0; i <= retries; i++) {
+    try { await kv.put(key, value); return; }
+    catch (e) {
+      if (i === retries) throw e;
+      await new Promise(r => setTimeout(r, 200 * (i + 1)));
+    }
+  }
 }
 
 async function fetchAllVehicles(token) {
