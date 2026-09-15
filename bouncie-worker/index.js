@@ -93,18 +93,101 @@ export default {
       }
     }
 
+    // One-time re-authorization endpoint. Exchanges a fresh authorization
+    // code (from https://auth.bouncie.com/dialog/grant, redirect_uri must be
+    // https://localhost to match) for a new token pair, using the client
+    // secret already stored in this Worker's env — the secret never needs to
+    // be typed anywhere else. Remove this route once re-auth is confirmed
+    // working, since it's an unauthenticated write to shared KV otherwise.
+    if (url.pathname === '/authorize') {
+      const code = url.searchParams.get('code');
+      if (!code) return Response.json({ error: 'missing ?code=' }, { status: 400, headers: CORS });
+      try {
+        const res = await fetch('https://auth.bouncie.com/oauth/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            client_id:     env.BOUNCIE_CLIENT_ID,
+            client_secret: env.BOUNCIE_CLIENT_SECRET,
+            grant_type:    'authorization_code',
+            code,
+            redirect_uri:  'https://localhost',
+          }),
+        });
+        const data = await res.json();
+        if (!data.refresh_token) throw new Error('No refresh_token in response: ' + JSON.stringify(data));
+        const expiresAt = Date.now() + (data.expires_in ?? 3600) * 1000;
+        await Promise.all([
+          env.BOUNCIE_KV.put('refresh_token', data.refresh_token),
+          env.BOUNCIE_KV.put('access_token', data.access_token),
+          env.BOUNCIE_KV.put('access_token_expires_at', String(expiresAt)),
+          env.BOUNCIE_KV.delete('refresh_lock'),
+        ]);
+        cachedToken = null; tokenExpiresAt = 0; // force this isolate to re-check KV next call
+        return Response.json({ ok: true, message: 'refresh_token and access_token saved to KV' }, { headers: CORS });
+      } catch (e) {
+        return Response.json({ error: e.message }, { status: 502, headers: CORS });
+      }
+    }
+
     return new Response('Not found', { status: 404, headers: CORS });
   },
 };
 
 async function getAccessToken(env) {
   const now = Date.now();
-  // Use in-memory cached token if still valid (2-min buffer)
+  // 1. In-memory cache — fastest, but only lives for this isolate's lifetime
+  //    and isn't shared with any other concurrently-running copy of this
+  //    Worker (Cloudflare runs multiple isolates of the same script).
   if (cachedToken && now < tokenExpiresAt - 120_000) {
     return cachedToken;
   }
 
-  // Read current refresh token from KV
+  // 2. KV-cached access token — shared across every isolate, so under normal
+  //    conditions only ONE isolate ever needs to actually refresh per token
+  //    lifetime (~1hr), not every isolate on every request. This is the main
+  //    defense against the refresh race described below: it shrinks the
+  //    window where two isolates could both decide to refresh at once from
+  //    "any request, any isolate" down to "the few seconds right at expiry."
+  const [kvToken, kvExpiresAtStr] = await Promise.all([
+    env.BOUNCIE_KV.get('access_token'),
+    env.BOUNCIE_KV.get('access_token_expires_at'),
+  ]);
+  const kvExpiresAt = parseInt(kvExpiresAtStr || '0', 10);
+  if (kvToken && now < kvExpiresAt - 120_000) {
+    cachedToken = kvToken;
+    tokenExpiresAt = kvExpiresAt;
+    return cachedToken;
+  }
+
+  // 3. Actually need to refresh. Bouncie rotates the refresh token on every
+  //    use and invalidates the old one immediately — if two isolates ever
+  //    read the same refresh_token from KV and both redeem it near-
+  //    simultaneously, Bouncie honors whichever arrives first and rejects
+  //    the other with invalid_grant, which is exactly the failure this
+  //    project hit twice. A short KV-based lock closes most of that window:
+  //    if another isolate is already mid-refresh, wait for it and use what
+  //    it saves instead of racing it. Not a true atomic lock (Workers KV has
+  //    no compare-and-swap), but combined with step 2 above the real race
+  //    window shrinks from "constant" to "a couple seconds, once an hour."
+  const lockKey = 'refresh_lock';
+  if (await env.BOUNCIE_KV.get(lockKey)) {
+    await new Promise(r => setTimeout(r, 1500));
+    const [freshToken, freshExpiresAtStr] = await Promise.all([
+      env.BOUNCIE_KV.get('access_token'),
+      env.BOUNCIE_KV.get('access_token_expires_at'),
+    ]);
+    const freshExpiresAt = parseInt(freshExpiresAtStr || '0', 10);
+    if (freshToken && Date.now() < freshExpiresAt - 60_000) {
+      cachedToken = freshToken;
+      tokenExpiresAt = freshExpiresAt;
+      return cachedToken;
+    }
+    // Whoever held the lock didn't leave us anything usable — fall through
+    // and refresh ourselves rather than fail outright.
+  }
+  await env.BOUNCIE_KV.put(lockKey, '1', { expirationTtl: 15 });
+
   const refreshToken = await env.BOUNCIE_KV.get('refresh_token');
   if (!refreshToken) throw new Error('No refresh_token in KV — add key "refresh_token" to BOUNCIE_TOKENS namespace');
 
@@ -122,13 +205,22 @@ async function getAccessToken(env) {
   const data = await res.json();
   if (!data.access_token) throw new Error('Token refresh failed: ' + JSON.stringify(data));
 
-  // Bouncie rotates refresh tokens — save the new one to KV immediately
+  const expiresAt = now + (data.expires_in ?? 3600) * 1000;
+
+  // Save the new access token (shared cache for every isolate) and the
+  // rotated refresh token together, then release the lock.
+  const writes = [
+    env.BOUNCIE_KV.put('access_token', data.access_token),
+    env.BOUNCIE_KV.put('access_token_expires_at', String(expiresAt)),
+  ];
   if (data.refresh_token) {
-    await env.BOUNCIE_KV.put('refresh_token', data.refresh_token);
+    writes.push(env.BOUNCIE_KV.put('refresh_token', data.refresh_token));
   }
+  writes.push(env.BOUNCIE_KV.delete(lockKey));
+  await Promise.all(writes);
 
   cachedToken = data.access_token;
-  tokenExpiresAt = now + (data.expires_in ?? 3600) * 1000;
+  tokenExpiresAt = expiresAt;
   return cachedToken;
 }
 
