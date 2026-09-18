@@ -11032,15 +11032,11 @@ function showEOD() {
     msg+=`✅ *Completed:*\n${doneNonClosure.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
   }
 
-  // Closure section
+  // Closure section — only completed items ever appear, same as every other area
   if(clDone.length===closure.length&&closure.length) {
     msg+=`🔐 *Closure: ✅ Complete*\n${clDone.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
-  } else if(closure.length) {
-    const clMissed=closure.filter(t=>!t.done);
-    const clComplete=closure.filter(t=>t.done);
-    if(clComplete.length) msg+=`🔐 *Closure — done:*\n${clComplete.map(t=>`  ✓ ${t.task}`).join('\n')}\n`;
-    if(clMissed.length) msg+=`🔐 *Closure — pending:*\n${clMissed.map(t=>`  ❌ ${t.task}`).join('\n')}\n`;
-    msg+='\n';
+  } else if(clDone.length) {
+    msg+=`🔐 *Closure — done:*\n${clDone.map(t=>`  ✓ ${t.task}`).join('\n')}\n\n`;
   }
 
   // Damage reports filed today
