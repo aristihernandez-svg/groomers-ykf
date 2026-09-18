@@ -19,7 +19,7 @@ const COFFEE_TIMES = [
   { hour: 9,  minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 11, minute: 40, message: '☕ Hurry... gotta make coffee!' },
   { hour: 15, minute: 40, message: '☕ Hurry... gotta make coffee!' },
-  { hour: 15, minute: 50, message: '🚗 The CC doesn\'t live at your house — leave it at the airport where it belongs!' },
+  { hour: 14, minute: 50, message: '🚗 The CC doesn\'t live at your house — leave it at the airport where it belongs!' },
   { hour: 20, minute: 0,  message: '🔐 Leave the CC and the phone on charge!' },
 ];
 
