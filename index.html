@@ -9668,14 +9668,14 @@ async function cleanupOneOffTasks() {
 
 function fsSaveTaskContent(tabName) {
   if(!db) return;
-  const content = (S.tasks[tabName]||[]).map(({task,freq,area})=>({task,freq:freq||'',area,done:false}));
+  const content = (S.tasks[tabName]||[]).map(({task,freq,area,onceDate})=>({task,freq:freq||'',area,done:false,...(onceDate?{onceDate}:{})}));
   db.collection('tasks').doc(tabName).set({tasks:content,migrated:true},{merge:true})
     .catch(e=>console.log('fsSaveTaskContent failed:',e));
 }
 
 async function fsAddTaskToDay(taskObj, day) {
   if(!db) return;
-  const clean = {task:taskObj.task, freq:taskObj.freq||'', area:taskObj.area||'', done:false};
+  const clean = {task:taskObj.task, freq:taskObj.freq||'', area:taskObj.area||'', done:false, ...(taskObj.onceDate?{onceDate:taskObj.onceDate}:{})};
   if(S.tasks[day] !== undefined) {
     // Day loaded in memory — push (dedup) then overwrite full doc
     if(!S.tasks[day].find(t => fsKey(t.task)===fsKey(taskObj.task))) {

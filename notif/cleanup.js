@@ -166,7 +166,7 @@ async function cleanCarLogs() {
 
 async function cleanOneOffTasks() {
   const DAYS = [
-    '1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday','4️⃣ Thursday','5️⃣ Friday','🗓 Saturday',
+    '☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday','4️⃣ Thursday','5️⃣ Friday','🗓 Saturday',
   ];
   let totalRemoved = 0;
   for (const day of DAYS) {
