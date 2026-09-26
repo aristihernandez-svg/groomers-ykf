@@ -39,7 +39,7 @@ function icao24For(reg) {
 // cs = call signs the crews actually use (matched exactly, spaces ignored)
 const FLEET = [
   { reg: 'C-FIOC', tail: 'IOC', type: 'Metroliner', cs: ['PHX632'] },
-  { reg: 'C-FIOE', tail: 'IOE', type: 'Metroliner', cs: [] },
+  { reg: 'C-FIOE', tail: 'IOE', type: 'Metroliner', cs: ['PHX706'] },
   { reg: 'C-FIOJ', tail: 'IOJ', type: 'Metroliner', cs: ['PHX594'] },
   { reg: 'C-FIOA', tail: 'IOA', type: 'Metroliner', cs: ['PHX680'] },
   { reg: 'C-FIOB', tail: 'IOB', type: 'Metroliner', cs: ['PHX614'] },
@@ -47,7 +47,6 @@ const FLEET = [
   { reg: 'C-GTIM', tail: 'TIM', type: 'Metroliner', cs: ['PHX274'] },
   { reg: 'C-GCPX', tail: 'CPX', type: 'Metroliner', cs: ['PHX11']  },
   { reg: 'C-GKKC', tail: 'KKC', type: 'Metroliner', cs: ['PHX370'] },
-  { reg: 'C-GIAW', tail: 'IAW', type: 'Westwind',   cs: [] },
   { reg: 'C-FXAW', tail: 'XAW', type: 'Westwind',   cs: ['PHX280'] },
   { reg: 'C-FXDP', tail: 'XDP', type: 'Westwind',   cs: ['PHX303'] },
   { reg: 'C-FDAX', tail: 'DAX', type: 'Astra',      cs: ['PHX58']  },
