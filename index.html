@@ -26,7 +26,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -337,6 +337,120 @@ body::before{
 
 /* CONTENT */
 .content{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(88px + var(--safe-b));background:var(--bg)}
+
+/* HOME DESIGNS — chosen with the 🎨 button on the home tab. Classic is the original layout. */
+.hero-img{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 0.6s ease}
+.hero-img.active{opacity:1}
+.hero-img.kb{animation:kenBurns 6s ease-out forwards}
+@keyframes kenBurns{from{transform:scale(1)}to{transform:scale(1.07)}}
+.hd{position:relative;overflow:hidden;isolation:isolate;min-height:calc(100vh - 150px);padding:18px 14px calc(100px + var(--safe-b));margin-bottom:calc(-88px - var(--safe-b))}
+.hd-notes{margin:0 -14px}
+.hd-top small{font-size:11px;font-weight:600;letter-spacing:1.6px;opacity:.65;text-transform:uppercase}
+.hd-top h2{font-size:26px;font-weight:800;line-height:1.1;margin-top:4px}
+.hd-foot{text-align:center;padding:14px 0 0;font-size:10px;font-weight:600;letter-spacing:.5px;opacity:.55}
+.hd-share{display:flex;justify-content:center;padding:10px 0 0}
+.hd-share button{display:flex;align-items:center;gap:8px;padding:10px 22px;border-radius:50px;background:rgba(128,128,128,.16);border:1px solid rgba(128,128,128,.3);color:inherit;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;letter-spacing:.3px}
+.hd svg{flex-shrink:0}
+/* 1 · Bento */
+.hd-bento{background:#0B1120;font-family:Figtree,sans-serif;color:#F0F4FF}
+.hd-bento .hd-top{padding:4px 4px 16px}
+.hd-bg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hd-bx{border-radius:24px;padding:14px;position:relative;overflow:hidden;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hd-bx:active{opacity:.85}
+.hd-bx.today{grid-column:1/-1;background:linear-gradient(135deg,#1c4fd6,#3a7bff 60%,#5fb0ff);display:flex;align-items:center;gap:16px;padding:18px;color:#fff}
+.hd-ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(#fff calc(var(--p)*1%),rgba(255,255,255,.22) 0);display:grid;place-items:center;flex-shrink:0}
+.hd-ring b{width:72px;height:72px;border-radius:50%;background:#2559e0;display:grid;place-items:center;font-weight:800;font-size:20px}
+.hd-bx.today h3{font-size:13px;font-weight:600;opacity:.85}
+.hd-bx.today p{font-size:20px;font-weight:800;line-height:1.15;margin:3px 0 10px}
+.hd-btn{display:inline-block;background:#fff;color:#1c4fd6;font-weight:800;font-size:12px;padding:7px 14px;border-radius:20px}
+.hd-bx.fleet{grid-row:span 2;background:#141F3A;border:1px solid rgba(255,255,255,.08);min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
+.hd-bx.fleet img{position:absolute;left:-10px;bottom:34px;width:calc(100% + 20px);max-width:none;height:74px;object-fit:contain;object-position:center;transform:rotate(-6deg);pointer-events:none}
+.hd-bx.fleet small,.hd-bx.cal small,.hd-bx.shop small{display:block;font-size:10.5px;color:#8c9bb8;font-weight:700;letter-spacing:1px}
+.hd-bx.fleet b{font-size:19px;font-weight:800;display:block;margin-top:2px}
+.hd-bx.fleet em{font-style:normal;font-size:12px;font-weight:700;position:relative;color:#8c9bb8}
+.hd-bx.fleet em.go{color:#2ECC8A}
+.hd-bx.cal{background:#1d1636;border:1px solid rgba(180,130,255,.3)}
+.hd-bx.shop{background:#0f2a2a;border:1px solid rgba(60,200,170,.3);display:flex;align-items:center;gap:10px}
+.hd-bx.cal small{color:#c9a8ff}.hd-bx.shop small{color:#7fe0c8}
+.hd-bx.cal p{font-size:13px;font-weight:700;margin-top:5px;line-height:1.25}
+.hd-bx.shop b{font-size:15px;font-weight:800}
+.hd-bx.shop svg{width:26px;height:26px;color:#7fe0c8}
+.hd-bsm{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
+.hd-bs{aspect-ratio:1;border-radius:18px;background:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:9.5px;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hd-bs svg{width:22px;height:22px}
+/* 2 · Aurora glass */
+.hd-aurora{background:#070914;font-family:Sora,sans-serif;color:#fff}
+.hd-blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.7;z-index:-1;animation:hdDrift 14s ease-in-out infinite alternate}
+.hd-blob.b1{width:260px;height:260px;background:#2f6bff;top:-60px;left:-70px}
+.hd-blob.b2{width:240px;height:240px;background:#12c6a8;top:340px;right:-90px;animation-delay:-4s}
+.hd-blob.b3{width:250px;height:250px;background:#8a3bff;bottom:60px;left:-60px;animation-delay:-8s}
+@keyframes hdDrift{to{transform:translate(30px,40px) scale(1.15)}}
+.hd-glass{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:24px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.hd-ahero{height:170px;margin:12px 0;position:relative;overflow:hidden}
+.hd-ahero .cap{position:absolute;left:14px;right:14px;bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;z-index:2;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.hd-ahero .cap b{font-size:13px}
+.hd-ahero .cap i{font-style:normal;background:rgba(46,204,138,.25);border:1px solid rgba(46,204,138,.5);color:#8ff0c6;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600}
+.hd-arow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.hd-arow .hd-glass{padding:12px 14px;font-size:12px;cursor:pointer}
+.hd-arow small{opacity:.65;font-size:10px;letter-spacing:1px;font-weight:600}
+.hd-arow p{margin-top:4px;line-height:1.3}
+.hd-atg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hd-at{padding:15px 4px 12px;text-align:center;font-size:11px;font-weight:600;display:flex;flex-direction:column;gap:7px;align-items:center;cursor:pointer;color:#fff}
+.hd-at svg{width:26px;height:26px;color:var(--g);filter:drop-shadow(0 0 8px var(--g))}
+/* 3 · Neo-brutal */
+.hd-brutal{background:#FFF0B8;font-family:"Bricolage Grotesque",sans-serif;color:#111;padding-top:0}
+.hd-mq{margin:0 -14px 14px;background:#111;color:#FFF0B8;font-weight:800;font-size:12px;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;padding:7px 0}
+.hd-mq span{display:inline-block;animation:hdMq 22s linear infinite}
+@keyframes hdMq{to{transform:translateX(-50%)}}
+.hd-brutal h2{font-size:44px;line-height:.92;font-weight:800;letter-spacing:-1.5px}
+.hd-brutal h2 em{font-style:normal;background:#FF5CA8;padding:0 8px;border:3px solid #111;display:inline-block;transform:rotate(-2deg);box-shadow:4px 4px 0 #111}
+.hd-brutal .sub{font-weight:700;font-size:13px;margin:10px 0 14px;text-transform:uppercase}
+.hd-bcard{border:3px solid #111;border-radius:14px;box-shadow:5px 5px 0 #111;padding:12px 14px;margin-bottom:14px;background:#fff;cursor:pointer}
+.hd-bcard.prog{background:#B6FF3B}
+.hd-bcard.prog b{font-size:15px}
+.hd-bcard .hd-pbar{height:22px;border:3px solid #111;border-radius:11px;background:#fff;margin-top:8px;overflow:hidden}
+.hd-bcard .hd-pbar i{display:block;height:100%;background:#111}
+.hd-bcard.fl{background:#7CB4FF;display:flex;align-items:center;gap:8px;overflow:hidden}
+.hd-bcard.fl .pl{width:96px;height:52px;background:center/contain no-repeat;flex-shrink:0;filter:drop-shadow(3px 3px 0 #111)}
+.hd-bcard.fl b{font-size:15px;display:block;line-height:1.1}
+.hd-bcard.fl small{font-weight:700;font-size:12px}
+.hd-btg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.hd-bt{border:3px solid #111;border-radius:12px;box-shadow:4px 4px 0 #111;background:var(--c);padding:12px 4px 9px;text-align:center;font-weight:800;font-size:12px;cursor:pointer;color:#111}
+.hd-btg .hd-bt:nth-child(2n){rotate:1.4deg}.hd-btg .hd-bt:nth-child(3n){rotate:-1.2deg}
+.hd-bt svg{width:26px;height:26px;margin:0 auto 5px;display:block;stroke-width:2}
+.hd-brutal .hd-foot,.hd-brutal .hd-share button{color:#111}
+/* 4 · Sky + bottom sheet */
+.hd-sky{background:linear-gradient(#0d2a5a 0,#3c5fa8 110px,#f0a06a 200px,#ffd0a0 290px,#0f1729 290px);font-family:Manrope,sans-serif;color:#fff;padding:0 0 calc(100px + var(--safe-b))}
+.hd-skyarea{position:relative;height:300px;overflow:hidden}
+.hd-skyarea .dt{position:absolute;left:18px;top:16px;font-size:12px;font-weight:700;opacity:.9;letter-spacing:.5px;text-transform:uppercase;z-index:2}
+.hd-chip{position:absolute;left:16px;bottom:48px;z-index:2;background:rgba(10,20,45,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:9px 13px;font-size:12px;line-height:1.35;cursor:pointer}
+.hd-chip b{display:block;font-size:14px}
+.hd-chip i{font-style:normal;color:#7dffc4;font-weight:800}
+.hd-sheet{position:relative;margin-top:-34px;background:#0f1729;border-radius:30px 30px 0 0;padding:10px 14px 10px;box-shadow:0 -14px 40px rgba(0,0,0,.35)}
+.hd-grab{width:42px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 14px}
+.hd-sheet h3{font-size:19px;font-weight:800;padding:0 4px}
+.hd-sheet .pb{height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin:9px 4px 5px;overflow:hidden}
+.hd-sheet .pb i{display:block;height:100%;background:linear-gradient(90deg,#ff9b5e,#ffcf7a);border-radius:4px}
+.hd-sheet .ps{font-size:12px;color:#9aa6c2;padding:0 4px;margin-bottom:6px}
+.hd-stg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.hd-st{background:#182241;border-radius:20px;padding:15px 4px 11px;text-align:center;font-size:11.5px;font-weight:700;color:#dfe6f7;cursor:pointer}
+.hd-st svg{margin:0 auto 7px;display:block;color:var(--c);width:26px;height:26px}
+/* design picker */
+.hp-veil{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s}
+.hp-veil.show{opacity:1;pointer-events:auto}
+.hp-dial{position:fixed;left:16px;bottom:calc(72px + var(--safe-b));z-index:60}
+.hp-btn{width:52px;height:52px;border-radius:50%;border:1px solid var(--border2);background:var(--bg3);font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.hp-btn.open{background:var(--accent-dim);border-color:var(--accent-border)}
+.hp-fan{position:absolute;left:0;bottom:64px;width:224px;display:flex;flex-direction:column;gap:8px;opacity:0;transform:translateY(12px);pointer-events:none;transition:opacity .22s ease,transform .22s ease}
+.hp-fan.show{opacity:1;transform:none;pointer-events:auto}
+.hp-pc{position:relative;display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:12px;border:1.5px solid var(--border2);background:var(--bg2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hp-pc.on{border-color:var(--accent);background:var(--accent-dim)}
+.hp-pc.on:after{content:"✓";position:absolute;top:6px;right:9px;font-size:11px;font-weight:800;color:var(--accent2)}
+.hp-pc small{font-size:12.5px;font-weight:700;color:var(--t2)}
+.hp-pc.on small{color:var(--accent2)}
+.hp-mini{width:64px;height:44px;flex-shrink:0;border-radius:8px;position:relative;overflow:hidden}
+.hp-mini u{position:absolute;border-radius:3px;text-decoration:none}
+@media (prefers-reduced-motion:reduce){.hd-blob,.hd-mq span{animation:none}}
 
 /* NAV */
 .nav{
@@ -822,6 +936,8 @@ body::before{
 
 <button class="fab" id="fab" onclick="fabClick()">+</button>
 <button class="eod-fab" id="eodFab" onclick="showEOD()">📋</button>
+<div class="hp-veil" id="hpVeil" onclick="closeHomePicker()"></div>
+<div class="hp-dial" id="hpDial" style="display:none"><div class="hp-fan" id="hpFan"></div><button class="hp-btn" id="hpBtn" onclick="toggleHomePicker()" aria-label="Home design">🎨</button></div>
 <div class="toast" id="toast"></div>
 
 <!-- ── SHARE & INSTALL SHEET ── -->
@@ -1191,6 +1307,8 @@ const S = {
   mCtx:null, photoCtx:null,
   dmgReports:{}, // {procKey:[{text,photo,date}]}
   dark: localStorage.getItem('gykf_dark')==='1',
+  homeDesign: (()=>{ try { return localStorage.getItem('gykf_home_design') || 'classic'; } catch(e) { return 'classic'; } })(), // per-device home layout
+  homeFleet: null,  // {inbound,airborne,ground} for the home designs, from fleetPositions/live
   handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
   calendarEvents: [], // {id,date,title,notes}
   calAnchor: null,     // Date — anchor day/month/year for the Calendar tab's current view
@@ -1484,6 +1602,12 @@ function updateThemeToggleBtn() {
 }
 function render() {
   const el=document.getElementById('content');
+  if(S.tab!=='home') {
+    S.homePickerOpen=false;
+    document.getElementById('hpDial').style.display='none';
+    document.getElementById('hpVeil').classList.remove('show');
+    if(_homeFleetTimer){ clearInterval(_homeFleetTimer); _homeFleetTimer=null; }
+  }
   switch(S.tab) {
     case 'home':       renderHome(el); break;
     case 'today':      renderToday(el); break;
@@ -1983,7 +2107,17 @@ async function renderHome(el) {
     {id:'week',       svg:ICONS.week,       label:'Week'},
   ].filter(item => item.id !== 'fleet' || BASE_CONFIG.features?.fleet !== false);
 
-  el.innerHTML = `
+  // Home design chosen with the 🎨 button. Anything going wrong falls back to Classic.
+  if(_homeFleetTimer) { clearInterval(_homeFleetTimer); _homeFleetTimer = null; }
+  let _designHtml = null;
+  const _wantDesign = homeDesign();
+  if(_wantDesign !== 'classic') {
+    try { _designHtml = homeDesignHtml(_wantDesign, dateStr); }
+    catch(e) { console.log('Home design error, using Classic:', e); _designHtml = null; }
+  }
+  _homeActiveDesign = _designHtml ? _wantDesign : 'classic';
+
+  el.innerHTML = _designHtml ? _designHtml : `
     <style>
       @keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
       .tile-anim{animation:slideIn 0.3s ease both}
@@ -2030,17 +2164,22 @@ async function renderHome(el) {
   if(!_tileEditMode) _tileOrder = getOrderedHomeTiles(HOME_TILES);
   _refreshTileGrid();
 
-  // Cinematic slideshow
+  // Cinematic slideshow (Classic, Aurora and Sky have the aircraft images; Bento and Neo-Brutal don't)
   let _hIdx = 0;
   const _hImgs = HERO_IMGS.map((_,i) => document.getElementById('hImg'+i));
-  _heroSlideTimer = setInterval(() => {
-    _hImgs[_hIdx].classList.remove('active','kb');
-    _hIdx = (_hIdx + 1) % HERO_IMGS.length;
-    const next = _hImgs[_hIdx];
-    next.classList.add('active');
-    void next.offsetWidth; // force reflow for KB restart
-    next.classList.add('kb');
-  }, 2000);
+  if(_hImgs.every(Boolean)) {
+    _heroSlideTimer = setInterval(() => {
+      _hImgs[_hIdx].classList.remove('active','kb');
+      _hIdx = (_hIdx + 1) % HERO_IMGS.length;
+      const next = _hImgs[_hIdx];
+      next.classList.add('active');
+      void next.offsetWidth; // force reflow for KB restart
+      next.classList.add('kb');
+    }, 2000);
+  }
+
+  // Design picker + live fleet info for the non-Classic layouts
+  try { homeAfterRender(); } catch(e) { console.log('homeAfterRender error:', e); }
 
   // Audit reminder popup — fires on 8th, 9th, 10th if audits are pending
   const _popDay = new Date().getDate();
@@ -2063,6 +2202,215 @@ async function renderHome(el) {
     if(!plData().done)  _pend.push('Parking Lot MX');
     if(!ykfData().done) _pend.push('YKF Base');
     if(_pend.length) setTimeout(()=>showAuditReminderPopup(_pend,_popKey), 800);
+  }
+}
+
+// ── HOME DESIGNS ───────────────────────────────────────────────────
+// The 🎨 button on the home tab picks a layout (saved on this device only). Only the home
+// page changes; every other tab is untouched. Classic is the original layout, in renderHome.
+const HOME_DESIGNS = [
+  {id:'classic', label:'Classic'},
+  {id:'bento',   label:'Bento'},
+  {id:'aurora',  label:'Aurora Glass'},
+  {id:'brutal',  label:'Neo-Brutal'},
+  {id:'sky',     label:'Sky + Sheet'},
+];
+const HOME_PLANE_IMGS = [
+  'cars/Westwind-removebg-preview.png',
+  'cars/Metroliner_logo-removebg-preview.png',
+  'cars/Navajo_logo-removebg-preview.png',
+  'cars/Astra-removebg-preview.png',
+];
+const HD_BENTO_FEATURED = ['today','fleet','calendar','shopping']; // drawn as big cards, not small tiles
+const HD_BENTO_COLORS = {contacts:'#1aa58a',procedures:'#d98a1c',audits:'#8a5cf6',cars:'#2d8fe0',week:'#3aa15a'};
+let _homeActiveDesign = 'classic';
+let _homeFleetTimer = null;
+
+function homeDesign() { return HOME_DESIGNS.some(d=>d.id===S.homeDesign) ? S.homeDesign : 'classic'; }
+function _hdEsc(s) { return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function homeGreeting() { const h=new Date().getHours(); return h<12?'Good morning':h<18?'Good afternoon':'Good evening'; }
+
+// Today's task progress + today's calendar events, the same numbers the Today and Calendar tabs use.
+function homeStats() {
+  const tasks = S.tasks[DAYS[getToday()]] || [];
+  const done = tasks.filter(t=>t.done).length;
+  const total = tasks.length;
+  return { done, total, pct: total ? Math.round(done/total*100) : 0,
+           evs: (S.calendarEvents||[]).filter(e=>e.date===localDateISO()) };
+}
+function homeEventsLine(st) {
+  if(!st.evs.length) return 'Nothing scheduled';
+  return _hdEsc(st.evs[0].title) + (st.evs.length>1 ? ` +${st.evs.length-1} more` : '');
+}
+function homeFooterHtml() {
+  return `<div class="hd-foot">Skycare ${APP_VERSION}</div>
+    <div class="hd-share"><button onclick="openShareInstallSheet()">Share &amp; Install App</button></div>`;
+}
+function homeNotesHtml() { return `<div class="hd-notes">${renderHandoffNotesHtml()}${renderTodayEventsHtml()}</div>`; }
+function homePlaneImgsHtml(pad) {
+  return HOME_PLANE_IMGS.map((src,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${src}" id="hImg${i}" style="object-fit:contain;padding:${pad};object-position:center" alt="">`).join('');
+}
+
+// ── live fleet info (read from fleetPositions/live, written by the alert job) ──
+function homeFleetInfo() {
+  const hf = S.homeFleet;
+  const plane = {Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Astra:HOME_PLANE_IMGS[3]};
+  if(!hf) return {reg:'Checking…', line:'', sub:'', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
+  if(!_fleetFeedAt || Date.now()-_fleetFeedAt > 15*60000)
+    return {reg:'No live feed', line:'', sub:'Open the Fleet tab', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
+  if(hf.inbound) {
+    const p = hf.inbound;
+    const type = (FLEET_AIRCRAFT.find(a=>a.tail===p.tail)||{}).type;
+    const m = p.eta;
+    return {reg:p.reg, line:`Inbound · ${m>=60?Math.floor(m/60)+'h '+(m%60)+'m':m+' min'}`, sub:`${p.distNm} nm out`, tone:'go', img:plane[type]||HOME_PLANE_IMGS[0], inbound:true};
+  }
+  if(hf.airborne) return {reg:'Airborne', line:`${hf.airborne} in the air`, sub:'None inbound yet', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
+  return {reg:'No arrivals', line:'Nothing airborne', sub:hf.ground?`${hf.ground} on the ground`:'Live ADS-B', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
+}
+function homeFleetSlotHtml(kind) {
+  const f = homeFleetInfo();
+  if(kind==='bento')  return `<div><small>FLEET</small><b>${_hdEsc(f.reg)}</b></div><img src="${f.img}" alt=""><em class="${f.tone}">${_hdEsc(f.line||f.sub)}</em>`;
+  if(kind==='aurora') return `<b>${f.inbound?_hdEsc(f.reg)+' · inbound':_hdEsc(f.reg)}</b>${f.line?`<i>${_hdEsc(f.line)}${f.inbound?' · '+_hdEsc(f.sub):''}</i>`:''}`;
+  if(kind==='brutal') return `<div class="pl" style="background-image:url('${f.img}')"></div><div><b>${f.inbound?_hdEsc(f.reg)+' is coming in':_hdEsc(f.reg)}</b><small>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}</small></div>`;
+  if(kind==='sky')    return `<b>${_hdEsc(f.reg)}</b>${f.inbound?`<i>${_hdEsc(f.line)}</i> · ${_hdEsc(f.sub)}`:_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}`;
+  return '';
+}
+function homeFleetPaint() {
+  if(S.tab!=='home') return;
+  document.querySelectorAll('[data-hfslot]').forEach(n=>{ n.innerHTML = homeFleetSlotHtml(n.dataset.hfslot); });
+}
+async function homeFleetRefresh() {
+  if(BASE_CONFIG.features?.fleet === false) return;
+  try {
+    const pos = await fetchFleetOpenSky();
+    const air = pos.filter(p=>!p.onGround);
+    const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250)
+      .map(p=>({...p, eta:etaMinutes(p.distNm,p.speedKts)})).filter(p=>p.eta!==null)
+      .sort((a,b)=>a.distNm-b.distNm)[0] || null;
+    S.homeFleet = {inbound, airborne:air.length, ground:pos.length-air.length};
+  } catch(e) { return; }
+  homeFleetPaint();
+}
+
+// ── layouts ──
+function homeDesignHtml(d, dateStr) {
+  const st = homeStats();
+  const fleetOn = BASE_CONFIG.features?.fleet !== false;
+  const dt = _hdEsc(dateStr);
+  const prog = st.total ? `${st.done} of ${st.total} tasks done` : 'No tasks yet';
+  const fleetCard = (kind, cls, extra='') => fleetOn ? `<div class="${cls}" data-hfslot="${kind}" onclick="goTab('fleet')" ${extra}>${homeFleetSlotHtml(kind)}</div>` : '';
+  if(d==='bento') return `<div class="hd hd-bento">
+    <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()},<br>YKF crew</h2></div>
+    ${homeNotesHtml()}
+    <div class="hd-bg">
+      <div class="hd-bx today" onclick="goTab('today')"><div class="hd-ring" style="--p:${st.pct}"><b>${st.pct}%</b></div><div><h3>Today</h3><p>${prog}</p><span class="hd-btn">Open today</span></div></div>
+      ${fleetCard('bento','hd-bx fleet')}
+      <div class="hd-bx cal" onclick="goTab('calendar')"><small>📆 CALENDAR</small><p>${st.evs.length?`${st.evs.length} today<br>${homeEventsLine(st)}`:'Nothing<br>scheduled today'}</p></div>
+      <div class="hd-bx shop" onclick="goTab('shopping')">${ICONS.shopping}<div><small>LIST</small><b>Shopping</b></div></div>
+    </div>
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  if(d==='aurora') return `<div class="hd hd-aurora"><i class="hd-blob b1"></i><i class="hd-blob b2"></i><i class="hd-blob b3"></i>
+    <div class="hd-top"><small>${dt}</small><h2>Skycare YKF</h2></div>
+    ${homeNotesHtml()}
+    <div class="hd-glass hd-ahero">${homePlaneImgsHtml('18px 30px 34px')}${fleetOn?`<div class="cap" data-hfslot="aurora" onclick="goTab('fleet')">${homeFleetSlotHtml('aurora')}</div>`:''}</div>
+    <div class="hd-arow">
+      <div class="hd-glass" onclick="goTab('today')"><small>TODAY</small><p><b style="font-size:24px">${st.pct}%</b><br>${st.total?`${st.done} of ${st.total} tasks`:'No tasks yet'}</p></div>
+      <div class="hd-glass" onclick="goTab('calendar')"><small>CALENDAR</small><p>${st.evs.length?homeEventsLine(st):'Nothing scheduled today'}</p></div>
+    </div>
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  if(d==='brutal') {
+    const bits = [];
+    st.evs.forEach(e=>bits.push((e.type==='charter'?'✈ CHARTER TODAY: ':'📆 TODAY: ')+String(e.title||'').toUpperCase()));
+    if((S.handoffNotes||[]).length) bits.push('📌 HANDOFF FROM '+String(S.handoffNotes[0].day||'LAST SHIFT').toUpperCase());
+    if(!bits.length) bits.push('✈ SKYCARE YKF', 'HAVE A GREAT SHIFT');
+    const mq = _hdEsc(bits.join(' • ') + ' • ');
+    return `<div class="hd hd-brutal">
+    <div class="hd-mq"><span>${mq}${mq}</span></div>
+    <h2>YKF<br><em>SHIFT</em></h2>
+    <div class="sub">${dt}</div>
+    <div class="hd-bcard prog" onclick="goTab('today')"><b>${prog}</b><div class="hd-pbar"><i style="width:${st.pct}%"></i></div></div>
+    ${homeNotesHtml()}
+    ${fleetCard('brutal','hd-bcard fl')}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  }
+  if(d==='sky') return `<div class="hd hd-sky">
+    <div class="hd-skyarea"><div class="dt">${dt}</div>${homePlaneImgsHtml('44px 6px 60px')}${fleetOn?`<div class="hd-chip" data-hfslot="sky" onclick="goTab('fleet')">${homeFleetSlotHtml('sky')}</div>`:''}</div>
+    <div class="hd-sheet"><div class="hd-grab"></div>
+      <h3 onclick="goTab('today')">Today</h3><div class="pb"><i style="width:${st.pct}%"></i></div><div class="ps">${prog}${st.evs.length?' · '+homeEventsLine(st):''}</div>
+      ${homeNotesHtml()}
+      <div id="homeTileWrap"></div>
+      ${homeFooterHtml()}
+    </div></div>`;
+  throw new Error('unknown home design '+d);
+}
+
+function _hdTileAttrs(t, i, extraStyle) {
+  return `id="ht-${t.id}" data-tile-id="${t.id}"
+    style="${_tileEditMode?`animation-delay:${i*40}ms`:`animation-delay:${i*55}ms`};touch-action:none;position:relative;${extraStyle||''}"
+    ${_tileEditMode
+      ? `ontouchstart="tileTouchStart(event,'${t.id}')" ontouchend="tileTouchEnd(event)"`
+      : `onclick="goTab('${t.id}')" onpointerdown="tileLPStart('${t.id}')" onpointerup="tileLPCancel()" onpointerleave="tileLPCancel()"`}`;
+}
+// Tiles keep the same drag-to-reorder behaviour as Classic (long-press, drag, Done).
+function homeDesignTilesHtml(d) {
+  const cls = _tileEditMode ? 'tile-wobble' : 'tile-anim';
+  let list = _tileOrder || [];
+  const pal = {
+    aurora:['#6fa8ff','#5ff0d0','#c79bff','#ffd27a','#ff8fb6'],
+    brutal:['#FF5CA8','#B6FF3B','#7CB4FF','#FF9A3C','#ffffff','#C7A6FF'],
+    sky:   ['#7db8ff','#ffb86b','#ff8fb6','#7dffc4','#c79bff'],
+  };
+  if(d==='bento') {
+    list = list.filter(t=>!HD_BENTO_FEATURED.includes(t.id));
+    return `<div class="hd-bsm">${list.map((t,i)=>`<div class="hd-bs ${cls}" ${_hdTileAttrs(t,i,`--c:${HD_BENTO_COLORS[t.id]||'#3a7bff'}`)}>${t.svg}${t.label==='Crew Cars'?'Cars':t.label}</div>`).join('')}</div>`;
+  }
+  const c = pal[d] || pal.aurora;
+  const grid = {aurora:'hd-atg', brutal:'hd-btg', sky:'hd-stg'}[d];
+  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', sky:'hd-st'}[d];
+  const cvar = d==='aurora' ? '--g' : '--c';
+  return `<div class="${grid}">${list.map((t,i)=>`<div class="${item} ${cls}" ${_hdTileAttrs(t,i,`${cvar}:${c[i%c.length]}`)}>${t.svg}${t.label}</div>`).join('')}</div>`;
+}
+
+// ── the 🎨 picker ──
+function homeMiniHtml(id) {
+  const m = {
+    classic:`<div class="hp-mini" style="background:#0B1120"><u style="left:0;right:0;top:0;height:18px;border-radius:0;background:linear-gradient(#1a2c52,#0B1120)"></u><u style="left:24px;top:6px;width:16px;height:7px;background:#cfd8e8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*20}px;top:24px;width:16px;height:15px;background:rgba(255,255,255,.12)"></u>`).join('')}</div>`,
+    bento:`<div class="hp-mini" style="background:#0B1120"><u style="left:4px;right:4px;top:4px;height:13px;background:#3a7bff;border-radius:5px"></u><u style="left:4px;top:20px;width:26px;height:20px;background:#141F3A;border:1px solid #2a3a60"></u><u style="left:33px;top:20px;width:27px;height:9px;background:#5b46ff"></u><u style="left:33px;top:31px;width:27px;height:9px;background:#e0567a"></u></div>`,
+    aurora:`<div class="hp-mini" style="background:radial-gradient(circle at 20% 20%,#2f6bff,transparent 55%),radial-gradient(circle at 85% 80%,#8a3bff,transparent 55%),#070914"><u style="left:5px;right:5px;top:6px;height:15px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:26px;width:15px;height:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:5px"></u>`).join('')}</div>`,
+    brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
+    sky:`<div class="hp-mini" style="background:linear-gradient(#0d2a5a,#3c5fa8 30%,#f0a06a 60%)"><u style="left:14px;top:8px;width:36px;height:7px;background:#e8eef8;border-radius:4px"></u><u style="left:0;right:0;top:22px;bottom:0;background:#0f1729;border-radius:10px 10px 0 0"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:30px;width:15px;height:11px;background:#182241;border-radius:4px"></u>`).join('')}</div>`,
+  };
+  return m[id] || '';
+}
+function renderHomePicker() {
+  const cur = homeDesign();
+  document.getElementById('hpFan').innerHTML = HOME_DESIGNS.map(d=>
+    `<div class="hp-pc ${cur===d.id?'on':''}" onclick="setHomeDesign('${d.id}')">${homeMiniHtml(d.id)}<small>${d.label}</small></div>`).join('');
+  const open = !!S.homePickerOpen;
+  document.getElementById('hpFan').classList.toggle('show', open);
+  document.getElementById('hpVeil').classList.toggle('show', open);
+  document.getElementById('hpBtn').classList.toggle('open', open);
+}
+function toggleHomePicker() { S.homePickerOpen = !S.homePickerOpen; renderHomePicker(); }
+function closeHomePicker() { S.homePickerOpen = false; renderHomePicker(); }
+function setHomeDesign(d) {
+  if(!HOME_DESIGNS.some(x=>x.id===d)) return;
+  S.homeDesign = d;
+  S.homePickerOpen = false;
+  try { localStorage.setItem('gykf_home_design', d); } catch(e) {}
+  haptic('light');
+  _tileEditMode = false;
+  if(S.tab==='home') renderHome(document.getElementById('content'));
+}
+function homeAfterRender() {
+  document.getElementById('hpDial').style.display = '';
+  renderHomePicker();
+  if(_homeActiveDesign !== 'classic' && BASE_CONFIG.features?.fleet !== false) {
+    homeFleetRefresh();
+    _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
   }
 }
 
@@ -9025,6 +9373,7 @@ function _buildTileGridHtml() {
     ? `<div style="display:flex;justify-content:flex-end;margin-bottom:10px">
         <button onclick="exitTileEditMode()" style="padding:7px 20px;border-radius:20px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Done</button>
        </div>` : '';
+  if(_homeActiveDesign !== 'classic') return doneBtn + homeDesignTilesHtml(_homeActiveDesign);
   const tiles = (_tileOrder||[]).map((t,i)=>`
     <div class="home-tile${_tileEditMode?' tile-wobble':' tile-anim'}"
          id="ht-${t.id}" data-tile-id="${t.id}"
