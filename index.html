@@ -2327,7 +2327,7 @@ function hdSlots() {
 function hdSlotWin(design, slotId) {
   const slot = HD_SLOTS[design].find(s=>s.id===slotId);
   const w = (hdSlots()[design]||{})[slotId] || slot.def;
-  return hdWindows().some(x=>x.id===w) ? w : 'week';
+  return hdWindows().some(x=>x.id===w) ? w : slot.def;
 }
 function hdSlotWins(design) { return (HD_SLOTS[design]||[]).map(s=>hdSlotWin(design,s.id)); }
 function hdSetSlotWin(design, slotId, win) {
