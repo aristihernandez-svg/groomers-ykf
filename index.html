@@ -26,7 +26,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -361,7 +361,7 @@ body::before{
 .hd-ring{--p:0;width:92px;height:92px;border-radius:50%;background:conic-gradient(#fff calc(var(--p)*1%),rgba(255,255,255,.22) 0);display:grid;place-items:center;flex-shrink:0}
 .hd-ring b{width:72px;height:72px;border-radius:50%;background:#2559e0;display:grid;place-items:center;font-weight:800;font-size:20px}
 .hd-bx.today h3{font-size:13px;font-weight:600;opacity:.85}
-.hd-bx.today p{font-size:20px;font-weight:800;line-height:1.15;margin:3px 0 10px}
+.hd-bx.today p{font-size:18px;font-weight:800;line-height:1.15;margin:3px 0 10px}
 .hd-btn{display:inline-block;background:#fff;color:#1c4fd6;font-weight:800;font-size:12px;padding:7px 14px;border-radius:20px}
 .hd-bx.fleet{grid-row:span 2;background:#141F3A;border:1px solid rgba(255,255,255,.08);min-height:190px;display:flex;flex-direction:column;justify-content:space-between}
 .hd-bx.fleet img{position:absolute;left:-10px;bottom:34px;width:calc(100% + 20px);max-width:none;height:74px;object-fit:contain;object-position:center;transform:rotate(-6deg);pointer-events:none}
@@ -370,11 +370,9 @@ body::before{
 .hd-bx.fleet em{font-style:normal;font-size:12px;font-weight:700;position:relative;color:#8c9bb8}
 .hd-bx.fleet em.go{color:#2ECC8A}
 .hd-bx.cal{background:#1d1636;border:1px solid rgba(180,130,255,.3)}
-.hd-bx.shop{background:#0f2a2a;border:1px solid rgba(60,200,170,.3);display:flex;align-items:center;gap:10px}
+.hd-bx.shop{background:#0f2a2a;border:1px solid rgba(60,200,170,.3)}
 .hd-bx.cal small{color:#c9a8ff}.hd-bx.shop small{color:#7fe0c8}
-.hd-bx.cal p{font-size:13px;font-weight:700;margin-top:5px;line-height:1.25}
-.hd-bx.shop b{font-size:15px;font-weight:800}
-.hd-bx.shop svg{width:26px;height:26px;color:#7fe0c8}
+.hd-bx.cal p,.hd-bx.shop p{font-size:13px;font-weight:700;margin-top:5px;line-height:1.25}
 .hd-bsm{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
 .hd-bs{aspect-ratio:1;border-radius:18px;background:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:9.5px;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .hd-bs svg{width:22px;height:22px}
@@ -435,6 +433,50 @@ body::before{
 .hd-stg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
 .hd-st{background:#182241;border-radius:20px;padding:15px 4px 11px;text-align:center;font-size:11.5px;font-weight:700;color:#dfe6f7;cursor:pointer}
 .hd-st svg{margin:0 auto 7px;display:block;color:var(--c);width:26px;height:26px}
+.hd-mi{display:inline-block}.hd-mi svg{width:13px;height:13px;vertical-align:-2px}
+.hd-vis{width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
+.hd-vis svg{width:42px;height:42px}.hd-vis img{width:125%;max-width:none;height:64px;object-fit:contain}
+.hd-pb{height:10px;border-radius:5px;background:rgba(255,255,255,.14);overflow:hidden;position:relative}
+.hd-pb i{display:block;height:100%;background:linear-gradient(90deg,#3a7bff,#5fb0ff)}
+.hd-bigico{position:absolute;left:0;right:0;bottom:36px;display:grid;place-items:center}
+.hd-bigico svg{width:52px;height:52px;color:#5fb0ff;opacity:.9}
+.hd-aheroin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.hd-aheroin .hd-mi svg{width:46px;height:46px;color:#8ff0c6;filter:drop-shadow(0 0 10px #5ff0d0)}
+.hd-aheroin b{font-size:22px}.hd-aheroin small{opacity:.7;font-size:12px}
+.hd-bsub{font-weight:700;font-size:12px;margin-top:2px}
+.hd-bcard.fl .pl.ico{display:grid;place-items:center;filter:none;background:none}
+.hd-bcard.fl .pl.ico svg{width:44px;height:44px;stroke-width:2}
+/* 5 · Neon night ops */
+.hd-neon{background:linear-gradient(#0a0518,#1a0838 55%,#2b0a4a);font-family:'Exo 2',sans-serif;color:#fff}
+.hd-sun{position:absolute;left:50%;top:70px;width:230px;height:230px;margin-left:-115px;border-radius:50%;background:linear-gradient(#ffe45c,#ff4fa8 60%,#a52dff);-webkit-mask:repeating-linear-gradient(#000 0 14px,transparent 14px 17px);mask:repeating-linear-gradient(#000 0 14px,transparent 14px 17px);opacity:.92;z-index:-1}
+.hd-gridf{position:absolute;left:-40%;right:-40%;bottom:0;height:300px;background:repeating-linear-gradient(90deg,rgba(255,79,168,.55) 0 1px,transparent 1px 40px),repeating-linear-gradient(0deg,rgba(255,79,168,.55) 0 1px,transparent 1px 30px);transform:perspective(220px) rotateX(58deg);transform-origin:bottom;z-index:-1;-webkit-mask:linear-gradient(transparent,#000 60%);mask:linear-gradient(transparent,#000 60%)}
+.hd-nhd{display:flex;justify-content:space-between;font-size:11px;letter-spacing:2px;color:#ff9be0;text-transform:uppercase}
+.hd-neon h2{font-family:Audiowide,sans-serif;font-weight:400;font-size:31px;line-height:1.05;text-align:center;margin-top:64px;text-shadow:0 0 12px #ff4fa8,0 0 28px #a52dff;letter-spacing:1px}
+.hd-neon h2 span{display:block;font-size:13px;letter-spacing:6px;color:#7df3ff;text-shadow:0 0 10px #29e0ff;margin-top:6px}
+.hd-npl{height:100px;margin:2px -10px 8px;background:center/contain no-repeat;filter:drop-shadow(0 0 14px rgba(255,79,168,.8));transform:scaleX(-1)}
+.hd-nbar{border:1px solid #ff4fa8;border-radius:12px;padding:9px 12px;background:rgba(255,79,168,.1);box-shadow:0 0 16px rgba(255,79,168,.35),inset 0 0 12px rgba(255,79,168,.15);margin-bottom:10px;font-size:12px;cursor:pointer}
+.hd-nbar.cy{border-color:#7df3ff;background:rgba(41,224,255,.08);box-shadow:0 0 16px rgba(41,224,255,.3),inset 0 0 12px rgba(41,224,255,.12)}
+.hd-nbar b{color:#7df3ff}
+.hd-nbar .p{height:8px;border-radius:4px;background:rgba(255,255,255,.14);margin-top:7px;overflow:hidden}
+.hd-nbar .p i{display:block;height:100%;background:linear-gradient(90deg,#29e0ff,#ff4fa8);box-shadow:0 0 10px #ff4fa8}
+.hd-ntg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.hd-nt{border:1px solid var(--c);color:var(--c);border-radius:14px;text-align:center;padding:13px 4px 9px;font-size:11px;font-weight:700;letter-spacing:.8px;background:rgba(10,5,24,.55);box-shadow:0 0 12px color-mix(in srgb,var(--c) 45%,transparent),inset 0 0 10px color-mix(in srgb,var(--c) 18%,transparent);text-shadow:0 0 8px currentColor;cursor:pointer;text-transform:uppercase}
+.hd-nt svg{width:24px;height:24px;margin:0 auto 5px;display:block;filter:drop-shadow(0 0 5px currentColor)}
+/* long-press menu: which window a big card shows */
+.hs-veil{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:80;opacity:0;pointer-events:none;transition:opacity .2s}
+.hs-veil.show{opacity:1;pointer-events:auto}
+.hs-menu{position:fixed;left:0;right:0;bottom:0;z-index:81;background:var(--bg2);border-radius:24px 24px 0 0;padding:10px 16px calc(20px + var(--safe-b));border-top:1px solid var(--border2);transform:translateY(105%);transition:transform .25s ease;max-height:80vh;overflow-y:auto;box-shadow:0 -12px 40px rgba(0,0,0,.45)}
+.hs-menu.show{transform:none}
+.hs-grab{width:42px;height:5px;border-radius:3px;background:var(--border2);margin:0 auto 12px}
+.hs-menu h4{font-size:16px;font-weight:800;color:var(--t1)}
+.hs-menu p{font-size:12px;color:var(--t3);margin:3px 0 12px}
+.hs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.hs-w{border:1.5px solid var(--border2);background:var(--glass);border-radius:14px;padding:12px 4px 9px;text-align:center;cursor:pointer;color:var(--t1);-webkit-tap-highlight-color:transparent}
+.hs-w.on{border-color:var(--accent);background:var(--accent-dim)}
+.hs-w svg{width:24px;height:24px;margin:0 auto 5px;display:block;color:var(--accent2)}
+.hs-w b{display:block;font-size:12px;font-weight:700}
+.hs-w small{display:block;font-size:10px;color:var(--t3);margin-top:2px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hs-reset{text-align:center;margin-top:14px;font-size:12px;font-weight:700;color:var(--t3);cursor:pointer;padding:6px}
 /* design picker */
 .hp-veil{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s}
 .hp-veil.show{opacity:1;pointer-events:auto}
@@ -938,6 +980,8 @@ body::before{
 <button class="eod-fab" id="eodFab" onclick="showEOD()">📋</button>
 <div class="hp-veil" id="hpVeil" onclick="closeHomePicker()"></div>
 <div class="hp-dial" id="hpDial" style="display:none"><div class="hp-fan" id="hpFan"></div><button class="hp-btn" id="hpBtn" onclick="toggleHomePicker()" aria-label="Home design">🎨</button></div>
+<div class="hs-veil" id="hsVeil" onclick="hdCloseSlotMenu(true)"></div>
+<div class="hs-menu" id="hsMenu"></div>
 <div class="toast" id="toast"></div>
 
 <!-- ── SHARE & INSTALL SHEET ── -->
@@ -1606,6 +1650,7 @@ function render() {
     S.homePickerOpen=false;
     document.getElementById('hpDial').style.display='none';
     document.getElementById('hpVeil').classList.remove('show');
+    document.getElementById('hsMenu').classList.remove('show'); document.getElementById('hsVeil').classList.remove('show');
     if(_homeFleetTimer){ clearInterval(_homeFleetTimer); _homeFleetTimer=null; }
   }
   switch(S.tab) {
@@ -2208,11 +2253,13 @@ async function renderHome(el) {
 // ── HOME DESIGNS ───────────────────────────────────────────────────
 // The 🎨 button on the home tab picks a layout (saved on this device only). Only the home
 // page changes; every other tab is untouched. Classic is the original layout, in renderHome.
+// In Bento, Aurora, Neo-Brutal and Neon, holding a big card lets you choose which window it shows.
 const HOME_DESIGNS = [
   {id:'classic', label:'Classic'},
   {id:'bento',   label:'Bento'},
   {id:'aurora',  label:'Aurora Glass'},
   {id:'brutal',  label:'Neo-Brutal'},
+  {id:'neon',    label:'Neon Night Ops'},
   {id:'sky',     label:'Sky + Sheet'},
 ];
 const HOME_PLANE_IMGS = [
@@ -2221,14 +2268,34 @@ const HOME_PLANE_IMGS = [
   'cars/Navajo_logo-removebg-preview.png',
   'cars/Astra-removebg-preview.png',
 ];
-const HD_BENTO_FEATURED = ['today','fleet','calendar','shopping']; // drawn as big cards, not small tiles
-const HD_BENTO_COLORS = {contacts:'#1aa58a',procedures:'#d98a1c',audits:'#8a5cf6',cars:'#2d8fe0',week:'#3aa15a'};
+// The windows a big card can show (the same nine as the tool tiles)
+const HD_WINDOWS = [
+  {id:'today',label:'Today'},{id:'calendar',label:'Calendar'},{id:'shopping',label:'Shopping'},
+  {id:'fleet',label:'Fleet'},{id:'contacts',label:'Contacts'},{id:'procedures',label:'Procs'},
+  {id:'audits',label:'Audits'},{id:'cars',label:'Crew Cars'},{id:'week',label:'Week'},
+];
+// Big cards per design: default window, shape, and the CSS class of the card
+const HD_SLOTS = {
+  bento:  [{id:'s1',def:'today',   size:'wide',    cls:'hd-bx today'},
+           {id:'s2',def:'fleet',   size:'tall',    cls:'hd-bx fleet'},
+           {id:'s3',def:'calendar',size:'compact', cls:'hd-bx cal'},
+           {id:'s4',def:'shopping',size:'compact', cls:'hd-bx shop'}],
+  aurora: [{id:'a1',def:'fleet',   size:'hero',    cls:'hd-glass hd-ahero'},
+           {id:'a2',def:'today',   size:'card',    cls:'hd-glass'},
+           {id:'a3',def:'calendar',size:'card',    cls:'hd-glass'}],
+  brutal: [{id:'b1',def:'today',   size:'bar',     cls:'hd-bcard prog'},
+           {id:'b2',def:'fleet',   size:'plane',   cls:'hd-bcard fl'}],
+  neon:   [{id:'n1',def:'today',   size:'bar',     cls:'hd-nbar'},
+           {id:'n2',def:'fleet',   size:'bar',     cls:'hd-nbar cy'}],
+};
 let _homeActiveDesign = 'classic';
 let _homeFleetTimer = null;
 
 function homeDesign() { return HOME_DESIGNS.some(d=>d.id===S.homeDesign) ? S.homeDesign : 'classic'; }
 function _hdEsc(s) { return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function homeGreeting() { const h=new Date().getHours(); return h<12?'Good morning':h<18?'Good afternoon':'Good evening'; }
+function hdFleetOn() { return BASE_CONFIG.features?.fleet !== false; }
+function hdWindows() { return HD_WINDOWS.filter(w=>w.id!=='fleet' || hdFleetOn()); }
 
 // Today's task progress + today's calendar events, the same numbers the Today and Calendar tabs use.
 function homeStats() {
@@ -2251,6 +2318,44 @@ function homePlaneImgsHtml(pad) {
   return HOME_PLANE_IMGS.map((src,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${src}" id="hImg${i}" style="object-fit:contain;padding:${pad};object-position:center" alt="">`).join('');
 }
 
+// ── which window each big card shows (saved per device) ──
+let _hdSlots = null;
+function hdSlots() {
+  if(!_hdSlots) { try { _hdSlots = JSON.parse(localStorage.getItem('gykf_home_slots')||'{}') || {}; } catch(e) { _hdSlots = {}; } }
+  return _hdSlots;
+}
+function hdSlotWin(design, slotId) {
+  const slot = HD_SLOTS[design].find(s=>s.id===slotId);
+  const w = (hdSlots()[design]||{})[slotId] || slot.def;
+  return hdWindows().some(x=>x.id===w) ? w : 'week';
+}
+function hdSlotWins(design) { return (HD_SLOTS[design]||[]).map(s=>hdSlotWin(design,s.id)); }
+function hdSetSlotWin(design, slotId, win) {
+  const cur = hdSlotWin(design, slotId);
+  const other = HD_SLOTS[design].find(s=>s.id!==slotId && hdSlotWin(design,s.id)===win);
+  const m = {...(hdSlots()[design]||{})};
+  m[slotId] = win;
+  if(other) m[other.id] = cur; // picking a window that another card shows swaps the two
+  hdSlots()[design] = m;
+  try { localStorage.setItem('gykf_home_slots', JSON.stringify(hdSlots())); } catch(e) {}
+}
+
+// One summary per window, used by whichever card shows it
+function hdModel(w, st) {
+  const label = (HD_WINDOWS.find(x=>x.id===w)||{}).label || w;
+  const m = {id:w, label, svg:ICONS[w]||'', big:label, sub:'Tap to open', main:'Tap to open', pct:null, fleet:null};
+  if(w==='today') { m.pct=st.pct; m.big=`${st.pct}%`; m.sub=st.total?`${st.done} of ${st.total} tasks`:'No tasks yet'; m.main=st.total?`${st.done} of ${st.total} tasks done`:'No tasks yet'; }
+  else if(w==='calendar') { m.big=st.evs.length?`${st.evs.length} today`:'Clear'; m.sub=homeEventsLine(st); m.main=st.evs.length?homeEventsLine(st):'Nothing scheduled today'; }
+  else if(w==='shopping') { const n=(S.shopping||[]).filter(i=>i.checked).length; m.big=n?`${n} to buy`:'All stocked'; m.sub=n?'on the list':'nothing needed'; m.main=n?`${n} item${n===1?'':'s'} to buy`:'Nothing to buy'; }
+  else if(w==='week') { m.big=DAY_NAMES[getToday()]; m.sub='This week'; m.main='Plan the week'; }
+  else if(w==='contacts') { const c=(S.contacts||[]).length; m.big=c?`${c} people`:'Contacts'; m.sub='Directory'; m.main=c?`${c} contacts`:'Directory'; }
+  else if(w==='procedures') { m.sub='How-tos'; m.main='Step-by-step procedures'; }
+  else if(w==='audits') { m.sub='Monthly checks'; m.main='Monthly audits'; }
+  else if(w==='cars') { const k=(CREW_CARS||[]).length; m.big=k?`${k} vehicles`:'Crew Cars'; m.sub='Crew cars'; m.main=k?`${k} crew vehicles`:'Crew cars'; }
+  else if(w==='fleet') { const f=homeFleetInfo(); m.fleet=f; m.big=f.reg; m.sub=f.line||f.sub; m.main=[f.reg,f.line].filter(Boolean).join(' · '); }
+  return m;
+}
+
 // ── live fleet info (read from fleetPositions/live, written by the alert job) ──
 function homeFleetInfo() {
   const hf = S.homeFleet;
@@ -2267,20 +2372,29 @@ function homeFleetInfo() {
   if(hf.airborne) return {reg:'Airborne', line:`${hf.airborne} in the air`, sub:'None inbound yet', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
   return {reg:'No arrivals', line:'Nothing airborne', sub:hf.ground?`${hf.ground} on the ground`:'Live ADS-B', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
 }
-function homeFleetSlotHtml(kind) {
+function hdFleetSky() {
   const f = homeFleetInfo();
-  if(kind==='bento')  return `<div><small>FLEET</small><b>${_hdEsc(f.reg)}</b></div><img src="${f.img}" alt=""><em class="${f.tone}">${_hdEsc(f.line||f.sub)}</em>`;
-  if(kind==='aurora') return `<b>${f.inbound?_hdEsc(f.reg)+' · inbound':_hdEsc(f.reg)}</b>${f.line?`<i>${_hdEsc(f.line)}${f.inbound?' · '+_hdEsc(f.sub):''}</i>`:''}`;
-  if(kind==='brutal') return `<div class="pl" style="background-image:url('${f.img}')"></div><div><b>${f.inbound?_hdEsc(f.reg)+' is coming in':_hdEsc(f.reg)}</b><small>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}</small></div>`;
-  if(kind==='sky')    return `<b>${_hdEsc(f.reg)}</b>${f.inbound?`<i>${_hdEsc(f.line)}</i> · ${_hdEsc(f.sub)}`:_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}`;
-  return '';
+  return `<b>${_hdEsc(f.reg)}</b>${f.inbound?`<i>${_hdEsc(f.line)}</i> · ${_hdEsc(f.sub)}`:_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}`;
+}
+function hdAuroraCap() {
+  const f = homeFleetInfo();
+  return `<b>${f.inbound?_hdEsc(f.reg)+' · inbound':_hdEsc(f.reg)}</b>${f.line?`<i>${_hdEsc(f.line)}${f.inbound?' · '+_hdEsc(f.sub):''}</i>`:''}`;
 }
 function homeFleetPaint() {
   if(S.tab!=='home') return;
-  document.querySelectorAll('[data-hfslot]').forEach(n=>{ n.innerHTML = homeFleetSlotHtml(n.dataset.hfslot); });
+  document.querySelectorAll('[data-hfslot]').forEach(n=>{
+    const key = n.dataset.hfslot;
+    if(key==='sky') { n.innerHTML = hdFleetSky(); return; }
+    const [design, slotId] = key.split(':');
+    const slot = (HD_SLOTS[design]||[]).find(s=>s.id===slotId);
+    if(!slot) return;
+    const cap = n.querySelector('[data-hfcap]');           // aurora hero: only the caption, so the slideshow keeps running
+    if(cap) cap.innerHTML = hdAuroraCap();
+    else n.innerHTML = hdCardInner(design, slot, 'fleet');
+  });
 }
 async function homeFleetRefresh() {
-  if(BASE_CONFIG.features?.fleet === false) return;
+  if(!hdFleetOn()) return;
   try {
     const pos = await fetchFleetOpenSky();
     const air = pos.filter(p=>!p.onGround);
@@ -2292,52 +2406,140 @@ async function homeFleetRefresh() {
   homeFleetPaint();
 }
 
+// ── big cards ──
+function hdSlotCard(design, slot) {
+  const w = hdSlotWin(design, slot.id);
+  const key = `${design}:${slot.id}`;
+  return `<div class="${slot.cls}" data-hs="${key}" ${w==='fleet'?`data-hfslot="${key}"`:''}
+    onclick="hdSlotClick('${design}','${slot.id}')" onpointerdown="hdSlotDown(event,'${design}','${slot.id}')"
+    onpointermove="hdSlotMove(event)" onpointerup="hdSlotUp()" onpointercancel="hdSlotUp()" onpointerleave="hdSlotUp()"
+    oncontextmenu="return false">${hdCardInner(design, slot, w)}</div>`;
+}
+function hdCardInner(design, slot, w) {
+  const m = hdModel(w, homeStats());
+  const f = m.fleet, U = m.label.toUpperCase();
+  const ico = `<span class="hd-mi">${m.svg}</span>`;
+  switch(design+':'+slot.size) {
+    case 'bento:wide': {
+      const vis = w==='today' ? `<div class="hd-ring" style="--p:${m.pct}"><b>${m.pct}%</b></div>`
+                : w==='fleet' ? `<div class="hd-vis"><img src="${f.img}" alt=""></div>`
+                : `<div class="hd-vis">${m.svg}</div>`;
+      return `${vis}<div><h3>${_hdEsc(m.label)}</h3><p>${_hdEsc(m.main)}</p><span class="hd-btn">Open ${_hdEsc(m.label)}</span></div>`;
+    }
+    case 'bento:tall': {
+      const mid = w==='fleet' ? `<img src="${f.img}" alt="">`
+                : w==='today' ? `<div class="hd-pb"><i style="width:${m.pct}%"></i></div>`
+                : `<div class="hd-bigico">${m.svg}</div>`;
+      return `<div><small>${U}</small><b>${_hdEsc(m.big)}</b></div>${mid}<em class="${f?f.tone:''}">${_hdEsc(m.sub)}</em>`;
+    }
+    case 'bento:compact':
+      return `<small>${ico} ${U}</small><p>${_hdEsc(m.big)}<br>${_hdEsc(m.sub)}</p>`;
+    case 'aurora:hero':
+      if(w==='fleet') return `${homePlaneImgsHtml('18px 30px 34px')}<div class="cap" data-hfcap>${hdAuroraCap()}</div>`;
+      return `<div class="hd-aheroin"><span class="hd-mi">${m.svg}</span><b>${_hdEsc(m.big)}</b><small>${_hdEsc(m.sub)}</small></div>`;
+    case 'aurora:card':
+      return `<small>${U}</small><p><b style="font-size:24px">${_hdEsc(m.big)}</b><br>${_hdEsc(m.sub)}</p>`;
+    case 'brutal:bar':
+      return w==='today' ? `<b>${_hdEsc(m.main)}</b><div class="hd-pbar"><i style="width:${m.pct}%"></i></div>`
+                         : `<b>${_hdEsc(m.label)} · ${_hdEsc(m.big)}</b><div class="hd-bsub">${_hdEsc(m.sub)}</div>`;
+    case 'brutal:plane':
+      if(w==='fleet') return `<div class="pl" style="background-image:url('${f.img}')"></div><div><b>${f.inbound?_hdEsc(f.reg)+' is coming in':_hdEsc(f.reg)}</b><small>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}</small></div>`;
+      return `<div class="pl ico">${m.svg}</div><div><b>${_hdEsc(m.label)}</b><small>${_hdEsc(m.big)} · ${_hdEsc(m.sub)}</small></div>`;
+    case 'neon:bar':
+      return w==='today' ? `<b>TODAY</b> · ${_hdEsc(m.main)}<div class="p"><i style="width:${m.pct}%"></i></div>`
+                         : `<b>${U}</b> · ${_hdEsc(m.main)}`;
+  }
+  return '';
+}
+
+// Hold a big card to choose what it shows; a quick tap still opens the window it shows.
+let _hsTimer = null, _hsFired = false, _hsX = 0, _hsY = 0, _hsOpenAt = 0, _hsCtx = null;
+function hdSlotDown(e, design, slotId) {
+  _hsFired = false; _hsX = e.clientX; _hsY = e.clientY;
+  clearTimeout(_hsTimer);
+  _hsTimer = setTimeout(()=>{ _hsTimer=null; _hsFired=true; haptic('medium'); hdOpenSlotMenu(design, slotId); }, 600);
+}
+function hdSlotMove(e) {
+  if(_hsTimer && Math.hypot(e.clientX-_hsX, e.clientY-_hsY) > 10) { clearTimeout(_hsTimer); _hsTimer = null; }
+}
+function hdSlotUp() { clearTimeout(_hsTimer); _hsTimer = null; }
+function hdSlotClick(design, slotId) {
+  if(_hsFired) { _hsFired = false; return; }
+  goTab(hdSlotWin(design, slotId));
+}
+function hdOpenSlotMenu(design, slotId) {
+  _hsCtx = {design, slotId}; _hsOpenAt = Date.now();
+  const cur = hdSlotWin(design, slotId);
+  const slot = HD_SLOTS[design].find(s=>s.id===slotId);
+  const st = homeStats();
+  document.getElementById('hsMenu').innerHTML = `<div class="hs-grab"></div>
+    <h4>Show in this card</h4><p>Pick a window. If another card already shows it, the two swap.</p>
+    <div class="hs-grid">${hdWindows().map(w=>`<div class="hs-w ${w.id===cur?'on':''}" onclick="hdPickWindow('${w.id}')">${ICONS[w.id]||''}<b>${w.label}</b><small>${_hdEsc(hdModel(w.id,st).sub)}</small></div>`).join('')}</div>
+    <div class="hs-reset" onclick="hdPickWindow('${slot.def}')">Reset this card to ${_hdEsc((HD_WINDOWS.find(x=>x.id===slot.def)||{}).label||slot.def)}</div>`;
+  document.getElementById('hsMenu').classList.add('show');
+  document.getElementById('hsVeil').classList.add('show');
+}
+function hdCloseSlotMenu(fromVeil) {
+  if(fromVeil && Date.now()-_hsOpenAt < 450) return; // the finger that opened it is still lifting
+  document.getElementById('hsMenu').classList.remove('show');
+  document.getElementById('hsVeil').classList.remove('show');
+  _hsCtx = null;
+}
+function hdPickWindow(win) {
+  if(!_hsCtx) return;
+  hdSetSlotWin(_hsCtx.design, _hsCtx.slotId, win);
+  hdCloseSlotMenu();
+  haptic('light');
+  if(S.tab==='home') renderHome(document.getElementById('content'));
+}
+
 // ── layouts ──
 function homeDesignHtml(d, dateStr) {
   const st = homeStats();
-  const fleetOn = BASE_CONFIG.features?.fleet !== false;
+  const fleetOn = hdFleetOn();
   const dt = _hdEsc(dateStr);
   const prog = st.total ? `${st.done} of ${st.total} tasks done` : 'No tasks yet';
-  const fleetCard = (kind, cls, extra='') => fleetOn ? `<div class="${cls}" data-hfslot="${kind}" onclick="goTab('fleet')" ${extra}>${homeFleetSlotHtml(kind)}</div>` : '';
+  const cards = design => HD_SLOTS[design].map(s=>hdSlotCard(design, s));
   if(d==='bento') return `<div class="hd hd-bento">
     <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()},<br>YKF crew</h2></div>
     ${homeNotesHtml()}
-    <div class="hd-bg">
-      <div class="hd-bx today" onclick="goTab('today')"><div class="hd-ring" style="--p:${st.pct}"><b>${st.pct}%</b></div><div><h3>Today</h3><p>${prog}</p><span class="hd-btn">Open today</span></div></div>
-      ${fleetCard('bento','hd-bx fleet')}
-      <div class="hd-bx cal" onclick="goTab('calendar')"><small>📆 CALENDAR</small><p>${st.evs.length?`${st.evs.length} today<br>${homeEventsLine(st)}`:'Nothing<br>scheduled today'}</p></div>
-      <div class="hd-bx shop" onclick="goTab('shopping')">${ICONS.shopping}<div><small>LIST</small><b>Shopping</b></div></div>
-    </div>
+    <div class="hd-bg">${cards('bento').join('')}</div>
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
-  if(d==='aurora') return `<div class="hd hd-aurora"><i class="hd-blob b1"></i><i class="hd-blob b2"></i><i class="hd-blob b3"></i>
+  if(d==='aurora') { const c = cards('aurora'); return `<div class="hd hd-aurora"><i class="hd-blob b1"></i><i class="hd-blob b2"></i><i class="hd-blob b3"></i>
     <div class="hd-top"><small>${dt}</small><h2>Skycare YKF</h2></div>
     ${homeNotesHtml()}
-    <div class="hd-glass hd-ahero">${homePlaneImgsHtml('18px 30px 34px')}${fleetOn?`<div class="cap" data-hfslot="aurora" onclick="goTab('fleet')">${homeFleetSlotHtml('aurora')}</div>`:''}</div>
-    <div class="hd-arow">
-      <div class="hd-glass" onclick="goTab('today')"><small>TODAY</small><p><b style="font-size:24px">${st.pct}%</b><br>${st.total?`${st.done} of ${st.total} tasks`:'No tasks yet'}</p></div>
-      <div class="hd-glass" onclick="goTab('calendar')"><small>CALENDAR</small><p>${st.evs.length?homeEventsLine(st):'Nothing scheduled today'}</p></div>
-    </div>
+    ${c[0]}
+    <div class="hd-arow">${c[1]}${c[2]}</div>
     <div id="homeTileWrap"></div>
-    ${homeFooterHtml()}</div>`;
+    ${homeFooterHtml()}</div>`; }
   if(d==='brutal') {
     const bits = [];
     st.evs.forEach(e=>bits.push((e.type==='charter'?'✈ CHARTER TODAY: ':'📆 TODAY: ')+String(e.title||'').toUpperCase()));
     if((S.handoffNotes||[]).length) bits.push('📌 HANDOFF FROM '+String(S.handoffNotes[0].day||'LAST SHIFT').toUpperCase());
     if(!bits.length) bits.push('✈ SKYCARE YKF', 'HAVE A GREAT SHIFT');
     const mq = _hdEsc(bits.join(' • ') + ' • ');
+    const c = cards('brutal');
     return `<div class="hd hd-brutal">
     <div class="hd-mq"><span>${mq}${mq}</span></div>
     <h2>YKF<br><em>SHIFT</em></h2>
     <div class="sub">${dt}</div>
-    <div class="hd-bcard prog" onclick="goTab('today')"><b>${prog}</b><div class="hd-pbar"><i style="width:${st.pct}%"></i></div></div>
+    ${c[0]}
     ${homeNotesHtml()}
-    ${fleetCard('brutal','hd-bcard fl')}
+    ${c[1]}
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
   }
+  if(d==='neon') { const c = cards('neon'); return `<div class="hd hd-neon"><div class="hd-sun"></div><div class="hd-gridf"></div>
+    <div class="hd-nhd"><span>${dt}</span><span>YKF · NIGHT OPS</span></div>
+    <h2>SKYCARE<span>GROOMERS YKF</span></h2>
+    <div class="hd-npl" style="background-image:url('${HOME_PLANE_IMGS[1]}')"></div>
+    ${homeNotesHtml()}
+    ${c[0]}${c[1]}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`; }
   if(d==='sky') return `<div class="hd hd-sky">
-    <div class="hd-skyarea"><div class="dt">${dt}</div>${homePlaneImgsHtml('44px 6px 60px')}${fleetOn?`<div class="hd-chip" data-hfslot="sky" onclick="goTab('fleet')">${homeFleetSlotHtml('sky')}</div>`:''}</div>
+    <div class="hd-skyarea"><div class="dt">${dt}</div>${homePlaneImgsHtml('44px 6px 60px')}${fleetOn?`<div class="hd-chip" data-hfslot="sky" onclick="goTab('fleet')">${hdFleetSky()}</div>`:''}</div>
     <div class="hd-sheet"><div class="hd-grab"></div>
       <h3 onclick="goTab('today')">Today</h3><div class="pb"><i style="width:${st.pct}%"></i></div><div class="ps">${prog}${st.evs.length?' · '+homeEventsLine(st):''}</div>
       ${homeNotesHtml()}
@@ -2361,15 +2563,18 @@ function homeDesignTilesHtml(d) {
   const pal = {
     aurora:['#6fa8ff','#5ff0d0','#c79bff','#ffd27a','#ff8fb6'],
     brutal:['#FF5CA8','#B6FF3B','#7CB4FF','#FF9A3C','#ffffff','#C7A6FF'],
+    neon:  ['#ff4fa8','#29e0ff','#ffe45c','#a52dff','#3dff8b'],
     sky:   ['#7db8ff','#ffb86b','#ff8fb6','#7dffc4','#c79bff'],
   };
   if(d==='bento') {
-    list = list.filter(t=>!HD_BENTO_FEATURED.includes(t.id));
-    return `<div class="hd-bsm">${list.map((t,i)=>`<div class="hd-bs ${cls}" ${_hdTileAttrs(t,i,`--c:${HD_BENTO_COLORS[t.id]||'#3a7bff'}`)}>${t.svg}${t.label==='Crew Cars'?'Cars':t.label}</div>`).join('')}</div>`;
+    const shown = hdSlotWins('bento');                    // windows already in a big card aren't repeated as small tiles
+    const colors = ['#1aa58a','#d98a1c','#8a5cf6','#2d8fe0','#3aa15a','#c2461f','#5b46ff','#e0567a','#3a7bff'];
+    list = list.filter(t=>!shown.includes(t.id));
+    return `<div class="hd-bsm">${list.map((t,i)=>`<div class="hd-bs ${cls}" ${_hdTileAttrs(t,i,`--c:${colors[HD_WINDOWS.findIndex(w=>w.id===t.id)%colors.length]}`)}>${t.svg}${t.label==='Crew Cars'?'Cars':t.label}</div>`).join('')}</div>`;
   }
   const c = pal[d] || pal.aurora;
-  const grid = {aurora:'hd-atg', brutal:'hd-btg', sky:'hd-stg'}[d];
-  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', sky:'hd-st'}[d];
+  const grid = {aurora:'hd-atg', brutal:'hd-btg', neon:'hd-ntg', sky:'hd-stg'}[d];
+  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', neon:'hd-nt', sky:'hd-st'}[d];
   const cvar = d==='aurora' ? '--g' : '--c';
   return `<div class="${grid}">${list.map((t,i)=>`<div class="${item} ${cls}" ${_hdTileAttrs(t,i,`${cvar}:${c[i%c.length]}`)}>${t.svg}${t.label}</div>`).join('')}</div>`;
 }
@@ -2381,6 +2586,7 @@ function homeMiniHtml(id) {
     bento:`<div class="hp-mini" style="background:#0B1120"><u style="left:4px;right:4px;top:4px;height:13px;background:#3a7bff;border-radius:5px"></u><u style="left:4px;top:20px;width:26px;height:20px;background:#141F3A;border:1px solid #2a3a60"></u><u style="left:33px;top:20px;width:27px;height:9px;background:#5b46ff"></u><u style="left:33px;top:31px;width:27px;height:9px;background:#e0567a"></u></div>`,
     aurora:`<div class="hp-mini" style="background:radial-gradient(circle at 20% 20%,#2f6bff,transparent 55%),radial-gradient(circle at 85% 80%,#8a3bff,transparent 55%),#070914"><u style="left:5px;right:5px;top:6px;height:15px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:26px;width:15px;height:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:5px"></u>`).join('')}</div>`,
     brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
+    neon:`<div class="hp-mini" style="background:linear-gradient(#0a0518,#2b0a4a)"><u style="left:19px;top:5px;width:26px;height:18px;border-radius:50%;background:linear-gradient(#ffe45c,#ff4fa8)"></u><u style="left:4px;right:4px;top:27px;height:2px;background:#ff4fa8;box-shadow:0 0 5px #ff4fa8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:32px;width:15px;height:9px;border:1px solid ${['#ff4fa8','#29e0ff','#ffe45c'][i]};border-radius:3px;box-shadow:0 0 4px ${['#ff4fa8','#29e0ff','#ffe45c'][i]}"></u>`).join('')}</div>`,
     sky:`<div class="hp-mini" style="background:linear-gradient(#0d2a5a,#3c5fa8 30%,#f0a06a 60%)"><u style="left:14px;top:8px;width:36px;height:7px;background:#e8eef8;border-radius:4px"></u><u style="left:0;right:0;top:22px;bottom:0;background:#0f1729;border-radius:10px 10px 0 0"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:30px;width:15px;height:11px;background:#182241;border-radius:4px"></u>`).join('')}</div>`,
   };
   return m[id] || '';
@@ -2404,11 +2610,17 @@ function setHomeDesign(d) {
   haptic('light');
   _tileEditMode = false;
   if(S.tab==='home') renderHome(document.getElementById('content'));
+  try {
+    if(HD_SLOTS[d] && !localStorage.getItem('gykf_home_tip')) {
+      localStorage.setItem('gykf_home_tip','1');
+      setTimeout(()=>toast('Tip: hold a big card to choose what it shows'), 500);
+    }
+  } catch(e) {}
 }
 function homeAfterRender() {
   document.getElementById('hpDial').style.display = '';
   renderHomePicker();
-  if(_homeActiveDesign !== 'classic' && BASE_CONFIG.features?.fleet !== false) {
+  if(_homeActiveDesign !== 'classic' && hdFleetOn()) {
     homeFleetRefresh();
     _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
   }
