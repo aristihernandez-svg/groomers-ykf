@@ -12046,25 +12046,23 @@ let _fleetData = {}; // icao24/callsign → state
 let _fleetLastFetch = 0;
 let _fleetTimer = null;
 
+let _fleetFeedAt = 0; // when the alert job last wrote positions (ms)
 async function fetchFleetOpenSky() {
-  // Direct browser fetch from airplanes.live — free, no auth, open CORS
-  const results = await Promise.allSettled(
-    FLEET_AIRCRAFT.map(ac =>
-      fetch(`https://api.airplanes.live/v2/reg/${encodeURIComponent(ac.reg)}`, { signal: AbortSignal.timeout(8000) })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          const p = data?.ac?.[0];
-          if(!p) return null;
-          const onGround = p.alt_baro === 'ground' || p.on_ground === true;
-          const altFt = onGround ? 0 : (typeof p.alt_baro === 'number' ? p.alt_baro : null);
-          const speedKts = typeof p.gs === 'number' ? Math.round(p.gs) : 0;
-          const distNm = (p.lat && p.lon) ? Math.round(haversineNm(p.lat, p.lon, CYKF_LAT, CYKF_LON)) : null;
-          return { tail: ac.tail, reg: ac.reg, lat: p.lat, lon: p.lon, altFt, speedKts, track: p.track || 0, onGround, distNm };
-        })
-        .catch(() => null)
-    )
-  );
-  return results.map(r => r.status === 'fulfilled' ? r.value : null).filter(Boolean);
+  // Positions come from the fleet-alert GitHub job (OpenSky, about every 2 min), which
+  // saves them to fleetPositions/live. Browsers can't call OpenSky (CORS) and
+  // airplanes.live now returns 403, so Firestore is the only path.
+  try {
+    const snap = await db.collection('fleetPositions').doc('live').get();
+    const v = snap.exists ? snap.data() : null;
+    if(!v) return [];
+    _fleetFeedAt = v.fetchedAt?.toMillis?.() || 0;
+    return Object.values(v.positions || {}).filter(Boolean).map(p => ({
+      tail: p.tail, reg: p.reg, lat: p.lat, lon: p.lon,
+      altFt: p.onGround ? 0 : (p.altFt ?? null),
+      speedKts: p.speedKts || 0, track: p.track || 0,
+      onGround: !!p.onGround, distNm: p.distNm ?? null
+    }));
+  } catch(e) { return []; }
 }
 
 function fleetCallsignMatch(callsign) {
@@ -12095,7 +12093,7 @@ async function refreshFleet() {
       };
     });
   }
-  _fleetLastFetch = Date.now();
+  _fleetLastFetch = _fleetFeedAt || Date.now(); // show the age of the data, not of the request
   renderFleet(document.getElementById('content'));
 }
 

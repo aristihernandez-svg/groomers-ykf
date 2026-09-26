@@ -135,7 +135,8 @@ async function main() {
     const speedKts = s[9] ? Math.round(s[9] * 1.944) : null;
     const altFt    = s[7] ? Math.round(s[7] * 3.28084) : null;
     const onGround = !!s[8];
-    live[ac.tail] = { ...ac, lat, lon, distNm, speedKts, altFt, onGround };
+    const track    = s[10] != null ? Math.round(s[10]) : 0; // true track, degrees — the Fleet map rotates icons with it
+    live[ac.tail] = { ...ac, lat, lon, distNm, speedKts, altFt, onGround, track };
   });
   console.log('Fleet found:', Object.keys(live).join(', ') || 'none');
 
