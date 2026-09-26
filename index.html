@@ -2310,7 +2310,7 @@ function homeEventsLine(st) {
   return _hdEsc(st.evs[0].title) + (st.evs.length>1 ? ` +${st.evs.length-1} more` : '');
 }
 function homeFooterHtml() {
-  return `<div class="hd-foot">Skycare ${APP_VERSION}</div>
+  return `<div class="hd-foot"><span id="appVerChip" style="cursor:default;user-select:none" ontouchstart="startVerPress()" ontouchend="cancelVerPress()" onmousedown="startVerPress()" onmouseup="cancelVerPress()" onmouseleave="cancelVerPress()">Skycare ${APP_VERSION} · Tasks: <span id="tasksSourceBadge">${S.tasksSource==='firestore'?'🟢 Firestore':'📋 Sheets'}</span></span></div>
     <div class="hd-share"><button onclick="openShareInstallSheet()">Share &amp; Install App</button></div>`;
 }
 function homeNotesHtml() { return `<div class="hd-notes">${renderHandoffNotesHtml()}${renderTodayEventsHtml()}</div>`; }
