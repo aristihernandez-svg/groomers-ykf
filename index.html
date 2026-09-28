@@ -12934,7 +12934,9 @@ function renderFleet(el) {
     const mapEl = document.getElementById('fleetMap');
     if(!mapEl || mapEl._leaflet_id) return;
     const map = L.map('fleetMap',{zoomControl:false,attributionControl:false}).setView([CYKF_LAT,CYKF_LON],7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:14}).addTo(map);
+    // CARTO's dark basemap now requires a paid API key (every tile came back "API key required").
+    // Esri's dark-gray basemap is free with no key or account needed.
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16}).addTo(map);
     // CYKF marker
     L.circle([CYKF_LAT,CYKF_LON],{radius:30*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
     L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#C8A84B',fillColor:'#C8A84B',fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
