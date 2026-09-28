@@ -26,7 +26,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -477,6 +477,44 @@ body::before{
 .hs-w b{display:block;font-size:12px;font-weight:700}
 .hs-w small{display:block;font-size:10px;color:var(--t3);margin-top:2px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hs-reset{text-align:center;margin-top:14px;font-size:12px;font-weight:700;color:var(--t3);cursor:pointer;padding:6px}
+/* 6 · Airline App */
+.hd-airline{background:#fff;color:#12203c}
+.hd-airline .hd-top{background:#0B3B8C;color:#fff;margin:-18px -14px 0;padding:20px 18px 46px;border-radius:0 0 28px 28px}
+.hd-airline .hd-top small{font-size:11px;opacity:.75;letter-spacing:.5px;text-transform:uppercase}
+.hd-airline .hd-top h2{font-size:24px;font-weight:700;margin-top:4px}
+.ap-card{background:#fff;border-radius:18px;box-shadow:0 10px 26px rgba(11,59,140,.14);padding:16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ap-photo{margin:-30px 0 12px;position:relative;z-index:2}
+.ap-img{height:56px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+.ap-img img{max-height:56px;object-fit:contain}
+.ap-img svg{width:38px;height:38px;color:#0B3B8C}
+.ap-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:#5a6b8c}
+.ap-row b{font-size:15px;color:#12203c;font-weight:700}
+.ap-pill{background:#E8F5E9;color:#1B8A3A;font-weight:700;padding:3px 10px;border-radius:12px;font-size:11px;flex-shrink:0}
+.ap-prog{background:#F4F7FC;margin-bottom:12px}
+.ap-bar{height:8px;border-radius:4px;background:#DCE6F5;margin-top:8px;overflow:hidden}
+.ap-bar i{display:block;height:100%;background:#0B3B8C;border-radius:4px}
+.ap-sub{font-size:12px;color:#5a6b8c;margin-top:6px}
+.ap-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ap-t{background:#F4F7FC;border-radius:16px;padding:14px 4px 10px;text-align:center;font-size:11px;font-weight:600;color:#12203c;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ap-t svg{width:22px;height:22px;color:#0B3B8C;margin:0 auto 6px;display:block}
+/* 7 · Corkboard */
+.hd-cork{background:#8a6a45;background-image:radial-gradient(rgba(0,0,0,.14) 1px,transparent 1px);background-size:6px 6px;color:#3a2a18;font-family:Kalam,cursive}
+.hd-cork .hd-top small{font-size:11px;letter-spacing:1px;font-weight:700;opacity:.8;text-transform:uppercase;font-family:"Inter Tight",Inter,sans-serif}
+.hd-cork .hd-top h2{font-size:24px;font-weight:700;margin-top:3px}
+.ck-polaroid{background:#fdfaf2;padding:10px 10px 12px;box-shadow:0 8px 16px rgba(0,0,0,.35);transform:rotate(-2deg);position:relative;margin-bottom:20px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-img{height:110px;background:#1b2233;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ck-img img{max-height:90%;max-width:90%;object-fit:contain}
+.ck-img svg{width:44px;height:44px;color:#8fb2ff}
+.ck-polaroid figcaption{font-size:18px;text-align:center;margin-top:8px;color:#2a2015}
+.ck-pin{position:absolute;left:50%;top:-9px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff8a8a,#c62828);box-shadow:0 2px 4px rgba(0,0,0,.4);z-index:2}
+.ck-prog{background:#fff;box-shadow:0 6px 12px rgba(0,0,0,.3);padding:12px 14px;transform:rotate(-1deg);margin-bottom:16px;font-size:16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-prog b{font-size:18px}
+.ck-bar{height:12px;background:#e8ddc8;border-radius:6px;margin-top:8px;overflow:hidden}
+.ck-bar i{display:block;height:100%;background:#5b8a3a}
+.ck-tg{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.ck-t{background:#fdfaf2;box-shadow:0 6px 10px rgba(0,0,0,.3);width:92px;padding:12px 4px 9px;text-align:center;font-size:13px;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ck-t:nth-child(2n){transform:rotate(2deg)}.ck-t:nth-child(3n){transform:rotate(-2deg)}
+.ck-t svg{width:22px;height:22px;margin:0 auto 5px;color:#3a2a18;display:block}
 /* design picker */
 .hp-veil{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:55;opacity:0;pointer-events:none;transition:opacity .2s}
 .hp-veil.show{opacity:1;pointer-events:auto}
@@ -2261,6 +2299,8 @@ const HOME_DESIGNS = [
   {id:'brutal',  label:'Neo-Brutal'},
   {id:'neon',    label:'Neon Night Ops'},
   {id:'sky',     label:'Sky + Sheet'},
+  {id:'airline', label:'Airline App'},
+  {id:'cork',    label:'Corkboard'},
 ];
 const HOME_PLANE_IMGS = [
   'cars/Westwind-removebg-preview.png',
@@ -2287,6 +2327,10 @@ const HD_SLOTS = {
            {id:'b2',def:'fleet',   size:'plane',   cls:'hd-bcard fl'}],
   neon:   [{id:'n1',def:'today',   size:'bar',     cls:'hd-nbar'},
            {id:'n2',def:'fleet',   size:'bar',     cls:'hd-nbar cy'}],
+  airline:[{id:'p1',def:'fleet',   size:'photo',   cls:'ap-card ap-photo'},
+           {id:'p2',def:'today',   size:'bar',     cls:'ap-card ap-prog'}],
+  cork:   [{id:'k1',def:'fleet',   size:'polaroid',cls:'ck-polaroid'},
+           {id:'k2',def:'today',   size:'bar',     cls:'ck-prog'}],
 };
 let _homeActiveDesign = 'classic';
 let _homeFleetTimer = null;
@@ -2448,6 +2492,18 @@ function hdCardInner(design, slot, w) {
     case 'neon:bar':
       return w==='today' ? `<b>TODAY</b> · ${_hdEsc(m.main)}<div class="p"><i style="width:${m.pct}%"></i></div>`
                          : `<b>${U}</b> · ${_hdEsc(m.main)}`;
+    case 'airline:photo':
+      return `<div class="ap-img">${w==='fleet'&&f?`<img src="${f.img}" alt="">`:m.svg}</div><div class="ap-row"><b>${_hdEsc(m.label)} · ${_hdEsc(m.big)}</b><span class="ap-pill">${_hdEsc(m.sub)}</span></div>`;
+    case 'airline:bar':
+      return m.pct!=null
+        ? `<div class="ap-row"><b>${_hdEsc(m.label)}</b><span>${m.pct}%</span></div><div class="ap-bar"><i style="width:${m.pct}%"></i></div><div class="ap-sub">${_hdEsc(m.sub)}</div>`
+        : `<div class="ap-row"><b>${_hdEsc(m.label)}</b><span>${_hdEsc(m.big)}</span></div><div class="ap-sub">${_hdEsc(m.sub)}</div>`;
+    case 'cork:polaroid':
+      return `<div class="ck-pin"></div><div class="ck-img">${w==='fleet'&&f?`<img src="${f.img}" alt="">`:m.svg}</div><figcaption>${_hdEsc(m.label)} — ${_hdEsc(m.big)}</figcaption>`;
+    case 'cork:bar':
+      return m.pct!=null
+        ? `<b>${_hdEsc(m.label)}: ${m.pct}%</b><div class="ck-bar"><i style="width:${m.pct}%"></i></div><div>${_hdEsc(m.sub)}</div>`
+        : `<b>${_hdEsc(m.label)}: ${_hdEsc(m.big)}</b><div>${_hdEsc(m.sub)}</div>`;
   }
   return '';
 }
@@ -2546,6 +2602,20 @@ function homeDesignHtml(d, dateStr) {
       <div id="homeTileWrap"></div>
       ${homeFooterHtml()}
     </div></div>`;
+  if(d==='airline') { const c = cards('airline'); return `<div class="hd hd-airline">
+    <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()}</h2></div>
+    ${c[0]}
+    ${c[1]}
+    ${homeNotesHtml()}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`; }
+  if(d==='cork') { const c = cards('cork'); return `<div class="hd hd-cork">
+    <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()}</h2></div>
+    ${c[0]}
+    ${homeNotesHtml()}
+    ${c[1]}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`; }
   throw new Error('unknown home design '+d);
 }
 
@@ -2565,6 +2635,7 @@ function homeDesignTilesHtml(d) {
     brutal:['#FF5CA8','#B6FF3B','#7CB4FF','#FF9A3C','#ffffff','#C7A6FF'],
     neon:  ['#ff4fa8','#29e0ff','#ffe45c','#a52dff','#3dff8b'],
     sky:   ['#7db8ff','#ffb86b','#ff8fb6','#7dffc4','#c79bff'],
+    airline:['#0B3B8C'], cork:['#3a2a18'], // fixed colours — these two designs don't tint per tile
   };
   if(d==='bento') {
     const shown = hdSlotWins('bento');                    // windows already in a big card aren't repeated as small tiles
@@ -2573,8 +2644,8 @@ function homeDesignTilesHtml(d) {
     return `<div class="hd-bsm">${list.map((t,i)=>`<div class="hd-bs ${cls}" ${_hdTileAttrs(t,i,`--c:${colors[HD_WINDOWS.findIndex(w=>w.id===t.id)%colors.length]}`)}>${t.svg}${t.label==='Crew Cars'?'Cars':t.label}</div>`).join('')}</div>`;
   }
   const c = pal[d] || pal.aurora;
-  const grid = {aurora:'hd-atg', brutal:'hd-btg', neon:'hd-ntg', sky:'hd-stg'}[d];
-  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', neon:'hd-nt', sky:'hd-st'}[d];
+  const grid = {aurora:'hd-atg', brutal:'hd-btg', neon:'hd-ntg', sky:'hd-stg', airline:'ap-tg', cork:'ck-tg'}[d];
+  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', neon:'hd-nt', sky:'hd-st', airline:'ap-t', cork:'ck-t'}[d];
   const cvar = d==='aurora' ? '--g' : '--c';
   return `<div class="${grid}">${list.map((t,i)=>`<div class="${item} ${cls}" ${_hdTileAttrs(t,i,`${cvar}:${c[i%c.length]}`)}>${t.svg}${t.label}</div>`).join('')}</div>`;
 }
@@ -2588,6 +2659,8 @@ function homeMiniHtml(id) {
     brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
     neon:`<div class="hp-mini" style="background:linear-gradient(#0a0518,#2b0a4a)"><u style="left:19px;top:5px;width:26px;height:18px;border-radius:50%;background:linear-gradient(#ffe45c,#ff4fa8)"></u><u style="left:4px;right:4px;top:27px;height:2px;background:#ff4fa8;box-shadow:0 0 5px #ff4fa8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:32px;width:15px;height:9px;border:1px solid ${['#ff4fa8','#29e0ff','#ffe45c'][i]};border-radius:3px;box-shadow:0 0 4px ${['#ff4fa8','#29e0ff','#ffe45c'][i]}"></u>`).join('')}</div>`,
     sky:`<div class="hp-mini" style="background:linear-gradient(#0d2a5a,#3c5fa8 30%,#f0a06a 60%)"><u style="left:14px;top:8px;width:36px;height:7px;background:#e8eef8;border-radius:4px"></u><u style="left:0;right:0;top:22px;bottom:0;background:#0f1729;border-radius:10px 10px 0 0"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:30px;width:15px;height:11px;background:#182241;border-radius:4px"></u>`).join('')}</div>`,
+    airline:`<div class="hp-mini" style="background:#fff"><u style="left:0;right:0;top:0;height:20px;background:#0B3B8C"></u><u style="left:6px;top:14px;right:6px;height:16px;background:#fff;border:1px solid #dce6f5;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,.15)"></u><u style="left:6px;top:33px;right:6px;height:8px;background:#F4F7FC;border-radius:3px"></u></div>`,
+    cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
   return m[id] || '';
 }
