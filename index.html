@@ -2024,6 +2024,12 @@ async function fetchContacts() {
 
 
 async function fetchBored() {
+  // Once the board lives in Firestore (boredBoard listener), the Sheet is no longer read:
+  // show the last cached copy instantly and let the live listener take over.
+  if(localStorage.getItem('gykf_bored_live')==='1') {
+    try { const c=JSON.parse(localStorage.getItem('gykf_bored')||'[]'); if(Array.isArray(c)) S.bored=c; } catch(e) {}
+    return;
+  }
   try {
     const url=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1981877526`;
     const text=(await (await fetch(url)).text());
@@ -2048,6 +2054,7 @@ async function fetchBored() {
       loadBoredFallback();
     } else {
       // Sheet has data — save it to localStorage as cache
+      S.boredFromSheet = true; // only a real Sheet load is allowed to seed the one-time Firestore import
       localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
     }
   } catch(e){
@@ -10107,12 +10114,13 @@ function renderBored(el) {
 }
 
 function toggleBoredById(id) {
+  if(!boredReady()) return;
   const idx = S.bored.findIndex(b=>String(b.id)===String(id));
   if(idx<0) return;
   S.bored[idx].done=!S.bored[idx].done;
-  haptic(); api({action:'toggleBored',task:S.bored[idx].task});
-  fsSetBoredDone(S.bored[idx].task, S.bored[idx].done);
-  localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
+  haptic();
+  boredWrite(id, {done:S.bored[idx].done});
+  boredCache();
   renderBored(document.getElementById('content'));
   toast(S.bored[idx].done?'✓ Done!':'Unchecked');
 }
@@ -10235,16 +10243,7 @@ function resetShop() {
   renderShopping(document.getElementById('content'));
   toast(`✅ ${n} items reset to In Stock`);
 }
-function toggleBored(id) {
-  const idx = S.bored.findIndex(b=>String(b.id)===String(id));
-  if(idx===-1) return;
-  S.bored[idx].done=!S.bored[idx].done;
-  haptic(); api({action:'toggleBored',task:S.bored[idx].task});
-  fsSetBoredDone(S.bored[idx].task, S.bored[idx].done);
-  localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
-  renderBored(document.getElementById('content'));
-  toast(S.bored[idx].done?'✓ Done!':'Unchecked');
-}
+function toggleBored(id) { toggleBoredById(id); }
 function toggleProc(key) { S.procView=key; render(); }
 function toggleStep(key,idx) {
   const d=S.procs[key].done, i=d.indexOf(idx);
@@ -11331,10 +11330,12 @@ function openAddBored() {
     async()=>{
       const task=document.getElementById('mBT').value.trim();
       if(!task) return;
-      S.bored.unshift({id:Date.now(),task,done:false});
-      localStorage.setItem('gykf_bored',JSON.stringify(S.bored));
+      if(!boredReady()) return;
+      const ref=db.collection('boredBoard').doc(), ts=Date.now();
+      S.bored.unshift({id:ref.id,task,done:false,ts});
+      boredCache();
       closeModal(); renderBored(document.getElementById('content')); toast('Added ✓');
-      api({action:'addBored',task});
+      ref.set({task,done:false,ts}).catch(e=>{ console.log('Add bored note failed:', e); toast('❌ Not saved — check your connection'); });
     });
 }
 
@@ -11959,8 +11960,10 @@ function editBoredItem(id) {
     ()=>{
       const task=document.getElementById('eBT').value.trim();
       if(!task) return;
+      if(!boredReady()) return;
       S.bored[idx].task = task;
-      localStorage.setItem('gykf_bored', JSON.stringify(S.bored));
+      boredWrite(id, {task});
+      boredCache();
       closeModal();
       renderBored(document.getElementById('content'));
       toast('Task updated ✓');
@@ -11970,14 +11973,19 @@ function editBoredItem(id) {
 function deleteBoredItem(id) {
   const idx = S.bored.findIndex(b=>String(b.id)===String(id));
   if(idx===-1) return;
-  if(!confirm(`Delete this task?`)) return;
-  const task = S.bored[idx].task;
-  // Call backend to delete from sheet
-  api({action:'deleteBoredItem', task});
-  S.bored.splice(idx,1);
-  localStorage.setItem('gykf_bored', JSON.stringify(S.bored));
-  renderBored(document.getElementById('content'));
-  toast('Task deleted');
+  if(!boredReady()) return;
+  openModal('🗑 Delete Note?',
+    `<p style="font-size:14px;color:var(--t2);line-height:1.5">“${_hdEsc(S.bored[idx].task)}” will be removed from the board for everyone.</p>`,
+    ()=>{
+      const i = S.bored.findIndex(b=>String(b.id)===String(id));
+      if(i>-1) S.bored.splice(i,1);
+      boredWrite(id, {deleted:true}); // soft delete: hidden everywhere, still recoverable in Firestore
+      boredCache();
+      closeModal();
+      renderBored(document.getElementById('content'));
+      toast('Note deleted');
+    });
+  const b=document.getElementById('mSave'); if(b) b.textContent='Delete';
 }
 
 function saveShoppingState() {
@@ -12374,6 +12382,7 @@ async function setupLiveSync() {
 
     // Bored board done-state.
     db.collection('boredState').doc('state').onSnapshot(snap => {
+      if(_boredLive) return; // legacy done-state; each note carries its own `done` once on Firestore
       const data = snap.data(); if(!data) return;
       S.bored.forEach(b => { const v=data[fsKey(b.task)]; if(v!==undefined) b.done=v; });
       if(S.tab==='bored') {
@@ -12381,6 +12390,25 @@ async function setupLiveSync() {
         else setTimeout(()=>{ if(S.tab==='bored') renderBored(document.getElementById('content')); }, 200);
       }
     }, e => console.log('boredState listener error:', e));
+
+    // Bored board notes — live, Firestore is the source of truth.
+    db.collection('boredBoard').onSnapshot(snap => {
+      if(snap.empty) {
+        // Never seen server data yet: copy the Sheet's notes in once (skipped if this is only an empty cache)
+        if(!snap.metadata.fromCache) importBoredFromSheet().catch(e=>console.log('Bored import failed:', e));
+        return;
+      }
+      _boredLive = true;
+      try { localStorage.setItem('gykf_bored_live','1'); } catch(e) {}
+      S.bored = snap.docs.map(d=>({id:d.id, ...d.data()}))
+        .filter(b=>!b.deleted && b.task)
+        .sort((a,b)=>(b.ts||0)-(a.ts||0)); // newest first
+      boredCache();
+      if(S.tab==='bored') {
+        if(!touchActive) renderBored(document.getElementById('content'));
+        else setTimeout(()=>{ if(S.tab==='bored') renderBored(document.getElementById('content')); }, 200);
+      }
+    }, e => console.log('boredBoard listener error:', e));
 
     // One-time silent cleanup: fix shoppingCatalog docs where notes === false or 'false'
     db.collection('shoppingCatalog').get().then(snap => {
@@ -13141,6 +13169,43 @@ function fsSetShopState(item, checked, status, qty) {
   db.collection('shopState').doc('state').set({[fsKey(item)]:upd}, {merge:true})
     .catch(e => console.log('fsSetShopState failed (offline?):', e));
 }
+// ── BORED BOARD (Firestore) ────────────────────────────────────────
+// One doc per note in `boredBoard`: {task, done, ts, deleted?}. It used to be read from the
+// Google Sheet and written through the Apps Script backend, but browsers block those writes
+// (CORS), so new notes, edits and deletes never stuck. The Sheet is left untouched as a backup.
+let _boredLive = false;
+function boredCache() { try { localStorage.setItem('gykf_bored', JSON.stringify(S.bored)); } catch(e) {} }
+function boredReady() {
+  if(db && _boredLive) return true;
+  toast('⏳ Board is still syncing — try again in a moment');
+  return false;
+}
+function boredWrite(id, data) {
+  db.collection('boredBoard').doc(String(id)).update(data)
+    .catch(e=>{ console.log('Bored note save failed:', e); toast('❌ Not saved — check your connection'); });
+}
+// Doc id for an imported Sheet note: derived from its text, so two phones importing at the
+// same moment write the same docs instead of duplicates. Plain [a-z0-9_] so it's safe in onclick.
+function boredImportId(task) {
+  let h = 0; for(const c of String(task)) h = (h*31 + c.codePointAt(0)) >>> 0;
+  return 'sheet_' + h.toString(36) + '_' + String(task).length;
+}
+async function importBoredFromSheet() {
+  if(!db || !S.boredFromSheet || !S.bored.length) return;
+  // Double-check with the server (not the local cache) that the collection really is empty
+  const chk = await db.collection('boredBoard').limit(1).get({source:'server'});
+  if(!chk.empty) return;
+  let state = {};
+  try { state = (await db.collection('boredState').doc('state').get()).data() || {}; } catch(e) {}
+  const base = Date.now(), batch = db.batch();
+  S.bored.forEach((b,i)=>{
+    batch.set(db.collection('boredBoard').doc(boredImportId(b.task)),
+      {task:b.task, done:!!state[fsKey(b.task)], ts:base - i*1000, source:'sheet'});
+  });
+  await batch.commit();
+  console.log('Bored Board imported from Sheet:', S.bored.length);
+}
+
 function fsSetBoredDone(task, done) {
   if(!db) return;
   db.collection('boredState').doc('state').set({[fsKey(task)]:done}, {merge:true})
