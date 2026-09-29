@@ -1534,6 +1534,30 @@ function sopSecretTap(e) {
   }
 }
 
+// ── Secret: the "Remember that this is for dreams to come true" Bored Board note ──
+// It can never be checked off, and 4 quick taps show a photo full-screen (tap to close).
+// Matched on "dreams to come true", ignoring case, spaces and punctuation.
+function isDreamNote(task) {
+  return String(task||'').toLowerCase().replace(/[^a-z]/g,'').includes('dreamstocometrue');
+}
+let _dreamTaps = 0, _dreamTimer = null;
+function dreamSecretTap(e) {
+  _dreamTaps++;
+  clearTimeout(_dreamTimer);
+  _dreamTimer = setTimeout(() => { _dreamTaps = 0; }, 2000);
+  if (_dreamTaps >= 4) { _dreamTaps = 0; haptic('medium'); showDreamPhoto(); }
+}
+function showDreamPhoto() {
+  if (document.getElementById('dreamPhoto')) return;
+  const ov = document.createElement('div');
+  ov.id = 'dreamPhoto';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .35s ease;cursor:pointer';
+  ov.innerHTML = '<img src="Emerson/PHOTO-2026-09-27-11-27-02.jpg" alt="" style="max-width:100%;max-height:86vh;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.6)">';
+  ov.onclick = () => { ov.style.opacity = '0'; setTimeout(() => ov.remove(), 350); };
+  document.body.appendChild(ov);
+  setTimeout(() => { ov.style.opacity = '1'; }, 20);
+}
+
 window.addEventListener('load', async () => {
   if (localStorage.getItem('app_pin_ok') !== '1') {
     showPinGate();
@@ -10081,8 +10105,10 @@ function renderBored(el) {
   S.bored.forEach((b, i) => {
     const {bg, fold} = noteColors[i % noteColors.length];
     const rot = (i%2===0 ? -1 : 1) * (0.4 + (i%4)*0.25);
+    const dream = isDreamNote(b.task);
+    if(dream) b = {...b, done:false}; // this note is never shown as checked off
     html += `
-    <div data-id="${b.id}" onclick="${b.task==='Study SOP and COM'?'sopSecretTap(event)':'toggleBoredById(\''+b.id+'\')'}"
+    <div data-id="${b.id}" onclick="${dream?'dreamSecretTap(event)':b.task==='Study SOP and COM'?'sopSecretTap(event)':'toggleBoredById(\''+b.id+'\')'}"
       style="
         position:relative;
         background-color:${bg};
@@ -10114,9 +10140,9 @@ function renderBored(el) {
 }
 
 function toggleBoredById(id) {
-  if(!boredReady()) return;
   const idx = S.bored.findIndex(b=>String(b.id)===String(id));
-  if(idx<0) return;
+  if(idx<0 || isDreamNote(S.bored[idx].task)) return; // the dreams note can't be checked off
+  if(!boredReady()) return;
   S.bored[idx].done=!S.bored[idx].done;
   haptic();
   boredWrite(id, {done:S.bored[idx].done});
