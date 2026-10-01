@@ -2378,7 +2378,7 @@ function homeStats() {
   const done = tasks.filter(t=>t.done).length;
   const total = tasks.length;
   return { done, total, pct: total ? Math.round(done/total*100) : 0,
-           evs: (S.calendarEvents||[]).filter(e=>e.date===localDateISO()) };
+           evs: calEventsOn(localDateISO()) };
 }
 function homeEventsLine(st) {
   if(!st.evs.length) return 'Nothing scheduled';
@@ -3150,13 +3150,13 @@ function renderCalWeek() {
     const iso = dayIsos[i];
     const isToday = iso===todayIso;
     const isSel = iso===S.calSelectedDay;
-    const dayEvents = S.calendarEvents.filter(e=>e.date===iso);
+    const dayEvents = calEventsOn(iso);
     const hasCharter = dayEvents.some(e=>e.type==='charter');
     html += `<div onclick="selectCalDay('${iso}')" style="text-align:center;cursor:pointer">
       <div style="font-size:9px;margin-bottom:3px;font-weight:${isToday?'800':'700'};color:${isToday?'var(--accent)':'var(--t3)'}">${DOW[i]}</div>
       <div style="border-radius:8px;min-height:52px;padding:5px 3px;border:${isSel?'1.5px solid var(--accent)':'1px solid var(--border2)'};background:${isSel?'var(--accent-dim)':'transparent'}">
         <div style="font-size:12px;font-weight:${isToday?'800':'700'};color:var(--t1);margin-bottom:4px">${d.getDate()}</div>
-        ${dayEvents.length?(hasCharter?`<div style="font-size:11px">✈️</div>`:`<div style="width:100%;height:16px;background:${CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`):''}
+        ${dayEvents.length?(hasCharter?`<div style="font-size:11px">✈️</div>`:`<div style="width:100%;height:16px;background:${dayEvents.some(e=>calRepeats(e))?`repeating-linear-gradient(90deg,${CAL_NOTE_BG} 0 6px,rgba(255,229,138,.45) 6px 9px)`:CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`):''}
       </div>
     </div>`;
   });
@@ -3164,7 +3164,7 @@ function renderCalWeek() {
 
   const selIdx = dayIsos.indexOf(S.calSelectedDay);
   const selDate = days[selIdx];
-  const selEvents = S.calendarEvents.filter(e=>e.date===S.calSelectedDay);
+  const selEvents = calEventsOn(S.calSelectedDay);
   const selLabel = selDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
   const numColor = S.calSelectedDay===todayIso ? 'var(--accent)' : 'var(--t1)';
 
@@ -3183,10 +3183,11 @@ function renderCalWeek() {
       const sub = isCharter
         ? (items.length ? `${doneCount} of ${items.length} items done` : 'Tap to add requested items')
         : ev.notes;
-      html += `<div onclick="${isCharter?`openCharterDetail('${ev.id}')`:`askDeleteEvent('${ev.id}')`}" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
+      html += `<div onclick="${isCharter?`openCharterDetail('${ev.id}')`:`askDeleteEvent('${ev.id}','${S.calSelectedDay}')`}" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
         <span style="font-size:34px;font-weight:800;color:${numColor};width:42px;flex-shrink:0">${i===0?selDate.getDate():''}</span>
         <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${isCharter?'✈️ ':''}${ev.title}</div>
-        ${sub?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${sub}</div>`:''}</div>
+        ${sub?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${sub}</div>`:''}
+        ${calRepeats(ev)?`<span style="display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:2px 9px">🔁 ${calRepeatLabel(ev)}</span>`:''}</div>
       </div>`;
     });
   }
@@ -3202,7 +3203,7 @@ function renderCalMonth() {
   const daysInMonth = new Date(y,m+1,0).getDate();
   const todayIso = localDateISO();
   const monthLabel = anchor.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  const eventDates = new Set(S.calendarEvents.map(e=>e.date));
+  const eventDates = calEventDatesInRange(localDateISO(new Date(y,m,1)), localDateISO(new Date(y,m,daysInMonth)));
   let html = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 10px">
       <span onclick="calShiftMonth(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
@@ -3234,7 +3235,7 @@ function renderCalMonth() {
 function renderCalYear() {
   const y = S.calAnchor.getFullYear();
   const now = new Date();
-  const eventDates = new Set(S.calendarEvents.map(e=>e.date));
+  const eventDates = calEventDatesInRange(`${y}-01-01`, `${y}-12-31`);
   let html = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 10px">
       <span onclick="calShiftYear(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
@@ -3261,7 +3262,7 @@ function renderCalYear() {
 
 function renderTodayEventsHtml() {
   const todayIso = localDateISO();
-  const todayEvents = (S.calendarEvents||[]).filter(e=>e.date===todayIso);
+  const todayEvents = calEventsOn(todayIso);
   if(!todayEvents.length) return '';
   return todayEvents.map(ev=>{
     const isCharter = ev.type==='charter';
@@ -3275,6 +3276,7 @@ function renderTodayEventsHtml() {
                 border:1px solid rgba(0,0,0,0.06)">
       <div style="font-size:11px;font-weight:700;color:${CAL_NOTE_INK};letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px">${isCharter?'✈️':'📆'} Today — ${ev.title}</div>
       ${sub?`<div style="font-size:14px;color:${CAL_NOTE_INK2};line-height:1.4">${sub}</div>`:''}
+      ${calRepeats(ev)?`<div style="font-size:11.5px;font-weight:700;color:${CAL_NOTE_INK};margin-top:4px">🔁 ${calRepeatLabel(ev)}</div>`:''}
     </div>`;
   }).join('');
 }
@@ -3283,9 +3285,74 @@ function openCalendarToCharter(id) {
   goTab('calendar');
 }
 
+// ── REPEATING EVENTS ───────────────────────────────────────────────
+// One doc per event: {date, repeat, until, skip:[iso]}. `date` is the first occurrence;
+// repeat ∈ once|daily|weekly|biweekly|monthly|yearly (missing = once); `skip` holds dates
+// removed with "Just this date". Group Charters never repeat (each date has its own list).
+const CAL_REPEATS = [['once','Once'],['daily','Daily'],['weekly','Weekly'],['biweekly','Every 2 weeks'],['monthly','Monthly'],['yearly','Yearly']];
+const CAL_DOW = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const CAL_MON_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function calRepeats(e) { return !!e.repeat && e.repeat !== 'once' && e.type !== 'charter'; }
+function calOrd(n) { const s=['th','st','nd','rd'], v=n%100; return n + (s[(v-20)%10] || s[v] || s[0]); }
+function calRepeatLabel(e) {
+  const d = new Date(e.date+'T00:00:00');
+  const t = {daily:'Every day', weekly:`Every ${CAL_DOW[d.getDay()]}`, biweekly:`Every other ${CAL_DOW[d.getDay()]}`,
+             monthly:`Monthly on the ${calOrd(d.getDate())}`, yearly:`Every year on ${CAL_MON_SHORT[d.getMonth()]} ${d.getDate()}`}[e.repeat] || '';
+  if(!e.until) return t;
+  const u = new Date(e.until+'T00:00:00');
+  return `${t} · until ${CAL_MON_SHORT[u.getMonth()]} ${u.getDate()}`;
+}
+function calEventOccurs(e, iso) {
+  if((e.skip||[]).includes(iso)) return false;
+  if(!calRepeats(e)) return e.date === iso;
+  if(iso < e.date || (e.until && iso > e.until)) return false;
+  const a = new Date(e.date+'T00:00:00'), b = new Date(iso+'T00:00:00');
+  const diff = Math.round((b - a) / 86400000);
+  switch(e.repeat) {
+    case 'daily':    return true;
+    case 'weekly':   return diff % 7 === 0;
+    case 'biweekly': return diff % 14 === 0;
+    case 'monthly': {   // a 29th–31st lands on the last day of shorter months
+      const last = new Date(b.getFullYear(), b.getMonth()+1, 0).getDate();
+      return b.getDate() === Math.min(a.getDate(), last);
+    }
+    case 'yearly':   return b.getMonth() === a.getMonth() && b.getDate() === a.getDate();
+  }
+  return false;
+}
+function calEventsOn(iso) { return (S.calendarEvents||[]).filter(e=>calEventOccurs(e, iso)); }
+function calEventDatesInRange(fromIso, toIso) {
+  const set = new Set(), d = new Date(fromIso+'T00:00:00'), end = new Date(toIso+'T00:00:00');
+  const evs = S.calendarEvents||[];
+  for(; d <= end; d.setDate(d.getDate()+1)) { const iso = localDateISO(d); if(evs.some(e=>calEventOccurs(e, iso))) set.add(iso); }
+  return set;
+}
+let _addEventRepeat = 'once';
+function setAddEventRepeat(r) {
+  _addEventRepeat = r;
+  document.querySelectorAll('#mEvRepeat [data-r]').forEach(c=>{
+    const on = c.dataset.r === r;
+    c.style.borderColor = on ? 'var(--accent)' : 'var(--border2)';
+    c.style.background  = on ? 'var(--accent-dim)' : 'transparent';
+    c.style.color       = on ? 'var(--t1)' : 'var(--t2)';
+  });
+  document.getElementById('mEvUntilWrap').style.display = r === 'once' ? 'none' : '';
+  updateAddEventSummary();
+}
+function updateAddEventSummary() {
+  const box = document.getElementById('mEvSummary'); if(!box) return;
+  const date = document.getElementById('mEvDate').value;
+  if(!date) { box.innerHTML = ''; return; }
+  const d = new Date(date+'T00:00:00');
+  if(_addEventRepeat === 'once') { box.innerHTML = `Happens once, on <b style="color:var(--accent)">${CAL_DOW[d.getDay()]} ${CAL_MON_SHORT[d.getMonth()]} ${d.getDate()}</b>.`; return; }
+  const until = document.getElementById('mEvUntil').value || null;
+  box.innerHTML = `🔁 <b style="color:var(--accent)">${calRepeatLabel({date, repeat:_addEventRepeat, until})}</b>, starting ${CAL_MON_SHORT[d.getMonth()]} ${d.getDate()}.`;
+}
+
 let _addEventType = 'event';
 function openAddEvent() {
   _addEventType = 'event';
+  _addEventRepeat = 'once';
   const defaultIso = (S.tab==='calendar' && S.calZoom==='week' && S.calSelectedDay)
     ? S.calSelectedDay
     : (S.tab==='calendar' ? localDateISO(S.calAnchor) : localDateISO());
@@ -3296,12 +3363,25 @@ function openAddEvent() {
        <div id="mEvTypeCharter" onclick="setAddEventType('charter')" style="flex:1;text-align:center;padding:10px;border-radius:10px;cursor:pointer;font-size:13px;font-weight:700;background:var(--glass2);color:var(--t2)">✈️ Group Charter</div>
      </div>
      <label>Date</label>
-     <input type="date" id="mEvDate" value="${defaultIso}">
+     <input type="date" id="mEvDate" value="${defaultIso}" oninput="updateAddEventSummary()">
      <label>Title</label>
      <input id="mEvTitle" placeholder="e.g. Fire extinguisher inspection">
+     <div id="mEvRepeatWrap">
+       <label>Repeats</label>
+       <div id="mEvRepeat" style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+         ${CAL_REPEATS.map(([k,l])=>`<div data-r="${k}" onclick="setAddEventRepeat('${k}')" style="text-align:center;border:1.5px solid var(--border2);border-radius:10px;padding:9px 4px;font-size:12.5px;font-weight:700;color:var(--t2);cursor:pointer">${l}</div>`).join('')}
+       </div>
+       <div id="mEvUntilWrap" style="display:none">
+         <label>Until (optional)</label>
+         <input type="date" id="mEvUntil" oninput="updateAddEventSummary()">
+         <div style="font-size:11px;color:var(--t3);margin-top:4px">Leave blank to keep repeating.</div>
+       </div>
+       <div id="mEvSummary" style="margin-top:12px;font-size:13px;color:var(--t1);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:10px;padding:9px 12px"></div>
+     </div>
      <label>Notes (optional)</label>
      <textarea id="mEvNotes" placeholder="Any details..."></textarea>`,
     saveEvent);
+  setAddEventRepeat('once');
 }
 function setAddEventType(type) {
   _addEventType = type;
@@ -3312,6 +3392,8 @@ function setAddEventType(type) {
   chBtn.style.color = type==='charter' ? '#fff' : 'var(--t2)';
   const titleEl = document.getElementById('mEvTitle');
   if(type==='charter' && !titleEl.value.trim()) titleEl.value = 'Group Charter';
+  // Group Charters don't repeat: each date keeps its own requested-items list
+  document.getElementById('mEvRepeatWrap').style.display = type==='charter' ? 'none' : '';
 }
 function saveEvent() {
   const date = document.getElementById('mEvDate').value;
@@ -3319,18 +3401,48 @@ function saveEvent() {
   const notes = document.getElementById('mEvNotes').value.trim();
   if(!date) { toast('Pick a date'); return; }
   if(!title) { toast('Enter a title'); return; }
+  const repeat = _addEventType==='charter' ? 'once' : _addEventRepeat;
+  const until = repeat==='once' ? null : (document.getElementById('mEvUntil').value || null);
+  if(until && until < date) { toast('“Until” must be after the start date'); return; }
   closeModal();
   if(!db) { toast('No connection — not saved'); return; }
   const doc = {date, title, notes, deleted:false, createdAt:Date.now()};
+  if(repeat !== 'once') { doc.repeat = repeat; doc.until = until; doc.skip = []; }
   if(_addEventType==='charter') { doc.type='charter'; doc.seriesId='group-charter'; doc.items=[]; }
   db.collection('calendarEvents').add(doc)
-    .then(()=>toast(_addEventType==='charter' ? '✈️ Group Charter added' : '📆 Event added'))
+    .then(()=>toast(_addEventType==='charter' ? '✈️ Group Charter added' : repeat!=='once' ? '🔁 Repeating event added' : '📆 Event added'))
     .catch(e=>{ console.log('Add event failed:', e); toast('⚠️ Failed to save — check connection'); });
 }
-function askDeleteEvent(id) {
+// Tapping an event: one-time events ask to delete; repeating ones offer "just this date" or "the whole series".
+function askDeleteEvent(id, iso) {
   const ev = S.calendarEvents.find(e=>e.id===id);
   if(!ev) return;
-  if(!confirm(`Delete "${ev.title}"?`)) return;
+  const day = iso || ev.date;
+  const d = new Date(day+'T00:00:00');
+  const dayLabel = `${CAL_DOW[d.getDay()]} ${CAL_MON_SHORT[d.getMonth()]} ${d.getDate()}`;
+  const optStyle = 'display:block;width:100%;text-align:left;border:1.5px solid var(--border2);background:var(--glass2);color:var(--t1);border-radius:12px;padding:11px 14px;margin-bottom:8px;font-family:inherit;cursor:pointer';
+  const _t = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  if(!calRepeats(ev)) {
+    openModal('🗑 Delete Event?',
+      `<p style="font-size:14px;color:var(--t1);line-height:1.5;margin:0">Delete <strong>“${_t(ev.title)}”</strong> on ${dayLabel}?</p>`,
+      ()=>{ closeModal(); deleteEventSeries(id); });
+    document.getElementById('mSave').textContent = 'Delete';
+    return;
+  }
+  openModal(`🗑 Delete “${ev.title}”?`,
+    `<p style="font-size:13px;color:var(--t2);margin:0 0 14px">It repeats: ${calRepeatLabel(ev)}.</p>
+     <button style="${optStyle}" onclick="closeModal();skipEventDate('${id}','${day}')"><b style="display:block;font-size:14px">Just this date</b><span style="font-size:12px;color:var(--t3)">Skip ${dayLabel} only — the other dates stay</span></button>
+     <button style="${optStyle}" onclick="closeModal();deleteEventSeries('${id}')"><b style="display:block;font-size:14px;color:#FF7A6B">The whole series</b><span style="font-size:12px;color:var(--t3)">Removes every date, past and future</span></button>`,
+    ()=>closeModal());
+  document.getElementById('mSave').style.display = 'none';   // the two choices above are the actions
+}
+function skipEventDate(id, iso) {
+  if(!db) { toast('No connection'); return; }
+  db.collection('calendarEvents').doc(id).update({skip: firebase.firestore.FieldValue.arrayUnion(iso)})
+    .then(()=>toast('Skipped that date'))
+    .catch(e=>{ console.log('Skip event date failed:', e); toast('⚠️ Failed — check connection'); });
+}
+function deleteEventSeries(id) {
   if(!db) { toast('No connection'); return; }
   db.collection('calendarEvents').doc(id).update({deleted:true})
     .then(()=>toast('Event deleted'))
