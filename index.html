@@ -1394,7 +1394,6 @@ const S = {
   handoffNotes: [], // unresolved shift-handoff notes, shown as sticky notes
   calendarEvents: [], // {id,date,title,notes}
   calAnchor: null,     // Date — anchor day/month/year for the Calendar tab's current view
-  calZoom: 'week',     // 'week' | 'month' | 'year'
   calSelectedDay: null, // ISO date — which day's events show below the week grid
   calCharterView: null, // calendarEvents doc id — when set, shows that Group Charter's checklist screen
   pendingHandoffAudio: null,
@@ -3102,162 +3101,123 @@ function renderCalendar(el) {
   if(S.calCharterView) { renderCalCharterDetail(el, S.calCharterView); return; }
   setBar({title:'Calendar'});
   showFab(openAddEvent);
-  if(!S.calAnchor) S.calAnchor = new Date();
-  const toggle = `
-    <div style="padding:14px 14px 0">
-      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:4px;display:flex;gap:4px">
-        ${['week','month','year'].map(z=>`
-          <div onclick="setCalZoom('${z}')" style="flex:1;text-align:center;padding:9px;border-radius:9px;cursor:pointer;font-size:12px;font-weight:700;background:${S.calZoom===z?'var(--accent)':'transparent'};color:${S.calZoom===z?'#fff':'var(--t2)'}">${z[0].toUpperCase()+z.slice(1)}</div>
-        `).join('')}
-      </div>
-    </div>`;
-  let body;
-  if(S.calZoom==='month') body = renderCalMonth();
-  else if(S.calZoom==='year') body = renderCalYear();
-  else body = renderCalWeek();
-  el.innerHTML = toggle + body + `<div style="height:90px"></div>`;
+  el.innerHTML = renderCalMonth() + `<div style="height:90px"></div>`;
 }
-function setCalZoom(z) { S.calZoom = z; render(); }
-function calShiftWeek(delta) { const d=new Date(S.calAnchor); d.setDate(d.getDate()+delta*7); S.calAnchor=d; render(); }
-function calShiftMonth(delta) { const d=new Date(S.calAnchor); d.setDate(1); d.setMonth(d.getMonth()+delta); S.calAnchor=d; render(); }
-function calShiftYear(delta) { const d=new Date(S.calAnchor); d.setFullYear(d.getFullYear()+delta); S.calAnchor=d; render(); }
-function calGoToMonth(m) { const d=new Date(S.calAnchor); d.setDate(1); d.setMonth(m); S.calAnchor=d; S.calZoom='month'; render(); }
-function calGoToDate(iso) { S.calAnchor=new Date(iso+'T00:00:00'); S.calZoom='week'; render(); }
-
-function renderCalWeek() {
-  const start = new Date(S.calAnchor);
-  start.setHours(0,0,0,0);
-  start.setDate(start.getDate() - start.getDay());
-  const days = [...Array(7)].map((_,i)=>{ const d=new Date(start); d.setDate(start.getDate()+i); return d; });
-  const dayIsos = days.map(d=>localDateISO(d));
-  const todayIso = localDateISO();
-  if(!S.calSelectedDay || !dayIsos.includes(S.calSelectedDay)) {
-    S.calSelectedDay = dayIsos.includes(todayIso) ? todayIso : dayIsos[0];
+// One screen: the month grid, with the selected day's events underneath.
+// ‹ › step a month; tapping "Month Year ▾" opens the month/year picker.
+function calGoMonth(y, m) {
+  const d = new Date(y, m, 1);
+  S.calAnchor = d;
+  const sel = S.calSelectedDay ? new Date(S.calSelectedDay+'T00:00:00') : null;
+  if(!sel || sel.getFullYear()!==d.getFullYear() || sel.getMonth()!==d.getMonth()) {
+    const now = new Date();
+    S.calSelectedDay = (now.getFullYear()===d.getFullYear() && now.getMonth()===d.getMonth()) ? localDateISO(now) : localDateISO(d);
   }
-  const rangeLabel = `${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${days[6].toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}`;
-  const DOW = ['S','M','T','W','T','F','S'];
-
-  let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 12px">
-      <span onclick="calShiftWeek(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
-      <span style="font-size:14px;font-weight:800;color:var(--t1)">${rangeLabel}</span>
-      <span onclick="calShiftWeek(1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">›</span>
-    </div>
-    <div style="padding:0 14px 4px">
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:18px">`;
-
-  days.forEach((d,i)=>{
-    const iso = dayIsos[i];
-    const isToday = iso===todayIso;
-    const isSel = iso===S.calSelectedDay;
-    const dayEvents = calEventsOn(iso);
-    const hasCharter = dayEvents.some(e=>e.type==='charter');
-    html += `<div onclick="selectCalDay('${iso}')" style="text-align:center;cursor:pointer">
-      <div style="font-size:9px;margin-bottom:3px;font-weight:${isToday?'800':'700'};color:${isToday?'var(--accent)':'var(--t3)'}">${DOW[i]}</div>
-      <div style="border-radius:8px;min-height:52px;padding:5px 3px;border:${isSel?'1.5px solid var(--accent)':'1px solid var(--border2)'};background:${isSel?'var(--accent-dim)':'transparent'}">
-        <div style="font-size:12px;font-weight:${isToday?'800':'700'};color:var(--t1);margin-bottom:4px">${d.getDate()}</div>
-        ${dayEvents.length?(hasCharter?`<div style="font-size:11px">✈️</div>`:`<div style="width:100%;height:16px;background:${dayEvents.some(e=>calRepeats(e))?`repeating-linear-gradient(90deg,${CAL_NOTE_BG} 0 6px,rgba(255,229,138,.45) 6px 9px)`:CAL_NOTE_BG};border-radius:3px;opacity:0.85"></div>`):''}
-      </div>
-    </div>`;
-  });
-  html += `</div>`;
-
-  const selIdx = dayIsos.indexOf(S.calSelectedDay);
-  const selDate = days[selIdx];
-  const selEvents = calEventsOn(S.calSelectedDay);
-  const selLabel = selDate.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
-  const numColor = S.calSelectedDay===todayIso ? 'var(--accent)' : 'var(--t1)';
-
-  html += `<div style="border-top:1px solid var(--border2);padding-top:14px">
-    <div style="font-size:12px;color:var(--t3);margin-bottom:12px">${selLabel}</div>`;
-  if(!selEvents.length) {
-    html += `<div style="display:flex;align-items:baseline;gap:14px">
-      <span style="font-size:34px;font-weight:800;color:var(--t4);width:42px;flex-shrink:0">${selDate.getDate()}</span>
-      <span style="font-size:13px;color:var(--t4)">No events</span>
-    </div>`;
-  } else {
-    selEvents.forEach((ev,i)=>{
-      const isCharter = ev.type==='charter';
-      const items = ev.items||[];
-      const doneCount = items.filter(x=>x.done).length;
-      const sub = isCharter
-        ? (items.length ? `${doneCount} of ${items.length} items done` : 'Tap to add requested items')
-        : ev.notes;
-      html += `<div onclick="${isCharter?`openCharterDetail('${ev.id}')`:`askDeleteEvent('${ev.id}','${S.calSelectedDay}')`}" style="display:flex;align-items:baseline;gap:14px;${i<selEvents.length-1?'margin-bottom:12px':''};cursor:pointer">
-        <span style="font-size:34px;font-weight:800;color:${numColor};width:42px;flex-shrink:0">${i===0?selDate.getDate():''}</span>
-        <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${isCharter?'✈️ ':''}${ev.title}</div>
-        ${sub?`<div style="font-size:12px;color:var(--t3);margin-top:3px">${sub}</div>`:''}
-        ${calRepeats(ev)?`<span style="display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:2px 9px">🔁 ${calRepeatLabel(ev)}</span>`:''}</div>
-      </div>`;
-    });
-  }
-  html += `</div></div>`;
-  return html;
+  render();
 }
+function calShiftMonth(delta) { const a = S.calAnchor || new Date(); calGoMonth(a.getFullYear(), a.getMonth() + delta); }
+function calGoToday() { S.calSelectedDay = localDateISO(); const n = new Date(); calGoMonth(n.getFullYear(), n.getMonth()); }
 function selectCalDay(iso) { S.calSelectedDay = iso; render(); }
 
 function renderCalMonth() {
+  if(!S.calAnchor) S.calAnchor = new Date();
   const anchor = new Date(S.calAnchor);
   const y = anchor.getFullYear(), m = anchor.getMonth();
+  const now = new Date(), todayIso = localDateISO();
+  const isCurrentMonth = y===now.getFullYear() && m===now.getMonth();
   const startWeekday = new Date(y,m,1).getDay();
   const daysInMonth = new Date(y,m+1,0).getDate();
-  const todayIso = localDateISO();
+  const selMonthOk = S.calSelectedDay && S.calSelectedDay.slice(0,7) === localDateISO(new Date(y,m,1)).slice(0,7);
+  if(!selMonthOk) S.calSelectedDay = isCurrentMonth ? todayIso : localDateISO(new Date(y,m,1));
   const monthLabel = anchor.toLocaleDateString('en-US',{month:'long',year:'numeric'});
-  const eventDates = calEventDatesInRange(localDateISO(new Date(y,m,1)), localDateISO(new Date(y,m,daysInMonth)));
+
   let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 10px">
-      <span onclick="calShiftMonth(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
-      <span style="font-size:15px;font-weight:800;color:var(--t1)">${monthLabel}</span>
-      <span onclick="calShiftMonth(1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">›</span>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 12px 10px">
+      <span onclick="calShiftMonth(-1)" style="color:var(--t3);font-size:22px;padding:4px 12px;cursor:pointer">‹</span>
+      <div onclick="openMonthPicker()" style="display:flex;align-items:center;gap:6px;background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:7px 14px;cursor:pointer">
+        <span style="font-size:16px;font-weight:800;color:var(--t1)">${monthLabel}</span><span style="font-size:11px;color:var(--accent)">▾</span>
+      </div>
+      <span onclick="calShiftMonth(1)" style="color:var(--t3);font-size:22px;padding:4px 12px;cursor:pointer">›</span>
     </div>
-    <div style="padding:0 14px">
+    ${isCurrentMonth ? '' : `<div style="text-align:center;margin:-2px 0 10px"><span onclick="calGoToday()" style="font-size:12px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:4px 12px;cursor:pointer">↩ Today</span></div>`}
+    <div style="padding:0 12px">
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px">
         ${['S','M','T','W','T','F','S'].map(d=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--t3)">${d}</div>`).join('')}
       </div>
       <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
         ${[...Array(startWeekday)].map(()=>'<div></div>').join('')}
         ${[...Array(daysInMonth)].map((_,i)=>{
-          const day=i+1;
-          const iso = localDateISO(new Date(y,m,day));
-          const isToday = iso===todayIso;
-          const hasEvent = eventDates.has(iso);
-          return `<div onclick="calGoToDate('${iso}')" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:${isToday?'var(--accent)':'transparent'};cursor:pointer">
-            <span style="font-size:12px;font-weight:${isToday?'800':'600'};color:${isToday?'#fff':'var(--t1)'}">${day}</span>
-            ${hasEvent?`<span style="width:4px;height:4px;border-radius:50%;background:${isToday?'#fff':'var(--accent)'};margin-top:2px"></span>`:''}
+          const day = i+1, iso = localDateISO(new Date(y,m,day));
+          const isToday = iso===todayIso, isSel = iso===S.calSelectedDay;
+          const evs = calEventsOn(iso);
+          const dots = evs.slice(0,3).map(e=>{
+            const c = isToday ? '#fff' : e.type==='charter' ? '#7fd1ff' : 'var(--accent)';
+            return calRepeats(e)
+              ? `<span style="width:5px;height:5px;border-radius:1px;background:repeating-linear-gradient(90deg,${c} 0 2px,transparent 2px 3px)"></span>`
+              : `<span style="width:5px;height:5px;border-radius:50%;background:${c}"></span>`;
+          }).join('');
+          return `<div onclick="selectCalDay('${iso}')" style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border-radius:10px;cursor:pointer;
+                    background:${isToday?'var(--accent)':'transparent'};border:1.5px solid ${isSel?'var(--accent)':'transparent'};${isToday&&isSel?'box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--accent)':''}">
+            <span style="font-size:13px;font-weight:${isToday?'800':'600'};color:${isToday?'#fff':'var(--t1)'}">${day}</span>
+            <span style="display:flex;gap:2px;height:5px">${dots}</span>
           </div>`;
         }).join('')}
       </div>
-    </div>
-    <div style="text-align:center;font-size:11px;color:var(--t4);margin-top:18px">Tap a day to jump to its week</div>`;
+    </div>`;
+
+  // the selected day's events
+  const sd = new Date(S.calSelectedDay+'T00:00:00');
+  const selEvents = calEventsOn(S.calSelectedDay);
+  html += `<div style="margin:16px 14px 0;border-top:1px solid var(--border2);padding-top:14px">
+    <div style="font-size:12px;color:var(--t3);margin-bottom:10px">${sd.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'})}</div>`;
+  if(!selEvents.length) {
+    html += `<div style="font-size:13px;color:var(--t4);padding:4px 0">No events — tap + to add one on this day.</div>`;
+  } else {
+    selEvents.forEach(ev=>{
+      const isCharter = ev.type==='charter';
+      const items = ev.items||[];
+      const sub = isCharter ? (items.length ? `${items.filter(x=>x.done).length} of ${items.length} items done` : 'Tap to add requested items') : ev.notes;
+      html += `<div onclick="${isCharter?`openCharterDetail('${ev.id}')`:`askDeleteEvent('${ev.id}','${S.calSelectedDay}')`}" style="display:flex;gap:12px;padding:10px 12px;border-radius:12px;background:var(--glass2);margin-bottom:8px;cursor:pointer">
+        <span style="width:4px;align-self:stretch;border-radius:2px;flex-shrink:0;background:${isCharter?'#7fd1ff':CAL_NOTE_BG}"></span>
+        <div><div style="font-size:14px;font-weight:800;color:var(--t1)">${isCharter?'✈️ ':''}${ev.title}</div>
+        ${sub?`<div style="font-size:12px;color:var(--t3);margin-top:2px">${sub}</div>`:''}
+        ${calRepeats(ev)?`<span style="display:inline-block;margin-top:5px;font-size:11px;font-weight:700;color:var(--accent);background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:2px 9px">🔁 ${calRepeatLabel(ev)}</span>`:''}</div>
+      </div>`;
+    });
+  }
+  html += `</div>`;
   return html;
 }
 
-function renderCalYear() {
-  const y = S.calAnchor.getFullYear();
-  const now = new Date();
-  const eventDates = calEventDatesInRange(`${y}-01-01`, `${y}-12-31`);
-  let html = `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 14px 10px">
-      <span onclick="calShiftYear(-1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">‹</span>
-      <span style="font-size:16px;font-weight:800;color:var(--t1)">${y}</span>
-      <span onclick="calShiftYear(1)" style="color:var(--t3);font-size:20px;padding:4px 12px;cursor:pointer">›</span>
+// Month/year picker: the year with ‹ › on top, 12 month buttons below; one tap jumps there.
+let _calPickYear = null;
+function openMonthPicker() {
+  _calPickYear = (S.calAnchor || new Date()).getFullYear();
+  openModal('Go to month', '<div id="monthPick"></div>', ()=>closeModal());
+  document.getElementById('mSave').style.display = 'none';
+  renderMonthPicker();
+}
+function calPickShiftYear(d) { _calPickYear += d; renderMonthPicker(); }
+function calPickMonth(m) { closeModal(); calGoMonth(_calPickYear, m); }
+function renderMonthPicker() {
+  const box = document.getElementById('monthPick'); if(!box) return;
+  const y = _calPickYear, a = S.calAnchor || new Date(), now = new Date();
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px">
+      <span onclick="calPickShiftYear(-1)" style="color:var(--t3);font-size:24px;padding:2px 14px;cursor:pointer">‹</span>
+      <span style="font-size:22px;font-weight:800;color:var(--t1);min-width:70px;text-align:center">${y}</span>
+      <span onclick="calPickShiftYear(1)" style="color:var(--t3);font-size:24px;padding:2px 14px;cursor:pointer">›</span>
     </div>
-    <div style="padding:0 14px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px">`;
-  for(let m=0; m<12; m++) {
-    const daysInMonth = new Date(y,m+1,0).getDate();
-    const isCurrentMonth = (y===now.getFullYear() && m===now.getMonth());
-    let dots = '';
-    for(let d=1; d<=daysInMonth; d++) {
-      const has = eventDates.has(localDateISO(new Date(y,m,d)));
-      dots += `<div style="aspect-ratio:1;border-radius:1px;background:${has?'var(--accent)':'var(--glass2)'}"></div>`;
-    }
-    html += `<div onclick="calGoToMonth(${m})" style="background:${isCurrentMonth?'var(--accent-dim)':'var(--glass2)'};border:1px solid ${isCurrentMonth?'var(--accent-border)':'var(--border2)'};border-radius:10px;padding:8px 6px;cursor:pointer">
-      <div style="font-size:10px;font-weight:800;color:${isCurrentMonth?'var(--accent)':'var(--t1)'};margin-bottom:5px;text-align:center">${CAL_MONTH_NAMES[m]}</div>
-      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px">${dots}</div>
-    </div>`;
-  }
-  html += `</div><div style="text-align:center;font-size:11px;color:var(--t4);margin-top:18px">Tap a month to zoom in</div>`;
-  return html;
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      ${CAL_MONTH_NAMES.map((n,m)=>{
+        const on = y===a.getFullYear() && m===a.getMonth();
+        const isNow = y===now.getFullYear() && m===now.getMonth();
+        const has = calEventDatesInRange(localDateISO(new Date(y,m,1)), localDateISO(new Date(y,m+1,0))).size > 0;
+        return `<div onclick="calPickMonth(${m})" style="text-align:center;padding:14px 0;border-radius:12px;cursor:pointer;font-size:14px;font-weight:700;
+                  border:1.5px solid ${on?'var(--accent)':isNow?'var(--accent-border)':'var(--border2)'};background:${on?'var(--accent)':'transparent'};color:${on?'#fff':'var(--t1)'}">${n}${has?`<span style="color:${on?'#fff':'var(--accent)'};margin-left:3px">•</span>`:''}</div>`;
+      }).join('')}
+    </div>
+    <div style="text-align:center;font-size:11px;color:var(--t4);margin-top:12px">• = has events</div>`;
 }
 
 function renderTodayEventsHtml() {
@@ -3353,7 +3313,7 @@ let _addEventType = 'event';
 function openAddEvent() {
   _addEventType = 'event';
   _addEventRepeat = 'once';
-  const defaultIso = (S.tab==='calendar' && S.calZoom==='week' && S.calSelectedDay)
+  const defaultIso = (S.tab==='calendar' && S.calSelectedDay)
     ? S.calSelectedDay
     : (S.tab==='calendar' ? localDateISO(S.calAnchor) : localDateISO());
   openModal('Add Event',
