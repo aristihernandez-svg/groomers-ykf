@@ -2481,7 +2481,7 @@ async function homeFleetRefresh() {
   try {
     const pos = await fetchFleetOpenSky();
     const air = pos.filter(p=>!p.onGround);
-    const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250)
+    const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250 && fleetHeadingToward(p.lat,p.lon,p.trackRaw,CYKF_LAT,CYKF_LON))
       .map(p=>({...p, eta:etaMinutes(p.distNm,p.speedKts)})).filter(p=>p.eta!==null)
       .sort((a,b)=>a.distNm-b.distNm)[0] || null;
     S.homeFleet = {inbound, airborne:air.length, ground:pos.length-air.length};
