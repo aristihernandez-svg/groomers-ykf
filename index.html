@@ -3285,7 +3285,10 @@ function calEventOccurs(e, iso) {
       const last = new Date(b.getFullYear(), b.getMonth()+1, 0).getDate();
       return b.getDate() === Math.min(a.getDate(), last);
     }
-    case 'yearly':   return b.getMonth() === a.getMonth() && b.getDate() === a.getDate();
+    case 'yearly': {    // Feb 29 lands on Feb 28 in non-leap years
+      if(b.getMonth() !== a.getMonth()) return false;
+      return b.getDate() === Math.min(a.getDate(), new Date(b.getFullYear(), b.getMonth()+1, 0).getDate());
+    }
   }
   return false;
 }
