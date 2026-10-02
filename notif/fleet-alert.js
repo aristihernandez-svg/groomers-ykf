@@ -128,13 +128,16 @@ function fetchOpenSky() {
 
 // Free community ADS-B network (no key). Second opinion next to OpenSky:
 // every fleet ICAO24 worldwide, plus everything within 250 nm of CYKF and of CYAV (for call-sign matches).
+// One request at a time, spaced out: three at once gets rate-limited (HTTP 420), and the
+// fleet hex lookup -- the one that really matters -- goes first so it never gets lost.
 async function fetchAdsbLol() {
   const hexes = FLEET.map(a => a.icao24).join(',');
-  const [byHex, near, nearYav] = await Promise.all([
-    getJson(`https://api.adsb.lol/v2/hex/${hexes}`),
-    getJson(`https://api.adsb.lol/v2/point/${CYKF_LAT}/${CYKF_LON}/250`).catch(() => ({ ac: [] })),
-    getJson(`https://api.adsb.lol/v2/point/${CYAV_LAT}/${CYAV_LON}/250`).catch(() => ({ ac: [] })),
-  ]);
+  const pause = () => new Promise(r => setTimeout(r, 1200));
+  const byHex = await getJson(`https://api.adsb.lol/v2/hex/${hexes}`);
+  await pause();
+  const near = await getJson(`https://api.adsb.lol/v2/point/${CYKF_LAT}/${CYKF_LON}/250`).catch(e => { console.error('adsb.lol near CYKF:', e.message); return { ac: [] }; });
+  await pause();
+  const nearYav = await getJson(`https://api.adsb.lol/v2/point/${CYAV_LAT}/${CYAV_LON}/250`).catch(e => { console.error('adsb.lol near CYAV:', e.message); return { ac: [] }; });
   const seen = new Set();
   return [...(byHex.ac || []), ...(near.ac || []), ...(nearYav.ac || [])].filter(p => p.hex && !seen.has(p.hex) && seen.add(p.hex));
 }
