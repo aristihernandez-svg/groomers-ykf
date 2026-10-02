@@ -27,6 +27,15 @@ const COOLDOWN_MS = 15 * 60 * 1000; // minimum gap between two alerts for the sa
 const INBOUND_TOL_DEG = 75;         // heading must point within this of the airport to count as inbound
 const MAX_AGE_S = 180;              // ignore positions older than this
 
+// YAV (St. Andrews) gets its own alert, measured only from CYAV, sent to the
+// YAV app's own subscribers (skycare-yav) with YAV's own push key.
+const CYAV_LAT = 50.0564;
+const CYAV_LON = -97.0325;
+const YAV_ALERT_NM = 40;
+const YAV_RESET_NM = 80;
+const YAV_VAPID_PUBLIC = 'BL-9QbyPlFMPIv8T_C_aeM4MTkv2Mb9ogKZLlQjk9IJeHbCGYNJKlThwgJyqdxbuDdCGQf7dR5sDeNSEyNsgAVA';
+const YAV_APP = 'https://aristihernandez-svg.github.io/groomers-yav/';
+
 // Canadian registrations map to ICAO24 (Mode S) addresses arithmetically:
 // C-FAAA = C00001, C-GAAA = C00001 + 26^3. Checked against 64 live Canadian aircraft.
 function icao24For(reg) {
@@ -87,10 +96,11 @@ function bearingDeg(lat1, lon1, lat2, lon2) {
   return (Math.atan2(y, x) / r + 360) % 360;
 }
 
-// True when the aircraft's track points toward CYKF. Unknown track counts as inbound.
-function isInbound(ac) {
+// True when the aircraft's track points toward the airport (CYKF unless told otherwise).
+// Unknown track counts as inbound.
+function isInbound(ac, lat = CYKF_LAT, lon = CYKF_LON) {
   if (ac.track == null) return true;
-  const want = bearingDeg(ac.lat, ac.lon, CYKF_LAT, CYKF_LON);
+  const want = bearingDeg(ac.lat, ac.lon, lat, lon);
   const diff = Math.abs(((ac.track - want + 540) % 360) - 180);
   return diff <= INBOUND_TOL_DEG;
 }
@@ -117,15 +127,16 @@ function fetchOpenSky() {
 }
 
 // Free community ADS-B network (no key). Second opinion next to OpenSky:
-// every fleet ICAO24 worldwide, plus everything within 250 nm of CYKF (for call-sign matches).
+// every fleet ICAO24 worldwide, plus everything within 250 nm of CYKF and of CYAV (for call-sign matches).
 async function fetchAdsbLol() {
   const hexes = FLEET.map(a => a.icao24).join(',');
-  const [byHex, near] = await Promise.all([
+  const [byHex, near, nearYav] = await Promise.all([
     getJson(`https://api.adsb.lol/v2/hex/${hexes}`),
     getJson(`https://api.adsb.lol/v2/point/${CYKF_LAT}/${CYKF_LON}/250`).catch(() => ({ ac: [] })),
+    getJson(`https://api.adsb.lol/v2/point/${CYAV_LAT}/${CYAV_LON}/250`).catch(() => ({ ac: [] })),
   ]);
   const seen = new Set();
-  return [...(byHex.ac || []), ...(near.ac || [])].filter(p => p.hex && !seen.has(p.hex) && seen.add(p.hex));
+  return [...(byHex.ac || []), ...(near.ac || []), ...(nearYav.ac || [])].filter(p => p.hex && !seen.has(p.hex) && seen.add(p.hex));
 }
 
 // Match by ICAO24 first (permanent, independent of call sign), then the crews' call signs,
@@ -175,6 +186,87 @@ async function sendToAll(title, body, tag) {
   }
 }
 
+// ── YAV ──────────────────────────────────────────────────────────────────────
+// Firestore REST value -> plain JS (the YAV app's subscriptions live in skycare-yav,
+// read here over REST; its rules let the app read them without a login).
+function fsValue(v) {
+  if (!v) return null;
+  if ('stringValue' in v)  return v.stringValue;
+  if ('integerValue' in v) return Number(v.integerValue);
+  if ('doubleValue' in v)  return v.doubleValue;
+  if ('booleanValue' in v) return v.booleanValue;
+  if ('mapValue' in v)     return Object.fromEntries(Object.entries(v.mapValue.fields || {}).map(([k, x]) => [k, fsValue(x)]));
+  if ('arrayValue' in v)   return (v.arrayValue.values || []).map(fsValue);
+  if ('timestampValue' in v) return v.timestampValue;
+  return null;
+}
+async function yavSubscriptions() {
+  const subs = [];
+  let token = '';
+  do {
+    const r = await getJson('https://firestore.googleapis.com/v1/projects/skycare-yav/databases/(default)/documents/pushSubscriptions?pageSize=300'
+      + (token ? '&pageToken=' + encodeURIComponent(token) : ''));
+    (r.documents || []).forEach(d => { const s = fsValue(d.fields?.sub); if (s?.endpoint && s.keys) subs.push(s); });
+    token = r.nextPageToken || '';
+  } while (token);
+  return subs;
+}
+async function sendToYav(title, body, tag, type) {
+  if (!process.env.VAPID_PRIVATE_KEY_YAV) { console.log('YAV: no push key configured — not sending'); return; }
+  const subs = await yavSubscriptions();
+  if (!subs.length) { console.log('YAV: no subscribers'); return; }
+  const icon = YAV_APP + 'cars/' + (type === 'Navajo' ? 'Navajo_logo-removebg-preview.png' : 'Metroliner_logo-removebg-preview.png');
+  const payload = JSON.stringify({ title, body, icon, badge: icon, tag, url: YAV_APP });
+  const opts = { vapidDetails: { subject: 'mailto:aristihernandez@gmail.com', publicKey: YAV_VAPID_PUBLIC, privateKey: process.env.VAPID_PRIVATE_KEY_YAV } };
+  const results = await Promise.allSettled(subs.map(s => webpush.sendNotification(s, payload, opts)));
+  const ok = results.filter(r => r.status === 'fulfilled').length;
+  console.log(`YAV push sent — ${ok} ok, ${results.length - ok} failed`);
+}
+// 40 nm arrival alert for CYAV. Every distance here is from CYAV; alert state is
+// kept apart from YKF's (fleetNotificationsYAV) so the two bases never share a trigger.
+async function checkYav(live) {
+  try {
+    webpush.getVapidHeaders('https://fcm.googleapis.com', 'mailto:aristihernandez@gmail.com', YAV_VAPID_PUBLIC, process.env.VAPID_PRIVATE_KEY_YAV || '', 'aes128gcm');
+    console.log('YAV push key OK');
+  } catch (e) { console.error('YAV push key problem:', e.message); }
+  const now = Date.now();
+  for (const ac of Object.values(live)) {
+    const distNm = Math.round(haversineNm(ac.lat, ac.lon, CYAV_LAT, CYAV_LON));
+    const ref  = db.collection('fleetNotificationsYAV').doc(ac.tail);
+    const snap = await ref.get();
+    const prev = snap.exists ? snap.data() : null;
+
+    if (ac.onGround) {
+      if (prev?.active) {
+        console.log(`YAV: ${ac.reg} on the ground — re-arming`);
+        await ref.set({ active: false, distNm, resetAt: admin.firestore.FieldValue.serverTimestamp(), landed: true }, { merge: true });
+      }
+      continue;
+    }
+    const inbound = isInbound(ac, CYAV_LAT, CYAV_LON);
+    if (distNm <= YAV_ALERT_NM) {
+      const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
+      if (prev?.active !== true && inbound && (now - lastNotified) > COOLDOWN_MS) {
+        const eta  = etaStr(distNm, ac.speedKts);
+        const body = [
+          `${distNm} nm from CYAV`,
+          ac.altFt ? ac.altFt.toLocaleString() + ' ft' : null,
+          ac.speedKts ? ac.speedKts + ' KTS' : null,
+          eta ? 'ETA ' + eta : null,
+        ].filter(Boolean).join(' · ');
+        console.log(`YAV ALERT: ${ac.reg} — ${body}`);
+        await sendToYav(`✈ ${ac.reg} approaching CYAV`, body, `fleet-yav-${ac.tail}`, ac.type);
+        await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm });
+      } else {
+        console.log(`YAV: ${ac.reg} ${distNm} nm — no alert (${prev?.active ? 'already sent for this arrival' : !inbound ? 'not heading toward CYAV' : 'cooldown'})`);
+      }
+    } else if (distNm > YAV_RESET_NM && prev?.active) {
+      console.log(`YAV: ${ac.reg} beyond ${YAV_RESET_NM} nm — resetting`);
+      await ref.set({ active: false, distNm, resetAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    }
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   // Ask both sources at once; either one failing must not stop the other.
@@ -207,7 +299,7 @@ async function main() {
     });
   }
   if (lolRes.status === 'fulfilled') {
-    console.log(`adsb.lol: ${lolRes.value.length} aircraft (fleet hex list + 250 nm around CYKF)`);
+    console.log(`adsb.lol: ${lolRes.value.length} aircraft (fleet hex list + 250 nm around CYKF and CYAV)`);
     lolRes.value.forEach(p => {
       const ac = matchAircraft(p.hex, p.flight);
       if (!ac) return;
@@ -287,6 +379,9 @@ async function main() {
       console.log(`${info} — outside ${ALERT_NM} nm`);
     }
   }
+
+  // YAV's own 40 nm alert — kept separate so a YAV problem can never stop YKF's
+  try { await checkYav(live); } catch (e) { console.error('YAV alert check failed:', e.message); }
 
   // Write live positions to Firestore so the browser map can read them
   // without calling OpenSky directly (OpenSky blocks browser CORS requests)
