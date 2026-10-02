@@ -1105,7 +1105,7 @@ function fleetHeadingToward(lat, lon, track, toLat, toLon) {
   const want = (Math.atan2(y,x)/r + 360) % 360;
   return Math.abs(((track - want + 540) % 360) - 180) <= 75;
 }
-const FLEET_ALERT_NM = 30;
+const FLEET_ALERT_NM = 60; // same radius the push alert uses (notif/fleet-alert.js ALERT_NM)
 const PROC_TAILS  = {
   metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
   westwind: ['IAW','XAW','XDP'],
@@ -12945,11 +12945,11 @@ function renderFleet(el) {
     return d.distNm!==null && d.distNm<=250 && d.eta!==null;
   }).sort((a,b)=>_fleetData[a.tail].distNm-_fleetData[b.tail].distNm);
 
-  const notifBtn = ('Notification' in window && Notification.permission!=='granted')
-    ? `<button onclick="Notification.requestPermission().then(()=>renderFleet(document.getElementById('content')))"
+  const notifBtn = ('Notification' in window && 'serviceWorker' in navigator && localStorage.getItem('notifications_enabled')!=='1')
+    ? `<button onclick="requestNotificationPermission().then(()=>renderFleet(document.getElementById('content')))"
          style="margin-top:8px;padding:8px 14px;border-radius:8px;border:1px solid rgba(200,168,75,0.4);
                 background:rgba(200,168,75,0.1);color:#C8A84B;font-size:12px;font-weight:600;cursor:pointer;width:100%">
-         🔔 Enable 30 nm arrival alerts
+         🔔 Enable ${FLEET_ALERT_NM} nm arrival alerts
        </button>` : '';
 
   el.innerHTML = `
@@ -12999,7 +12999,7 @@ function renderFleet(el) {
       ${inbound.map(ac=>{
         const d=_fleetData[ac.tail];
         const etaStr = d.eta!=null ? (d.eta<60 ? d.eta+' min' : Math.floor(d.eta/60)+'h '+(d.eta%60)+'m') : '—';
-        const alert25 = d.distNm<=FLEET_ALERT_NM ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ 30 NM</span>` : '';
+        const alert25 = d.distNm<=FLEET_ALERT_NM ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ ${FLEET_ALERT_NM} NM</span>` : '';
         return `<div style="background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
             <div style="display:flex;align-items:center;gap:8px">
@@ -13085,7 +13085,7 @@ function renderFleet(el) {
     // Esri's dark-gray basemap is free with no key or account needed.
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16}).addTo(map);
     // CYKF marker
-    L.circle([CYKF_LAT,CYKF_LON],{radius:30*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
+    L.circle([CYKF_LAT,CYKF_LON],{radius:FLEET_ALERT_NM*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
     L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#C8A84B',fillColor:'#C8A84B',fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
     // Aircraft markers
     FLEET_AIRCRAFT.forEach(ac=>{
