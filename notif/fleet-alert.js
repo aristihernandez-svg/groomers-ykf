@@ -50,6 +50,16 @@ const FLEET = [
   { reg: 'C-FXAW', tail: 'XAW', type: 'Westwind',   cs: ['PHX280'] },
   { reg: 'C-FXDP', tail: 'XDP', type: 'Westwind',   cs: ['PHX303'] },
   { reg: 'C-FDAX', tail: 'DAX', type: 'Astra',      cs: ['PHX58']  },
+  { reg: 'C-FAJR', tail: 'AJR', type: 'Navajo',     cs: ['PHX410'] },
+  { reg: 'C-FAQR', tail: 'AQR', type: 'Navajo',     cs: ['PHX411'] },
+  { reg: 'C-FTJX', tail: 'TJX', type: 'Navajo',     cs: ['PHX412'] },
+  { reg: 'C-GCJH', tail: 'CJH', type: 'Navajo',     cs: ['PHX413'] },
+  { reg: 'C-GJHX', tail: 'JHX', type: 'Navajo',     cs: ['PHX414'] },
+  { reg: 'C-GJRH', tail: 'JRH', type: 'Navajo',     cs: ['PHX415'] },
+  { reg: 'C-GQXD', tail: 'QXD', type: 'Navajo',     cs: ['PHX416'] },
+  { reg: 'C-GQXX', tail: 'QXX', type: 'Navajo',     cs: ['PHX417'] },
+  { reg: 'C-GTJF', tail: 'TJF', type: 'Navajo',     cs: ['PHX418'] },
+  { reg: 'C-FBHO', tail: 'BHO', type: 'Navajo',     cs: ['PHX419'] },
 ].map(a => ({ ...a, icao24: icao24For(a.reg) }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

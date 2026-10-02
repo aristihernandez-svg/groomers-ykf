@@ -2433,7 +2433,7 @@ function hdModel(w, st) {
 // ── live fleet info (read from fleetPositions/live, written by the alert job) ──
 function homeFleetInfo() {
   const hf = S.homeFleet;
-  const plane = {Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Astra:HOME_PLANE_IMGS[3]};
+  const plane = {Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Navajo:HOME_PLANE_IMGS[2], Astra:HOME_PLANE_IMGS[3]};
   if(!hf) return {reg:'Checking…', line:'', sub:'', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
   if(!_fleetFeedAt || Date.now()-_fleetFeedAt > 15*60000)
     return {reg:'No live feed', line:'', sub:'Open the Fleet tab', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
@@ -12802,6 +12802,16 @@ const FLEET_AIRCRAFT = [
   {reg:'C-FXAW', tail:'XAW', type:'Westwind',   icao24:''},
   {reg:'C-FXDP', tail:'XDP', type:'Westwind',   icao24:''},
   {reg:'C-FDAX', tail:'DAX', type:'Astra',      icao24:''},
+  {reg:'C-FAJR', tail:'AJR', type:'Navajo',     icao24:''},
+  {reg:'C-FAQR', tail:'AQR', type:'Navajo',     icao24:''},
+  {reg:'C-FTJX', tail:'TJX', type:'Navajo',     icao24:''},
+  {reg:'C-GCJH', tail:'CJH', type:'Navajo',     icao24:''},
+  {reg:'C-GJHX', tail:'JHX', type:'Navajo',     icao24:''},
+  {reg:'C-GJRH', tail:'JRH', type:'Navajo',     icao24:''},
+  {reg:'C-GQXD', tail:'QXD', type:'Navajo',     icao24:''},
+  {reg:'C-GQXX', tail:'QXX', type:'Navajo',     icao24:''},
+  {reg:'C-GTJF', tail:'TJF', type:'Navajo',     icao24:''},
+  {reg:'C-FBHO', tail:'BHO', type:'Navajo',     icao24:''},
 ];
 
 let _fleetData = {}; // icao24/callsign → state
