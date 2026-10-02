@@ -239,7 +239,8 @@ async function checkYav(live) {
     const snap = await ref.get();
     const prev = snap.exists ? snap.data() : null;
 
-    if (ac.onGround) {
+    // Under 50 kts it's rolling on a runway or taxiing, not "approaching" -- treat as on the ground.
+    if (ac.onGround || (ac.speedKts != null && ac.speedKts < 50)) {
       if (prev?.active) {
         console.log(`YAV: ${ac.reg} on the ground — re-arming`);
         await ref.set({ active: false, distNm, resetAt: admin.firestore.FieldValue.serverTimestamp(), landed: true }, { merge: true });
