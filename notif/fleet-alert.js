@@ -24,6 +24,10 @@ const CYKF_LON = -80.3782;
 const ALERT_NM = 60;
 const RESET_NM = 120;  // re-arm the alert once aircraft goes beyond this (or lands)
 const COOLDOWN_MS = 15 * 60 * 1000; // minimum gap between two alerts for the same tail
+// A sent alert counts as "this arrival" for at most an hour. Landings often go unseen
+// (transponder off before a ground report), and without this the next arrival never alerted.
+const ALERT_EXPIRE_MS = 60 * 60 * 1000;
+const MIN_ALERT_NM = 5;             // inside this it's departing or over the field, not "approaching"
 const INBOUND_TOL_DEG = 75;         // heading must point within this of the airport to count as inbound
 const MAX_AGE_S = 180;              // ignore positions older than this
 
@@ -250,7 +254,9 @@ async function checkYav(live) {
     const inbound = isInbound(ac, CYAV_LAT, CYAV_LON);
     if (distNm <= YAV_ALERT_NM) {
       const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
-      if (prev?.active !== true && inbound && (now - lastNotified) > COOLDOWN_MS) {
+      const alreadyActive = prev?.active === true && (now - lastNotified) < ALERT_EXPIRE_MS;
+      const tooClose = distNm < MIN_ALERT_NM;
+      if (!alreadyActive && !tooClose && inbound && (now - lastNotified) > COOLDOWN_MS) {
         const eta  = etaStr(distNm, ac.speedKts);
         const body = [
           `${distNm} nm from CYAV`,
@@ -262,7 +268,7 @@ async function checkYav(live) {
         await sendToYav(`✈ ${ac.reg} approaching CYAV`, body, `fleet-yav-${ac.tail}`, ac.type);
         await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm });
       } else {
-        console.log(`YAV: ${ac.reg} ${distNm} nm — no alert (${prev?.active ? 'already sent for this arrival' : !inbound ? 'not heading toward CYAV' : 'cooldown'})`);
+        console.log(`YAV: ${ac.reg} ${distNm} nm — no alert (${alreadyActive ? 'already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYAV' : 'cooldown'})`);
       }
     } else if (distNm > YAV_RESET_NM && prev?.active) {
       console.log(`YAV: ${ac.reg} beyond ${YAV_RESET_NM} nm — resetting`);
@@ -355,9 +361,10 @@ async function main() {
     if (ac.distNm <= ALERT_NM) {
       // Within 60 nm — should we notify?
       const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
-      const alreadyActive = prev?.active === true;
+      const alreadyActive = prev?.active === true && (now - lastNotified) < ALERT_EXPIRE_MS;
+      const tooClose = ac.distNm < MIN_ALERT_NM;
 
-      if (!alreadyActive && inbound && (now - lastNotified) > COOLDOWN_MS) {
+      if (!alreadyActive && !tooClose && inbound && (now - lastNotified) > COOLDOWN_MS) {
         // Fire the alert
         const eta  = etaStr(ac.distNm, ac.speedKts);
         const body = [
@@ -371,7 +378,7 @@ async function main() {
         await sendToAll(`✈ ${ac.reg} approaching CYKF`, body, `fleet-${tail}`);
         await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm: ac.distNm });
       } else {
-        const why = alreadyActive ? 'alert already sent for this arrival' : !inbound ? 'not heading toward CYKF' : 'cooldown';
+        const why = alreadyActive ? 'alert already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYKF' : 'cooldown';
         console.log(`${info} — no alert (${why})`);
       }
 

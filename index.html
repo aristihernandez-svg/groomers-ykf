@@ -1096,6 +1096,15 @@ function haversineNm(lat1,lon1,lat2,lon2){
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
 function etaMinutes(distNm, speedKts){ return speedKts>20 ? Math.round(distNm/speedKts*60) : null; }
+// Pointed at the airport (within 75°, the same rule the alert job uses)? Unknown track counts as yes.
+function fleetHeadingToward(lat, lon, track, toLat, toLon) {
+  if(track == null) return true;
+  const r = Math.PI/180;
+  const y = Math.sin((toLon-lon)*r)*Math.cos(toLat*r);
+  const x = Math.cos(lat*r)*Math.sin(toLat*r) - Math.sin(lat*r)*Math.cos(toLat*r)*Math.cos((toLon-lon)*r);
+  const want = (Math.atan2(y,x)/r + 360) % 360;
+  return Math.abs(((track - want + 540) % 360) - 180) <= 75;
+}
 const FLEET_ALERT_NM = 30;
 const PROC_TAILS  = {
   metro:    ['IOA','IOB','IOC','IOE','IOJ','IOH'],
@@ -12831,7 +12840,7 @@ async function fetchFleetOpenSky() {
     return Object.values(v.positions || {}).filter(Boolean).map(p => ({
       tail: p.tail, reg: p.reg, lat: p.lat, lon: p.lon,
       altFt: p.onGround ? 0 : (p.altFt ?? null),
-      speedKts: p.speedKts || 0, track: p.track || 0,
+      speedKts: p.speedKts || 0, track: p.track || 0, trackRaw: p.track ?? null,
       onGround: !!p.onGround, distNm: p.distNm ?? null
     }));
   } catch(e) { return []; }
@@ -12854,7 +12863,9 @@ async function refreshFleet() {
   if(positions) {
     positions.forEach(p => {
       if(!p || !p.tail) return;
-      const eta = p.distNm && p.speedKts ? etaMinutes(p.distNm, p.speedKts) : null;
+      // Only a plane heading for the base gets an ETA (and so shows under "Inbound")
+      const headingIn = fleetHeadingToward(p.lat, p.lon, p.trackRaw, CYKF_LAT, CYKF_LON);
+      const eta = headingIn && p.distNm && p.speedKts ? etaMinutes(p.distNm, p.speedKts) : null;
       _fleetData[p.tail] = {
         callsign: p.reg || p.tail,
         lat: p.lat, lon: p.lon,
