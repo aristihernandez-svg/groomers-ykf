@@ -11178,6 +11178,7 @@ async function autoFetchTitle(urlInputId, nameInputId) {
   // First: instant fallback from URL slug
   const slugName = nameFromUrlSlug(url);
   if (slugName) nameEl.value = slugName;
+  if (nameInputId === 'mSI') checkShopDuplicate();
   // Then: try Worker for better og:title (overwrites slug if successful)
   try {
     const res = await fetch(`https://skycare-worker.skycare.workers.dev?url=${encodeURIComponent(url)}`);
@@ -11185,13 +11186,40 @@ async function autoFetchTitle(urlInputId, nameInputId) {
     const blocked = ['access denied','403','forbidden','robot','blocked'].some(w => (data.name||'').toLowerCase().includes(w));
     if (data.name && !blocked) nameEl.value = data.name;
   } catch(_) {}
+  if (nameInputId === 'mSI') checkShopDuplicate();
+}
+
+// Warn while typing a new shopping item if it (or something close) is already in the list —
+// same three checks as tasks: exact, contained, typo. Tapping a match closes the form and shows it.
+function checkShopDuplicate() {
+  const input = document.getElementById('mSI'), warn = document.getElementById('mSIWarn');
+  if(!input || !warn) return;
+  const val = input.value.trim();
+  if(val.length < 3) { warn.style.display='none'; return; }
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const all = S.shopping.filter(i => i.item);
+  const normVal = normalizeTask(val);
+  let hits = all.filter(i => i.item.trim().toLowerCase() === val.toLowerCase());
+  if(!hits.length && normVal) hits = all.filter(i => normalizeTask(i.item).includes(normVal));
+  if(!hits.length) hits = all.map(i => ({i, sc:taskSimilarity(val, i.item)})).filter(x => x.sc >= 0.75).sort((a,b)=>b.sc-a.sc).map(x => x.i);
+  if(!hits.length) { warn.style.display='none'; return; }
+  warn.style.display = '';
+  warn.innerHTML = `⚠️ Already on the list — tap to see it:` + hits.slice(0,3).map(i =>
+    `<div data-name="${esc(i.item)}" onclick="showShopMatch(this.dataset.name)" style="margin-top:5px;padding:6px 9px;border-radius:7px;background:var(--glass2);color:var(--t1);cursor:pointer">
+      <b>${esc(i.item)}</b> <span style="color:var(--t2);font-size:11px">· ${esc(i.store||'')}${i.cabinet?' · '+esc(i.cabinet):''}${i.checked?' · 🛒 in cart':''}</span></div>`).join('');
+}
+function showShopMatch(name) {
+  closeModal();
+  S.shopView = 'list'; S.shopFilter = 'all'; S.shopLocFilter = 'all'; S.shopSearch = name;
+  renderShopping(document.getElementById('content'));
 }
 
 function openAddShopItem() {
   const existingLocs = [...new Set(S.shopping.map(i=>i.cabinet).filter(Boolean))].sort();
   openModal('Add Shopping Item',
     `<label>Item name</label>
-     <input id="mSI" placeholder="Item...">
+     <input id="mSI" placeholder="Item..." oninput="checkShopDuplicate()">
+     <div id="mSIWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location / Cabinet</label>
      <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${l}</option>`).join('')}</select>
      <label>Store</label>
