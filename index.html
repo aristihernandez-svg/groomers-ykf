@@ -10410,6 +10410,36 @@ async function cleanupOneOffTasks() {
   db.collection('appConfig').doc('oneOffCleaned').set({date: today}).catch(e=>console.log('cleanupOneOffTasks: failed to mark done:', e));
 }
 
+// ── Task lists: change one task at a time, on fresh data ─────────────────
+// Lists used to be saved whole from this phone's own copy: a phone that had a day open for
+// hours could undo other people's changes, and "Delete for good" only reached the days this
+// phone had open. Now every change reads all 7 lists fresh in one transaction, changes only
+// the one task, and writes just the days that changed (all-or-nothing).
+const taskDayRef = day => db.collection('tasks').doc(day);
+// A one-off belongs to the next date that weekday falls on (today, if it's today).
+function taskOnceDateFor(day) {
+  const d = new Date();
+  d.setDate(d.getDate() + ((DAYS.indexOf(day) - d.getDay() + 7) % 7));
+  return d.toDateString();
+}
+// fn(list, day) returns the new list for that day, or null for "leave it alone".
+async function changeTaskDays(fn) {
+  if(!db) throw new Error('No connection');
+  let changed = [];
+  await db.runTransaction(async tx => {
+    changed = [];
+    const snaps = await Promise.all(DAYS.map(day => tx.get(taskDayRef(day))));
+    DAYS.forEach((day, i) => {
+      const list = snaps[i].exists ? (snaps[i].data().tasks || []).map(t => ({...t})) : [];
+      const next = fn(list, day);
+      if(next) { tx.set(taskDayRef(day), {tasks: next, migrated: true}, {merge: true}); changed.push(day); }
+    });
+  });
+  // refresh this phone's copy of the changed days it has open (keeps today's ticks)
+  await Promise.all(changed.filter(day => S.tasks[day] !== undefined).map(day => fetchDay(day)));
+  return changed;
+}
+
 function fsSaveTaskContent(tabName) {
   if(!db) return;
   const content = (S.tasks[tabName]||[]).map(({task,freq,area,onceDate})=>({task,freq:freq||'',area,done:false,...(onceDate?{onceDate}:{})}));
@@ -10435,25 +10465,6 @@ async function fsAddTaskToDay(taskObj, day) {
   }
 }
 
-function hideTaskToday(tabName,idx) {
-  const t=S.tasks[tabName]?.[idx]; if(!t) return;
-  t.hidden=true;
-  // Persist hidden state into taskState (same doc that tracks done/undone — resets at midnight)
-  if(db) {
-    const today=new Date().toDateString();
-    const patch={_date:today}; patch[fsKey(t.task)+'_hidden']=true;
-    db.collection('taskState').doc(tabName).set(patch,{merge:true}).catch(()=>{});
-  }
-  try {
-    const ls=JSON.parse(localStorage.getItem('gykf_taskstate')||'{}');
-    ls[tabName]=ls[tabName]||{};
-    ls[tabName][fsKey(t.task)+'_hidden']=true;
-    ls[tabName]._date=new Date().toDateString();
-    localStorage.setItem('gykf_taskstate',JSON.stringify(ls));
-  } catch(_) {}
-  render(); toast('Hidden for today');
-}
-
 function confirmDeleteTask(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
   const ov=document.createElement('div');
@@ -10463,39 +10474,36 @@ function confirmDeleteTask(tabName,idx) {
   ov.innerHTML=`
     <div style="background:var(--bg2);border:1px solid var(--border2);border-radius:16px;padding:28px 24px;width:100%;max-width:320px;text-align:center">
       <div style="font-size:22px;margin-bottom:8px">🗑</div>
-      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Remove task?</div>
-      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}</div>
+      <div style="font-size:16px;font-weight:700;color:var(--t1);margin-bottom:8px">Delete this task?</div>
+      <div style="font-size:13px;color:var(--t2);margin-bottom:20px;line-height:1.4">${t.task}<br><span style="font-size:12px;color:var(--t3)">It comes off every day it's on.</span></div>
       <div style="display:flex;flex-direction:column;gap:8px">
-        <button id="hideConfirmBtn" style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:12px 20px;color:var(--t1);font-size:14px;font-weight:600;cursor:pointer">👁 Hide for today</button>
         <button id="deletePermBtn" style="background:var(--red);border:none;border-radius:10px;padding:12px 20px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">🗑 Delete for good</button>
         <button id="hideCancelBtn" style="background:none;border:none;color:var(--t3);font-size:13px;cursor:pointer;padding:6px">Cancel</button>
       </div>
     </div>`;
   document.body.appendChild(ov);
   document.getElementById('hideCancelBtn').onclick=()=>ov.remove();
-  document.getElementById('hideConfirmBtn').onclick=()=>{ ov.remove(); hideTaskToday(tabName,idx); };
   document.getElementById('deletePermBtn').onclick=()=>{ ov.remove(); deleteTaskPermanent(tabName,idx); };
 }
 
-function deleteTaskPermanent(tabName,idx) {
+async function deleteTaskPermanent(tabName,idx) {
   const t=S.tasks[tabName]?.[idx]; if(!t) return;
-  const taskName=t.task;
-  // Remove from every day that has this task
-  const affected=[];
-  DAYS.forEach(day=>{
-    if(!S.tasks[day]) return;
-    const i=S.tasks[day].findIndex(x=>x.task===taskName);
-    if(i>=0){ S.tasks[day].splice(i,1); affected.push(day); }
-  });
-  affected.forEach(day=>{
-    fsSaveTaskContent(day);
-    // Clean up hidden flag from taskState for each day
-    if(db){
-      const patch={}; patch[fsKey(taskName)+'_hidden']=firebase.firestore.FieldValue.delete();
+  const key=fsKey(t.task);
+  try {
+    // Every day, read fresh -- not just the days this phone happens to have open
+    const changed = await changeTaskDays(list => {
+      const next = list.filter(x => fsKey(x.task) !== key);
+      return next.length === list.length ? null : next;
+    });
+    changed.forEach(day => {
+      const patch={}; patch[key+'_hidden']=firebase.firestore.FieldValue.delete();
       db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
-    }
-  });
-  render(); toast(`🗑 Deleted from ${affected.length} day${affected.length!==1?'s':''}`);
+    });
+    render(); toast(`🗑 Deleted from ${changed.length} day${changed.length!==1?'s':''}`);
+  } catch(e) {
+    console.error('deleteTaskPermanent failed:', e);
+    toast('Delete failed — check connection and try again');
+  }
 }
 
 const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -10596,55 +10604,28 @@ function openEditTask(tabName,idx) {
       const task=document.getElementById('eTTask').value.trim();
       const area=document.getElementById('eTArea').value;
       if(!task) return;
-      const newKey=fsKey(task);
-      const nameChanged=oldKey!==newKey;
       const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
       // Which days the task should live on after this edit
       const targetSet = _fpMode==='daily' ? new Set(DAYS)
         : _fpMode==='once' ? new Set([tabName])
         : new Set([..._fpDays].map(i=>DAYS[i]));
+      const onceDate = _fpMode==='once' ? taskOnceDateFor(tabName) : null;
       const saveBtn=document.getElementById('mSave');
       if(saveBtn){saveBtn.disabled=true;saveBtn.textContent='Saving…';}
       try {
-        await Promise.all(DAYS.map(async day=>{
-          const shouldHave=targetSet.has(day);
-          if(S.tasks[day]!==undefined){
-            // Day loaded in memory — update array then write full doc
-            const mi=S.tasks[day].findIndex(x=>fsKey(x.task)===oldKey);
-            if(shouldHave){
-              if(mi>=0){
-                const wasHidden=S.tasks[day][mi].hidden;
-                S.tasks[day][mi]={...S.tasks[day][mi],task,freq,area,hidden:wasHidden};
-                if(nameChanged && wasHidden && db){
-                  const patch={_date:new Date().toDateString()};
-                  patch[oldKey+'_hidden']=firebase.firestore.FieldValue.delete();
-                  patch[newKey+'_hidden']=true;
-                  db.collection('taskState').doc(day).set(patch,{merge:true}).catch(()=>{});
-                }
-              } else {
-                S.tasks[day].push({task,freq,area,done:false});
-              }
-            } else {
-              if(mi>=0) S.tasks[day].splice(mi,1);
-            }
-            fsSaveTaskContent(day);
-          } else if(db){
-            // Day not in memory — fetch, patch, write back to Firestore
-            const docRef=db.collection('tasks').doc(day);
-            const snap=await docRef.get();
-            const existing=snap.exists?(snap.data().tasks||[]):[];
-            const mi=existing.findIndex(x=>fsKey(x.task)===oldKey);
-            const updated=[...existing];
-            if(shouldHave){
-              if(mi>=0) updated[mi]={...existing[mi],task,freq,area};
-              else updated.push({task,freq,area,done:false});
-            } else {
-              if(mi<0) return;
-              updated.splice(mi,1);
-            }
-            await docRef.set({tasks:updated,migrated:true},{merge:true});
+        // All 7 days read fresh; only this task changes on each
+        await changeTaskDays((list, day) => {
+          const mi = list.findIndex(x => fsKey(x.task) === oldKey);
+          if(targetSet.has(day)) {
+            const item = {...(mi >= 0 ? list[mi] : {}), task, freq, area, done:false};
+            if(onceDate) item.onceDate = onceDate; else delete item.onceDate;
+            if(mi >= 0) list[mi] = item; else list.push(item);
+            return list;
           }
-        }));
+          if(mi < 0) return null;
+          list.splice(mi, 1);
+          return list;
+        });
         if(db) db.collection('taskEdits').add({
           day:tabName,action:'edit',task,freq,area,at:firebase.firestore.FieldValue.serverTimestamp()
         }).catch(()=>{});
@@ -11148,12 +11129,17 @@ function openAddTask(tabName,area='') {
       else if(_fpMode==='once') targetDays=[tabName];
       else targetDays=[..._fpDays].sort((a,b)=>a-b).map(i=>DAYS[i]);
       const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
-      const taskObj = {task, freq, area:areaVal, done:false, ...(freq==='Once'?{onceDate:new Date().toDateString()}:{})};
+      const taskObj = {task, freq, area:areaVal, done:false, ...(freq==='Once'?{onceDate:taskOnceDateFor(tabName)}:{})};
       // Disable save button to prevent double-tap (R2)
       const saveBtn=document.getElementById('mSave');
       if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='Saving…'; }
       try {
-        await Promise.all(targetDays.map(day=>fsAddTaskToDay(taskObj,day)));
+        const targetSet = new Set(targetDays);
+        await changeTaskDays((list, day) => {
+          if(!targetSet.has(day) || list.some(x => fsKey(x.task) === fsKey(task))) return null;
+          list.push({...taskObj});
+          return list;
+        });
         closeModal();
         renderToday(document.getElementById('content'));
         const label = targetDays.length===7 ? 'every day' : targetDays.length===1 ? (targetDays[0].replace(/[\d️⃣☀🗓]/gu,'').trim()||targetDays[0]) : targetDays.length+' days';

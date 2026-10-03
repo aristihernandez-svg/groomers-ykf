@@ -170,17 +170,34 @@ async function cleanOneOffTasks() {
   const DAYS = [
     '☀ Sunday','1️⃣ Monday','2️⃣ Tuesday','3️⃣ Wednesday','4️⃣ Thursday','5️⃣ Friday','🗓 Saturday',
   ];
+  // A one-off is dated (onceDate) for the day it's meant for; keep it until that date has
+  // passed in YKF's time zone. Only one-offs with no date at all (legacy) are removed regardless.
+  const today = todayIn('America/Toronto');
+  const onceIso = s => {
+    const d = new Date(s);
+    if (isNaN(d)) return null;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  };
+  const keep = t => {
+    if (t.freq !== 'One-off' && t.freq !== 'Once') return true;
+    const iso = t.onceDate ? onceIso(t.onceDate) : null;
+    return !!iso && iso >= today;
+  };
   let totalRemoved = 0;
   for (const day of DAYS) {
-    const snap = await db.collection('tasks').doc(day).get();
-    if (!snap.exists || !snap.data().migrated) continue;
-    const all = snap.data().tasks || [];
-    const filtered = all.filter(t => t.freq !== 'One-off' && t.freq !== 'Once');
-    if (filtered.length === all.length) continue;
-    await db.collection('tasks').doc(day).set({ tasks: filtered, migrated: true });
-    const removed = all.length - filtered.length;
-    totalRemoved += removed;
-    console.log(`tasks/${day}: removed ${removed} one-off task(s)`);
+    const ref = db.collection('tasks').doc(day);
+    // Read and write in one transaction, so a phone's edit in the same moment isn't lost
+    const removed = await db.runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      if (!snap.exists || !snap.data().migrated) return [];
+      const all = snap.data().tasks || [];
+      const gone = all.filter(t => !keep(t));
+      if (gone.length) tx.update(ref, { tasks: all.filter(keep) });
+      return gone;
+    });
+    if (!removed.length) continue;
+    totalRemoved += removed.length;
+    console.log(`tasks/${day}: removed ${removed.length} past one-off task(s): ${removed.map(t => `${t.task} (${t.onceDate || 'no date'})`).join('; ')}`);
   }
   if (!totalRemoved) { console.log('oneOffTasks: nothing to remove'); return; }
   // Clear the client-side "already ran today" flag so the app doesn't skip cleanup on boot
