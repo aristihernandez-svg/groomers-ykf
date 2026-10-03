@@ -3697,11 +3697,12 @@ function renderCart(el, items) {
         const cqty = item.qty||1;
         const isCH = item.source === 'crewhouse';
         const isSL = item.source === 'siouxlookout';
-        const srcCol = isCH ? '#4A90D9' : isSL ? 'var(--green)' : col;
-        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':isSL?'rgba(46,204,138,0.13)':'var(--glass)'};border-left:3px solid ${srcCol}" onclick="toggleShop(${ri})">
+        const isMX = item.source === 'mechanics';
+        const srcCol = isCH ? '#4A90D9' : isSL ? 'var(--green)' : isMX ? '#E8892E' : col;
+        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':isSL?'rgba(46,204,138,0.13)':isMX?'rgba(232,137,46,0.13)':'var(--glass)'};border-left:3px solid ${srcCol}" onclick="toggleShop(${ri})">
           <div class="scb" style="background:${srcCol};border-color:${srcCol};color:#fff">✓</div>
           <div class="sinfo">
-            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:#4A90D9;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}${isSL?` <span style="background:rgba(46,204,138,0.25);color:var(--green);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">📍 Sioux Lookout</span>`:''}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
+            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:#4A90D9;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}${isSL?` <span style="background:rgba(46,204,138,0.25);color:var(--green);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">📍 Sioux Lookout</span>`:''}${isMX?` <span style="background:rgba(232,137,46,0.25);color:#E8892E;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🔧 MX</span>`:''}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
             <div class="smeta"><span>${item.cabinet}</span></div>
             ${item.notes && String(item.notes)!=='false' && item.notes.trim() ? `<div style="font-size:11px;color:var(--t3);margin-top:2px;font-style:italic">${item.notes}</div>` : ''}
           </div>
