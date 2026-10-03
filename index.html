@@ -1624,7 +1624,8 @@ async function bootApp() {
         clearContaminatedTaskState(); // one-time: wipe done-states written to non-today days by pre-v68 bug
         // Flush any dayNotes that were saved to localStorage but never made it to Firestore
         // (e.g. app was closed within the 800ms debounce window after typing)
-        Object.keys(S.dayNotes).forEach(isoDate => fsSaveDayNote(isoDate));
+        // Only today/future: a past note still on the phone must never be re-uploaded after the nightly cleanup
+        Object.keys(S.dayNotes).filter(isoDate => isoDate >= localDateISO()).forEach(isoDate => fsSaveDayNote(isoDate));
         seedProceduresIfEmpty(); // one-time bootstrap, no-op after the first run
         // Remove legacy procedures that were deleted from the app
         ['arrival','departure','crewcars'].forEach(key=>{
@@ -2850,7 +2851,7 @@ function renderWeek(el) {
     const isToday=i===getToday();
     const pct=tasks.length?Math.round(done/tasks.length*100):0;
     const dayIso = weekIsoDate(i);
-    const hasDayNote = !!(S.dayNotes[dayIso]?.text?.trim());
+    const hasDayNote = dayIso >= localDateISO() && !!(S.dayNotes[dayIso]?.text?.trim());
     html+=`<div onclick="showDay(${i})" style="
       background:${isToday?'var(--gold-glow)':'var(--glass)'};
       backdrop-filter:blur(10px);
@@ -12130,6 +12131,8 @@ function clearTrip() {
 }
 function loadDayNotes() {
   try { S.dayNotes = JSON.parse(localStorage.getItem('gykf_dayNotes')||'{}'); } catch(e) { S.dayNotes = {}; }
+  // Day notes only live on their own date -- forget past ones
+  Object.keys(S.dayNotes).forEach(k => { if(k < localDateISO()) delete S.dayNotes[k]; });
 }
 function loadTaskCache() {
   try {
@@ -13138,6 +13141,7 @@ window._dayNoteOpen = {};
 window._dayNoteTimer = {};
 
 function renderDayNoteWidget(isoDate, isToday) {
+  if(isoDate < localDateISO()) return ''; // day notes disappear at midnight
   const note = S.dayNotes[isoDate] || {};
   const text = note.text || '';
   const isOpen = !!window._dayNoteOpen[isoDate];

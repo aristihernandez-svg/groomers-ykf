@@ -2,8 +2,10 @@
 // Runs once daily via cron-job.org.
 // Deletes sent documents older than 30 days from mxNotifQueue and shopNotifQueue.
 // Retires audit records (Storage files + Firestore docs) older than 2 years.
+// Removes day notes once their date has passed (YKF deletes; YAV blanks — its rules block deletes).
 
 const admin = require('firebase-admin');
+const https = require('https');
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -186,6 +188,67 @@ async function cleanOneOffTasks() {
   console.log(`oneOffTasks: total ${totalRemoved} removed, oneOffCleaned flag reset`);
 }
 
+// Day notes belong to their own date only (user's rule, 2026-10-03): once the date has passed
+// in the base's own time zone, the note goes. Doc ids ARE the dates (YYYY-MM-DD); anything that
+// isn't a plain date id is never touched, and nothing dated today or later is ever touched.
+// The apps already hide past notes at midnight; this removes them from the database.
+const DAY_ID = /^\d{4}-\d{2}-\d{2}$/;
+function todayIn(timeZone) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+}
+async function cleanPastDayNotes() {
+  const today = todayIn('America/Toronto');
+  const snap = await db.collection('dayNotes').get();
+  const past = snap.docs.filter(d => DAY_ID.test(d.id) && d.id < today);
+  if (!past.length) { console.log(`dayNotes: nothing dated before ${today}`); return; }
+  let ok = 0;
+  for (const d of past) {
+    // precondition: skip it if someone edited the note after we read it
+    try { await d.ref.delete({ lastUpdateTime: d.updateTime }); ok++; }
+    catch (e) { console.warn(`dayNotes/${d.id}: not deleted (${e.message})`); }
+  }
+  console.log(`dayNotes: deleted ${ok} past note(s) dated before ${today}: ${past.map(d => d.id).join(', ')}`);
+}
+
+// YAV keeps its own day notes in skycare-yav. Its rules block deletes, so past notes are
+// blanked instead (a blank note shows nowhere). Read over REST, one narrow write per note.
+function yavRest(method, url, body) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(url, { method, headers: { 'Content-Type': 'application/json' } }, res => {
+      let b = ''; res.on('data', d => b += d);
+      res.on('end', () => resolve({ status: res.statusCode, json: b ? JSON.parse(b) : {} }));
+    });
+    req.on('error', reject);
+    if (body) req.write(JSON.stringify(body));
+    req.end();
+  });
+}
+async function blankPastYavDayNotes() {
+  const base = 'https://firestore.googleapis.com/v1/projects/skycare-yav/databases/(default)/documents/dayNotes';
+  const today = todayIn('America/Winnipeg');
+  const docs = [];
+  let token = '';
+  do {
+    const r = await yavRest('GET', `${base}?pageSize=300${token ? '&pageToken=' + encodeURIComponent(token) : ''}`);
+    if (r.status !== 200) throw new Error('list HTTP ' + r.status);
+    docs.push(...(r.json.documents || []));
+    token = r.json.nextPageToken || '';
+  } while (token);
+  const past = docs.filter(d => {
+    const id = d.name.split('/').pop();
+    return DAY_ID.test(id) && id < today && d.fields?.text?.stringValue;
+  });
+  if (!past.length) { console.log(`YAV dayNotes: nothing dated before ${today}`); return; }
+  let ok = 0;
+  for (const d of past) {
+    const id = d.name.split('/').pop();
+    const r = await yavRest('PATCH', `${base}/${id}?updateMask.fieldPaths=text&currentDocument.updateTime=${encodeURIComponent(d.updateTime)}`,
+      { fields: { text: { stringValue: '' } } });
+    if (r.status === 200) ok++; else console.warn(`YAV dayNotes/${id}: not blanked (HTTP ${r.status})`);
+  }
+  console.log(`YAV dayNotes: blanked ${ok} past note(s) dated before ${today}`);
+}
+
 async function main() {
   await cleanQueue('mxNotifQueue');
   await cleanQueue('shopNotifQueue');
@@ -193,6 +256,9 @@ async function main() {
   await cleanOldAuditRecords();
   await cleanCarLogs();
   await cleanOneOffTasks();
+  // Last, and each on its own: a day-note problem must never stop the cleanups above.
+  try { await cleanPastDayNotes(); } catch (e) { console.error('dayNotes cleanup failed:', e.message); }
+  try { await blankPastYavDayNotes(); } catch (e) { console.error('YAV dayNotes cleanup failed:', e.message); }
   console.log('Cleanup done.');
 }
 
