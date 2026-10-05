@@ -9405,7 +9405,7 @@ function renderAircraftChecklist(el, reg, type) {
 }
 
 // Flagged-items summary — one page listing only what needs attention, for the manager.
-// Crew House/Hangar/Parking Lot: score <= 7. YKF Base/Aircraft: any "No". MSDS: nothing
+// Crew House/Hangar/Parking Lot: score <= 6 (7 and up is good). YKF Base/Aircraft: any "No". MSDS: nothing
 // to flag (straight checklist). Crew cars: "Issue" checks + "Poor" photos.
 function buildFlaggedSummaryHTML() {
   const month = auditMonth();
@@ -9421,7 +9421,7 @@ function buildFlaggedSummaryHTML() {
     const flagged = [];
     checklist.forEach(sec=>sec.items.forEach(item=>{
       const it = items[item.key];
-      if (it && it.score>0 && it.score<=7) flagged.push({label:item.label, value:`${it.score}/10`, note:it.comment||''});
+      if (it && it.score>0 && it.score<=6) flagged.push({label:item.label, value:`${it.score}/10`, note:it.comment||''});
     }));
     return {title, flagged};
   };
