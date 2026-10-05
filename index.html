@@ -6265,19 +6265,16 @@ function renderAuditsLanding(el) {
     ${tileGrid(crewHouseRow + hangarRow + msdsRow + parkingRow + ykfBaseRow + facilityRows)}
     ` : ''}
 
-    <div style="position:sticky;bottom:calc(-88px - var(--safe-b));margin-bottom:calc(-88px - var(--safe-b));z-index:5;margin-top:14px;padding:14px 16px calc(104px + var(--safe-b));background:var(--bg2);border-top:1px solid var(--border2);box-shadow:0 -12px 28px rgba(0,0,0,0.35);display:flex;flex-direction:column;gap:10px">
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:10px">
-        <div>
-          <div style="font-size:30px;font-weight:900;line-height:1;color:${_allDone?'var(--green)':'var(--t1)'};font-variant-numeric:tabular-nums">${_doneN}<span style="font-size:17px;color:var(--t3);font-weight:700"> / ${_total}</span></div>
-          <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-top:4px">${_monthName} audits done</div>
-        </div>
-        <div style="font-size:12px;font-weight:700;color:${_dueCol};text-align:right">${_dueTxt}</div>
+    <div style="position:sticky;bottom:calc(10px - 88px - var(--safe-b));margin:14px 12px calc(10px - 88px - var(--safe-b));z-index:5;padding:10px 10px 10px 12px;border-radius:18px;background:color-mix(in srgb, var(--bg2) 88%, transparent);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid ${_allDone?'rgba(46,204,138,0.45)':'var(--border2)'};box-shadow:0 10px 30px rgba(0,0,0,0.35);display:flex;align-items:center;gap:12px">
+      <div style="width:46px;height:46px;border-radius:50%;flex-shrink:0;background:conic-gradient(${_allDone?'var(--green)':'var(--accent)'} ${_total?Math.round(_doneN/_total*360):0}deg, var(--border2) 0);display:flex;align-items:center;justify-content:center">
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:${_allDone?'var(--green)':'var(--t1)'};font-variant-numeric:tabular-nums">${_allDone?'✓':Math.round(_total?_doneN/_total*100:0)+'%'}</div>
       </div>
-      <div style="height:8px;border-radius:4px;background:var(--border2);overflow:hidden"><div style="height:100%;width:${_total?Math.round(_doneN/_total*100):0}%;background:${_allDone?'var(--green)':'linear-gradient(90deg,var(--accent),var(--accent2))'}"></div></div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${chip('✈ Aircraft', _acDoneN, _acTotal)}${chip('🚗 Cars', carsDoneCount, _audCars.length)}${_facOn?chip('🏢 Facility', _facDoneN, _facList.length):''}</div>
-      <button onclick="${_allDone?'shareAllRecords()':''}" ${_allDone?'':'disabled'} style="height:46px;border-radius:11px;font-family:inherit;font-size:14px;font-weight:800;cursor:${_allDone?'pointer':'default'};border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'linear-gradient(135deg,var(--accent),var(--accent2))':'var(--glass2)'};color:${_allDone?'#fff':'var(--t3)'}">
-        📧 ${_allDone?'Send PDFs via e-mail':`Send PDFs · unlocks when all ${_total} are done`}
-      </button>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:800;color:var(--t1);font-variant-numeric:tabular-nums">${_doneN} of ${_total} done</div>
+        <div style="font-size:11px;font-weight:600;color:${_dueCol};margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${_dueTxt}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:3px;white-space:nowrap;font-variant-numeric:tabular-nums">✈ ${_acDoneN}/${_acTotal} · 🚗 ${carsDoneCount}/${_audCars.length}${_facOn?` · 🏢 ${_facDoneN}/${_facList.length}`:''}</div>
+      </div>
+      <button onclick="${_allDone?'shareAllRecords()':`toast('📧 Unlocks when all ${_total} audits are done')`}" aria-label="Send PDFs via e-mail" style="flex-shrink:0;height:40px;padding:0 14px;border-radius:12px;font-family:inherit;font-size:13px;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;border:1px solid ${_allDone?'var(--accent-border)':'var(--border2)'};background:${_allDone?'linear-gradient(135deg,var(--accent),var(--accent2))':'var(--glass2)'};color:${_allDone?'#fff':'var(--t3)'}">${_allDone?'📧 Send PDFs':'🔒 Send'}</button>
     </div>`;
 }
 
