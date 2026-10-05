@@ -6055,7 +6055,15 @@ function renderAuditsLanding(el) {
   const _metroDone = _metroRegs.every(r=>acIsDone(r,'metro'));
   const _wwDone    = _wwRegs.every(r=>acIsDone(r,'westwind'));
   const _astraDone = _astraRegs.every(r=>acIsDone(r,'astra'));
-  const _allDone   = _carsDone && _metroDone && _wwDone && _astraDone;
+  // Every audit counts before the e-mail package unlocks: aircraft (incl. added types), crew cars and all facility audits
+  const _customDone = S.customAcTypesList.every(ct=>ct.regs.filter(r=>!isAcDisabled(r)).every(r=>acIsDone(r,ct.id)));
+  const _facDone   = BASE_CONFIG.features?.facilityAudits === false ? true
+    : [S.crewHouseAudit, S.hangarAudit, S.msdsAudit, S.parkingAudit, S.ykfBaseAudit].every(a=>a && a.done);
+  const _allDone   = _carsDone && _metroDone && _wwDone && _astraDone && _customDone && _facDone;
+  const _auditsLeft = [..._metroRegs.map(r=>acIsDone(r,'metro')), ..._wwRegs.map(r=>acIsDone(r,'westwind')), ..._astraRegs.map(r=>acIsDone(r,'astra')),
+    ...S.customAcTypesList.flatMap(ct=>ct.regs.filter(r=>!isAcDisabled(r)).map(r=>acIsDone(r,ct.id))),
+    ..._audCars.map(c=>!!carAuditData(c.key).done),
+    ...(BASE_CONFIG.features?.facilityAudits === false ? [] : [S.crewHouseAudit, S.hangarAudit, S.msdsAudit, S.parkingAudit, S.ykfBaseAudit].map(a=>!!(a&&a.done)))].filter(x=>!x).length;
 
   // Section label helper
   const sectionLabel = (icon, text) =>
@@ -6228,7 +6236,7 @@ function renderAuditsLanding(el) {
         <span style="font-size:22px;line-height:1;flex-shrink:0">📧</span>
         <span style="flex:1">
           <span style="display:block;font-size:13px;font-weight:700;color:${_allDone?'var(--accent)':'var(--t2)'}">Send PDFs via e-mail</span>
-          <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate & send':'Complete all audits to enable'}</span>
+          <span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">${_allDone?'All audits complete — tap to generate & send':`Complete all audits to enable · ${_auditsLeft} left`}</span>
         </span>
         <span style="color:${_allDone?'var(--accent)':'var(--border2)'};font-size:20px;opacity:0.7">›</span>
       </button>
@@ -6359,6 +6367,24 @@ const CREW_HOUSE_CHECKLIST = [
 
 const CH_TOTAL = CREW_HOUSE_CHECKLIST.reduce((a,s)=>a+s.items.length,0);
 
+// Facility scores of 5 or less need a corrective-action note before the audit can be marked done
+function facMissingActions(d) {
+  return Object.values((d && d.items) || {}).filter(i => i && i.score > 0 && i.score <= 5 && !(i.comment||'').trim()).length;
+}
+function facDoneBlock(d, done, total, toggleFn, savingKey) {
+  const missing = facMissingActions(d);
+  if (done === total && !d.done && missing)
+    return `<div id="facLock" style="margin:8px 14px 4px;padding:11px 13px;border-radius:9px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.1);text-align:center;font-size:12px;font-weight:700;color:#E74C3C">🔒 Add a corrective action to ${missing} low score${missing>1?'s':''} (5 or less) to mark as done</div>`;
+  return markDoneBlock(done===total, !!d.done, toggleFn, done, total, _pdfSavingKeys.has(savingKey));
+}
+
+// Redraw only when the lock should appear or disappear (keeps the keyboard on the next box otherwise)
+function facLockRefresh(d, total) {
+  const scored = Object.values(d.items||{}).filter(i=>i&&i.score>0).length;
+  const shouldLock = scored === total && !d.done && facMissingActions(d) > 0;
+  if (!!document.getElementById('facLock') !== shouldLock) render();
+}
+
 function chData() {
   if(!S.crewHouseAudit) S.crewHouseAudit={};
   if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
@@ -6423,6 +6449,7 @@ async function chToggleDone() {
   const d = chData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < CH_TOTAL) return;
+  if(!d.done && facMissingActions(d)) { toast('⚠️ Add a corrective action to every score of 5 or less first'); render(); return; }
   d.done = !d.done;
   saveCrewHouseDebounced();
   if (d.done) {
@@ -6776,7 +6803,7 @@ function renderCrewHouseChecklist(el) {
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea ${locked?'readonly':''} oninput="chSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} onblur="facLockRefresh(chData(),CH_TOTAL)" oninput="chSetComment('${item.key}',this.value)" placeholder="${isConcerning?'Corrective action — what is being done to fix it?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="chExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -6813,7 +6840,7 @@ function renderCrewHouseChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="chSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===CH_TOTAL, !!d.done, 'chToggleDone()', done, CH_TOTAL, _pdfSavingKeys.has('crewhouse'))}
+    ${facDoneBlock(d, done, CH_TOTAL, 'chToggleDone()', 'crewhouse')}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateCrewHousePDF()">
@@ -7064,6 +7091,7 @@ async function hoToggleDone() {
   const d = hoData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < HO_TOTAL) return;
+  if(!d.done && facMissingActions(d)) { toast('⚠️ Add a corrective action to every score of 5 or less first'); render(); return; }
   d.done = !d.done;
   saveHangarDebounced();
   if (d.done) {
@@ -7110,7 +7138,7 @@ function renderHangarChecklist(el) {
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea ${locked?'readonly':''} oninput="hoSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} onblur="facLockRefresh(hoData(),HO_TOTAL)" oninput="hoSetComment('${item.key}',this.value)" placeholder="${isConcerning?'Corrective action — what is being done to fix it?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="hoExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -7143,7 +7171,7 @@ function renderHangarChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="hoSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===HO_TOTAL, !!d.done, 'hoToggleDone()', done, HO_TOTAL, _pdfSavingKeys.has('hangar'))}
+    ${facDoneBlock(d, done, HO_TOTAL, 'hoToggleDone()', 'hangar')}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateHangarPDF()">
@@ -7515,6 +7543,7 @@ async function plToggleDone() {
   const d = plData();
   const doneCount = Object.values(d.items).filter(i=>i.score>0).length;
   if(!d.done && doneCount < PL_TOTAL) return;
+  if(!d.done && facMissingActions(d)) { toast('⚠️ Add a corrective action to every score of 5 or less first'); render(); return; }
   d.done = !d.done;
   saveParkingDebounced();
   if (d.done) {
@@ -7561,7 +7590,7 @@ function renderParkingChecklist(el) {
             <span style="font-size:11px;color:#444">—/10</span>
            </div>`;
       const commentHtml = showComment
-        ? `<textarea ${locked?'readonly':''} oninput="plSetComment('${item.key}',this.value)" placeholder="${isConcerning?'What needs attention here?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
+        ? `<textarea ${locked?'readonly':''} onblur="facLockRefresh(plData(),PL_TOTAL)" oninput="plSetComment('${item.key}',this.value)" placeholder="${isConcerning?'Corrective action — what is being done to fix it?':'Add a note…'}" style="margin-top:7px;width:100%;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:7px 9px;font-size:12px;color:var(--t1);font-family:inherit;resize:none;min-height:52px;box-sizing:border-box">${it.comment||''}</textarea>`
         : showHint
         ? `<div onclick="plExpandComment('${item.key}')" style="margin-top:6px;font-size:11px;color:var(--t3);padding:3px 0;cursor:pointer">+ add comment</div>`
         : '';
@@ -7594,7 +7623,7 @@ function renderParkingChecklist(el) {
       <textarea ${locked?'readonly':''} oninput="plSetField('comments',this.value)" placeholder="Add general inspection notes…" style="width:100%;min-height:70px;background:var(--glass);border:1px solid var(--border2);border-radius:6px;padding:9px;font-size:13px;color:var(--t1);font-family:inherit;resize:vertical">${d.comments||''}</textarea>
     </div>
 
-    ${markDoneBlock(done===PL_TOTAL, !!d.done, 'plToggleDone()', done, PL_TOTAL, _pdfSavingKeys.has('parking'))}
+    ${facDoneBlock(d, done, PL_TOTAL, 'plToggleDone()', 'parking')}
     ${pdfViewLink(d.pdfUrl)}
 
     <div style="margin:8px 14px 4px;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;padding:11px 13px;display:flex;align-items:center;gap:11px;cursor:pointer" onclick="generateParkingPDF()">
@@ -9030,6 +9059,14 @@ function toggleAcItem(reg, key, val) {
   d.done = false;
   saveAcAuditDebounced(reg);
   render();
+  // An ✗ is never left without a corrective action: ask for it right away
+  if(val==='no' && !already && !(d.items[key].comments||'').trim()) openAcCommentModal(reg, key, '', true);
+}
+
+// ✗ items that still have no corrective-action note — they block "Mark as Done"
+function acMissingActions(reg, type) {
+  const d = acAuditData(reg);
+  return acAllItems(type).filter(i => d.items[i.key] && d.items[i.key].no && !(d.items[i.key].comments||'').trim());
 }
 
 async function acToggleDone(reg, type) {
@@ -9037,6 +9074,10 @@ async function acToggleDone(reg, type) {
   const total = acTotalCount(type);
   const answered = acAnsweredCount(reg, type);
   if(!d.done && answered < total) return;
+  if(!d.done) {
+    const missing = acMissingActions(reg, type).length;
+    if(missing) { toast(`⚠️ Add a corrective action to ${missing} ✗ item${missing>1?'s':''} first`); render(); return; }
+  }
   d.done = !d.done;
   saveAcAuditDebounced(reg);
   if (d.done) {
@@ -9120,9 +9161,12 @@ function openAcLabelEditModal(type, key) {
 }
 // ─────────────────────────────────────────────────────────────────
 
-function openAcCommentModal(reg, key, currentVal) {
-  openModal('Comments / Action Required',
-    `<textarea id="acCommentTA" style="width:100%;height:100px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${currentVal||''}</textarea>`,
+function openAcCommentModal(reg, key, currentVal, isMissing) {
+  const it = (acAuditData(reg).items||{})[key] || {};
+  const needsAction = isMissing || it.no;
+  openModal(needsAction ? '✗ Corrective Action' : 'Comments / Action Required',
+    `${needsAction ? `<div style="font-size:12px;color:#E74C3C;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;padding:8px 10px;margin-bottom:8px;line-height:1.45">This item is missing. Write what is being done to get it back — who you asked, and when it will be restocked.</div>` : ''}
+     <textarea id="acCommentTA" placeholder="${needsAction ? 'e.g. Asked the Parts / Maintenance lead — will be restocked when received' : 'Note…'}" style="width:100%;height:100px;padding:10px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:14px;resize:vertical">${currentVal||''}</textarea>`,
     ()=>saveAcComment(reg, key));
 }
 
@@ -9238,6 +9282,7 @@ function renderAircraftChecklist(el, reg, type) {
   const total   = acTotalCount(type);
   const answered= acAnsweredCount(reg, type);
   const allDone = answered === total;
+  const missingActions = acMissingActions(reg, type).length;
   const pct     = Math.round(answered/total*100);
   const { urgent, overdue, daysLeft } = auditDeadlineStatus();
   const editMode = S.acEditLabelsMode;
@@ -9256,6 +9301,7 @@ function renderAircraftChecklist(el, reg, type) {
         const hasNo  = it.no;
         const hasComment = !!(it.comments && it.comments.trim());
         const stripColor = hasYes ? '#27AE60' : hasNo ? '#E74C3C' : 'transparent';
+        const needsAction = hasNo && !hasComment;
         const lbl = getAcLabel(type, item.key);
         const labelHtml = editMode
           ? `<div onclick="openAcLabelEditModal('${type}','${item.key}')" style="font-size:15px;font-weight:700;color:var(--accent);line-height:1.35;border-bottom:1px dashed var(--accent);cursor:pointer;padding-bottom:1px">${lbl.label}</div>
@@ -9263,11 +9309,12 @@ function renderAircraftChecklist(el, reg, type) {
           : `<div style="font-size:15px;font-weight:700;color:var(--t1);line-height:1.35">${lbl.label}</div>
              ${lbl.sub?`<div style="font-size:10px;color:var(--t3);margin-top:-4px;line-height:1.35">${lbl.sub}</div>`:''}`;
         return `
-        <div style="display:flex;border-bottom:1px solid var(--border)${editMode?';background:rgba(74,144,217,0.03)':''}">
+        <div style="display:flex;border-bottom:1px solid var(--border)${editMode?';background:rgba(74,144,217,0.03)':needsAction?';background:rgba(231,76,60,0.10)':''}">
           <div style="width:4px;flex-shrink:0;background:${stripColor}"></div>
           <div style="flex:1;padding:12px 14px;display:flex;flex-direction:column;gap:8px">
             ${labelHtml}
-            ${hasComment?`<div style="font-size:10px;color:var(--t2);font-style:italic;background:var(--glass2);padding:3px 8px;border-radius:5px;border-left:2px solid var(--accent)">${it.comments}</div>`:''}
+            ${hasComment?`<div style="font-size:10px;color:var(--t2);font-style:italic;background:var(--glass2);padding:3px 8px;border-radius:5px;border-left:2px solid ${hasNo?'#E74C3C':'var(--accent)'}">${it.comments}</div>`:''}
+            ${needsAction&&!editMode?`<div style="font-size:11px;font-weight:700;color:#E74C3C">⚠ Corrective action needed — tap Notes</div>`:''}
             ${editMode?'':`<div style="display:flex;align-items:center;gap:7px;justify-content:flex-end">
               <button ${locked?'disabled':''} onclick="toggleAcItem('${reg}','${item.key}','yes')"
                 style="width:26px;height:26px;border-radius:6px;border:1px solid ${hasYes?'#27AE60':'var(--border2)'};background:${hasYes?'rgba(39,174,96,0.18)':'transparent'};color:${hasYes?'#27AE60':'var(--t4)'};font-size:14px;cursor:${locked?'default':'pointer'};display:flex;align-items:center;justify-content:center;flex-shrink:0">✓</button>
@@ -9283,7 +9330,7 @@ function renderAircraftChecklist(el, reg, type) {
       }).join('')}
     </div>`).join('');
 
-  const pdfBtn = allDone
+  const pdfBtn = allDone && !missingActions
     ? `<button onclick="generateAircraftPDF('${reg}','${type}','${month}')"
          style="width:100%;padding:13px 16px;border-radius:var(--radius);border:1px solid var(--accent-border);background:linear-gradient(135deg,var(--accent-dim),rgba(212,160,23,0.06));cursor:pointer;display:flex;align-items:center;gap:13px;text-align:left">
          <span style="font-size:26px;line-height:1;flex-shrink:0">📄</span>
@@ -9294,7 +9341,7 @@ function renderAircraftChecklist(el, reg, type) {
          <span style="color:var(--accent);font-size:20px;opacity:0.7">›</span>
        </button>`
     : `<div style="padding:12px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--glass2);text-align:center;font-size:12px;color:var(--t3)">
-         Complete all ${total} items to generate PDF &nbsp;·&nbsp; ${answered}/${total} done
+         ${allDone ? `Add the missing corrective actions to generate PDF` : `Complete all ${total} items to generate PDF &nbsp;·&nbsp; ${answered}/${total} done`}
        </div>`;
 
   const editBanner = editMode
@@ -9343,7 +9390,8 @@ function renderAircraftChecklist(el, reg, type) {
           style="flex:1;padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px">
       </div>
     </div>
-    ${markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total, _pdfSavingKeys.has('ac-'+reg+'-'+type))}
+    ${allDone && !d.done && missingActions ? `<div style="margin:8px 14px 4px;padding:11px 13px;border-radius:9px;border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.1);text-align:center;font-size:12px;font-weight:700;color:#E74C3C">🔒 Add a corrective action to ${missingActions} ✗ item${missingActions>1?'s':''} to mark as done</div>`
+      : markDoneBlock(allDone, !!d.done, `acToggleDone('${reg}','${type}')`, answered, total, _pdfSavingKeys.has('ac-'+reg+'-'+type))}
     ${pdfViewLink(d.pdfUrl)}
     <div style="padding:0 14px 14px">
       ${pdfBtn}
