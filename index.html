@@ -210,6 +210,20 @@ body::before{
   background:radial-gradient(ellipse at 30% 20%,#1A2848 0%,#0B1120 60%,#060C18 100%);
 }
 #splash.out{opacity:0;pointer-events:none}
+/* Sync gate: after the splash, blocks the app until the team's live data is in */
+#syncGate{position:fixed;inset:0;z-index:998;display:flex;align-items:center;justify-content:center;background:rgba(6,12,24,0.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .45s}
+#syncGate.out{opacity:0;pointer-events:none}
+.sg-card{width:min(300px,82vw);padding:20px 20px 18px;border-radius:20px;background:rgba(15,24,48,0.94);border:1px solid rgba(255,255,255,0.12);box-shadow:0 18px 50px rgba(0,0,0,0.5);text-align:center;color:#F0F4FF}
+.sg-sky{position:relative;height:58px;margin-bottom:8px;overflow:hidden}
+.sg-sky::before{content:'';position:absolute;left:10px;right:10px;top:40px;border-top:2px dashed rgba(200,168,75,0.35)}
+.sg-plane{position:absolute;top:12px;left:-44px;width:36px;height:36px;animation:sgFly 2.2s ease-in-out infinite;filter:drop-shadow(0 3px 10px rgba(200,168,75,0.45))}
+@keyframes sgFly{0%{left:-44px;transform:translateY(10px) rotate(-10deg)}50%{transform:translateY(-4px) rotate(0deg)}100%{left:calc(100% + 8px);transform:translateY(6px) rotate(6deg)}}
+.sg-title{font-size:16px;font-weight:800}
+.sg-sub{font-size:12px;color:#A8B8CC;margin-top:4px;line-height:1.4}
+.sg-steps{display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:11px;font-weight:700;color:#7D8DA3}
+.sg-steps b{display:inline-block;width:16px;color:#7D8DA3;font-weight:800}
+.sg-steps b.ok{color:#2ECC8A}
+@media (prefers-reduced-motion: reduce){.sg-plane{animation:none;left:calc(50% - 18px)}}
 .splash-ring{
   width:120px;height:120px;border-radius:50%;
   border:1px solid rgba(200,168,75,0.35);
@@ -246,7 +260,7 @@ body::before{
 .sp-sub{color:#7890A8;font-size:12px;letter-spacing:3px;margin-top:6px;font-weight:300}
 .sp-divider{width:60px;height:1px;background:linear-gradient(90deg,transparent,#C8A84B,transparent);margin:18px auto;opacity:0.5}
 .sp-bar{width:160px;height:1px;background:rgba(255,255,255,0.08);border-radius:1px;margin-top:8px;overflow:hidden}
-.sp-fill{height:100%;background:linear-gradient(90deg,#C8A84B,#E8C86A);animation:prog 2s ease forwards;box-shadow:0 0 8px #C8A84B}
+.sp-fill{height:100%;background:linear-gradient(90deg,#C8A84B,#E8C86A);animation:prog 3s ease forwards;box-shadow:0 0 8px #C8A84B}
 @keyframes prog{to{width:100%}}
 
 /* ── Harry Potter living portrait ── */
@@ -935,6 +949,14 @@ body::before{
   <div class="sp-sub">Aviation Grooming Team</div>
   <div class="sp-bar"><div class="sp-fill"></div></div>
 </div>
+<div id="syncGate" role="status" aria-live="polite">
+  <div class="sg-card">
+    <div class="sg-sky"><svg class="sg-plane" viewBox="0 0 64 64" fill="#E8C86A" aria-hidden="true"><path transform="translate(64,0) scale(-1,1)" d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z"/></svg></div>
+    <div class="sg-title" id="sgTitle">Syncing with the team…</div>
+    <div class="sg-sub" id="sgSub">Getting the latest tasks, shopping and audits. One moment.</div>
+    <div class="sg-steps"><span><b id="sg-tasks">⏳</b>Tasks</span><span><b id="sg-shop">⏳</b>Shopping</span><span><b id="sg-more">⏳</b>Contacts</span></div>
+  </div>
+</div>
 <script>
 (function(){
   const day=new Date().getDay();
@@ -1467,6 +1489,29 @@ const NAV_ITEMS = [
   {id:'bored',       icon:'💡', label:'Bored'},
 ].filter(item => item.id !== 'fleet' || BASE_CONFIG.features?.fleet !== false);
 
+// ── SYNC GATE ─────────────────────────────────────────────────────
+// People were opening the app and using it before the live data arrived. The gate (under the
+// splash) stays until the first Firestore data is in and live sync is attached; it never traps
+// anyone: with no connection it lets them in after 12 s with an offline note.
+let _appReady = false;
+function syncGateStep(id) { const b = document.getElementById('sg-' + id); if (b) { b.textContent = '✓'; b.classList.add('ok'); } }
+function appReady(offline) {
+  if (_appReady) return;
+  _appReady = true;
+  const g = document.getElementById('syncGate');
+  if (!g) return;
+  const close = () => { g.classList.add('out'); setTimeout(() => g.remove(), 600); };
+  if (offline) {
+    close();
+    setTimeout(() => toast('⚠️ Offline — changes will sync later'), 400);
+    return;
+  }
+  ['tasks', 'shop', 'more'].forEach(syncGateStep);
+  const t = document.getElementById('sgTitle'), sub = document.getElementById('sgSub');
+  if (t) t.textContent = '🟢 Live — ready to go';
+  if (sub) sub.textContent = 'Everything is up to date.';
+  setTimeout(close, splashCleared ? 600 : 0);
+}
 // ── BOOT ───────────────────────────────────────────────────────────
 // Hard failsafe: no matter what throws or hangs above, force the splash
 // off and the app visible after 6s so the app can never get stuck.
@@ -1477,7 +1522,7 @@ function clearSplash() {
   document.getElementById('splash')?.classList.add('out');
   document.getElementById('app')?.classList.add('show');
 }
-setTimeout(clearSplash, 6000);
+setTimeout(clearSplash, 7000);
 
 // ── PIN GATE ─────────────────────────────────────────────────────────────────
 const PIN_CORRECT = BASE_CONFIG.pinCorrect;
@@ -1575,6 +1620,7 @@ window.addEventListener('load', async () => {
 });
 
 async function bootApp() {
+  setTimeout(() => appReady(true), 12000);   // sync gate safety exit (counted from boot, not from the PIN screen)
   try {
     // Load saved theme
     const savedTheme = localStorage.getItem('gykf_theme') || 'premium';
@@ -1616,10 +1662,15 @@ async function bootApp() {
       : Promise.resolve();
 
     _bootTasksSource.then(() =>
-    Promise.all([fetchDay(DAYS[TODAY]),fetchShopping(),fetchContacts(),fetchBored()])
+    Promise.all([
+      fetchDay(DAYS[TODAY]).then(() => syncGateStep('tasks')),
+      fetchShopping().then(() => syncGateStep('shop')),
+      Promise.all([fetchContacts(), fetchBored()]).then(() => syncGateStep('more')),
+    ])
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
+        appReady(!db);   // lift the sync gate: data is in and listeners are attached
         cleanupOneOffTasks(); // delete any One-off tasks that weren't cleaned up at midnight
         clearContaminatedTaskState(); // one-time: wipe done-states written to non-today days by pre-v68 bug
         // Flush any dayNotes that were saved to localStorage but never made it to Firestore
@@ -1656,9 +1707,9 @@ async function bootApp() {
         loadAllAuditRecords();
         setTimeout(healMissingPDFs, 4000); // give live listeners a moment to settle first
       })
-      .catch(e => console.log('Boot fetch error:', e))
+      .catch(e => { console.log('Boot fetch error:', e); appReady(true); })
     ); // closes _bootTasksSource.then
-  }, 1800);
+  }, 2800);
 }
 
 // ── NAV ────────────────────────────────────────────────────────────
