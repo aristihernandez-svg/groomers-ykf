@@ -6243,8 +6243,6 @@ function renderAuditsLanding(el) {
         ${adminRow("S.acVersionsView=true;render()", '🗂', 'PDF Form Versions', 'Update version · date · form # · upload new TC PDF')}
         ${adminRow("openAddAircraftTypeFlow()", '✈️', 'Add aircraft type', 'New checklist built from a TC-approved PDF')}
         ${adminRow("openAddAudit()", '📋', 'Add audit', 'A new facility or base audit tile')}
-        <div style="height:10px"></div>
-        ${adminRow("resetAllAcAudits()", '🗑', 'Reset all audits', 'Clears aircraft, crew cars, and all facility audits on every device', true)}
       </div>
       <div style="height:80px"></div>`;
     return;
@@ -8544,42 +8542,7 @@ function resetMsdsAudit() {
 // always have, so there is nothing left to wipe or archive-before-wiping: a new
 // month is just a new, blank document key.
 
-function resetAllAcAudits() {
-  if(!confirm('Reset ALL of THIS MONTH\'s audits? This clears all aircraft checklists, all facility audits, and crew car monthly photo audits for the current month only — past months are untouched. Crew car vehicle data (fuel, odometer, oil, registration, insurance, wash dates) is NEVER touched.')) return;
-
-  // Aircraft audits (metro, westwind, astra, custom types)
-  const allRegs = [
-    ...AIRCRAFT_METRO,    ...(S.acCustomAircraft.metro||[]),
-    ...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind||[]),
-    ...AIRCRAFT_ASTRA,    ...(S.acCustomAircraft.astra||[]),
-    ...(S.customAcTypesList||[]).flatMap(t=>t.regs||[]),
-  ];
-  allRegs.forEach(reg => {
-    const key = acAuditDocKey(reg);
-    delete S.acAudits[key];
-    if(db) db.collection('auditAircraft').doc(key).delete().catch(()=>{});
-  });
-  try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
-
-  // Monthly car photo audits (photos, done status per car) — NOT crew car vehicle data.
-  // Only this month's docs (auditDocKey embeds the month) — past months are untouched.
-  CREW_CARS.forEach(c => { delete S.monthlyCarAudits[auditDocKey(c.key)]; });
-  try { localStorage.setItem('gykf_caudits', JSON.stringify(S.monthlyCarAudits)); } catch(e){}
-  if(db) CREW_CARS.forEach(c => db.collection('auditCars').doc(auditDocKey(c.key)).delete().catch(()=>{}));
-
-  // Facility audits — only this month's docs; past months are untouched
-  S.crewHouseAudit = {items:{}};
-  S.hangarAudit    = {items:{}};
-  S.msdsAudit      = {items:{}};
-  S.parkingAudit   = {items:{}};
-  S.ykfBaseAudit   = {items:{}};
-  ['gykf_crewhouse','gykf_hangar','gykf_msds','gykf_parking','gykf_ykfbase'].forEach(k=>{ try{localStorage.removeItem(k);}catch(e){} });
-  if(db) ['crewhouse','hangar','msds','parking','ykfbase'].forEach(doc=>db.collection('facilityAudits').doc(facilityDocKey(doc)).delete().catch(()=>{}));
-
-  render();
-  localStorage.setItem('gykf_audit_reset_ts', Date.now().toString());
-  toast('All audits reset ✓');
-}
+// "Reset all audits" was removed on purpose (2026-10-05): monthly audits are permanent records and are never wiped.
 
 function renderAuditTileView(el, key) {
   const t=S.auditTiles[key];
