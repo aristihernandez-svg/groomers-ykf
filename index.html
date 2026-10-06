@@ -596,6 +596,52 @@ body::before{
 .ct-add{padding:18px;text-align:center;color:var(--t3);font-size:13px;cursor:pointer;background:var(--glass);border-bottom:1px solid var(--border)}
 .ct-del{margin-top:16px;width:100%;padding:10px;border-radius:var(--radius-sm);border:1px solid rgba(232,64,64,.4);background:var(--red-dim);color:var(--red);font-weight:700;font-size:13px;font-family:inherit;cursor:pointer}
 
+/* FLEET — live map on top, cards slide up over it */
+.fl-mapwrap{position:sticky;top:0;height:330px;z-index:0;background:#181B21}
+#fleetMap{position:absolute;inset:0;background:#181B21}
+.fl-chips{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:6px;z-index:500}
+.fl-chip{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:7px 4px;border-radius:20px;background:rgba(10,12,18,.78);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.14);color:#F0F4FF;font-family:inherit;font-size:11.5px;font-weight:700;white-space:nowrap}
+.fl-refresh{flex:0 0 auto;padding:7px 12px;color:var(--accent2);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.fl-age{position:absolute;left:12px;bottom:32px;z-index:500;font-size:10.5px;color:#C4CEDC;background:rgba(10,12,18,.7);padding:3px 9px;border-radius:10px}
+.fl-sheet{position:relative;z-index:1;margin-top:-22px;border-radius:22px 22px 0 0;background:var(--bg2);border-top:1px solid var(--border2);padding-top:8px;box-shadow:0 -10px 30px rgba(0,0,0,.45);min-height:calc(100vh - 150px)}
+.fl-grab{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:0 auto 4px}
+.fl-sec{display:flex;align-items:center;gap:8px;padding:14px 16px 8px;font-size:11px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--t3)}
+.fl-sec span{margin-left:auto;letter-spacing:0;font-weight:600}
+.fl-sec.acc{color:var(--accent2)}
+.fl-dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+.fl-dot.air{background:#2ECC8A;box-shadow:0 0 6px #2ECC8A} .fl-dot.gnd{background:#F5A623} .fl-dot.off{background:var(--t4)}
+.fl-reg{font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:14px;font-weight:700;letter-spacing:.04em;white-space:nowrap;color:var(--t1)}
+.fl-reg.big{font-size:17px} .fl-reg.off{color:var(--t4)}
+.fl-type{font-size:11px;color:var(--t3)}
+.fl-card{margin:0 12px 6px;border-radius:14px;background:var(--glass);border:1px solid var(--border);overflow:hidden}
+.fl-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.fl-row:last-child{border-bottom:0}
+.fl-grow{flex:1;min-width:0}
+.fl-sub{font-size:11.5px;color:var(--t2);margin-top:2px}
+.fl-sub.off{color:var(--t4)}
+.fl-state{font-size:11.5px;font-weight:700;flex-shrink:0}
+.fl-state.air{color:#2ECC8A} .fl-state.gnd{color:#F5A623}
+.fl-inb{margin:0 12px 8px;border-radius:14px;padding:13px;background:linear-gradient(160deg,var(--accent-dim),rgba(255,255,255,.02));border:1px solid var(--accent-border)}
+.fl-inb-top{display:flex;align-items:center;gap:8px}
+.fl-eta{margin-left:auto;text-align:right;white-space:nowrap}
+.fl-eta b{font-size:24px;font-weight:800;color:var(--accent2);line-height:1}
+.fl-eta small{display:block;font-size:9.5px;color:var(--t3);font-weight:700;letter-spacing:.8px;margin-top:3px}
+.fl-ring{white-space:nowrap;font-size:9.5px;font-weight:700;color:#FF8A8A;background:rgba(232,64,64,.14);border:1px solid rgba(232,64,64,.4);padding:2px 6px;border-radius:5px}
+.fl-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:11px}
+.fl-stats div{background:rgba(0,0,0,.2);border-radius:8px;padding:8px 4px;text-align:center}
+.fl-stats b{display:block;font-size:13.5px;font-weight:700;color:var(--t1)}
+.fl-stats small{font-size:9.5px;color:var(--t3)}
+[data-theme="premium-day"] .fl-stats div,[data-theme="standard-day"] .fl-stats div{background:rgba(255,255,255,.6)}
+.fl-flap{display:inline-flex;gap:2px;flex-shrink:0}
+.fl-flap i{font-style:normal;width:16px;height:23px;border-radius:3px;background:#06080E;border:1px solid rgba(255,255,255,.14);display:inline-flex;align-items:center;justify-content:center;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;font-size:14px;font-weight:800;color:#fff;position:relative;overflow:hidden}
+.fl-flap i::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px solid rgba(0,0,0,.6)}
+.fl-flap i.u{width:12px;font-size:9.5px;color:var(--accent2)}
+.fl-flap i.sp{width:3px;background:none;border:0}
+.fl-flap i.sp::after{display:none}
+.fl-more{margin:8px 12px 0;padding:12px 14px;border-radius:12px;background:var(--glass);border:1px dashed var(--border2);font-size:12px;color:var(--t3);display:flex;align-items:center;gap:9px;cursor:pointer}
+.fl-alertbtn{display:block;width:calc(100% - 24px);margin:14px 12px 0;padding:11px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent2);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.fl-fine{margin:12px 16px 0;font-size:10.5px;color:var(--t3);line-height:1.6}
+
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
 .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -13374,14 +13420,23 @@ function flipEta(etaMins) {
   }).join('');
 }
 
+// Small split-flap ETA for the fleet list: "11 MN" or "1H05"
+function fleetFlap(etaMins) {
+  if(etaMins == null) return '';
+  const tiles = etaMins < 60
+    ? [...String(etaMins).padStart(2,'0')].map(c=>`<i>${c}</i>`).join('') + '<i class="sp"></i><i class="u">M</i><i class="u">N</i>'
+    : [...String(Math.floor(etaMins/60))].map(c=>`<i>${c}</i>`).join('') + '<i class="u">H</i>' + [...String(etaMins%60).padStart(2,'0')].map(c=>`<i>${c}</i>`).join('');
+  return `<span class="fl-flap" title="ETA to CYKF">${tiles}</span>`;
+}
+
 function renderFleet(el) {
   setBar({title:'Fleet'});
   document.getElementById('fab').style.display='none';
   clearTimeout(_fleetTimer);
 
   const fetchAge = _fleetLastFetch
-    ? (() => { const s=Math.floor((Date.now()-_fleetLastFetch)/1000); return s<60?s+'s ago':Math.floor(s/60)+'m ago'; })()
-    : 'not yet fetched';
+    ? (() => { const s=Math.floor((Date.now()-_fleetLastFetch)/1000); return 'Updated '+(s<60?s+' s ago':Math.floor(s/60)+' min ago'); })()
+    : 'Not fetched yet';
 
   const airborne = FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&!_fleetData[a.tail].onGround);
   const onGround = FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&_fleetData[a.tail].onGround);
@@ -13392,135 +13447,63 @@ function renderFleet(el) {
     const d=_fleetData[a.tail];
     return d.distNm!==null && d.distNm<=250 && d.eta!==null;
   }).sort((a,b)=>_fleetData[a.tail].distNm-_fleetData[b.tail].distNm);
+  // In the air: inbound first (closest first), then everyone else flying
+  const airList = [...inbound, ...airborne.filter(a=>!inbound.includes(a))];
 
   const notifBtn = ('Notification' in window && 'serviceWorker' in navigator && localStorage.getItem('notifications_enabled')!=='1')
-    ? `<button onclick="requestNotificationPermission().then(()=>renderFleet(document.getElementById('content')))"
-         style="margin-top:8px;padding:8px 14px;border-radius:8px;border:1px solid rgba(200,168,75,0.4);
-                background:rgba(200,168,75,0.1);color:#C8A84B;font-size:12px;font-weight:600;cursor:pointer;width:100%">
-         🔔 Enable ${FLEET_ALERT_NM} nm arrival alerts
-       </button>` : '';
+    ? `<button class="fl-alertbtn" onclick="requestNotificationPermission().then(()=>renderFleet(document.getElementById('content')))">🔔 Enable ${FLEET_ALERT_NM} nm arrival alerts</button>` : '';
+
+  const etaText = m => m<60 ? m+' min' : Math.floor(m/60)+'h '+String(m%60).padStart(2,'0');
+  const row = ac => {
+    const d=_fleetData[ac.tail];
+    if(!d) return `<div class="fl-row"><span class="fl-dot off"></span><div class="fl-grow"><span class="fl-reg off">${ac.reg}</span> <span class="fl-type">${ac.type}</span><div class="fl-sub off">No signal</div></div></div>`;
+    const sub = d.onGround
+      ? (d.distNm!=null&&d.distNm<=5 ? 'On the ground · CYKF' : 'On the ground')
+      : [d.distNm!=null ? d.distNm+' nm' : null, d.altFt ? d.altFt.toLocaleString()+' ft' : null, d.speedKts ? d.speedKts+' kts' : null].filter(Boolean).join(' · ');
+    const right = d.onGround ? `<span class="fl-state gnd">Ground</span>`
+      : d.eta!=null ? fleetFlap(d.eta) : `<span class="fl-state air">Airborne</span>`;
+    return `<div class="fl-row"><span class="fl-dot ${d.onGround?'gnd':'air'}"></span><div class="fl-grow"><span class="fl-reg">${ac.reg}</span> <span class="fl-type">${ac.type}</span><div class="fl-sub">${sub||'—'}</div></div>${right}</div>`;
+  };
 
   el.innerHTML = `
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-  <div style="background:#0a0e1a;min-height:100vh;padding-bottom:100px">
-
-    <!-- Header -->
-    <div style="padding:16px 16px 10px;border-bottom:1px solid rgba(255,255,255,0.06)">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">✈ Skycare · Fleet Operations</div>
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="font-size:20px;font-weight:800;color:#fff">Fleet Status</div>
-        <div style="display:flex;gap:8px;align-items:center">
-          <span style="font-size:10px;color:rgba(255,255,255,0.3)">${fetchAge}</span>
-          <button id="fleetRefreshBtn" onclick="refreshFleet()"
-            style="padding:7px 14px;border-radius:8px;border:none;background:#C8A84B;
-                   color:#0a0e1a;font-size:12px;font-weight:700;cursor:pointer">🔄 Refresh</button>
-        </div>
-      </div>
-      ${notifBtn}
+  <div class="fl-mapwrap">
+    <div id="fleetMap"></div>
+    <div class="fl-chips">
+      <div class="fl-chip"><span class="fl-dot air"></span>${airborne.length} in air</div>
+      <div class="fl-chip"><span class="fl-dot gnd"></span>${onGround.length} ground</div>
+      <div class="fl-chip"><span class="fl-dot off"></span>${noSignal.length} no signal</div>
+      <button class="fl-chip fl-refresh" id="fleetRefreshBtn" onclick="refreshFleet()" aria-label="Refresh">↻</button>
     </div>
+    <div class="fl-age">${fetchAge}</div>
+  </div>
 
-    <!-- Summary pills -->
-    <div style="display:flex;gap:8px;padding:12px 16px">
-      <div style="flex:1;background:rgba(46,204,138,0.1);border:1px solid rgba(46,204,138,0.25);border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#2ECC8A">${airborne.length}</div>
-        <div style="font-size:10px;color:rgba(46,204,138,0.7);font-weight:600;letter-spacing:1px;text-transform:uppercase">Airborne</div>
-      </div>
-      <div style="flex:1;background:rgba(243,156,18,0.1);border:1px solid rgba(243,156,18,0.25);border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:#F39C12">${onGround.length}</div>
-        <div style="font-size:10px;color:rgba(243,156,18,0.7);font-weight:600;letter-spacing:1px;text-transform:uppercase">On Ground</div>
-      </div>
-      <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px;text-align:center">
-        <div style="font-size:22px;font-weight:800;color:rgba(255,255,255,0.25)">${noSignal.length}</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.3);font-weight:600;letter-spacing:1px;text-transform:uppercase">No Signal</div>
-      </div>
-    </div>
-
-    <!-- Live Map -->
-    <div style="margin:0 16px 16px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.08)">
-      <div id="fleetMap" style="height:260px;width:100%;background:#0d1520"></div>
-    </div>
-
-    <!-- Inbound section -->
+  <div class="fl-sheet"><div class="fl-grab"></div>
     ${inbound.length ? `
-    <div style="margin:0 16px 10px">
-      <div style="font-size:10px;font-weight:700;color:#C8A84B;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">⬇ Inbound to CYKF</div>
-      ${inbound.map(ac=>{
-        const d=_fleetData[ac.tail];
-        const etaStr = d.eta!=null ? (d.eta<60 ? d.eta+' min' : Math.floor(d.eta/60)+'h '+(d.eta%60)+'m') : '—';
-        const alert25 = d.distNm<=FLEET_ALERT_NM ? `<span style="background:rgba(232,64,64,0.2);border:1px solid rgba(232,64,64,0.4);color:#ff6b6b;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px">◉ ${FLEET_ALERT_NM} NM</span>` : '';
-        return `<div style="background:rgba(46,204,138,0.06);border:1px solid rgba(46,204,138,0.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <span style="font-size:15px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
-              <span style="font-size:10px;color:rgba(255,255,255,0.4)">${ac.type}</span>
-              ${alert25}
-            </div>
-            <div style="text-align:right">
-              <div style="font-size:18px;font-weight:800;color:#2ECC8A">${etaStr}</div>
-              <div style="font-size:9px;color:rgba(46,204,138,0.6);font-weight:600">ETA CYKF</div>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
-            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
-              <div style="font-size:13px;font-weight:700;color:#fff">${d.distNm} nm</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Distance</div>
-            </div>
-            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
-              <div style="font-size:13px;font-weight:700;color:#fff">${d.altFt?d.altFt.toLocaleString():'—'} ft</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Altitude</div>
-            </div>
-            <div style="background:rgba(0,0,0,0.25);border-radius:8px;padding:7px;text-align:center">
-              <div style="font-size:13px;font-weight:700;color:#fff">${d.speedKts||'—'} KTS</div>
-              <div style="font-size:9px;color:rgba(255,255,255,0.35)">Speed</div>
-            </div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>` : ''}
+    <div class="fl-sec acc">⬇ Inbound to CYKF<span>${inbound.length}</span></div>
+    ${inbound.map(ac=>{
+      const d=_fleetData[ac.tail];
+      const ring = d.distNm<=FLEET_ALERT_NM ? `<span class="fl-ring">◉ ${FLEET_ALERT_NM} NM</span>` : '';
+      return `<div class="fl-inb">
+        <div class="fl-inb-top"><span class="fl-dot air"></span><span class="fl-reg big">${ac.reg}</span><span class="fl-type">${ac.type}</span>${ring}
+          <div class="fl-eta"><b>${d.eta!=null?etaText(d.eta):'—'}</b><small>ETA CYKF</small></div></div>
+        <div class="fl-stats">
+          <div><b>${d.distNm} nm</b><small>Distance</small></div>
+          <div><b>${d.altFt?d.altFt.toLocaleString():'—'} ft</b><small>Altitude</small></div>
+          <div><b>${d.speedKts||'—'} kts</b><small>Speed</small></div>
+        </div></div>`;
+    }).join('')}` : ''}
 
-    <!-- Full roster -->
-    <div style="margin:0 16px">
-      <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Fleet Roster</div>
-      ${FLEET_AIRCRAFT.map(ac=>{
-        const d=_fleetData[ac.tail];
-        if(!d) return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="flex:1;min-width:0">
-            <span style="font-size:14px;font-weight:800;color:rgba(255,255,255,0.28);font-family:'Courier New',monospace">${ac.reg}</span>
-            <span style="font-size:10px;color:rgba(255,255,255,0.18);margin-left:8px">${ac.type}</span>
-          </div>
-          <span style="font-size:11px;color:rgba(255,255,255,0.18)">⚫ No signal</span>
-        </div>`;
-        const col = d.onGround ? '#F39C12' : '#2ECC8A';
-        const statusDot = d.onGround
-          ? `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#F39C12;margin-right:5px"></span>`
-          : `<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#2ECC8A;box-shadow:0 0 5px #2ECC8A;margin-right:5px;animation:grnpulse 1.8s infinite"></span>`;
-        const sub = [
-          d.distNm!=null&&!d.onGround ? d.distNm+' nm' : null,
-          d.altFt&&!d.onGround ? d.altFt.toLocaleString()+' ft' : null,
-          d.speedKts&&!d.onGround ? d.speedKts+' KTS' : null,
-        ].filter(Boolean).join(' · ');
-        return `
-        <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              ${statusDot}
-              <span style="font-size:14px;font-weight:800;color:#fff;font-family:'Courier New',monospace">${ac.reg}</span>
-              <span style="font-size:10px;color:rgba(255,255,255,0.35)">${ac.type}</span>
-            </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.3);padding-left:12px">${sub||(d.onGround ? (d.distNm!=null&&d.distNm<=5 ? 'On ground · CYKF' : 'On ground') : '—')}</div>
-          </div>
-          ${!d.onGround && d.eta!=null ? `
-          <div style="display:flex;align-items:center;gap:2px;flex-shrink:0" title="ETA to CYKF">
-            ${flipEta(d.eta)}
-          </div>` : d.onGround ? `<span style="font-size:11px;color:#F39C12;font-weight:600">Ground</span>` : ''}
-        </div>`;
-      }).join('')}
-    </div>
+    ${airList.length ? `<div class="fl-sec">In the air<span>${airList.length}</span></div><div class="fl-card">${airList.map(row).join('')}</div>` : ''}
+    ${onGround.length ? `<div class="fl-sec">On the ground<span>${onGround.length}</span></div><div class="fl-card">${onGround.map(row).join('')}</div>` : ''}
+    ${noSignal.length ? `
+    <div class="fl-more" onclick="S.fleetOffOpen=!S.fleetOffOpen;renderFleet(document.getElementById('content'))">
+      <span class="fl-dot off"></span>${noSignal.length} aircraft with no signal<span style="margin-left:auto">${S.fleetOffOpen?'▾':'▸'}</span></div>
+    ${S.fleetOffOpen ? `<div class="fl-card" style="margin-top:8px">${noSignal.map(row).join('')}</div>` : ''}` : ''}
 
-    <div style="margin:16px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;border:1px solid rgba(255,255,255,0.06)">
-      <div style="font-size:10px;color:rgba(255,255,255,0.25);line-height:1.6">Live data: OpenSky ADS-B, refreshed about every 2 min. The push alert fires once per inbound arrival, within 60 nm.</div>
-    </div>
+    ${notifBtn}
+    <p class="fl-fine">Live ADS-B, refreshed about every 2 min. The push alert fires once per inbound arrival, within ${FLEET_ALERT_NM} nm of CYKF.</p>
+    <div style="height:90px"></div>
   </div>`;
 
   // Init Leaflet map after DOM is ready
@@ -13528,20 +13511,21 @@ function renderFleet(el) {
     if(typeof L === 'undefined') return;
     const mapEl = document.getElementById('fleetMap');
     if(!mapEl || mapEl._leaflet_id) return;
+    const acc = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4A9EFF';
     const map = L.map('fleetMap',{zoomControl:false,attributionControl:false}).setView([CYKF_LAT,CYKF_LON],7);
     // CARTO's dark basemap now requires a paid API key (every tile came back "API key required").
     // Esri's dark-gray basemap is free with no key or account needed.
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:16}).addTo(map);
-    // CYKF marker
-    L.circle([CYKF_LAT,CYKF_LON],{radius:FLEET_ALERT_NM*1852,color:'#C8A84B',weight:1,fillOpacity:0.05,dashArray:'6,6'}).addTo(map);
-    L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#C8A84B',fillColor:'#C8A84B',fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
+    // CYKF marker + the push-alert ring
+    L.circle([CYKF_LAT,CYKF_LON],{radius:FLEET_ALERT_NM*1852,color:acc,weight:1.2,fillOpacity:0.06,dashArray:'6,6'}).addTo(map);
+    L.circleMarker([CYKF_LAT,CYKF_LON],{radius:6,color:'#fff',fillColor:acc,fillOpacity:1,weight:2}).bindTooltip('CYKF',{permanent:true,direction:'right',className:'fleet-tip'}).addTo(map);
     // Aircraft markers
     FLEET_AIRCRAFT.forEach(ac=>{
       const d=_fleetData[ac.tail];
       if(!d||!d.lat||!d.lon) return;
-      const col=d.onGround?'#F39C12':'#2ECC8A';
+      const col=d.onGround?'#F5A623':'#2ECC8A';
       const rot=d.track||0;
-      const etaStr=d.eta!=null?(d.eta<60?d.eta+' min':Math.floor(d.eta/60)+'h '+(d.eta%60)+'m'):'';
+      const etaStr=d.eta!=null?etaText(d.eta):'';
       const icon=L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],html:
         `<div style="width:28px;height:28px;display:flex;align-items:center;justify-content:center">
            <svg viewBox="0 0 24 24" width="22" height="22" style="transform:rotate(${rot}deg);filter:drop-shadow(0 0 4px ${col})">
@@ -13550,12 +13534,12 @@ function renderFleet(el) {
          </div>`
       });
       const tip=`<b>${ac.reg}</b><br>${d.altFt?d.altFt.toLocaleString()+' ft · ':''}`+
-                `${d.speedKts||''}${d.speedKts?' KTS':''}${etaStr?' · ETA '+etaStr:''}`;
+                `${d.speedKts||''}${d.speedKts?' kts':''}${etaStr?' · ETA '+etaStr:''}`;
       L.marker([d.lat,d.lon],{icon}).bindTooltip(tip,{direction:'top',className:'fleet-tip'}).addTo(map);
     });
     // Fit bounds if aircraft present
     const pts=FLEET_AIRCRAFT.filter(a=>_fleetData[a.tail]&&_fleetData[a.tail].lat).map(a=>[_fleetData[a.tail].lat,_fleetData[a.tail].lon]);
-    if(pts.length) { pts.push([CYKF_LAT,CYKF_LON]); try{map.fitBounds(pts,{padding:[20,20]});}catch(e){} }
+    if(pts.length) { pts.push([CYKF_LAT,CYKF_LON]); try{map.fitBounds(pts,{padding:[40,40]});}catch(e){} }
   },100);
 
   // Auto-refresh every 60s while on fleet tab
