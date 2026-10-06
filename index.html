@@ -11154,6 +11154,13 @@ const DAY_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 let _fpMode = 'specific';
 let _fpDays = []; // selected day indices 0–6
 
+// outline a form field in red for a moment (missing location / frequency / days)
+function _flagField(id) {
+  const el = document.getElementById(id); if(!el) return;
+  el.style.boxShadow = '0 0 0 2px var(--red)'; el.style.borderRadius = el.style.borderRadius || '10px';
+  if(el.scrollIntoView) el.scrollIntoView({block:'center', behavior:'smooth'});
+  setTimeout(() => { el.style.boxShadow = ''; }, 2200);
+}
 function _fpSetMode(m) {
   _fpMode = m;
   const grid = document.getElementById('fpDayGrid');
@@ -11183,6 +11190,7 @@ function _fpToggle(i) {
   _fpUpdateLabel();
 }
 function _fpLabel() {
+  if(!_fpMode) return 'Tap one: Daily, Specific days or Once';
   if(_fpMode==='daily') return 'Every day — forever';
   if(_fpMode==='once') return 'One time only';
   if(!_fpDays.length) return 'Select at least one day';
@@ -11204,7 +11212,7 @@ function _fpHTML(initMode, initDays) {
   };
   return `
     <label style="margin-top:8px">Schedule</label>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+    <div id="fpModes" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;border-radius:14px;transition:box-shadow .2s">
       ${mBtn('daily','🔁 Daily')}${mBtn('specific','📅 Specific days')}${mBtn('once','1️⃣ Once')}
     </div>
     <div id="fpDayGrid" style="display:${initMode==='specific'?'flex':'none'};gap:8px;flex-wrap:wrap;margin-bottom:10px;justify-content:center">
@@ -11752,20 +11760,22 @@ function checkTaskDuplicate() {
 }
 
 function openAddTask(tabName,area='') {
-  const tabIdx = DAYS.indexOf(tabName);
-  const initDays = tabIdx >= 0 ? [tabIdx] : [];
   openModal('Add Task',
     `<label>Task description</label>
      <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()" data-tab="${tabName}">
      <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location</label>
      <select id="mArea">${locationSelect(area)}</select>
-     ${_fpHTML('specific', initDays)}`,
+     ${_fpHTML('', [])}`,
     async()=>{
       const task=document.getElementById('mTask').value.trim();
       const areaVal=document.getElementById('mArea').value;
-      if(!task){ toast('Enter a task name'); return; }
-      if(_fpMode==='specific' && !_fpDays.length){ toast('Select at least one day'); return; }
+      if(!task){ _flagField('mTask'); toast('Enter a task name'); return; }
+      // no location = the task lands in a stray "item" group after Closure — a location is required
+      if(!areaVal){ _flagField('mArea'); toast('📍 Choose a location'); return; }
+      // how often is never pre-picked: the team chooses it on purpose
+      if(!_fpMode){ _flagField('fpModes'); toast('🔁 Choose how often: Daily, Specific days or Once'); return; }
+      if(_fpMode==='specific' && !_fpDays.length){ _flagField('fpDayGrid'); toast('Select at least one day'); return; }
       // Build target days array
       let targetDays;
       if(_fpMode==='daily') targetDays=[...DAYS];
