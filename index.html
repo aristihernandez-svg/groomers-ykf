@@ -10395,7 +10395,9 @@ function renderContactsList(q) {
 
   S.contacts.forEach(c => {
     const n = c.name.toLowerCase();
-    if (PERSON_NAMES.some(p => n.includes(p)) || c.phone || c.role) {
+    if (c.code) {
+      codes.push(c);   // filled-in Code field always wins
+    } else if (PERSON_NAMES.some(p => n.includes(p)) || c.phone || c.role) {
       persons.push(c);
     } else if (CODE_NAMES.some(k => n.includes(k)) || /code/i.test(c.name)) {
       codes.push(c);
@@ -11613,22 +11615,25 @@ function openAddShopItem() {
 
 function openAddContact() {
   openModal('Add Contact',
-    `<label>Name / Store</label><input id="mCN" placeholder="Name...">
+    `<div style="font-size:11px;color:var(--t3);line-height:1.5;margin-bottom:6px">With a code → 🔐 Codes &amp; Access · with a phone → 📞 Key Contacts · otherwise → 📍 Stores &amp; Suppliers</div>
+     <label>Name / Store</label><input id="mCN" placeholder="Name...">
      <label>Phone</label><input id="mCP" type="tel" placeholder="519-555-0100">
      <label>Address</label><input id="mCA" placeholder="Address...">
+     <label>Code</label><input id="mCC" placeholder="Door or lock code (optional)">
      <label>Notes</label><input id="mCO" placeholder="Notes...">`,
     async()=>{
       const name=document.getElementById('mCN').value.trim();
       const phone=document.getElementById('mCP').value.trim();
       const address=document.getElementById('mCA').value.trim();
+      const code=document.getElementById('mCC').value.trim();
       const notes=document.getElementById('mCO').value.trim();
       if(!name) return;
       const id=fsDocId(name);
-      S.contacts.push({id,name,phone,address,notes});
+      S.contacts.push({id,name,phone,address,code,notes});
       localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
       closeModal(); renderContacts(document.getElementById('content')); toast('Contact added ✓');
       if(db) {
-        db.collection('contacts').doc(id).set({name,phone,address,notes})
+        db.collection('contacts').doc(id).set({name,phone,address,code,notes})
           .catch(e => { console.log('Add contact Firestore write failed:', e); toast('⚠️ Saved locally — will retry sync when online'); });
       }
     });
@@ -11641,21 +11646,23 @@ function editContact(idx) {
     `<label>Name / Store</label><input id="eCN" value="${c.name}">
      <label>Phone</label><input id="eCP" type="tel" value="${c.phone||''}" placeholder="519-555-0100">
      <label>Address</label><input id="eCA" value="${c.address||''}">
+     <label>Code</label><input id="eCC" value="${c.code||''}" placeholder="Door or lock code (optional)">
      <label>Notes</label><input id="eCO" value="${c.notes||''}">`,
     async()=>{
       const name=document.getElementById('eCN').value.trim();
       const phone=document.getElementById('eCP').value.trim();
       const address=document.getElementById('eCA').value.trim();
+      const code=document.getElementById('eCC').value.trim();
       const notes=document.getElementById('eCO').value.trim();
       if(!name) return;
       const oldId = c.id || fsDocId(c.name);
       const newId = fsDocId(name);
-      S.contacts[idx] = {...c, id:newId, name, phone, address, notes};
+      S.contacts[idx] = {...c, id:newId, name, phone, address, code, notes};
       localStorage.setItem('gykf_contacts', JSON.stringify(S.contacts));
       closeModal(); renderContacts(document.getElementById('content')); toast('Contact updated ✓');
       if(db) {
         if(newId !== oldId) db.collection('contacts').doc(oldId).delete().catch(()=>{});
-        db.collection('contacts').doc(newId).set({name, phone, address, notes, role:c.role||'', code:c.code||''})
+        db.collection('contacts').doc(newId).set({name, phone, address, notes, role:c.role||'', code})
           .catch(e => console.log('Edit contact Firestore write failed:', e));
       }
     });
