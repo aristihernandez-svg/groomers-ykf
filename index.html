@@ -4189,7 +4189,14 @@ const _recordsExpandedCarMonths = new Set();
 // past month is just that month's own facilityAudits/auditCars/auditAircraft
 // document, which is never deleted. PDF links point straight to the file saved
 // in Storage when that audit was marked done — nothing needs to be regenerated.
+// "October 2026" / "Oct 2026" / "Sept 2026" → "2026-10". Parsed by hand: iPhone Safari can't read
+// "October 2026 1" as a date, which left Records sorted alphabetically with years shown as "Octo", "Augu"…
 function monthLabelToMonthKey(label) {
+  const m = String(label || '').trim().match(/^([A-Za-z]+)\.?\s+(\d{4})$/);
+  if (m) {
+    const i = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(m[1].slice(0, 3).toLowerCase());
+    if (i >= 0) return `${m[2]}-${String(i + 1).padStart(2, '0')}`;
+  }
   const d = new Date(label + ' 1');
   return isNaN(d) ? label : d.toLocaleDateString('en-CA',{year:'numeric',month:'2-digit'});
 }
