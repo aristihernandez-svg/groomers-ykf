@@ -210,20 +210,16 @@ body::before{
   background:radial-gradient(ellipse at 30% 20%,#1A2848 0%,#0B1120 60%,#060C18 100%);
 }
 #splash.out{opacity:0;pointer-events:none}
-/* Sync gate: after the splash, blocks the app until the team's live data is in */
-#syncGate{position:fixed;inset:0;z-index:998;display:flex;align-items:center;justify-content:center;background:rgba(6,12,24,0.74);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);transition:opacity .45s}
-#syncGate.out{opacity:0;pointer-events:none}
-.sg-card{width:min(300px,82vw);padding:20px 20px 18px;border-radius:20px;background:rgba(15,24,48,0.94);border:1px solid rgba(255,255,255,0.12);box-shadow:0 18px 50px rgba(0,0,0,0.5);text-align:center;color:#F0F4FF}
-.sg-sky{position:relative;height:58px;margin-bottom:8px;overflow:hidden}
-.sg-sky::before{content:'';position:absolute;left:10px;right:10px;top:40px;border-top:2px dashed rgba(200,168,75,0.35)}
-.sg-plane{position:absolute;top:12px;left:-44px;width:36px;height:36px;animation:sgFly 2.2s ease-in-out infinite;filter:drop-shadow(0 3px 10px rgba(200,168,75,0.45))}
-@keyframes sgFly{0%{left:-44px;transform:translateY(10px) rotate(-10deg)}50%{transform:translateY(-4px) rotate(0deg)}100%{left:calc(100% + 8px);transform:translateY(6px) rotate(6deg)}}
-.sg-title{font-size:16px;font-weight:800}
-.sg-sub{font-size:12px;color:#A8B8CC;margin-top:4px;line-height:1.4}
-.sg-steps{display:flex;justify-content:center;gap:14px;margin-top:14px;font-size:11px;font-weight:700;color:#7D8DA3}
-.sg-steps b{display:inline-block;width:16px;color:#7D8DA3;font-weight:800}
-.sg-steps b.ok{color:#2ECC8A}
-@media (prefers-reduced-motion: reduce){.sg-plane{animation:none;left:calc(50% - 18px)}}
+/* Loading screen (one animation per weekday, see #ldRoot script) */
+#ldRoot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;overflow:hidden;color:#F0F4FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+.ld-logo{height:46px;filter:brightness(0) invert(1);opacity:.95;margin-bottom:46px}
+.ld-stage{display:flex;flex-direction:column;align-items:center}
+.ld-title{margin-top:36px;font-size:17px;font-weight:800;text-align:center;padding:0 16px}
+.ld-sub{margin-top:6px;font-size:12px;color:#A8B8CC;text-align:center;padding:0 16px}
+.ld-steps{margin-top:16px;display:flex;gap:14px;font-size:12px;font-weight:700}
+.ld-cond{font-family:'Barlow Condensed','Arial Narrow','Roboto Condensed',sans-serif}
+.ld-cloud{position:absolute;width:124px;height:66px;transform-origin:62px 33px;filter:drop-shadow(0 6px 7px rgba(25,45,85,.28))}
+.ld-puff{position:absolute;border-radius:50%;background:radial-gradient(circle at 42% 34%,#FFFFFF 0%,#F6F9FC 50%,#DCE6F1 85%,#C9D6E6 100%)}
 .splash-ring{
   width:120px;height:120px;border-radius:50%;
   border:1px solid rgba(200,168,75,0.35);
@@ -942,41 +938,204 @@ body::before{
 </style>
 </head>
 <body>
-<div id="splash">
-  <div id="spHero"></div>
-  <div class="sp-title">Groomers YKF</div>
-  <div class="sp-divider"></div>
-  <div class="sp-sub">Aviation Grooming Team</div>
-  <div class="sp-bar"><div class="sp-fill"></div></div>
-</div>
-<div id="syncGate" role="status" aria-live="polite">
-  <div class="sg-card">
-    <div class="sg-sky"><svg class="sg-plane" viewBox="0 0 64 64" fill="#E8C86A" aria-hidden="true"><path transform="translate(64,0) scale(-1,1)" d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z"/></svg></div>
-    <div class="sg-title" id="sgTitle">Syncing with the team…</div>
-    <div class="sg-sub" id="sgSub">Getting the latest tasks, shopping and audits. One moment.</div>
-    <div class="sg-steps"><span><b id="sg-tasks">⏳</b>Tasks</span><span><b id="sg-shop">⏳</b>Shopping</span><span><b id="sg-more">⏳</b>Contacts</span></div>
-  </div>
-</div>
+<div id="splash"><div id="ldRoot"></div></div>
 <script>
+// ── LOADING SCREEN ─────────────────────────────────────────────────
+// One animation per weekday. It runs from the first paint until the app's data is live
+// (see bootMark / appReady): LD.target is the real share of boot steps done, LD.p the shown value.
 (function(){
-  const day=new Date().getDay();
-  const planes={0:'cars/Westwind-removebg-preview.png',2:'cars/Metroliner_logo-removebg-preview.png',4:'cars/Navajo_logo-removebg-preview.png',6:'cars/Astra-removebg-preview.png'};
-  const names={0:'Westwind',2:'Metroliner',4:'Navajo',6:'Astra'};
-  const hero=document.getElementById('spHero');
-  if(day===3){
-    hero.innerHTML=`<div class="hp-portrait-wrap">
-      <img src="Emerson/emerson.gif" alt="Emerson" style="width:160px;height:160px;border-radius:50%;object-fit:cover;border:2px solid rgba(200,168,75,0.4)">
-      <div class="hp-nameplate">Emerson</div>
-    </div>`;
-  } else if(planes[day]){
-    hero.innerHTML=`<div class="splash-ring"><div class="sp-plane">
-      <img src="${planes[day]}" alt="${names[day]}" style="width:90px;height:90px;object-fit:contain;filter:drop-shadow(0 4px 16px rgba(200,168,75,0.5))">
-    </div></div>`;
-  } else {
-    hero.innerHTML=`<div class="splash-ring"><div class="sp-plane">
-      <svg viewBox="0 0 64 64" width="52" height="52" fill="#E8C86A"><path d="M3 34 L57 16 L46 34 L57 52 L3 34 Z M21 34 L46 34 L33 47 L21 34 Z" opacity="0.95"/></svg>
-    </div></div>`;
+  const LOGO = 'cars/Skycare_logo-removebg-preview.png', METRO = 'cars/Metroliner_logo-removebg-preview.png', EMERSON = 'Emerson/emerson.gif';
+  const PLANE = '<path d="M61 30 L7 12 L18 30 L7 48 L61 30 Z M43 30 L18 30 L31 43 L43 30 Z"/>';
+  const GOLD = 'linear-gradient(90deg,#C8A84B,#E8C86A)', GREEN = '#2ECC8A';
+  const LD = window.LD = { p: 0, target: 0, live: false, liveAt: 0, done: false, steps: {}, t0: performance.now() };
+  const $ = id => document.getElementById(id);
+  const pct = p => Math.round(p * 100) + '%';
+  const shell = (stage, withSteps) => `
+    <img class="ld-logo" src="${LOGO}" alt="Skycare">
+    <div class="ld-stage">${stage}</div>
+    <div class="ld-title" id="ldTitle"></div>
+    <div class="ld-sub" id="ldSub"></div>
+    ${withSteps ? '<div class="ld-steps" id="ldSteps"></div>' : ''}`;
+  const STEP_LABELS = [['tasks', 'Tasks'], ['shop', 'Shopping'], ['contacts', 'Contacts'], ['handoff', 'Handoff']];
+  function common(p, live, title, liveTitle, liveSub) {
+    $('ldTitle').textContent = live ? liveTitle : `${title} · ${pct(p)}`;
+    $('ldTitle').style.color = live ? GREEN : '#F0F4FF';
+    $('ldSub').textContent = live ? (liveSub || 'Everything is up to date') : 'Getting the latest tasks, shopping and audits';
+    const st = $('ldSteps');
+    if (st) st.innerHTML = STEP_LABELS.map(([k, l]) => `<span style="color:${LD.steps[k] || live ? GREEN : '#7D8DA3'}">${LD.steps[k] || live ? '✓' : '·'} ${l}</span>`).join('');
   }
+
+  const VIEWS = {
+    // Monday — the Metroliner rolls down a runway that is the progress bar, then takes off
+    1: { build: r => r.innerHTML = shell(`<div style="position:relative;width:310px;height:150px">
+          <img id="rwPlane" src="${METRO}" alt="" style="position:absolute;bottom:14px;width:120px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))">
+          <div style="position:absolute;left:0;right:0;bottom:0;height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden"><div id="rwFill" style="height:100%;border-radius:4px;background:${GOLD};box-shadow:0 0 10px rgba(232,200,106,.6)"></div></div>
+          <div style="position:absolute;left:6px;right:6px;bottom:-14px;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 14px,transparent 14px 26px)"></div></div>`, true),
+      update: (p, live, lv) => {
+        const lift = live ? Math.min(1, lv / 0.7) : 0;
+        const pl = $('rwPlane');
+        pl.style.left = (-10 + p * 200 + lift * 150) + 'px';
+        pl.style.transform = `translateY(${-lift * 150}px) rotate(${-lift * 16}deg)`;
+        pl.style.opacity = 1 - Math.max(0, (lift - .6) / .4);
+        $('rwFill').style.width = pct(p);
+        common(p, live, 'Syncing with the team', 'Live — ready to go');
+      } },
+    // Tuesday — a YKF → LIVE boarding pass prints its barcode, then gets stamped BOARDED
+    2: { build: r => {
+          const W = [3,1,2,1,3,2,1,1,3,1,2,2,1,3,1,2,1,3,2,1,1,2,3,1,2,1,3,1,1,2,3,2,1,2,1,3,1,2,2,1,3,1,2,1];
+          r.innerHTML = shell(`<div style="position:relative;width:316px;border-radius:18px;background:#F5F1E6;color:#1A2033;box-shadow:0 22px 50px rgba(0,0,0,.55);overflow:hidden">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px;background:#14213D;color:#F0F4FF"><span style="font-size:12px;font-weight:800;letter-spacing:2px">BOARDING PASS</span><span style="font-size:12px;font-weight:700;color:#E8C86A">SKYCARE</span></div>
+            <div class="ld-cond" style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 6px">
+              <div><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#6B7280">FROM</div><div style="font-size:40px;font-weight:700;line-height:1">YKF</div></div>
+              <svg width="40" height="40" viewBox="0 0 64 64" fill="#14213D">${PLANE}</svg>
+              <div style="text-align:right"><div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#6B7280">TO</div><div id="bpTo" style="font-size:40px;font-weight:700;line-height:1">LIVE</div></div></div>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:10px 20px 14px;font-size:10px;font-weight:700;color:#6B7280;letter-spacing:1px">
+              <div>CREW<div style="font-size:14px;color:#1A2033;margin-top:2px">GROOMERS</div></div><div>GATE<div style="font-size:14px;color:#1A2033;margin-top:2px">CR</div></div><div>STATUS<div id="bpStatus" style="font-size:14px;margin-top:2px"></div></div></div>
+            <div style="border-top:2px dashed #C9C1AC;margin:0 12px"></div>
+            <div id="bpBars" style="display:flex;gap:2px;align-items:flex-end;height:58px;padding:14px 20px 6px">${W.map(w => `<div style="height:100%;width:${w * 2}px;background:#1A2033"></div>`).join('')}</div>
+            <div id="bpCode" style="padding:0 20px 14px;font-size:10px;font-weight:700;letter-spacing:2px;color:#6B7280"></div>
+            <div id="bpStamp" style="position:absolute;right:22px;top:120px;padding:6px 12px;border:3px solid #1F9D63;border-radius:8px;color:#1F9D63;font-size:20px;font-weight:900;letter-spacing:2px;opacity:0">BOARDED</div></div>`, false);
+        },
+      update: (p, live, lv) => {
+        const bars = $('bpBars').children, n = Math.round(p * bars.length);
+        for (let i = 0; i < bars.length; i++) bars[i].style.opacity = i < n ? 1 : .08;
+        $('bpCode').textContent = `SYNC ${String(Math.round(p * 100)).padStart(3, '0')}% · TASKS · SHOPPING · CONTACTS`;
+        $('bpStatus').textContent = live ? 'ON TIME' : 'SYNCING';
+        $('bpStatus').style.color = live ? '#1F9D63' : '#B7791F';
+        $('bpTo').style.color = live ? '#1F9D63' : '#1A2033';
+        const s = live ? Math.min(1, lv / .35) : 0;
+        $('bpStamp').style.opacity = s;
+        $('bpStamp').style.transform = `rotate(-12deg) scale(${1.6 - s * .6})`;
+        common(p, live, 'Printing your pass', 'Boarded — you are live', 'Tasks, shopping and audits are up to date');
+      } },
+    // Wednesday — Emerson circles the ring as it fills
+    3: { build: r => r.innerHTML = shell(`<div style="position:relative;width:280px;height:280px">
+          <svg width="280" height="280" viewBox="0 0 280 280" style="position:absolute;inset:0">
+            <circle cx="140" cy="140" r="110" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/>
+            <circle id="rgArc" cx="140" cy="140" r="110" fill="none" stroke="#E8C86A" stroke-width="10" stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="691" transform="rotate(-90 140 140)"/>
+            <circle cx="140" cy="140" r="86" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="3 7"/></svg>
+          <div id="rgEm" style="position:absolute;width:50px;height:50px;border-radius:50%;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.55);border:3px solid #E8C86A"><img src="${EMERSON}" alt="Emerson" style="width:100%;height:100%;object-fit:cover"></div>
+          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div id="rgBig" style="font-size:52px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums"></div>
+            <div id="rgSub" style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7D8DA3;margin-top:2px"></div></div></div>`, true),
+      update: (p, live) => {
+        const a = (-90 + p * 360) * Math.PI / 180;
+        $('rgArc').setAttribute('stroke-dashoffset', Math.round(691 * (1 - p)));
+        $('rgArc').setAttribute('stroke', live ? GREEN : '#E8C86A');
+        const em = $('rgEm');
+        em.style.left = (140 + 110 * Math.cos(a) - 25) + 'px'; em.style.top = (140 + 110 * Math.sin(a) - 25) + 'px';
+        em.style.borderColor = live ? GREEN : '#E8C86A';
+        $('rgBig').textContent = live ? 'LIVE' : pct(p); $('rgBig').style.color = live ? GREEN : '#F0F4FF';
+        $('rgSub').textContent = live ? 'ready to go' : 'syncing';
+        common(p, live, 'Syncing with the team', 'Everything is up to date', 'Tasks, shopping and audits are live');
+      } },
+    // Thursday — a cockpit altimeter climbs to 35,000 ft (long hand: 1 turn / 10,000 ft · small hand: 1 turn / 100,000 ft)
+    4: { build: r => {
+          let ticks = '', nums = '';
+          for (let i = 0; i < 50; i++) ticks += `<div style="position:absolute;left:129px;top:8px;width:2px;height:${i % 5 ? 7 : 14}px;opacity:${i % 5 ? .55 : 1};background:#EDEFF3;transform-origin:1px 122px;transform:rotate(${i * 7.2}deg)"></div>`;
+          for (let i = 0; i < 10; i++) { const a = (i * 36 - 90) * Math.PI / 180; nums += `<div class="ld-cond" style="position:absolute;width:30px;height:24px;margin:-12px 0 0 -15px;text-align:center;font-size:24px;font-weight:700;color:#F4F5F7;left:${130 + 92 * Math.cos(a)}px;top:${130 + 92 * Math.sin(a)}px">${i}</div>`; }
+          const screw = (l, t) => `<div style="position:absolute;left:${l}px;top:${t}px;width:16px;height:16px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#8A93A3,#3A404C)"><div style="position:absolute;left:3px;right:3px;top:7px;height:2px;background:#22262E;transform:rotate(35deg)"></div></div>`;
+          r.innerHTML = shell(`<div style="position:relative;width:300px;height:300px;border-radius:34px;background:linear-gradient(145deg,#2E3440,#15181F);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 24px 50px rgba(0,0,0,.6)">
+            ${screw(12, 12)}${screw(272, 12)}${screw(12, 272)}${screw(272, 272)}
+            <div style="position:absolute;left:20px;top:20px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle at 50% 38%,#1C1F25,#07080A 72%);box-shadow:0 0 0 5px #0B0C10,0 0 0 7px #4A505C,inset 0 6px 18px rgba(0,0,0,.8)">
+              ${ticks}${nums}
+              <div style="position:absolute;left:0;right:0;top:80px;text-align:center;font-size:11px;font-weight:800;letter-spacing:3px;color:#C9CED8">ALT</div>
+              <div style="position:absolute;left:0;right:0;top:96px;text-align:center;font-size:8px;font-weight:700;letter-spacing:2px;color:#8A93A3">100 FEET</div>
+              <div id="alDrum" class="ld-cond" style="position:absolute;left:84px;top:156px;width:92px;height:26px;border-radius:4px;background:#000;box-shadow:inset 0 0 0 1px #3A404C;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;letter-spacing:1px;font-variant-numeric:tabular-nums;color:#E9EEF8"></div>
+              <div class="ld-cond" style="position:absolute;right:30px;top:118px;width:40px;height:22px;border-radius:3px;background:#000;box-shadow:inset 0 0 0 1px #3A404C;font-size:13px;font-weight:700;color:#E9EEF8;display:flex;align-items:center;justify-content:center">29.92</div>
+              <div id="alSmall" style="position:absolute;left:124px;top:62px;width:12px;height:76px;transform-origin:6px 68px"><div style="width:0;height:0;margin:0 auto;border-left:6px solid transparent;border-right:6px solid transparent;border-bottom:16px solid #F4F5F7"></div><div style="margin:0 auto;width:8px;height:60px;background:#F4F5F7;border-radius:0 0 3px 3px"></div></div>
+              <div id="alLong" style="position:absolute;left:127px;top:22px;width:6px;height:120px;transform-origin:3px 108px"><div style="width:0;height:0;margin:0 auto;border-left:3px solid transparent;border-right:3px solid transparent;border-bottom:14px solid #E8C86A"></div><div style="margin:0 auto;width:3px;height:106px;background:#F4F5F7"></div></div>
+              <div style="position:absolute;left:119px;top:119px;width:22px;height:22px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#6A7280,#1F232B);box-shadow:0 2px 6px rgba(0,0,0,.6)"></div></div></div>`, true);
+        },
+      update: (p, live) => {
+        const alt = Math.round((1 - Math.pow(1 - p, 2.2)) * 35000 / 100) * 100;
+        $('alLong').style.transform = `rotate(${(alt % 10000) / 10000 * 360}deg)`;
+        $('alSmall').style.transform = `rotate(${alt / 100000 * 360}deg)`;
+        $('alDrum').textContent = live ? 'LIVE' : alt.toLocaleString('en-US');
+        $('alDrum').style.color = live ? GREEN : '#E9EEF8';
+        common(p, live, 'Climbing to live data', 'Cruising — you are live', 'Tasks, shopping and audits are up to date');
+      } },
+    // Friday — a plane flies YKF → YYZ → YQT → LIVE
+    5: { build: r => r.innerHTML = shell(`<div id="rtBox" style="position:relative;width:390px;height:300px">
+          <svg width="390" height="300" viewBox="0 0 390 300" style="position:absolute;inset:0">
+            <path d="M40 250 Q195 40 350 250" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="2" stroke-dasharray="4 7"/>
+            <path id="rtLine" d="M40 250 Q195 40 350 250" fill="none" stroke="#E8C86A" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>
+          <div id="rtPts"></div>
+          <svg id="rtPlane" width="36" height="36" viewBox="0 0 64 64" fill="#E8C86A" style="position:absolute;margin:-18px 0 0 -18px;filter:drop-shadow(0 3px 10px rgba(232,200,106,.55))">${PLANE}</svg></div>`, false),
+      update: (p, live) => {
+        const B = s => ({ x: (1 - s) * (1 - s) * 40 + 2 * (1 - s) * s * 195 + s * s * 350, y: (1 - s) * (1 - s) * 250 + 2 * (1 - s) * s * 40 + s * s * 250 });
+        const pos = B(p), ang = Math.atan2(2 * (1 - p) * -210 + 2 * p * 210, 310) * 180 / Math.PI;
+        $('rtLine').setAttribute('stroke-dashoffset', Math.round(100 * (1 - p)));
+        $('rtLine').setAttribute('stroke', live ? GREEN : '#E8C86A');
+        const pl = $('rtPlane');
+        pl.style.left = pos.x + 'px'; pl.style.top = pos.y + 'px'; pl.style.transform = `rotate(${ang}deg)`; pl.style.opacity = live ? 0 : 1;
+        $('rtPts').innerHTML = [['YKF', 0, 1], ['YYZ', .34, 0], ['YQT', .67, 0], ['LIVE', 1, 1]].map(([l, s, below]) => {
+          const q = B(s), ok = l === 'LIVE' ? live : (s === 0 || p >= s), c = ok ? GREEN : '#7D8DA3';
+          return `<div style="position:absolute;left:${q.x}px;top:${q.y}px;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:${ok ? c : '#0B1120'};border:2px solid ${c}"></div>
+            <div style="position:absolute;left:${q.x}px;top:${q.y + (below ? 14 : -30)}px;width:90px;margin-left:-45px;text-align:center;font-size:11px;font-weight:800;letter-spacing:1px;color:${c}">${ok && s > 0 && l !== 'LIVE' ? '✓ ' : ''}${l}</div>`;
+        }).join('');
+        common(p, live, 'En route to live data', 'Landed — you are live', 'Tasks, shopping and audits are up to date');
+      } },
+    // Saturday — looking out a cabin window, climbing through fluffy clouds
+    6: { build: r => {
+          const puff = (l, t, w, h) => `<div class="ld-puff" style="left:${l}px;top:${t}px;width:${w}px;height:${h}px"></div>`;
+          const cloud = i => `<div class="ld-cloud" id="wc${i}">${puff(6, 30, 44, 34)}${puff(24, 8, 50, 50)}${puff(56, 2, 44, 44)}${puff(82, 22, 38, 34)}${puff(40, 26, 54, 38)}<div style="position:absolute;left:10px;right:6px;top:44px;height:22px;border-radius:14px;background:linear-gradient(#EEF3F9,#CCD8E7)"></div></div>`;
+          r.innerHTML = shell(`<div style="padding:16px;border-radius:120px;background:linear-gradient(145deg,#D9DEE7,#9AA4B5);box-shadow:0 22px 50px rgba(0,0,0,.55),inset 0 2px 6px rgba(255,255,255,.6)">
+            <div id="wSky" style="position:relative;width:190px;height:270px;border-radius:95px;overflow:hidden;box-shadow:inset 0 0 0 6px #7D879A,inset 0 6px 18px rgba(0,0,0,.5)">
+              <div id="wSun" style="position:absolute;width:110px;height:110px;border-radius:50%;left:96px;background:radial-gradient(circle,#FFF6D2 0%,rgba(255,222,140,.45) 38%,rgba(255,222,140,0) 70%)"></div>
+              ${[0, 1, 2, 3, 4, 5].map(cloud).join('')}</div></div>
+            <div style="margin-top:22px;width:240px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden"><div id="wBar" style="height:100%;border-radius:3px"></div></div>`, false);
+        },
+      update: (p, live, lv, sec) => {
+        const mix = (a, b) => Math.round(a + (b - a) * p);
+        $('wSky').style.background = `linear-gradient(rgb(${mix(28, 62)},${mix(44, 128)},${mix(88, 222)}),rgb(${mix(96, 168)},${mix(86, 206)},${mix(120, 246)}))`;
+        $('wSun').style.top = (200 - p * 160) + 'px'; $('wSun').style.opacity = .25 + p * .75;
+        [[.9, -40, 20, .26], [.6, 80, -10, .19], [1.15, 30, 25, .31], [.5, 110, -15, .16], [.8, -20, 30, .23], [.7, 70, -20, .21]].forEach(([sc, x0, dr, sp], i) => {
+          const k = (sec * sp + i * .19) % 1, c = $('wc' + i);
+          c.style.left = (x0 + k * dr) + 'px'; c.style.top = (k * 380 - 110) + 'px'; c.style.transform = `scale(${sc})`;
+        });
+        $('wBar').style.width = pct(p); $('wBar').style.background = live ? GREEN : GOLD;
+        common(p, live, 'Climbing through the clouds', 'Above the clouds — you are live', 'Tasks, shopping and audits are up to date');
+      } },
+    // Sunday — gears roll the hangar door up on the Metroliner
+    0: { build: r => {
+          const gear = (id, css, size) => `<svg id="${id}" width="${size}" height="${size}" viewBox="0 0 40 40" style="position:absolute;${css}"><circle cx="20" cy="20" r="14" fill="none" stroke="#9AA6BA" stroke-width="7" stroke-dasharray="5 3.8"/><circle cx="20" cy="20" r="10" fill="#9AA6BA"/><circle cx="20" cy="20" r="4" fill="#1B2538"/></svg>`;
+          r.innerHTML = shell(`<div style="position:relative;width:320px;height:240px">
+            <div style="position:absolute;left:0;right:0;top:0;height:76px;border-radius:160px 160px 0 0;background:linear-gradient(#2A3852,#1B2538);border:2px solid #3A4A68;border-bottom:none"></div>
+            <div style="position:absolute;left:18px;right:18px;top:62px;height:4px;border-radius:2px;background:repeating-linear-gradient(90deg,#6B7890 0 6px,#3A4A68 6px 9px)"></div>
+            ${gear('hgL', 'left:8px;top:44px', 40)}${gear('hgR', 'right:8px;top:44px', 40)}${gear('hgM', 'left:147px;top:24px', 26)}
+            <div style="position:absolute;left:10px;right:10px;top:76px;bottom:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3B4A66 0%,#161E2E 75%);border-left:2px solid #3A4A68;border-right:2px solid #3A4A68">
+              <img src="${METRO}" alt="" style="position:absolute;left:50%;bottom:16px;width:220px;margin-left:-110px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.6))">
+              <div id="hgDoor" style="position:absolute;left:0;right:0;top:0;height:100%;background:repeating-linear-gradient(180deg,#2C3A55 0 18px,#1E293F 18px 20px);border-bottom:3px solid #4A5B7E;box-shadow:0 6px 14px rgba(0,0,0,.45)"></div></div></div>
+            <div style="margin-top:22px;width:260px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden"><div id="hgBar" style="height:100%;border-radius:3px"></div></div>`, false);
+        },
+      update: (p, live) => {
+        const turn = p * 900, col = live ? GREEN : '#9AA6BA';
+        $('hgDoor').style.transform = `translateY(-${Math.round(p * 100)}%)`;
+        [['hgL', 1], ['hgR', -1], ['hgM', -1.5]].forEach(([id, k]) => {
+          const g = $(id); g.style.transform = `rotate(${turn * k}deg)`;
+          g.querySelectorAll('circle').forEach((c, i) => { if (i === 0) c.setAttribute('stroke', col); else if (i === 1) c.setAttribute('fill', col); });
+        });
+        $('hgBar').style.width = pct(p); $('hgBar').style.background = live ? GREEN : GOLD;
+        common(p, live, 'Opening the hangar', 'Door up — you are live', 'Tasks, shopping and audits are up to date');
+      } },
+  };
+
+  const view = VIEWS[new Date().getDay()];
+  try { view.build($('ldRoot')); } catch (e) { console.log('loader build error', e); }
+  function frame(now) {
+    if (LD.done) return;
+    const sec = (now - LD.t0) / 1000;
+    // shown progress eases toward the real share of steps done, creeping a little ahead so it never looks frozen
+    const cap = LD.live ? 1 : Math.min(.96, LD.target + .1);
+    const goal = LD.live ? 1 : Math.max(LD.target, Math.min(cap, LD.p + .003));
+    LD.p += (goal - LD.p) * (LD.live ? .2 : .07);
+    const live = LD.live && LD.p > .985;
+    if (live && !LD.liveAt) LD.liveAt = now;
+    try { view.update(Math.min(1, LD.p), live, live ? (now - LD.liveAt) / 1000 : 0, sec); } catch (e) {}
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
 })();
 </script>
 
@@ -1489,28 +1648,32 @@ const NAV_ITEMS = [
   {id:'bored',       icon:'💡', label:'Bored'},
 ].filter(item => item.id !== 'fleet' || BASE_CONFIG.features?.fleet !== false);
 
-// ── SYNC GATE ─────────────────────────────────────────────────────
-// People were opening the app and using it before the live data arrived. The gate (under the
-// splash) stays until the first Firestore data is in and live sync is attached; it never traps
-// anyone: with no connection it lets them in after 12 s with an offline note.
+// ── STARTUP PROGRESS ─────────────────────────────────────────────
+// People were using the app before the team's data had arrived. The loading screen (splash)
+// now stays until every step below has answered, so Home — handoff notes included — is complete
+// when it opens. Each step moves the day's animation forward. It never traps anyone: 12 s after
+// boot the app opens anyway with a note.
+const BOOT_STEPS = ['config', 'tasks', 'shop', 'contacts', 'ticks', 'handoff', 'calendar', 'daynotes'];
 let _appReady = false;
-function syncGateStep(id) { const b = document.getElementById('sg-' + id); if (b) { b.textContent = '✓'; b.classList.add('ok'); } }
-function appReady(offline) {
+function bootMark(k) {
+  const L = window.LD;
+  if (!L || L.steps[k]) return;
+  L.steps[k] = true;
+  L.target = BOOT_STEPS.filter(x => L.steps[x]).length / BOOT_STEPS.length;
+  if (BOOT_STEPS.every(x => L.steps[x])) appReady(false);
+}
+function appReady(timedOut) {
   if (_appReady) return;
   _appReady = true;
-  const g = document.getElementById('syncGate');
-  if (!g) return;
-  const close = () => { g.classList.add('out'); setTimeout(() => g.remove(), 600); };
-  if (offline) {
-    close();
-    setTimeout(() => toast('⚠️ Offline — changes will sync later'), 400);
-    return;
-  }
-  ['tasks', 'shop', 'more'].forEach(syncGateStep);
-  const t = document.getElementById('sgTitle'), sub = document.getElementById('sgSub');
-  if (t) t.textContent = '🟢 Live — ready to go';
-  if (sub) sub.textContent = 'Everything is up to date.';
-  setTimeout(close, splashCleared ? 600 : 0);
+  const L = window.LD;
+  const finish = () => {
+    clearSplash();
+    if (timedOut) setTimeout(() => toast(navigator.onLine === false ? '⚠️ Offline — changes will sync later' : '⏳ Still syncing — data will update in a moment'), 400);
+  };
+  if (!L || timedOut) { finish(); return; }
+  // keep the animation up long enough to be read, then show its "live" moment before opening
+  const wait = Math.max(0, 1200 - (performance.now() - L.t0));
+  setTimeout(() => { L.live = true; setTimeout(finish, 900); }, wait);
 }
 // ── BOOT ───────────────────────────────────────────────────────────
 // Hard failsafe: no matter what throws or hangs above, force the splash
@@ -1519,10 +1682,11 @@ let splashCleared = false;
 function clearSplash() {
   if(splashCleared) return;
   splashCleared = true;
+  if (window.LD) LD.done = true;
   document.getElementById('splash')?.classList.add('out');
   document.getElementById('app')?.classList.add('show');
 }
-setTimeout(clearSplash, 7000);
+setTimeout(() => { if (!window._bootStarted && localStorage.getItem('app_pin_ok') === '1') clearSplash(); }, 15000);
 
 // ── PIN GATE ─────────────────────────────────────────────────────────────────
 const PIN_CORRECT = BASE_CONFIG.pinCorrect;
@@ -1620,7 +1784,8 @@ window.addEventListener('load', async () => {
 });
 
 async function bootApp() {
-  setTimeout(() => appReady(true), 12000);   // sync gate safety exit (counted from boot, not from the PIN screen)
+  window._bootStarted = true;
+  setTimeout(() => appReady(true), 12000);   // loading-screen safety exit (counted from boot, not from the PIN screen)
   try {
     // Load saved theme
     const savedTheme = localStorage.getItem('gykf_theme') || 'premium';
@@ -1644,7 +1809,6 @@ async function bootApp() {
   }
   setTimeout(() => {
     try {
-      clearSplash();
       setupDraggableNav();
       S.tab = 'home';
       document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
@@ -1660,17 +1824,18 @@ async function bootApp() {
           .then(snap => { if(snap.exists && snap.data()?.source) S.tasksSource = snap.data().source; })
           .catch(() => {})
       : Promise.resolve();
+    _bootTasksSource.then(() => bootMark('config'));
 
     _bootTasksSource.then(() =>
     Promise.all([
-      fetchDay(DAYS[TODAY]).then(() => syncGateStep('tasks')),
-      fetchShopping().then(() => syncGateStep('shop')),
-      Promise.all([fetchContacts(), fetchBored()]).then(() => syncGateStep('more')),
+      fetchDay(DAYS[TODAY]).then(() => bootMark('tasks')),
+      fetchShopping().then(() => bootMark('shop')),
+      Promise.all([fetchContacts(), fetchBored()]).then(() => bootMark('contacts')),
     ])
       .then(() => {
         if(S.tab==='home') renderHome(document.getElementById('content')); else render();
         setupLiveSync(); // attach Firestore listeners once we have the base data to merge into
-        appReady(!db);   // lift the sync gate: data is in and listeners are attached
+        if (!db) appReady(true);   // no database: nothing more to wait for
         cleanupOneOffTasks(); // delete any One-off tasks that weren't cleaned up at midnight
         clearContaminatedTaskState(); // one-time: wipe done-states written to non-today days by pre-v68 bug
         // Flush any dayNotes that were saved to localStorage but never made it to Firestore
@@ -1709,7 +1874,7 @@ async function bootApp() {
       })
       .catch(e => { console.log('Boot fetch error:', e); appReady(true); })
     ); // closes _bootTasksSource.then
-  }, 2800);
+  }, 0);
 }
 
 // ── NAV ────────────────────────────────────────────────────────────
@@ -12506,6 +12671,7 @@ async function setupLiveSync() {
     }
 
     db.collection('taskState').doc(tabName).onSnapshot(snap => {
+      bootMark('ticks');
       const data = snap.data();
       _cachedTaskState = data; // always cache so task content listener can use it
       if(!data || !S.tasks[tabName]) return;
@@ -12721,21 +12887,24 @@ async function setupLiveSync() {
     // shift. Single-field orderBy (no composite index needed); unresolved
     // filtering happens client-side since the list is always small.
     db.collection('handoffNotes').orderBy('ts','desc').onSnapshot(snap => {
+      bootMark('handoff');
       S.handoffNotes = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(n=>!n.resolved);
       if(S.tab==='home') renderHome(document.getElementById('content'));
       else if(S.tab==='today') renderToday(document.getElementById('content'));
-    }, e => console.log('handoffNotes listener error:', e));
+    }, e => { bootMark('handoff'); console.log('handoffNotes listener error:', e); });
 
     // Calendar events — one-off dated events, shown as a sticky note on Home on their exact day
     db.collection('calendarEvents').onSnapshot(snap => {
+      bootMark('calendar');
       S.calendarEvents = snap.docs.map(d=>({id:d.id, ...d.data()})).filter(ev=>ev.date && !ev.deleted);
       const el = document.getElementById('content');
       if(S.tab==='home') renderHome(el);
       else if(S.tab==='calendar') renderCalendar(el);
-    }, e => console.log('calendarEvents listener error:', e));
+    }, e => { bootMark('calendar'); console.log('calendarEvents listener error:', e); });
 
     // Day notes — per-date team reminders
     db.collection('dayNotes').onSnapshot(snap => {
+      bootMark('daynotes');
       snap.forEach(doc => { S.dayNotes[doc.id] = doc.data(); });
       // Remove deleted docs
       const liveIds = new Set(snap.docs.map(d=>d.id));
