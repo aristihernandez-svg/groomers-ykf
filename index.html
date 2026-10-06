@@ -966,20 +966,67 @@ body::before{
   }
 
   const VIEWS = {
-    // Monday — the Metroliner rolls down a runway that is the progress bar, then takes off
-    1: { build: r => r.innerHTML = shell(`<div style="position:relative;width:310px;height:150px">
-          <img id="rwPlane" src="${METRO}" alt="" style="position:absolute;bottom:14px;width:120px;filter:drop-shadow(0 6px 14px rgba(0,0,0,.5))">
-          <div style="position:absolute;left:0;right:0;bottom:0;height:8px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden"><div id="rwFill" style="height:100%;border-radius:4px;background:${GOLD};box-shadow:0 0 10px rgba(232,200,106,.6)"></div></div>
-          <div style="position:absolute;left:6px;right:6px;bottom:-14px;height:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.28) 0 14px,transparent 14px 26px)"></div></div>`, true),
-      update: (p, live, lv) => {
-        const lift = live ? Math.min(1, lv / 0.7) : 0;
-        const pl = $('rwPlane');
-        pl.style.left = (-10 + p * 200 + lift * 150) + 'px';
-        pl.style.transform = `translateY(${-lift * 150}px) rotate(${-lift * 16}deg)`;
-        pl.style.opacity = 1 - Math.max(0, (lift - .6) / .4);
-        $('rwFill').style.width = pct(p);
-        common(p, live, 'Syncing with the team', 'Live — ready to go');
-      } },
+    // Monday — pilot's view down runway 26 with a Garmin G1000 airspeed tape; ROTATE at 100 %
+    1: { build: r => r.innerHTML = shell(`<div style="position:relative;width:330px;height:400px;border-radius:26px;overflow:hidden;box-shadow:0 0 0 3px #1F2A40,0 24px 50px rgba(0,0,0,.6);background:#0D1626">
+          <div id="pvSky" style="position:absolute;left:0;right:0;top:0;background:linear-gradient(#1E3C6E,#7095C2)"></div>
+          <div id="pvGnd" style="position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#2F3F27,#141E11)"></div>
+          <div id="pvRw" style="position:absolute;inset:0"></div>
+          <div id="pvCall" class="ld-cond" style="position:absolute;left:0;right:0;top:34px;text-align:center;font-size:30px;font-weight:700;letter-spacing:4px;color:#7CF5C0;text-shadow:0 0 12px rgba(46,204,138,.7)"></div>
+          <div style="position:absolute;left:10px;top:76px;width:74px;height:240px;background:rgba(36,40,48,.62);border:1px solid rgba(255,255,255,.28);overflow:hidden;font-family:'Arial Narrow','Roboto Condensed',Arial,sans-serif">
+            <div id="pvTape" style="position:absolute;inset:0"></div>
+            <div style="position:absolute;left:3px;top:102px;width:58px;height:36px;background:#000;border:1.5px solid #fff;clip-path:polygon(0 0,82% 0,82% 32%,100% 50%,82% 68%,82% 100%,0 100%);"></div>
+            <div id="pvIas" style="position:absolute;left:5px;top:104px;width:44px;height:32px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums"></div></div>
+          <div style="position:absolute;left:10px;top:318px;width:74px;height:20px;background:#000;border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:space-between;padding:0 6px;box-sizing:border-box;font-family:'Arial Narrow',Arial,sans-serif;font-size:11px;color:#fff"><span>TAS</span><b id="pvTas" style="font-weight:700"></b></div></div>`, false),
+      update: (() => {
+        let camZ = 0, last = null;
+        return (p, live, lv, sec) => {
+          const dt = last == null ? 0 : Math.min(.1, sec - last); last = sec;
+          const pitch = live ? Math.min(1, lv / .7) : 0;            // rotate: the runway drops away
+          camZ += dt * (3 + p * 55);                                // speed builds with progress
+          const H = 400, CX = 165, hy = 150 + pitch * 200, C = 600, Z0 = C / (H - hy + 1e-6);
+          const yAt = z => hy + C / z, half = z => .74 * C / z;
+          const quad = (z1, z2, a1, a2, color, extra) => {
+            z1 = Math.max(z1, Z0); if (z2 <= z1) return '';
+            const y1 = yAt(z1), y2 = yAt(z2), h1 = half(z1), h2 = half(z2);
+            return `<div style="position:absolute;inset:0;background:${color};${extra || ''}clip-path:polygon(${CX + a1 * h1}px ${y1}px,${CX + a2 * h1}px ${y1}px,${CX + a2 * h2}px ${y2}px,${CX + a1 * h2}px ${y2}px)"></div>`;
+          };
+          let html = '';
+          if (pitch < .95) {
+            html += quad(Z0, 900, -1, 1, '#2E3440');                                  // asphalt
+            html += quad(Z0, 900, -.97, -.92, '#E9ECF1') + quad(Z0, 900, .92, .97, '#E9ECF1');   // edge lines
+            const rep = (period, start, len, fn) => { for (let n = Math.floor((camZ - start) / period); n < Math.floor((camZ - start) / period) + 40; n++) { const z = start + n * period - camZ; if (z + len > Z0 && z < 400) html += fn(z, z + len); } };
+            rep(12, 0, 6, (a, b) => a + camZ < 24 ? '' : quad(a, b, -.035, .035, '#F4F5F7'));   // centreline (starts after the 26)
+            rep(50, 30, 9, (a, b) => quad(a, b, -.62, -.42, '#E9ECF1') + quad(a, b, .42, .62, '#E9ECF1'));            // touchdown zone
+            rep(150, 70, 16, (a, b) => quad(a, b, -.5, -.28, '#F4F5F7') + quad(a, b, .28, .5, '#F4F5F7'));           // aiming point
+            for (let k = 0; k < 8; k++) { const a = 1 + k * 1.3 - camZ, b = a + .9; if (b > Z0) html += quad(a, b, -.86 + k * .01, -.6, '#F4F5F7') + quad(a, b, .6, .86 - k * .01, '#F4F5F7'); }   // threshold keys
+            const nz1 = 13 - camZ, nz2 = 20 - camZ;                                    // the painted "26"
+            if (nz2 > Z0) { const y1 = yAt(Math.max(nz1, Z0)), y2 = yAt(nz2); html += `<div class="ld-cond" style="position:absolute;left:${CX - 60}px;width:120px;top:${y2}px;height:${y1 - y2}px;display:flex;align-items:center;justify-content:center;color:rgba(244,245,247,.9);font-weight:700;font-size:${(y1 - y2) * 1.1}px;line-height:1;transform:scaleX(${Math.min(2.4, half(nz1) / 70)})">26</div>`; }
+            for (let n = Math.floor(camZ / 10); n < Math.floor(camZ / 10) + 40; n++) {   // edge lights
+              const z = n * 10 - camZ; if (z <= Z0 || z > 400) continue;
+              const y = yAt(z), s = Math.max(2, 14 / z * 6), h = half(z) * 1.04;
+              html += `<div style="position:absolute;left:${CX - h - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;border-radius:50%;background:#FFF3C4;box-shadow:0 0 ${s * 2}px #F2C35A"></div><div style="position:absolute;left:${CX + h - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;border-radius:50%;background:#FFF3C4;box-shadow:0 0 ${s * 2}px #F2C35A"></div>`;
+            }
+          }
+          $('pvRw').innerHTML = html;
+          $('pvSky').style.height = hy + 'px'; $('pvGnd').style.top = hy + 'px';
+          // G1000 airspeed tape: 3 px per knot, centred on the pointer box
+          const v = p * 112, k = 3, cy = 120;
+          let tape = `<div style="position:absolute;left:66px;width:5px;top:${cy - (140 - v) * k}px;height:${80 * k}px;background:#22C55E"></div>`
+            + `<div style="position:absolute;left:62px;width:3px;top:${cy - (95 - v) * k}px;height:${55 * k}px;background:#F4F5F7"></div>`
+            + `<div style="position:absolute;left:60px;width:12px;height:2px;top:${cy - (105 - v) * k - 1}px;background:#22D3EE"></div><div style="position:absolute;left:46px;top:${cy - (105 - v) * k - 7}px;font-size:11px;font-weight:700;color:#22D3EE">R</div>`;
+          for (let n = Math.max(0, Math.floor((v - 45) / 5) * 5); n <= v + 45; n += 5) {
+            const y = cy - (n - v) * k, major = n % 10 === 0;
+            tape += `<div style="position:absolute;left:${major ? 46 : 52}px;width:${major ? 14 : 8}px;height:1.5px;top:${y}px;background:#fff"></div>`;
+            if (major && n >= 20) tape += `<div style="position:absolute;left:4px;width:38px;text-align:right;top:${y - 9}px;font-size:16px;font-weight:700;color:#fff">${n}</div>`;
+          }
+          if (!live && p < 1) tape += `<div style="position:absolute;left:58px;width:3px;top:${cy - 36}px;height:36px;background:#E040FB"></div>`;   // trend vector
+          $('pvTape').innerHTML = tape;
+          $('pvIas').textContent = Math.round(v);
+          $('pvTas').textContent = Math.round(v * 1.02) + 'KT';
+          $('pvCall').textContent = live ? 'ROTATE' : v >= 98 ? 'V1' : '';
+          common(p, live, 'Takeoff roll', 'Rotate — you are live', 'Tasks, shopping and audits are up to date');
+        };
+      })() },
     // Tuesday — a YKF → LIVE boarding pass prints its barcode, then gets stamped BOARDED
     2: { build: r => {
           const W = [3,1,2,1,3,2,1,1,3,1,2,2,1,3,1,2,1,3,2,1,1,2,3,1,2,1,3,1,1,2,3,2,1,2,1,3,1,2,2,1,3,1,2,1];
