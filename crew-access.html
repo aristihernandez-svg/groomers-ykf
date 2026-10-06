@@ -127,19 +127,16 @@ function toast(msg) {
 function render() { view==='list' ? renderList() : renderDetail(view); }
 
 // ── List ──
-function lastUseLine(d) {
-  const u = d.lastUse;
-  if (!u || !u.name) return '';
-  const when = u.at ? new Date(u.at).toLocaleDateString('en-CA', { month: 'short', day: 'numeric' }) : '';
-  return `Last used by ${u.name}${when ? ' · ' + when : ''}`;
-}
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function hhmm(iso) { return iso ? new Date(iso).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}) : ''; }
+function isOut(d) { return !!(d.trip && d.trip.out); }
 function renderList() {
   document.getElementById('barTitle').textContent='Crew Car Check-in';
   let html=`<div style="padding:10px 14px 4px;font-size:12px;color:rgba(255,255,255,0.35);line-height:1.5">
-    Tap the vehicle you used, add your name, and tell us if there is any damage.</div>`;
+    Tap the car you are taking, or the one you are bringing back.</div>`;
   CREW_CARS.forEach(car=>{
     const d=carData[car.key]||{};
-    const dmg = d.damage && d.damage.open;
+    const out=isOut(d);
     html+=`<div class="car-card" onclick="openDetail('${car.key}')">
       <div class="car-icon" style="background:linear-gradient(135deg,${car.color},${car.color2})">
         <img src="${car.img}" alt="${car.name}" onerror="this.style.display='none'">
@@ -147,7 +144,7 @@ function renderList() {
       <div style="flex:1;min-width:0">
         <div class="car-name">${car.name}</div>
         <div class="car-sub">${car.label}</div>
-        <div style="font-size:11px;margin-top:6px;color:${dmg?'#F87171':'rgba(255,255,255,0.4)'};font-weight:${dmg?700:500}">${dmg?'🚨 Damage reported':esc(lastUseLine(d))||'&nbsp;'}</div>
+        <div style="font-size:11px;margin-top:6px;font-weight:700;color:${out?'#F5B041':'#4ADE80'}">${out?`🔑 Out · ${esc(d.trip.by)} · since ${hhmm(d.trip.outAt)}`:'🅿 At base'}</div>
       </div>
       <button onclick="event.stopPropagation();openCarQR('${car.key}')"
         style="background:var(--glass2);border:1px solid var(--border2);border-radius:10px;padding:9px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center">
@@ -160,36 +157,39 @@ function renderList() {
   });
   document.getElementById('app').innerHTML=html;
 }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-// ── Detail: name + damage yes/no ──
-let _damage = null;   // null until chosen, then true / false
+// ── Detail: take the car (name) or bring it back (name + any damage?) ──
+let _damage = null;   // return form: null until chosen, then true / false
 function openDetail(key) { view=key; _damage=null; renderDetail(key); }
 
 function renderDetail(key) {
   const car=CREW_CARS.find(c=>c.key===key);
   if(!car){view='list';render();return;}
+  const d=carData[key]||{};
+  const out=isOut(d);
   document.getElementById('barTitle').textContent=car.name;
   let savedName=''; try { savedName=localStorage.getItem('crewAccessName')||''; } catch(e){}
+  const name = out ? (savedName || d.trip.by || '') : savedName;
   const choice=(val,label,col)=>`<button type="button" onclick="setDamage(${val})" style="flex:1;padding:14px;border-radius:var(--radius-sm);font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;border:2px solid ${_damage===val?col:'var(--border2)'};background:${_damage===val?col+'26':'var(--bg3)'};color:${_damage===val?col:'var(--t2)'}">${label}</button>`;
   document.getElementById('app').innerHTML=`
     <div class="detail-hero" style="background:linear-gradient(160deg,${car.color},${car.color2})">
       <img src="${car.img}" alt="${car.name}" onerror="this.style.display='none'">
       <div class="detail-hero-overlay"></div>
-      <div class="detail-hero-text"><div class="detail-hero-name">${car.name}</div><div class="detail-hero-sub">${car.label}</div></div>
+      <div class="detail-hero-text"><div class="detail-hero-name">${car.name}</div><div class="detail-hero-sub">${out?`🔑 Out with ${esc(d.trip.by)} since ${hhmm(d.trip.outAt)}`:'🅿 At base'}</div></div>
     </div>
     <div class="section">
-      <div class="section-label">👤 Your name</div>
-      <input type="text" id="inName" placeholder="First and last name" value="${esc(savedName)}" autocomplete="name">
+      <div class="section-label">${out?'↩️ Bringing the car back':'🔑 Taking the car'}</div>
+      <label>Your name</label>
+      <input type="text" id="inName" placeholder="First and last name" value="${esc(name)}" autocomplete="name">
     </div>
-    <div class="section">
+    ${out?`<div class="section">
       <div class="section-label">🚗 Any damage to report?</div>
       <div style="display:flex;gap:10px">${choice(false,'No','#27AE60')}${choice(true,'Yes','#E74C3C')}</div>
       ${_damage===true?`<label style="margin-top:14px">What is damaged? Where on the car, and what happened</label>
-      <textarea id="inDamage" placeholder="e.g. Scratch on the rear bumper, driver side. Noticed when picking up the car."></textarea>`:''}
-    </div>
+      <textarea id="inDamage" placeholder="e.g. Scratch on the rear bumper, driver side."></textarea>`:''}
+    </div>`:''}
     <div style="padding:0 14px">
-      <button class="save-btn" onclick="saveDetail('${key}')">✅ Submit</button>
+      <button class="save-btn" onclick="${out?`returnCar('${key}')`:`takeCar('${key}')`}">${out?'↩️ Return the car':'🔑 Take the car'}</button>
     </div>
     <div style="height:40px"></div>`;
 }
@@ -200,9 +200,26 @@ function setDamage(v) {
   const n=document.getElementById('inName'); if(n) n.value=name;
   const t=document.getElementById('inDamage'); if(t){ t.value=text; t.focus(); }
 }
+function thanks(icon, title, line) {
+  document.getElementById('app').innerHTML=`<div style="padding:70px 24px;text-align:center">
+    <div style="font-size:48px;margin-bottom:12px">${icon}</div>
+    <div style="font-size:18px;font-weight:800;color:var(--t1)">${title}</div>
+    <div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5">${line}</div>
+    <button class="save-btn" style="max-width:240px;margin:24px auto 0" onclick="goBack()">Done</button></div>`;
+}
 
-// ── Save: only this car's lastUse (+ damage), never the rest of the shared record ──
-async function saveDetail(key) {
+// ── Saves: only this car's trip / lastUse / damage, never the rest of the shared record ──
+async function takeCar(key) {
+  const name=(document.getElementById('inName')?.value||'').trim();
+  if(!name){toast('⚠️ Please enter your name');return;}
+  try { localStorage.setItem('crewAccessName', name); } catch(e){}
+  const car=CREW_CARS.find(c=>c.key===key);
+  try {
+    await db.collection('crewCarData').doc('all').set({[key]: {trip:{out:true, by:name, outAt:new Date().toISOString(), backAt:null, returnedBy:null}}}, {merge:true});
+    thanks('🔑', `Have a good trip, ${esc(name)}!`, `The ${esc(car?car.name:key)} is now marked as out with you. Scan the QR again when you bring it back.`);
+  } catch(e){ toast('❌ Save failed — check connection'); }
+}
+async function returnCar(key) {
   const name=(document.getElementById('inName')?.value||'').trim();
   const text=(document.getElementById('inDamage')?.value||'').trim();
   if(!name){toast('⚠️ Please enter your name');return;}
@@ -211,10 +228,10 @@ async function saveDetail(key) {
   try { localStorage.setItem('crewAccessName', name); } catch(e){}
   const car=CREW_CARS.find(c=>c.key===key);
   const at=new Date().toISOString();
-  const patch={lastUse:{name, at, damage:!!_damage}};
+  const patch={trip:{out:false, backAt:at, returnedBy:name}, lastUse:{name, at, damage:!!_damage}};
   if(_damage) patch.damage={text, by:name, at, open:true};
   try {
-    await db.collection('crewCarData').doc('all').set({[key]: patch}, {merge: true});
+    await db.collection('crewCarData').doc('all').set({[key]: patch}, {merge:true});
     if(_damage) {
       db.collection('mxNotifQueue').add({
         title:`🚗 Damage reported — ${car?car.name:key}`,
@@ -223,11 +240,7 @@ async function saveDetail(key) {
         sent:false
       }).catch(()=>{});
     }
-    document.getElementById('app').innerHTML=`<div style="padding:70px 24px;text-align:center">
-      <div style="font-size:48px;margin-bottom:12px">${_damage?'🚨':'✅'}</div>
-      <div style="font-size:18px;font-weight:800;color:var(--t1)">Thanks, ${esc(name)}!</div>
-      <div style="font-size:13px;color:var(--t2);margin-top:8px;line-height:1.5">${_damage?'The damage report was sent to the team.':'Check-in saved for the '+esc(car?car.name:key)+'.'}</div>
-      <button class="save-btn" style="max-width:240px;margin:24px auto 0" onclick="goBack()">Done</button></div>`;
+    thanks(_damage?'🚨':'✅', `Thanks, ${esc(name)}!`, _damage?'The car is back at base and the damage report was sent to the team.':`The ${esc(car?car.name:key)} is back at base.`);
   } catch(e){ toast('❌ Save failed — check connection'); }
 }
 

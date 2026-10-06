@@ -4028,6 +4028,25 @@ function saveCrewCarData() {
   }
 }
 function _carEsc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// 🔑 Out · Alex · since 08:30  /  🅿 At base — from the pilot check-in page (crew-access.html)
+function carTripLine(d) {
+  if (d.trip && d.trip.out) {
+    const since = d.trip.outAt ? new Date(d.trip.outAt).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div style="font-size:11px;font-weight:700;color:#F5B041;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔑 Out · ${_carEsc(d.trip.by)}${since?' · '+since:''}</div>`;
+  }
+  return `<div style="font-size:11px;font-weight:700;color:#4ADE80;margin-top:2px">🅿 At base</div>`;
+}
+// For a car brought back without scanning: one narrow write (only that car's trip fields)
+function markCarReturned(key) {
+  const d = carData(key);
+  if (!d.trip || !d.trip.out) return;
+  const at = new Date().toISOString();
+  d.trip.out = false; d.trip.backAt = at; d.trip.returnedBy = '(marked in app)';
+  renderCarDetail(document.getElementById('content'), key);
+  toast('↩️ Marked as back at base');
+  if (db) db.collection('crewCarData').doc('all').update({ [key + '.trip.out']: false, [key + '.trip.backAt']: at, [key + '.trip.returnedBy']: '(marked in app)' })
+    .catch(e => console.log('markCarReturned failed:', e));
+}
 function markDamageHandled(key) {
   const d = carData(key);
   if (!d.damage) return;
@@ -4653,7 +4672,10 @@ function renderCrewCarsList(el) {
           </div>
           <div style="flex:1;min-width:0;padding:12px 8px;display:flex;flex-direction:column;justify-content:space-between">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px">
-              <div style="font-size:14px;font-weight:800;color:#EAF2FF;letter-spacing:-.2px">${car.name}</div>
+              <div style="min-width:0">
+                <div style="font-size:14px;font-weight:800;color:#EAF2FF;letter-spacing:-.2px">${car.name}</div>
+                ${carTripLine(d)}
+              </div>
               ${chip}
             </div>
             <div style="display:flex;align-items:flex-end;justify-content:space-between">
@@ -4843,6 +4865,11 @@ function renderCarDetail(el, key) {
           </div>
         </div>
       </div>
+      ${d.trip&&d.trip.out?`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(245,176,65,0.12);border:1px solid rgba(245,176,65,0.45)">
+        <span style="font-size:20px">🔑</span>
+        <span style="flex:1;font-size:13px;color:var(--t1)">Out with <b>${_carEsc(d.trip.by)}</b><span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">since ${d.trip.outAt?new Date(d.trip.outAt).toLocaleString('en-CA',{weekday:'short',hour:'2-digit',minute:'2-digit'}):''}</span></span>
+        <button onclick="markCarReturned('${key}')" style="padding:8px 12px;border-radius:20px;border:1px solid rgba(245,176,65,0.6);background:transparent;color:#F5B041;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">↩️ Mark returned</button>
+      </div>`:`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3)"><span style="font-size:18px">🅿</span><span style="font-size:13px;font-weight:700;color:#4ADE80">At base</span></div>`}
       ${d.damage&&d.damage.open?`<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.45);border-radius:14px;padding:12px 14px">
         <div style="font-size:10px;font-weight:800;color:#F87171;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:4px">🚨 Damage reported</div>
         <div style="font-size:13px;color:var(--t1);line-height:1.5">${_carEsc(d.damage.text)}</div>
@@ -12905,6 +12932,12 @@ async function setupLiveSync() {
         const el=document.getElementById('content');
         if(v==='list') renderCrewCarsList(el);
         else if(!v.startsWith('audit')) renderCarDetail(el,v);
+      }
+      // Crew Cars tab: show a pilot's check-out / return right away (not while someone is typing in a field)
+      if(S.tab==='cars' && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) {
+        const el=document.getElementById('content');
+        if(!v || v==='list') renderCrewCarsList(el);
+        else if(typeof v==='string' && !v.startsWith('audit') && v!=='past') renderCarDetail(el,v);
       }
     }, e => console.log('crewCarData listener error:', e));
 
