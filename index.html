@@ -642,6 +642,33 @@ body::before{
 .fl-alertbtn{display:block;width:calc(100% - 24px);margin:14px 12px 0;padding:11px;border-radius:10px;background:var(--accent-dim);border:1px solid var(--accent-border);color:var(--accent2);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
 .fl-fine{margin:12px 16px 0;font-size:10.5px;color:var(--t3);line-height:1.6}
 
+/* CREW CAR PAGE — Status · Service · Papers */
+.cd-card{margin:0 12px 8px;border-radius:14px;background:var(--glass);border:1px solid var(--border)}
+.cd-row{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.cd-row:last-child{border-bottom:0}
+.cd-grow{flex:1;min-width:0}
+.cd-k{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--t3)}
+.cd-v{font-size:14px;font-weight:700;color:var(--t1);margin-top:2px}
+.cd-s{font-size:11.5px;color:var(--t2);margin-top:2px}
+.cd-who{font-size:20px;font-weight:800;color:var(--t1);margin-top:3px;line-height:1.15;word-break:break-word}
+.cd-chev{color:var(--t4);font-size:16px}
+.cd-sec{padding:12px 16px 8px;font-size:10.5px;font-weight:800;letter-spacing:1.3px;text-transform:uppercase;color:var(--t3)}
+.cd-key{display:flex;gap:12px;align-items:flex-start;margin:0 12px 8px;padding:10px 14px 12px 6px;border-radius:14px;border:1px solid}
+.cd-key.out{background:rgba(245,166,35,.12);border-color:rgba(245,166,35,.42)}
+.cd-key.in{background:rgba(46,204,138,.10);border-color:rgba(46,204,138,.35)}
+.cd-dmg{margin:0 12px 8px;padding:12px 14px;border-radius:14px;background:rgba(232,64,64,.12);border:1px solid rgba(232,64,64,.45);display:flex;flex-direction:column;gap:3px}
+.cd-btn{align-self:flex-start;display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:7px 13px;border-radius:20px;font-family:inherit;font-size:12px;font-weight:700;border:1px solid;background:transparent;cursor:pointer;white-space:nowrap}
+.cd-btn.amber{color:#F5A623;border-color:rgba(245,166,35,.6)}
+.cd-btn.red{color:#FF7A7A;border-color:rgba(232,64,64,.55)}
+.cd-btn.ghost{color:var(--t2);border-color:var(--border2);background:var(--glass2);font-size:11px;padding:5px 10px}
+.cd-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px}
+.cd-tile{margin:0;padding:12px 6px;text-align:center}
+.cd-fine{margin:10px 16px 0;font-size:10.5px;color:var(--t3);line-height:1.5}
+.cd-kmin{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--t1);font-size:16px;font-weight:700;font-family:ui-monospace,'SF Mono',Menlo,Consolas,monospace;outline:none;padding:2px 0;margin-top:2px}
+.cd-track{height:7px;border-radius:4px;background:rgba(128,128,128,.18);overflow:hidden;margin-top:9px}
+.cd-track div{height:100%;border-radius:4px}
+.cd-dot{font-style:normal;color:#FF5A5A;margin-left:4px;font-size:10px;vertical-align:2px}
+
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
 .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -4861,131 +4888,207 @@ function renderCrewCarsList(el) {
 }
 
 // ── RENDER: CAR DETAIL ────────────────────────────────────────
+// ── CREW CAR KEYS ── a key drawn after each car's make, on a ring with a small OUT (amber) / BASE (green) tag
+const FOB_SILVER = '#C9CFD8';
+let _fobU = 0;
+const FOB_ICON = {
+  lock: c => `<rect x="-3.4" y="-.6" width="6.8" height="5" rx="1" fill="${c}"/><path d="M-2.1 -.6v-1.8a2.1 2.1 0 0 1 4.2 0v1.8" stroke="${c}" stroke-width="1.15" fill="none"/>`,
+  unlock: c => `<rect x="-3.4" y="-.6" width="6.8" height="5" rx="1" fill="${c}"/><path d="M-2.1 -.6v-2.2a2.1 2.1 0 0 1 4.2 0" stroke="${c}" stroke-width="1.15" fill="none"/>`,
+  trunk: c => `<path d="M-5.2 2.6h10.4v-2.4l-2.1-2.6H-3.1l-2.1 2.6z" fill="${c}"/><path d="M3.1 -2.4l3.4 -2.4" stroke="${c}" stroke-width="1.2" stroke-linecap="round"/>`,
+  panic: c => `<path d="M-4.6 -1.6h2l3.2-2.6v8.4l-3.2-2.6h-2z" fill="${c}"/><path d="M2.4 -1.6a2.6 2.6 0 0 1 0 3.4M3.8 -3a4.6 4.6 0 0 1 0 6.2" stroke="${c}" stroke-width=".9" fill="none"/>`,
+  start: c => `<path d="M2.6 -2.4a3.6 3.6 0 1 0 1 2.4" stroke="${c}" stroke-width="1.2" fill="none" stroke-linecap="round"/><path d="M1.4 -4.2l2.2 1.6-2.4 1z" fill="${c}"/>`,
+  slideL: c => `<rect x="-4.6" y="-2.6" width="9.2" height="5.2" rx="1.2" stroke="${c}" stroke-width=".9" fill="none"/><path d="M2.6 0h-4.4M-.4 -1.4l-1.6 1.4 1.6 1.4" stroke="${c}" stroke-width=".9" fill="none"/>`,
+  slideR: c => `<rect x="-4.6" y="-2.6" width="9.2" height="5.2" rx="1.2" stroke="${c}" stroke-width=".9" fill="none"/><path d="M-2.6 0h4.4M.4 -1.4l1.6 1.4-1.6 1.4" stroke="${c}" stroke-width=".9" fill="none"/>`,
+};
+const FOB_EMBLEM = {
+  ford: `<ellipse rx="9.5" ry="5.4" fill="#1F4BA5" stroke="#DCE2EC" stroke-width=".9"/><text y="2" font-family="Georgia,'Times New Roman',serif" font-style="italic" font-weight="700" font-size="6" fill="#fff" text-anchor="middle">Ford</text>`,
+  hyundai: `<ellipse rx="8.6" ry="5.4" fill="none" stroke="${FOB_SILVER}" stroke-width="1.1"/><g transform="skewX(-14)"><path d="M-3.2 2.8V-2.8M3.2 2.8V-2.8M-3.2 .6Q0 -1.4 3.2 -.6" stroke="${FOB_SILVER}" stroke-width="1.2" fill="none"/></g>`,
+  nissan: `<circle r="6.4" fill="none" stroke="${FOB_SILVER}" stroke-width="1.1"/><rect x="-9" y="-2.1" width="18" height="4.2" rx=".6" fill="${FOB_SILVER}"/><text y="1.15" font-size="3" font-weight="800" fill="#1a1c20" text-anchor="middle" letter-spacing=".2">NISSAN</text>`,
+  chevy: `<polygon points="-9,-1.6 -3.2,-1.6 -2.2,-3.8 2.2,-3.8 3.2,-1.6 9,-1.6 7.4,1.8 2.2,1.8 1.2,4 -3.2,4 -2.2,1.8 -7.4,1.8" fill="#D9AE3F" stroke="#8A6A1A" stroke-width=".6"/>`,
+  honda: `<path d="M-5.6 -4.4h11.2l-1.3 8.8h-8.6z" fill="none" stroke="${FOB_SILVER}" stroke-width=".9" stroke-linejoin="round"/><path d="M-2.6 -2.6v5M2.6 -2.6v5M-2.6 -.1h5.2" stroke="${FOB_SILVER}" stroke-width="1.2"/>`,
+  ram: `<text y="2.2" font-size="6.6" font-weight="900" fill="${FOB_SILVER}" text-anchor="middle" letter-spacing=".6">RAM</text>`,
+  dodge: `<text y="2" font-size="5.2" font-weight="900" fill="${FOB_SILVER}" text-anchor="middle" letter-spacing=".5">DODGE</text>`,
+  kubota: `<text y="2" font-size="5.6" font-weight="900" fill="#F26B1D" text-anchor="middle" letter-spacing=".2" font-style="italic">KUBOTA</text>`,
+};
+function fobButton(x, y, w, h, icon, panic) {
+  const c = panic ? '#FF5A5A' : '#D3D8E0';
+  return `<rect x="${x - w / 2}" y="${y - h / 2}" width="${w}" height="${h}" rx="${h / 2}" fill="${panic ? '#3B1517' : '#1F2227'}" stroke="#05060A" stroke-width=".7"/>
+    <rect x="${x - w / 2 + 1}" y="${y - h / 2 + .6}" width="${w - 2}" height="${h / 2}" rx="${h / 3}" fill="rgba(255,255,255,.05)"/>
+    <g transform="translate(${x} ${y + .3})">${FOB_ICON[icon](c)}</g>`;
+}
+function fobBlade(x, top, len, u) {
+  return `<defs><linearGradient id="bl${u}" x1="0" x2="1"><stop offset="0" stop-color="#8E959F"/><stop offset=".45" stop-color="#EEF1F5"/><stop offset="1" stop-color="#9AA1AB"/></linearGradient></defs>
+    <path d="M${x - 6} ${top} h12 v${len - 10} l-4 7 -4 0 -4 -4z" fill="url(#bl${u})" stroke="#6B717A" stroke-width=".6"/>
+    <path d="M${x - 1} ${top + 6} v${len - 18} M${x + 2.5} ${top + 10} l-1.5 4 1.5 4 -1.5 4 1.5 4 -1.5 4 1.5 4" stroke="#7D838C" stroke-width=".8" fill="none"/>`;
+}
+function fobBody(x, y, w, h, rx, u, top = '#3A3E46', bottom = '#0E1013') {
+  return `<defs><linearGradient id="fb${u}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bottom}"/></linearGradient></defs>
+    <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="url(#fb${u})" stroke="#9AA1AB" stroke-width="1.4"/>
+    <rect x="${x + 3}" y="${y + 3}" width="${w - 6}" height="${h * .35}" rx="${rx - 3}" fill="rgba(255,255,255,.05)"/>`;
+}
+const FOB_KIND = {
+  // any car without its own key yet: a plain fob, no badge
+  generic: u => `<rect x="54" y="22" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(36, 30, 48, 100, 20, u)}${fobButton(60, 58, 26, 13, 'lock')}${fobButton(60, 78, 26, 13, 'unlock')}${fobButton(60, 98, 26, 13, 'trunk')}${fobButton(60, 116, 22, 10, 'panic', 1)}`,
+  // Ford Intelligent Access smart key (Escape)
+  escape: u => `<rect x="54" y="22" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(36, 30, 48, 116, 21, u)}
+    <g transform="translate(60 46)">${FOB_EMBLEM.ford}</g>${fobButton(60, 64, 26, 13, 'start')}${fobButton(60, 82, 26, 13, 'lock')}${fobButton(60, 100, 26, 13, 'unlock')}${fobButton(60, 118, 26, 13, 'trunk')}${fobButton(60, 134, 22, 10, 'panic', 1)}`,
+  // Remote-head key (F-150)
+  whtruck: u => `${fobBlade(60, 88, 70, u)}<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(33, 28, 54, 64, 17, u)}
+    <g transform="translate(60 39)">${FOB_EMBLEM.ford}</g>${fobButton(49, 56, 18, 12, 'lock')}${fobButton(71, 56, 18, 12, 'unlock')}${fobButton(49, 74, 18, 12, 'trunk')}${fobButton(71, 74, 18, 12, 'panic', 1)}`,
+  // Hyundai flip key (blade folded)
+  elantra: u => `<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>
+    <rect x="36" y="27" width="48" height="26" rx="9" fill="#B8BEC8" stroke="#7D838C" stroke-width=".8"/><rect x="40" y="31" width="40" height="18" rx="6" fill="#D5DAE1"/>
+    <circle cx="76" cy="40" r="3.2" fill="#9AA1AB" stroke="#6B717A" stroke-width=".6"/>
+    ${fobBody(34, 50, 52, 88, 20, u)}<g transform="translate(60 64)">${FOB_EMBLEM.hyundai}</g>
+    ${fobButton(60, 84, 26, 13, 'lock')}${fobButton(60, 102, 26, 13, 'unlock')}${fobButton(60, 120, 26, 13, 'trunk')}`,
+  // Nissan remote-head key (Micra)
+  micra: u => `${fobBlade(60, 84, 70, u)}<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(35, 28, 50, 60, 16, u, '#4A4E56', '#1A1C20')}
+    <g transform="translate(60 40)">${FOB_EMBLEM.nissan}</g>${fobButton(60, 58, 24, 12, 'lock')}${fobButton(60, 75, 24, 12, 'unlock')}`,
+  // Chevrolet keyless-entry fob (Impala)
+  impala: u => `<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>
+    <defs><linearGradient id="fi${u}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#3A3E46"/><stop offset="1" stop-color="#0E1013"/></linearGradient></defs>
+    <path d="M60 28 C84 28 88 44 88 86 C88 128 80 146 60 146 C40 146 32 128 32 86 C32 44 36 28 60 28Z" fill="url(#fi${u})" stroke="#9AA1AB" stroke-width="1.4"/>
+    <g transform="translate(60 46)">${FOB_EMBLEM.chevy}</g>${fobButton(60, 66, 28, 14, 'lock')}${fobButton(60, 86, 28, 14, 'unlock')}${fobButton(60, 106, 28, 14, 'trunk')}${fobButton(60, 126, 24, 11, 'panic', 1)}`,
+  // Honda remote-head key (Civic)
+  civic: u => `${fobBlade(60, 92, 66, u)}<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>
+    <defs><linearGradient id="fh${u}" x1="0" y1="0" x2=".3" y2="1"><stop offset="0" stop-color="#3A3E46"/><stop offset="1" stop-color="#0E1013"/></linearGradient></defs>
+    <path d="M38 34 Q38 27 46 27 H74 Q82 27 82 34 L86 82 Q86 94 74 94 H46 Q34 94 34 82Z" fill="url(#fh${u})" stroke="#9AA1AB" stroke-width="1.4"/>
+    <g transform="translate(60 38)">${FOB_EMBLEM.honda}</g>${fobButton(49, 56, 18, 12, 'lock')}${fobButton(71, 56, 18, 12, 'unlock')}${fobButton(49, 74, 18, 12, 'trunk')}${fobButton(71, 74, 18, 12, 'panic', 1)}`,
+  // Dodge Ram remote-head key (brown truck)
+  brtruck: u => `${fobBlade(60, 90, 68, u)}<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(34, 28, 52, 66, 14, u)}
+    <g transform="translate(60 40)">${FOB_EMBLEM.ram}</g>${fobButton(60, 56, 26, 11, 'lock')}${fobButton(60, 70, 26, 11, 'unlock')}${fobButton(60, 84, 22, 9, 'panic', 1)}`,
+  // Kubota ignition key (no remote)
+  kubota: u => `${fobBlade(60, 82, 62, u)}<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>
+    <defs><radialGradient id="fk${u}" cx=".4" cy=".35"><stop offset="0" stop-color="#3A3E46"/><stop offset="1" stop-color="#0A0B0E"/></radialGradient></defs>
+    <path d="M60 27 C80 27 86 40 86 56 C86 72 78 86 60 86 C42 86 34 72 34 56 C34 40 40 27 60 27Z" fill="url(#fk${u})" stroke="#555A62" stroke-width="1.2"/>
+    ${[0, 1, 2, 3, 4].map(i => `<path d="M${40 + i * 10} 70 v8" stroke="#24272C" stroke-width="2.4" stroke-linecap="round"/>`).join('')}
+    <g transform="translate(60 52)">${FOB_EMBLEM.kubota}</g>`,
+  // Dodge Caravan Fobik (YAV)
+  caravan: u => `<rect x="54" y="20" width="12" height="13" rx="4" fill="none" stroke="#9AA1AB" stroke-width="2.2"/>${fobBody(34, 28, 52, 108, 13, u)}
+    <rect x="50" y="134" width="20" height="16" rx="3" fill="#8E959F" stroke="#6B717A" stroke-width=".6"/>
+    <g transform="translate(60 40)">${FOB_EMBLEM.dodge}</g>${fobButton(49, 56, 18, 12, 'lock')}${fobButton(71, 56, 18, 12, 'unlock')}
+    ${fobButton(49, 74, 18, 12, 'slideL')}${fobButton(71, 74, 18, 12, 'slideR')}${fobButton(49, 92, 18, 12, 'trunk')}${fobButton(71, 92, 18, 12, 'panic', 1)}${fobButton(60, 112, 22, 10, 'start')}`,
+};
+function carKeySvg(car, out, w = 78) {
+  const u = 'ck' + (++_fobU), col = out ? '#F5A623' : '#2ECC8A', ink = out ? '#3A2600' : '#053A24';
+  return `<svg width="${w}" height="${w * 1.5}" viewBox="0 0 120 180" style="flex-shrink:0;overflow:visible">
+    <defs><linearGradient id="rg${u}" x1="0" x2="1"><stop offset="0" stop-color="#7D838C"/><stop offset=".5" stop-color="#F2F4F7"/><stop offset="1" stop-color="#8E959F"/></linearGradient></defs>
+    <path d="M51 17 Q34 18 20 29" stroke="url(#rg${u})" stroke-width="2.2" fill="none"/>
+    <rect x="6" y="27" width="28" height="44" rx="6" fill="${col}"/><circle cx="20" cy="33" r="2.6" fill="#0B1120"/>
+    <text x="20" y="56" text-anchor="middle" font-size="${out ? 9 : 7.4}" font-weight="900" fill="${ink}" letter-spacing=".3">${out ? 'OUT' : 'BASE'}</text>
+    ${(FOB_KIND[car] || FOB_KIND.generic)(u)}
+    <circle cx="60" cy="13" r="10" fill="none" stroke="url(#rg${u})" stroke-width="3.4"/></svg>`;
+}
+
 function renderCarDetail(el, key) {
   const car=CREW_CARS.find(c=>c.key===key);
   if(!car){S.crewCarsView=S.tab==='cars'?null:'list';render();return;}
   const d=carData(key);
   setBar({title: car.name, back:'Crew Cars', backFn: S.tab==='cars'?()=>{S.crewCarsView=null;render();}:backToCarList});
   document.getElementById('fab').style.display='none';
+  if(S.carTabKey!==key){ S.carTabKey=key; S.carTab='status'; }
+  const tab=S.carTab||'status';
+
   const fuelLog=d.log.filter(l=>l.type==='fuel').slice(-1)[0];
-  const oilLog=d.log.filter(l=>l.type==='oil').slice(-1)[0];
-  const washLog=d.log.filter(l=>l.type==='wash').slice(-1)[0];
   const _b=S.bouncieData[key];
   const _bOk=BOUNCIE_WORKER_URL&&_b&&_b.status==='ok';
   const _bFuel=_bOk&&_b.fuelLevel!=null;
-  const _fuelDisplayLabel=_bFuel?Math.round(_b.fuelLevel)+'%':(fuelLog?fuelLog.value:'—');
-  const _fuelDisplaySub=_bFuel?'Bouncie live':(fuelLog?fmtDate(fuelLog.date):'No record');
-  const _fuelLevel=_bFuel?(_b.fuelLevel<=5?'Empty':_b.fuelLevel<=37.5?'1/4':_b.fuelLevel<=62.5?'1/2':_b.fuelLevel<=87.5?'3/4':'Full'):(fuelLog?.value||'');
   const _milAlert=_bOk&&_b.milOn;
   const _battAlert=_bOk&&(_b.battery==='low'||_b.battery==='critical'||_b.battery==='shutdown');
-  const _problemTags=[];
-  if(_milAlert) _problemTags.push(`⚠️ Check engine${_b.dtcList?.length?': '+_b.dtcList.join(', '):''}`);
-  if(_battAlert) _problemTags.push(`🔋 Battery ${_b.battery}`);
-  const _problemBanner=_problemTags.length?`
-    <div style="margin:12px 14px 0;padding:10px 14px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.35);display:flex;flex-direction:column;gap:4px">
-      ${_problemTags.map(t=>`<span style="font-size:13px;font-weight:700;color:#F87171">${t}</span>`).join('')}
-    </div>`:'';
+  const fmtAt=(iso,o)=>iso?new Date(iso).toLocaleString('en-CA',o):'';
 
-  let html=`
-    <!-- Car hero banner -->
-    <div style="position:relative;height:180px;overflow:hidden;background:linear-gradient(160deg,${car.color},${car.color2})">
-      <img src="${car.img}" alt="${car.name}"
-        style="width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))"
-        onerror="this.style.display='none'">
-      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.65) 0%,rgba(0,0,0,0.1) 60%)"></div>
-      <div style="position:absolute;bottom:0;left:0;right:0;padding:14px 18px">
-        <div style="font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.4)">${car.name}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
-          <span style="font-size:12px;color:rgba(255,255,255,0.85)">${car.label} · ${car.fuel==='diesel'?'Diesel':'Gasoline'}</span>
+  // ── Status: problems, the key, damage, crew note, last use, live readings ──
+  const problems=[];
+  if(_milAlert) problems.push(`⚠️ Check engine${_b.dtcList?.length?': '+_b.dtcList.join(', '):''}`);
+  if(_battAlert) problems.push(`🔋 Battery ${_b.battery}`);
+  const out=!!(d.trip&&d.trip.out);
+  const backBy=d.trip&&d.trip.returnedBy?d.trip.returnedBy:(d.lastUse&&d.lastUse.name)||'';
+  const backAt=d.trip&&d.trip.backAt?d.trip.backAt:(d.lastUse&&d.lastUse.at)||'';
+  const keyCard=out
+    ? `<div class="cd-key out">${carKeySvg(key,true,80)}<div class="cd-grow" style="padding-top:12px">
+        <div class="cd-k" style="color:#F5A623">Key is out</div><div class="cd-who">${_carEsc(d.trip.by)}</div>
+        <div class="cd-s">since ${fmtAt(d.trip.outAt,{weekday:'short',hour:'numeric',minute:'2-digit'})}</div>
+        <button class="cd-btn amber" onclick="markCarReturned('${key}')">↩ Mark returned</button></div></div>`
+    : `<div class="cd-key in">${carKeySvg(key,false,80)}<div class="cd-grow" style="padding-top:12px">
+        <div class="cd-k" style="color:#2ECC8A">Key is back</div><div class="cd-who">At base</div>
+        ${backBy?`<div class="cd-s">Returned by ${_carEsc(backBy)}${backAt?' · '+fmtAt(backAt,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):''}</div>`:''}</div></div>`;
+  const dmgOpen=!!(d.damage&&d.damage.open);
+  const damageCard=dmgOpen?`<div class="cd-dmg"><div class="cd-k" style="color:#FF7A7A">🚨 Damage reported</div>
+      <div style="font-size:13.5px;color:var(--t1);line-height:1.45;margin-top:4px">${_carEsc(d.damage.text)}</div>
+      <div class="cd-s" style="color:var(--t3)">${_carEsc(d.damage.by||'')}${d.damage.at?' · '+fmtAt(d.damage.at,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):''}</div>
+      <button class="cd-btn red" onclick="markDamageHandled('${key}')">✓ Mark handled</button></div>`:'';
+  const noteCard=d.crewNote?`<div class="cd-card" style="padding:12px 14px;background:#FFF59D;border-color:#E6D86A">
+      <div class="cd-k" style="color:#8a6d00">📋 Crew note</div><div style="font-size:13px;color:#1c1c1c;line-height:1.5;margin-top:3px">${_carEsc(d.crewNote)}</div></div>`:'';
+  const lastRow=(out||!backBy)&&d.lastUse&&d.lastUse.name?`<div class="cd-card"><div class="cd-row"><span style="font-size:16px">👤</span>
+      <div class="cd-grow cd-s" style="margin:0">Last used by <b style="color:var(--t1)">${_carEsc(d.lastUse.name)}</b>${d.lastUse.at?' · '+fmtAt(d.lastUse.at,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):''}</div>
+      <span style="font-size:11px;font-weight:700;color:${d.lastUse.damage?'#FF7A7A':'#2ECC8A'}">${d.lastUse.damage?'Damage':'No damage'}</span></div></div>`:'';
+  const fuelVal=_bFuel?Math.round(_b.fuelLevel)+'%':(fuelLog?fuelLog.value:'—');
+  const fuelCol=_bFuel?(_b.fuelLevel<20?'#FF7A7A':'#2ECC8A'):'var(--t1)';
+  const tiles=[
+    ['⛽', fuelVal, _bFuel?'Fuel':(fuelLog?'Fuel · '+fmtDate(fuelLog.date):'Fuel'), fuelCol, ''],
+    ['🔋', !_bOk?'—':_battAlert?_b.battery:'OK', 'Battery', !_bOk?'var(--t3)':_battAlert?'#FF7A7A':'#2ECC8A', ''],
+    ['⚙️', !_bOk?'—':_milAlert?'Check':'OK', 'Engine', !_bOk?'var(--t3)':_milAlert?'#FF7A7A':'#2ECC8A', ''],
+  ].map(([i,v,s,c,tap])=>`<div class="cd-card cd-tile"${tap?` onclick="${tap}" style="cursor:pointer"`:''}><div style="font-size:22px">${i}</div><div class="cd-v" style="color:${c}">${v}</div><div class="cd-s">${s}</div></div>`).join('');
+  const statusPane=`
+    ${problems.length?`<div class="cd-dmg">${problems.map(t=>`<div style="font-size:13px;font-weight:700;color:#FF7A7A">${t}</div>`).join('')}</div>`:''}
+    ${keyCard}${damageCard}${noteCard}${lastRow}
+    <div class="cd-sec">Live from the car</div>
+    <div class="cd-tiles">${tiles}</div>
+    <p class="cd-fine">${_bOk?'Fuel, battery and engine come straight from the car’s Bouncie GPS.':BOUNCIE_WORKER_URL?'No live GPS reading for this vehicle.':'No GPS tracker set up.'}</p>`;
+
+  // ── Service: km + oil countdown, oil log, wash ──
+  const cur=parseInt(d.currentKm), nxt=parseInt(d.nextServiceKm);
+  const hasCount=!isNaN(cur)&&!isNaN(nxt);
+  const left=hasCount?nxt-cur:null;
+  const oilDue=hasCount&&left<=500;
+  const used=hasCount?Math.max(0,Math.min(100,100-left/10000*100)):0;
+  const servicePane=`
+    <div class="cd-card"><div class="cd-row" style="border:0;align-items:flex-start"><span style="font-size:18px">🛣️</span><div class="cd-grow">
+      <div class="cd-k">Current km</div>
+      <input id="inlineKM_${key}" type="number" inputmode="numeric" placeholder="e.g. 98500" value="${d.currentKm||''}" onchange="saveInlineKm('${key}',this.value)" class="cd-kmin">
+      ${hasCount?`<div class="cd-track"><div style="width:${used}%;background:linear-gradient(90deg,#2ECC8A,#F5A623 80%,#E84040)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:5px;gap:6px"><span style="font-size:11.5px;font-weight:700;color:${oilDue?'#FF7A7A':'var(--t2)'}">${left<=0?'Oil change overdue':'Oil due in '+left.toLocaleString('en-US')+' km'}</span><span class="cd-s" style="margin:0;color:var(--t3)">next at ${nxt.toLocaleString('en-US')}</span></div>`
+      :`<div class="cd-s" style="color:var(--t3)">Log an oil change to start the countdown.</div>`}
+    </div>${BOUNCIE_WORKER_URL?`<button class="cd-btn ghost" style="margin:0" onclick="syncBouncieBaseline('${key}')">${d.bouncieBaseline!=null&&d.bouncieBaseline!==''?'🔄 Re-sync':'📡 Sync'}</button>`:''}</div></div>
+    <div class="cd-card">
+      <div class="cd-row" onclick="openOilServiceModal('${key}')" style="cursor:pointer"><span style="font-size:17px">🛢</span><div class="cd-grow">
+        <div class="cd-k">Last oil change <span onclick="event.stopPropagation();openOilInfoPopup('${key}')" style="cursor:pointer;letter-spacing:0">ℹ️</span></div>
+        <div class="cd-v" style="color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'No record'}</div>
+        <div class="cd-s">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago · ':''}tap to log a new one</div></div><span class="cd-chev">›</span></div>
+      <div class="cd-row" onclick="openCarCalendar('${key}','wash')" style="cursor:pointer"><span style="font-size:17px">🧽</span><div class="cd-grow">
+        <div class="cd-k">Last wash</div><div class="cd-v" style="color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'No record'}</div>
+        ${daysSince(d.washed)!=null?`<div class="cd-s">${daysSince(d.washed)} days ago</div>`:''}</div><span class="cd-chev">›</span></div>
+    </div>`;
+
+  // ── Papers: registration + insurance ──
+  const daysTo=iso=>iso?Math.floor((new Date(iso)-new Date())/86400000):null;
+  const paperRow=(icon,label,iso,kind)=>{ const n=daysTo(iso);
+    return `<div class="cd-row" onclick="openCarCalendar('${key}','${kind}')" style="cursor:pointer"><span style="font-size:17px">${icon}</span><div class="cd-grow">
+      <div class="cd-k">${label}</div><div class="cd-v" style="color:${regExpiredColor(iso)}">${iso?fmtDate(iso):'Set expiry date'}</div></div>
+      ${n!=null?`<span class="cd-s" style="margin:0;color:${regExpiredColor(iso)}">${n<0?'expired':'in '+n+' d'}</span>`:''}<span class="cd-chev">›</span></div>`; };
+  const papersPane=`<div class="cd-card">${paperRow('📄','Registration',d.regExpiry,'reg')}${paperRow('🛡','Insurance',d.insuranceExpiry,'insurance')}</div>`;
+  const papersAlert=[d.regExpiry,d.insuranceExpiry].some(x=>x&&daysTo(x)<0);
+  const statusAlert=dmgOpen||problems.length>0;
+
+  const dot=on=>on?'<em class="cd-dot">●</em>':'';
+  el.innerHTML=`
+    <div style="position:relative;height:160px;overflow:hidden;background:linear-gradient(160deg,${car.color},${car.color2})">
+      <img src="${car.img}" alt="${car.name}" style="width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4))" onerror="this.style.display='none'">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.08) 60%)"></div>
+      <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 16px">
+        <div style="font-size:21px;font-weight:800;color:#fff;letter-spacing:-0.3px;text-shadow:0 1px 4px rgba(0,0,0,0.4)">${car.name}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:2px">
+          <span style="font-size:12px;color:rgba(255,255,255,0.85)">${car.label}${/diesel|gasoline/i.test(car.label)?'':' · '+(car.fuel==='diesel'?'Diesel':'Gasoline')}</span>
           ${car.plate?`<span style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;background:#f5e642;border-radius:4px;padding:2px 7px;border:1.5px solid rgba(0,0,0,0.25)">${car.plate}</span>`:''}
         </div>
       </div>
     </div>
-    ${_problemBanner}
-
-    <!-- Action cards -->
-    <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-
-      <!-- Fuel card -->
-      <!-- Fuel: display only — the level comes from the car's Bouncie GPS, so it isn't edited here -->
-      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default;text-align:center">
-        ${fuelTankSvg(_fuelLevel)}
-        <span style="font-size:12px;font-weight:800;color:var(--t1)">${_fuelDisplayLabel}</span>
-        <span style="font-size:10px;color:var(--t3)">${_fuelDisplaySub}</span>
-      </div>
-
-      <!-- Oil Change card -->
-      <div onclick="openOilServiceModal('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center;position:relative">
-        <div onclick="event.stopPropagation();openOilInfoPopup('${key}')" style="position:absolute;top:7px;right:9px;font-size:14px;cursor:pointer;line-height:1">ℹ️</div>
-        <span style="font-size:30px">🛢</span>
-        <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.oilChange)}">${d.oilChange?fmtDate(d.oilChange):'—'}</span>
-        <span style="font-size:10px;color:var(--t3)">${daysSince(d.oilChange)!=null?daysSince(d.oilChange)+' days ago':'No record'}</span>
-      </div>
-
-      <!-- Washed card -->
-      <div onclick="openCarCalendar('${key}','wash')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
-        <span style="font-size:30px">🧹</span>
-        <span style="font-size:12px;font-weight:800;color:${carStatusColor(d.washed)}">${d.washed?fmtDate(d.washed):'—'}</span>
-        <span style="font-size:10px;color:var(--t3)">${daysSince(d.washed)!=null?daysSince(d.washed)+' days ago':'No record'}</span>
-      </div>
-    </div>
-
-    <!-- Current KM & Crew Note -->
-    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
-      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px">
-        <span style="font-size:22px">🛣️</span>
-        <div style="flex:1">
-          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:4px">Current KM</div>
-          <input id="inlineKM_${key}" type="number" inputmode="numeric" placeholder="e.g. 98500"
-            value="${d.currentKm||''}"
-            onchange="saveInlineKm('${key}',this.value)"
-            style="width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--t1);font-size:15px;font-weight:700;font-family:inherit;outline:none;padding:2px 0">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;flex-wrap:wrap;gap:4px">
-            ${d.nextServiceKm&&d.currentKm&&(parseInt(d.nextServiceKm)-parseInt(d.currentKm))<=500?`<div style="font-size:11px;color:var(--red);font-weight:700">⚠️ Oil due in ${Math.max(0,parseInt(d.nextServiceKm)-parseInt(d.currentKm))} km</div>`:'<div></div>'}
-            ${BOUNCIE_WORKER_URL?`<button onclick="syncBouncieBaseline('${key}')" style="font-size:10px;padding:2px 8px;border-radius:6px;border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-family:inherit;cursor:pointer">${d.bouncieBaseline!=null&&d.bouncieBaseline!==''?'🔄 Re-sync':'📡 Sync with Bouncie'}</button>`:''}
-          </div>
-        </div>
-      </div>
-      ${d.trip&&d.trip.out?`<div style="display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:rgba(245,176,65,0.12);border:1px solid rgba(245,176,65,0.45)">
-        <span style="font-size:20px">🔑</span>
-        <span style="flex:1;font-size:13px;color:var(--t1)">Out with <b>${_carEsc(d.trip.by)}</b><span style="display:block;font-size:11px;color:var(--t3);margin-top:2px">since ${d.trip.outAt?new Date(d.trip.outAt).toLocaleString('en-CA',{weekday:'short',hour:'2-digit',minute:'2-digit'}):''}</span></span>
-        <button onclick="markCarReturned('${key}')" style="padding:8px 12px;border-radius:20px;border:1px solid rgba(245,176,65,0.6);background:transparent;color:#F5B041;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">↩️ Mark returned</button>
-      </div>`:`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:rgba(74,222,128,0.08);border:1px solid rgba(74,222,128,0.3)"><span style="font-size:18px">🅿</span><span style="font-size:13px;font-weight:700;color:#4ADE80">At base</span></div>`}
-      ${d.damage&&d.damage.open?`<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.45);border-radius:14px;padding:12px 14px">
-        <div style="font-size:10px;font-weight:800;color:#F87171;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:4px">🚨 Damage reported</div>
-        <div style="font-size:13px;color:var(--t1);line-height:1.5">${_carEsc(d.damage.text)}</div>
-        <div style="font-size:11px;color:var(--t3);margin-top:6px">${_carEsc(d.damage.by||'')}${d.damage.at?' · '+new Date(d.damage.at).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
-        <button onclick="markDamageHandled('${key}')" style="margin-top:10px;padding:8px 14px;border-radius:20px;border:1px solid rgba(239,68,68,0.5);background:transparent;color:#F87171;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Mark handled</button>
-      </div>`:''}
-      ${d.lastUse&&d.lastUse.name?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--glass2);border:1px solid var(--border2)">
-        <span style="font-size:18px">👤</span>
-        <span style="flex:1;font-size:12px;color:var(--t2)">Last used by <b style="color:var(--t1)">${_carEsc(d.lastUse.name)}</b>${d.lastUse.at?' · '+new Date(d.lastUse.at).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</span>
-        <span style="font-size:11px;font-weight:700;color:${d.lastUse.damage?'#F87171':'#4ADE80'}">${d.lastUse.damage?'Damage':'No damage'}</span>
-      </div>`:''}
-    </div>
-
-    <!-- Registration & Insurance -->
-    <div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
-      <div onclick="openCarCalendar('${key}','reg')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
-        <span style="font-size:22px">📄</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Registration</div>
-          <div style="font-size:14px;font-weight:700;color:${regExpiredColor(d.regExpiry)}">${d.regExpiry?fmtDate(d.regExpiry):'Set expiry date'}</div>
-        </div>
-        <span style="color:var(--border2);font-size:18px">›</span>
-      </div>
-      <div onclick="openCarCalendar('${key}','insurance')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;cursor:pointer">
-        <span style="font-size:22px">🛡</span>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:11px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:0.8px">Insurance</div>
-          <div style="font-size:14px;font-weight:700;color:${regExpiredColor(d.insuranceExpiry)}">${d.insuranceExpiry?fmtDate(d.insuranceExpiry):'Set expiry date'}</div>
-        </div>
-        <span style="color:var(--border2);font-size:18px">›</span>
-      </div>
-    </div>`;
-
-  html+=`<div style="height:80px"></div>`;
-  el.innerHTML=html;
+    <div style="padding:10px 12px"><div class="ct-seg">
+      ${[['status','Status',statusAlert],['service','Service',oilDue],['papers','Papers',papersAlert]].map(([k,l,a])=>
+        `<button class="${tab===k?'on':''}" onclick="S.carTab='${k}';renderCarDetail(document.getElementById('content'),'${key}')">${l}${dot(a)}</button>`).join('')}
+    </div></div>
+    ${tab==='service'?servicePane:tab==='papers'?papersPane:statusPane}
+    <div style="height:80px"></div>`;
 }
 
 // ── RENDER: CAR AUDIT (audit section only, from Audits tab) ──────
