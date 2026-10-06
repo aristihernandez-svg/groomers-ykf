@@ -1,9 +1,11 @@
 // Skycare YKF — Items push notification sender
 // Runs every 5 minutes via GitHub Actions.
 // Checks two queues:
-//   mxNotifQueue  — written by mechanics.html when a part is added
-//   shopNotifQueue — written by index.html when a shopping item is marked/added
-// Sends a push to all subscribers for each unsent item, then marks it sent.
+//   mxNotifQueue   — mechanics.html parts + crew car damage: sent as a PUSH to every subscriber
+//   shopNotifQueue — Crew House / Sioux Lookout shopping requests: IN-APP ONLY, never a push.
+//                    Each one becomes a 'notifications' doc, which only phones with the app
+//                    open pick up (same as shopping changes made inside the app).
+// Marks each item sent once handled.
 
 const admin   = require('firebase-admin');
 const webpush = require('web-push');
@@ -57,21 +59,26 @@ async function sendToAll(title, body, tag) {
   }
 }
 
-async function processQueue(collectionName) {
+async function processQueue(collectionName, inAppOnly) {
   const snap = await db.collection(collectionName).where('sent', '==', false).get();
   if (snap.empty) { console.log(`${collectionName}: no pending items`); return; }
 
   console.log(`${collectionName}: found ${snap.size} pending notification(s)`);
   for (const doc of snap.docs) {
     const { title, body } = doc.data();
-    await sendToAll(title, body, `${collectionName}-${doc.id}`);
+    if (inAppOnly) {
+      await db.collection('notifications').add({ title, body, tag: 'shopping', ts: admin.firestore.FieldValue.serverTimestamp() });
+      console.log(`In-app only: ${title}`);
+    } else {
+      await sendToAll(title, body, `${collectionName}-${doc.id}`);
+    }
     await doc.ref.update({ sent: true, sentAt: admin.firestore.FieldValue.serverTimestamp() });
   }
 }
 
 async function main() {
   await processQueue('mxNotifQueue');
-  await processQueue('shopNotifQueue');
+  await processQueue('shopNotifQueue', true);   // shopping never pushes to closed apps
   console.log('Done.');
 }
 
