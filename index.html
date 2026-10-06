@@ -740,6 +740,32 @@ body::before{
 .sh-f-pg{color:var(--accent2);border-color:var(--accent-border)}
 .sh-sub{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2);margin-top:3px;line-height:1.3}
 .sh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+/* ADD / EDIT TASK form */
+.atf-lbl{display:flex;align-items:center;gap:6px;margin:14px 0 7px;font-size:10.5px;font-weight:800;letter-spacing:1.1px;text-transform:uppercase;color:var(--t3)}
+.atf-st{margin-left:auto;font-size:10.5px;letter-spacing:.2px;text-transform:none;font-weight:700}
+.atf-st.req{color:#FF7A7A}.atf-st.ok{color:var(--green)}
+.atf-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;border-radius:12px;transition:box-shadow .2s}
+.atf-tile{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:12px;border:1.5px solid var(--border2);background:var(--glass);color:var(--t2);font-family:inherit;font-size:11.5px;font-weight:700;text-align:left;cursor:pointer;min-width:0;-webkit-tap-highlight-color:transparent}
+.atf-tile i{font-style:normal;font-size:15px;width:28px;height:28px;border-radius:8px;background:var(--ac);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.atf-tile span{line-height:1.15;overflow-wrap:anywhere}
+.atf-tile{position:relative}
+.atf-tile.on{background:var(--ac);border:2px solid rgba(255,255,255,.85);color:#fff;box-shadow:0 0 0 3px color-mix(in srgb,var(--ac) 55%,transparent)}
+.atf-tile.on::after{content:"✓";position:absolute;top:4px;right:6px;font-size:11px;font-weight:900;color:#fff}
+.atf-seg{display:flex;padding:3px;border-radius:11px;background:var(--glass2);border:1px solid var(--border);transition:box-shadow .2s}
+.atf-seg-b{flex:1;border:0;background:none;color:var(--t2);font-family:inherit;font-size:12.5px;font-weight:600;padding:9px 2px;border-radius:9px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.atf-seg-b.on{background:var(--bg4);color:var(--t1);box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.atf-days{gap:5px;justify-content:space-between;margin-top:9px;border-radius:12px;transition:box-shadow .2s}
+.atf-d{width:38px;height:38px;border-radius:50%;border:1.5px solid var(--border2);background:transparent;color:var(--t2);font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent}
+.atf-d.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.atf-hint{text-align:center;font-size:11.5px;color:var(--t3);margin-top:8px;min-height:15px}
+.atf-pv{border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+.atf-pv-h{display:flex;align-items:center;gap:8px;padding:8px 11px;color:#fff}
+.atf-pv-h b{font-size:11px;letter-spacing:.8px}
+.atf-pv-r{display:flex;align-items:center;gap:10px;padding:10px 11px;background:var(--glass)}
+.atf-pv-c{width:20px;height:20px;border-radius:50%;border:2px solid var(--t4);flex-shrink:0}
+.atf-pv-t{font-size:13.5px;font-weight:600;color:var(--t1)}
+.atf-pv-s{font-size:11px;color:var(--t3);margin-top:1px}
+#mSave.atf-off{background:var(--glass2);color:var(--t3);box-shadow:none;border:1px dashed var(--border2)}
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
 .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -11165,28 +11191,14 @@ function _fpSetMode(m) {
   _fpMode = m;
   const grid = document.getElementById('fpDayGrid');
   if(grid) grid.style.display = m==='specific' ? 'flex' : 'none';
-  ['daily','specific','once'].forEach(k => {
-    const b = document.getElementById('fpBtn'+k);
-    if(!b) return;
-    const on = k===m;
-    b.style.background = on ? 'var(--blue)' : 'transparent';
-    b.style.color = on ? '#fff' : 'var(--t2)';
-    b.style.border = '2px solid ' + (on ? 'var(--blue)' : 'var(--border2)');
-    b.style.fontSize = on ? '14px' : '13px';
-    b.style.fontWeight = on ? '700' : '500';
-  });
+  ['daily','specific','once'].forEach(k => { const b = document.getElementById('fpBtn'+k); if(b) b.classList.toggle('on', k===m); });
   _fpUpdateLabel();
 }
 function _fpToggle(i) {
   const ix = _fpDays.indexOf(i);
   if(ix>=0) _fpDays.splice(ix,1); else _fpDays.push(i);
   const b = document.getElementById('fpDay'+i);
-  if(b) {
-    const on = _fpDays.includes(i);
-    b.style.background = on ? 'var(--blue)' : 'transparent';
-    b.style.color = on ? '#fff' : 'var(--t2)';
-    b.style.borderColor = on ? 'var(--blue)' : 'var(--border2)';
-  }
+  if(b) b.classList.toggle('on', _fpDays.includes(i));
   _fpUpdateLabel();
 }
 function _fpLabel() {
@@ -11199,26 +11211,70 @@ function _fpLabel() {
 function _fpUpdateLabel() {
   const el = document.getElementById('fpLabel');
   if(el) el.textContent = _fpLabel();
+  if(typeof _atUpdate === 'function') _atUpdate();
 }
 function _fpHTML(initMode, initDays) {
   _fpMode = initMode; _fpDays = [...initDays];
-  const mBtn = (k,lbl) => {
-    const on = k===initMode;
-    return `<button type="button" id="fpBtn${k}" onclick="_fpSetMode('${k}')" style="background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t2)'};border:2px solid ${on?'var(--blue)':'var(--border2)'};border-radius:20px;padding:7px 16px;font-size:${on?'14px':'13px'};font-weight:${on?'700':'500'};cursor:pointer">${lbl}</button>`;
-  };
-  const dBtn = i => {
-    const on = initDays.includes(i);
-    return `<button type="button" id="fpDay${i}" onclick="_fpToggle(${i})" style="width:40px;height:40px;border-radius:50%;border:2px solid ${on?'var(--blue)':'var(--border2)'};background:${on?'var(--blue)':'transparent'};color:${on?'#fff':'var(--t2)'};font-size:11px;font-weight:700;cursor:pointer">${DAY_SHORT[i]}</button>`;
-  };
+  const mBtn = (k,lbl) => `<button type="button" id="fpBtn${k}" class="atf-seg-b${k===initMode?' on':''}" onclick="_fpSetMode('${k}')">${lbl}</button>`;
+  const dBtn = i => `<button type="button" id="fpDay${i}" class="atf-d${initDays.includes(i)?' on':''}" onclick="_fpToggle(${i})">${DAY_SHORT[i]}</button>`;
   return `
-    <label style="margin-top:8px">Schedule</label>
-    <div id="fpModes" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;border-radius:14px;transition:box-shadow .2s">
-      ${mBtn('daily','🔁 Daily')}${mBtn('specific','📅 Specific days')}${mBtn('once','1️⃣ Once')}
-    </div>
-    <div id="fpDayGrid" style="display:${initMode==='specific'?'flex':'none'};gap:8px;flex-wrap:wrap;margin-bottom:10px;justify-content:center">
-      ${[0,1,2,3,4,5,6].map(dBtn).join('')}
-    </div>
-    <div id="fpLabel" style="text-align:center;font-size:12px;color:var(--t2);min-height:16px;margin-bottom:4px">${_fpLabel()}</div>`;
+    <div class="atf-lbl">How often?<span id="atFreqSt" class="atf-st"></span></div>
+    <div id="fpModes" class="atf-seg">${mBtn('daily','🔁 Daily')}${mBtn('specific','📅 Specific days')}${mBtn('once','1️⃣ Once')}</div>
+    <div id="fpDayGrid" class="atf-days" style="display:${initMode==='specific'?'flex':'none'}">${[0,1,2,3,4,5,6].map(dBtn).join('')}</div>
+    <div id="fpLabel" class="atf-hint">${_fpLabel()}</div>`;
+}
+
+// ── Add / Edit task form: "Where does it go?" tiles + live preview ──
+const AREA_ICONS = {'AIRCRAFT':'✈️',"CR GROOMERS' CORNER":'🧹','CR OFFICE':'🖥','MX HANGAR':'🔧','MISC':'📦','CHARTER':'⭐','CLOSURE':'🔒'};
+let _atIds = null;   // {task, area} input ids of the open task form
+function _atFormHTML(ids, taskVal, area, initMode, initDays, extraAfterName) {
+  _atIds = ids;
+  const tiles = Object.keys(AREA_COLORS).map(a => `<button type="button" class="atf-tile${a===area?' on':''}" data-area="${a.replace(/"/g,'&quot;')}" style="--ac:${AREA_COLORS[a]}" onclick="_atPickArea(this)">
+      <i>${AREA_ICONS[a]||'📋'}</i><span>${a==="CR GROOMERS' CORNER"?"GROOMERS' CORNER":a}</span></button>`).join('');
+  return `<label>Task description</label>
+    <input id="${ids.task}" value="${(taskVal||'').replace(/"/g,'&quot;')}" placeholder="Task..." ${ids.task==='mTask'?`oninput="checkTaskDuplicate();_atUpdate()" data-tab="${ids.tab||''}"`:'oninput="_atUpdate()"'}>
+    ${extraAfterName||''}
+    <input type="hidden" id="${ids.area}" value="${(area||'').replace(/"/g,'&quot;')}">
+    <div class="atf-lbl">Where does it go?<span id="atAreaSt" class="atf-st"></span></div>
+    <div id="atTiles" class="atf-tiles">${tiles}</div>
+    ${_fpHTML(initMode, initDays)}
+    <div id="atPreview"></div>`;
+}
+function _atPickArea(btn) {
+  if(!_atIds) return;
+  document.getElementById(_atIds.area).value = btn.dataset.area;
+  document.querySelectorAll('#atTiles .atf-tile').forEach(b => b.classList.toggle('on', b === btn));
+  _atUpdate();
+}
+// keeps the ✓ / required marks, the preview and the Save label in step with the form
+function _atUpdate() {
+  if(!_atIds) return;
+  const tEl = document.getElementById(_atIds.task), aEl = document.getElementById(_atIds.area);
+  if(!tEl || !aEl) return;
+  const task = tEl.value.trim(), area = aEl.value;
+  const freqOk = _fpMode && (_fpMode!=='specific' || _fpDays.length);
+  const st = (id, ok) => { const el = document.getElementById(id); if(el) { el.textContent = ok ? '✓' : 'required'; el.className = 'atf-st ' + (ok ? 'ok' : 'req'); } };
+  st('atAreaSt', !!area); st('atFreqSt', !!freqOk);
+  const sub = !_fpMode ? 'how often?' : _fpMode==='daily' ? 'Daily' : _fpMode==='once' ? 'Once'
+    : (_fpDays.length ? [..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ') : 'pick the days');
+  const pv = document.getElementById('atPreview');
+  if(pv) pv.innerHTML = area ? `<div class="atf-lbl">Preview</div><div class="atf-pv">
+      <div class="atf-pv-h" style="background:${AREA_COLORS[area]||'#4A4A4A'}"><span>${AREA_ICONS[area]||'📋'}</span><b>${area}</b></div>
+      <div class="atf-pv-r"><span class="atf-pv-c"></span><div><div class="atf-pv-t">${task ? task.replace(/</g,'&lt;') : '<i style="color:var(--t3)">Task…</i>'}</div><div class="atf-pv-s">${sub}</div></div></div></div>` : '';
+  const btn = document.getElementById('mSave');
+  if(btn && !btn.disabled) {
+    const missing = !area ? 'Pick a location' : !_fpMode ? 'Choose how often' : !freqOk ? 'Pick the days' : !task ? 'Enter the task' : '';
+    btn.textContent = missing || 'Save';
+    btn.classList.toggle('atf-off', !!missing);
+  }
+}
+// shared checks before saving (add + edit): flags the first missing part
+function _atValid(taskId, areaId) {
+  if(!document.getElementById(taskId).value.trim()){ _flagField(taskId); toast('Enter a task name'); return false; }
+  if(!document.getElementById(areaId).value){ _flagField('atTiles'); toast('📍 Choose where it goes'); return false; }
+  if(!_fpMode){ _flagField('fpModes'); toast('🔁 Choose how often: Daily, Specific days or Once'); return false; }
+  if(_fpMode==='specific' && !_fpDays.length){ _flagField('fpDayGrid'); toast('Select at least one day'); return false; }
+  return true;
 }
 
 function locationSelect(selected='') {
@@ -11246,15 +11302,12 @@ function openEditTask(tabName,idx) {
     : freqIndices.length ? freqIndices : loadedDayIndices;
 
   openModal('✏️ Edit Task',
-    `<label>Task description</label>
-     <input id="eTTask" value="${t.task.replace(/"/g,'&quot;')}">
-     <label>Location</label>
-     <select id="eTArea">${locationSelect(t.area||'')}</select>
-     ${_fpHTML(initMode, initDays)}`,
+    _atFormHTML({task:'eTTask', area:'eTArea'}, t.task, AREA_COLORS[t.area] ? t.area : '', initMode, initDays),
     async()=>{
       const task=document.getElementById('eTTask').value.trim();
       const area=document.getElementById('eTArea').value;
-      if(!task) return;
+      // same rules as adding — and "Specific days" with no day would have removed the task from every day
+      if(!_atValid('eTTask','eTArea')) return;
       const freq = _fpMode==='daily'?'Daily':_fpMode==='once'?'Once':[..._fpDays].sort((a,b)=>a-b).map(i=>DAY_SHORT[i]).join(' · ');
       // Which days the task should live on after this edit
       const targetSet = _fpMode==='daily' ? new Set(DAYS)
@@ -11288,6 +11341,7 @@ function openEditTask(tabName,idx) {
         toast('Save failed — try again');
       }
     });
+  _atUpdate();
 }
 function resetDay() {
   const tabName=DAYS[getToday()];
@@ -11621,7 +11675,7 @@ function openModal(title,fields,onSave) {
   document.getElementById('overlay').classList.add('open');
   setTimeout(()=>document.querySelector('#mFields input,#mFields textarea')?.focus(),100);
 }
-function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; const ms=document.getElementById('mSave'); ms.textContent='Save'; ms.disabled=false; ms.style.display=''; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
+function closeModal() { document.getElementById('overlay').classList.remove('open'); S.mCtx=null; S.pendingPhoto=null; const ms=document.getElementById('mSave'); ms.textContent='Save'; ms.disabled=false; ms.style.display=''; ms.classList.remove('atf-off'); _atIds=null; document.getElementById('mBtnRow').style.display=''; if(S.dmgKeyCtx){S.dmgKeyCtx=null; S.pendingDmgPhoto=null; localStorage.removeItem('gykf_dmg_draft');} }
 function mSubmit() { S.mCtx?.(); }
 
 function fuzzyDistance(a, b) {
@@ -11761,21 +11815,14 @@ function checkTaskDuplicate() {
 
 function openAddTask(tabName,area='') {
   openModal('Add Task',
-    `<label>Task description</label>
-     <input id="mTask" placeholder="Task..." oninput="checkTaskDuplicate()" data-tab="${tabName}">
-     <div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
-     <label>Location</label>
-     <select id="mArea">${locationSelect(area)}</select>
-     ${_fpHTML('', [])}`,
+    _atFormHTML({task:'mTask', area:'mArea', tab:tabName}, '', area, '', [],
+      `<div id="mTaskWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>`),
     async()=>{
       const task=document.getElementById('mTask').value.trim();
       const areaVal=document.getElementById('mArea').value;
-      if(!task){ _flagField('mTask'); toast('Enter a task name'); return; }
-      // no location = the task lands in a stray "item" group after Closure — a location is required
-      if(!areaVal){ _flagField('mArea'); toast('📍 Choose a location'); return; }
-      // how often is never pre-picked: the team chooses it on purpose
-      if(!_fpMode){ _flagField('fpModes'); toast('🔁 Choose how often: Daily, Specific days or Once'); return; }
-      if(_fpMode==='specific' && !_fpDays.length){ _flagField('fpDayGrid'); toast('Select at least one day'); return; }
+      // no location = the task lands in a stray "item" group after Closure, and how often is never
+      // pre-picked: the team chooses both on purpose
+      if(!_atValid('mTask','mArea')) return;
       // Build target days array
       let targetDays;
       if(_fpMode==='daily') targetDays=[...DAYS];
@@ -11803,6 +11850,7 @@ function openAddTask(tabName,area='') {
         toast('Save failed — try again');
       }
     });
+  _atUpdate();
 }
 
 // Deterministic Firestore doc id from arbitrary text — lets repeated
