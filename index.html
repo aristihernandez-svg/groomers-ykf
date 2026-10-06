@@ -4791,7 +4791,8 @@ function renderCarDetail(el, key) {
     <div style="padding:14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
 
       <!-- Fuel card -->
-      <div onclick="openFuelGauge('${key}')" style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;text-align:center">
+      <!-- Fuel: display only — the level comes from the car's Bouncie GPS, so it isn't edited here -->
+      <div style="background:var(--glass2);border:1px solid var(--border2);border-radius:16px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:default;text-align:center">
         ${fuelTankSvg(_fuelLevel)}
         <span style="font-size:12px;font-weight:800;color:var(--t1)">${_fuelDisplayLabel}</span>
         <span style="font-size:10px;color:var(--t3)">${_fuelDisplaySub}</span>
