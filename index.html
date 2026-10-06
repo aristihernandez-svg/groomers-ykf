@@ -4031,7 +4031,7 @@ function _carEsc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&
 // 🔑 Out · Alex · since 08:30  /  🅿 At base — from the pilot check-in page (crew-access.html)
 function carTripLine(d) {
   if (d.trip && d.trip.out) {
-    const since = d.trip.outAt ? new Date(d.trip.outAt).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}) : '';
+    const since = d.trip.outAt ? new Date(d.trip.outAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '';
     return `<div style="font-size:11px;font-weight:700;color:#F5B041;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔑 Out · ${_carEsc(d.trip.by)}${since?' · '+since:''}</div>`;
   }
   return `<div style="font-size:11px;font-weight:700;color:#4ADE80;margin-top:2px">🅿 At base</div>`;

@@ -128,7 +128,7 @@ function render() { view==='list' ? renderList() : renderDetail(view); }
 
 // ── List ──
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function hhmm(iso) { return iso ? new Date(iso).toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'}) : ''; }
+function hhmm(iso) { return iso ? new Date(iso).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : ''; }
 function isOut(d) { return !!(d.trip && d.trip.out); }
 function renderList() {
   document.getElementById('barTitle').textContent='Crew Car Check-in';
