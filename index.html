@@ -4284,10 +4284,22 @@ function loadCarAudits() {
   CREW_CARS.forEach(car=>{
     const docKey=auditDocKey(car.key);
     db.collection('auditCars').doc(docKey).onSnapshot(doc=>{
+      // Someone typing in this car's audit (overall report, an issue note, a photo note): every save comes
+      // back here, and redrawing the page replaced the box and closed the keyboard at each letter. Keep
+      // what they're typing, apply the rest, and redraw once they leave the field (carAuditFieldDone).
+      const ae = document.activeElement;
+      const typing = !!(ae && ae.dataset && ae.dataset.acCar === car.key);
+      const mine = typing ? JSON.parse(JSON.stringify(S.monthlyCarAudits[docKey] || {})) : null;
       if(doc.exists) S.monthlyCarAudits[docKey]={...S.monthlyCarAudits[docKey],...doc.data()};
+      if(typing) {
+        const cur = S.monthlyCarAudits[docKey], f = ae.dataset.acField || '';
+        if(f === 'comments') cur.comments = mine.comments;
+        else if(f.startsWith('photo:')) { const i = +f.slice(6); if(cur.photos && cur.photos[i] && mine.photos && mine.photos[i]) cur.photos[i] = {...cur.photos[i], note: mine.photos[i].note}; }
+        else if(f.startsWith('check:')) { const k = f.slice(6); if(mine.checks && mine.checks[k]) cur.checks = {...(cur.checks || {}), [k]: {...((cur.checks || {})[k] || {}), note: mine.checks[k].note}}; }
+      }
       try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
       updateAuditBadge();
-      render();
+      if(!(ae && ae.dataset && ae.dataset.acCar)) render();   // typing in any car audit field: redraw once they leave it
     }, e=>console.log('loadCarAudits onSnapshot failed:',car.key,e));
   });
 }
@@ -5484,7 +5496,7 @@ function auditSectionHTML(key) {
           <button class="cacard-issue" ${locked?'disabled':''} onclick="setCarAuditCheck('${key}','${item.key}','Issue')"
             style="flex:1;padding:5px 0;border-radius:20px;font-size:10px;font-weight:700;cursor:${locked?'default':'pointer'};border:1px solid ${isIssue?'rgba(232,64,64,0.85)':'var(--border2)'};background:${isIssue?'rgba(232,64,64,0.85)':'var(--glass2)'};color:${isIssue?'#fff':'var(--t3)'}">Issue</button>
         </div>
-        ${isIssue?`<textarea class="cacard-note" ${locked?'readonly':''} placeholder="Describe the issue…" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
+        ${isIssue?`<textarea class="cacard-note" ${locked?'readonly':''} placeholder="Describe the issue…" data-ac-car="${key}" data-ac-field="check:${item.key}" onblur="carAuditFieldDone('${key}')" oninput="setCarAuditCheckNote('${key}','${item.key}',this.value)"
           style="width:100%;padding:5px 7px;border-radius:7px;border:1px solid rgba(232,64,64,0.35);background:rgba(232,64,64,0.07);color:var(--t1);font-size:10px;font-family:inherit;resize:none;outline:none" rows="2">${chk.note||''}</textarea>`:''}
       </div>`;
   });
@@ -5562,7 +5574,7 @@ function auditSectionHTML(key) {
       h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
         <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;cursor:pointer">
         <span style="font-size:10px;color:var(--t3);flex-shrink:0;font-weight:600">${AUDIT_PHOTO_SLOTS[i]}</span>
-        <input value="${p.note||''}" placeholder="Note..." ${locked?'disabled':''} oninput="setAuditPhotoNote('${key}',${i},this.value)"
+        <input value="${p.note||''}" placeholder="Note..." ${locked?'disabled':''} data-ac-car="${key}" data-ac-field="photo:${i}" onblur="carAuditFieldDone('${key}')" oninput="setAuditPhotoNote('${key}',${i},this.value)"
           style="flex:1;min-width:0;padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:11px;font-family:inherit;color:var(--t1);outline:none">
       </div>`;
     });
@@ -5572,7 +5584,7 @@ function auditSectionHTML(key) {
   // Overall report
   h+=`
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">📝 Overall Report</div>
-    <textarea placeholder="General condition, issues found, follow-up needed..." ${locked?'readonly':''} oninput="setAuditComments('${key}',this.value)"
+    <textarea placeholder="General condition, issues found, follow-up needed..." ${locked?'readonly':''} data-ac-car="${key}" data-ac-field="comments" onblur="carAuditFieldDone('${key}')" oninput="setAuditComments('${key}',this.value)"
       style="width:100%;min-height:80px;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit;resize:none;outline:none;margin-bottom:12px">${cd.comments||''}</textarea>
 
   ${_pdfSavingKeys.has('car-'+key) ? `<div style="width:100%;padding:12px;border-radius:var(--radius-sm);background:var(--glass2);border:1px solid var(--border2);text-align:center;font-size:14px;font-weight:700;color:var(--t2)">⏳ Saving PDF…</div>` : `
@@ -5598,8 +5610,15 @@ function removeAuditPhoto(key,i) {
   saveCarAudit(key); render();
 }
 function setAuditRating(key,i,val) { carAuditData(key).photos[i].rating=val; saveCarAudit(key); }
-function setAuditPhotoNote(key,i,val) { carAuditData(key).photos[i].note=val; saveCarAudit(key); }
-function setAuditComments(key,val) { carAuditData(key).comments=val; saveCarAudit(key); }
+function setAuditPhotoNote(key,i,val) { carAuditData(key).photos[i].note=val; carAuditTypedLocal(); saveCarAuditDebounced(key); }
+function setAuditComments(key,val) { carAuditData(key).comments=val; carAuditTypedLocal(); saveCarAuditDebounced(key); }
+function carAuditTypedLocal() { try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){} }
+// leaving a typed field: save now, and let the page catch up with anything that changed meanwhile
+function carAuditFieldDone(key) {
+  clearTimeout(_carAuditSaveTimers[key]);
+  saveCarAudit(key);
+  setTimeout(() => { const ae = document.activeElement; if(!(ae && ae.dataset && ae.dataset.acCar)) render(); }, 150);
+}
 async function markCarAuditDone(key) {
   const cd=carAuditData(key);
   cd.done=!cd.done;
