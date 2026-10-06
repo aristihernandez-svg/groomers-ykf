@@ -731,6 +731,15 @@ body::before{
 .sh-req-bar{width:6px;height:30px;border-radius:3px;flex-shrink:0}
 .sh-req-btn{padding:6px 11px;border-radius:9px;background:var(--glass2);border:1px solid var(--border2);color:var(--t1);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
 
+.sh-f3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;padding:10px 14px 2px}
+.sh-f{position:relative;display:flex;align-items:center;justify-content:center;gap:4px;min-width:0;height:36px;padding:0 22px 0 8px;border-radius:10px;background:var(--glass2);border:1px solid var(--border2);color:var(--t2);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;overflow:hidden}
+.sh-f select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
+.sh-f .sh-f-lbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.sh-f.on{background:var(--accent-dim);border-color:var(--accent);color:var(--t1)}
+.sh-f .sh-x{z-index:2}
+.sh-f-pg{color:var(--accent2);border-color:var(--accent-border)}
+.sh-sub{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--t2);margin-top:3px;line-height:1.3}
+.sh-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
 .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -4025,12 +4034,12 @@ function renderShopping(el) {
   let html=`<div class="shop-filters">
     ${shopTabsHtml(items)}
     ${buyerBanner}
-    <div class="sh-chips">
-      <div class="sh-chip${storeActive?' on':''}"><select onchange="setSF(this.value)"><option value="all">🏪 Store</option>${stores.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${S.shopFilter===s?'selected':''}>${s}</option>`).join('')}</select>
-        ${storeActive?`<span class="sh-x" onclick="setSF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
-      <div class="sh-chip${locActive?' on':''}"><select onchange="setSLF(this.value)"><option value="all">📍 Location</option>${locs.map(l=>`<option value="${l.replace(/"/g,'&quot;')}" ${S.shopLocFilter===l?'selected':''}>${cabLabel(l)}</option>`).join('')}</select>
-        ${locActive?`<span class="sh-x" onclick="setSLF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
-      <button class="sh-chip sh-reqbtn" onclick="openRequestPages()">🔗 Request pages <span class="sh-car" style="position:static">▾</span></button>
+    <div class="sh-f3">
+      <div class="sh-f${storeActive?' on':''}"><select onchange="setSF(this.value)" aria-label="Store"><option value="all">🏪 Store</option>${stores.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${S.shopFilter===s?'selected':''}>${s}</option>`).join('')}</select>
+        <span class="sh-f-lbl">${storeActive?S.shopFilter:'🏪 Store'}</span>${storeActive?`<span class="sh-x" onclick="setSF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
+      <div class="sh-f${locActive?' on':''}"><select onchange="setSLF(this.value)" aria-label="Location"><option value="all">📍 Location</option>${locs.map(l=>`<option value="${l.replace(/"/g,'&quot;')}" ${S.shopLocFilter===l?'selected':''}>${cabLabel(l)}</option>`).join('')}</select>
+        <span class="sh-f-lbl">${locActive?cabLabel(S.shopLocFilter):'📍 Location'}</span>${locActive?`<span class="sh-x" onclick="setSLF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
+      <button class="sh-f sh-f-pg" onclick="openRequestPages()"><span class="sh-f-lbl">🔗 QR pages</span><span class="sh-car">▾</span></button>
     </div>
     <div class="search-wrap">
       <div class="search-inner">
@@ -4049,41 +4058,30 @@ function renderShopping(el) {
       ${q?`<button onclick="setSSearch('')">Clear search</button>`:''}
     </div>`;
   } else {
-    // grouped by where things go
-    const groups = {};
-    filtered.forEach(i => { const k = i.cabinet || ''; (groups[k] = groups[k] || []).push(i); });
-    const order = Object.keys(groups).sort((a, b) => {
-      const ia = SHOP_LOC_ORDER.indexOf(a), ib = SHOP_LOC_ORDER.indexOf(b);
-      if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
-      if (!a) return 1; if (!b) return -1;
-      return a.localeCompare(b);
-    });
-    order.forEach(loc => {
-      const g = groups[loc].sort((a, b) => a.item.localeCompare(b.item));
-      const nBuy = g.filter(i => i.checked).length;
-      html += `<div class="sh-sec"><span class="sh-sec-ic">${SHOP_LOC_ICON[loc] || '📦'}</span>${cabLabel(loc)}<span class="sh-sec-n">${nBuy ? `<b>${nBuy} to buy</b>` : 'all stocked'}</span></div><div class="sh-card">`;
-      g.forEach(item => {
-        const ri = items.indexOf(item), qty = item.qty || 1;
-        const notes = item.notes && String(item.notes)!=='false' && item.notes.trim() ? item.notes : '';
-        html += `
-        <div class="swipe-wrap" data-idx="${ri}">
-          <div class="swipe-action-left">✏️ Edit</div>
-          <div class="swipe-action-right">🗑 Delete</div>
-          <div class="srow sh-row ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
-            <div class="sh-chk">${item.checked?'✓':''}</div>
-            <div class="sh-info">
-              <div class="sh-name">${item.item}${shopSrcTag(item)}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
-              ${notes?`<div class="sh-note">${notes}</div>`:''}
-            </div>
-            ${item.store?`<span class="sh-store" style="--sc:${STORE_COLORS[item.store]||'#5A6478'}">${item.store}</span>`:''}
-            <div class="sh-qty" onclick="event.stopPropagation()">
-              <button onclick="changeQty(${ri},-1)">−</button><b>${qty}</b><button onclick="changeQty(${ri},1)">+</button>
-            </div>
+    // one alphabetical list; the store and location sit under each item
+    const sorted = [...filtered].sort((a, b) => a.item.localeCompare(b.item) || cabLabel(a.cabinet).localeCompare(cabLabel(b.cabinet)));
+    html += `<div class="sh-card" style="margin-top:10px">`;
+    sorted.forEach(item => {
+      const ri = items.indexOf(item), qty = item.qty || 1;
+      const notes = item.notes && String(item.notes)!=='false' && item.notes.trim() ? item.notes : '';
+      html += `
+      <div class="swipe-wrap" data-idx="${ri}">
+        <div class="swipe-action-left">✏️ Edit</div>
+        <div class="swipe-action-right">🗑 Delete</div>
+        <div class="srow sh-row ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
+          <div class="sh-chk">${item.checked?'✓':''}</div>
+          <div class="sh-info">
+            <div class="sh-name">${item.item}${shopSrcTag(item)}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
+            <div class="sh-sub"><span class="sh-dot" style="background:${STORE_COLORS[item.store]||'#5A6478'}"></span>${item.store||'—'} · ${cabLabel(item.cabinet)}</div>
+            ${notes?`<div class="sh-note">${notes}</div>`:''}
           </div>
-        </div>`;
-      });
-      html += `</div>`;
+          <div class="sh-qty" onclick="event.stopPropagation()">
+            <button onclick="changeQty(${ri},-1)">−</button><b>${qty}</b><button onclick="changeQty(${ri},1)">+</button>
+          </div>
+        </div>
+      </div>`;
     });
+    html += `</div>`;
   }
   html+='<div style="height:90px"></div>';
   el.innerHTML=html;
