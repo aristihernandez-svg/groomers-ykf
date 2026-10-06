@@ -669,6 +669,68 @@ body::before{
 .cd-track div{height:100%;border-radius:4px}
 .cd-dot{font-style:normal;color:#FF5A5A;margin-left:4px;font-size:10px;vertical-align:2px}
 
+/* SHOPPING — list by location (to buy = red), cart coloured by who asked, crew house notes */
+.sh-seg{margin:10px 14px 0}
+.sh-count{font-style:normal;margin-left:6px;background:var(--red);color:#fff;border-radius:10px;padding:1px 7px;font-size:11.5px;font-weight:700}
+.ct-seg button em.sh-count{color:#fff;font-size:11.5px;font-weight:700;margin-left:6px}
+[data-theme="premium-day"] .sh-tag,[data-theme="standard-day"] .sh-tag{filter:brightness(.55) saturate(1.4)}
+.sh-chips{display:flex;gap:7px;padding:10px 14px 2px;overflow-x:auto;scrollbar-width:none}
+.sh-chips::-webkit-scrollbar{display:none}
+.sh-chip{position:relative;flex-shrink:0;display:inline-flex;align-items:center;border-radius:20px;background:var(--glass2);border:1px solid var(--border2);color:var(--t2);font-size:12.5px;font-weight:600;font-family:inherit;white-space:nowrap}
+.sh-chip select{appearance:none;-webkit-appearance:none;background:transparent;border:0;color:inherit;font:inherit;padding:7px 28px 7px 12px;outline:none;max-width:170px;text-overflow:ellipsis}
+.sh-chip.on{border-color:var(--accent);color:var(--t1);background:var(--accent-dim)}
+.sh-car{position:absolute;right:11px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--t3);pointer-events:none}
+.sh-x{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--t2);cursor:pointer;padding:3px}
+.sh-reqbtn{padding:7px 12px;gap:5px;cursor:pointer;color:var(--accent2);border-color:var(--accent-border)}
+.sh-sec{display:flex;align-items:center;gap:8px;padding:14px 16px 7px;font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--t3)}
+.sh-sec-ic{font-size:14px;letter-spacing:0}
+.sh-sec-n{margin-left:auto;letter-spacing:0;text-transform:none;font-weight:600}
+.sh-sec-n b{color:#FF6B6B}
+.sh-card{margin:0 12px 6px;border-radius:14px;background:var(--glass);border:1px solid var(--border);overflow:hidden}
+.sh-card .swipe-wrap:last-child .srow,.sh-card>.srow:last-child{border-bottom:0}
+.srow.sh-row{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--border);background:transparent}
+.swipe-wrap .srow.sh-row{background:var(--bg2)}
+.srow.sh-row.tobuy{background:rgba(232,64,64,.07);border-left:0}
+.swipe-wrap .srow.sh-row.tobuy{background:color-mix(in srgb,#E84040 9%,var(--bg2))}
+.sh-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--t4);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.tobuy .sh-chk{background:#E84040;border-color:#E84040}
+.sh-info{flex:1;min-width:0}
+.sh-name{font-size:14px;font-weight:600;color:var(--t1);line-height:1.3}
+.tobuy .sh-name{color:#FF6B6B}
+.sh-note{font-size:11px;color:var(--t3);margin-top:2px;font-style:italic}
+.sh-tag{display:inline-flex;align-items:center;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle;margin-left:6px;white-space:nowrap;font-style:normal}
+.sh-store{flex-shrink:0;max-width:92px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;font-weight:700;color:#fff;background:color-mix(in srgb,var(--sc) 70%,transparent);border-radius:10px;padding:2px 7px}
+.sh-qty{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.sh-qty button{width:25px;height:25px;border-radius:50%;border:1px solid var(--border2);background:var(--glass);color:var(--t1);font-size:16px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit}
+.sh-qty b{min-width:18px;text-align:center;font-size:13px;color:var(--t1)}
+.tobuy .sh-qty b{color:#FF6B6B}
+.sh-store-hdr{display:flex;align-items:center;gap:8px;padding:9px 13px;color:#fff;font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
+.sh-store-hdr span{margin-left:auto;font-size:10.5px;letter-spacing:0;text-transform:none;background:rgba(255,255,255,.22);border-radius:10px;padding:1px 8px}
+.sh-cart-row{cursor:pointer}
+.sh-pill{border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;color:#fff;flex-shrink:0}
+.sh-actions{display:flex;gap:8px;padding:10px 14px 2px;flex-wrap:wrap}
+.sh-act{padding:8px 13px;border-radius:20px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:12.5px;font-weight:700;font-family:inherit;cursor:pointer}
+.sh-act.amber{color:#F5A623;border-color:rgba(245,166,35,.55);background:rgba(245,166,35,.1)}
+.sh-act.green{color:#fff;border-color:#1d8a52;background:#1d8a52}
+.sh-out{margin:10px 14px 0;padding:9px 12px;border-radius:10px;background:rgba(245,166,35,.12);border:1px solid rgba(245,166,35,.4);font-size:12px;color:#F5A623;font-weight:600}
+.sh-notes{display:flex;flex-direction:column;gap:12px;padding:4px 16px 6px}
+.sh-sticky{position:relative;padding:12px 13px;border-radius:4px 4px 0 4px;color:#1c1c1c;box-shadow:3px 5px 16px rgba(0,0,0,.3);background-image:linear-gradient(225deg,rgba(0,0,0,.13) 20px,transparent 20px)}
+.sh-note-ts{background-color:#FFF59D;transform:rotate(-.5deg)}
+.sh-note-ct{background-color:#E1BEE7;transform:rotate(.5deg)}
+.sh-sticky h4{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px;color:#1c1c1c}
+.sh-sticky h4 small{margin-left:auto;font-size:10px;font-weight:600;color:#555}
+.sh-sticky ul{list-style:none;margin:8px 0 10px;display:flex;flex-direction:column;gap:5px;padding:0}
+.sh-sticky li{display:flex;align-items:baseline;gap:5px;font-size:13px;color:#1c1c1c}
+.sh-sticky li span{margin-left:auto;font-size:10px;color:#666;white-space:nowrap}
+.sh-sticky li.done{color:#777;text-decoration:line-through}
+.sh-sticky li i{font-style:normal;color:#1d8a52;font-weight:900;text-decoration:none}
+.sh-del{padding:6px 12px;border-radius:16px;background:rgba(0,0,0,.08);border:1px solid rgba(0,0,0,.2);font-size:11.5px;font-weight:700;color:#1c1c1c;font-family:inherit;cursor:pointer}
+.sh-stat{font-size:10.5px;color:#555;margin-left:8px}
+.sh-req{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--border)}
+.sh-req:last-child{border-bottom:0}
+.sh-req-bar{width:6px;height:30px;border-radius:3px;flex-shrink:0}
+.sh-req-btn{padding:6px 11px;border-radius:9px;background:var(--glass2);border:1px solid var(--border2);color:var(--t1);font-size:12px;font-weight:600;font-family:inherit;cursor:pointer}
+
 /* SPINNER */
 .spin-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;gap:12px}
 .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
@@ -3879,46 +3941,75 @@ function addCharterItem(id) {
 }
 
 // ── SHOPPING ───────────────────────────────────────────────────────
+// ── SHOPPING ───────────────────────────────────────────────────────
+// Crew houses: Thomas Slee's items use the original 'Crew House' location; Compass Trail has its
+// own list. The same item can sit on both lists, so Compass Trail items get their own shopState
+// key ('…@CT') and catalog doc id ('…__CT') — Thomas Slee's and everything else keep theirs.
+const CT_CABINET = 'Compass Trail Crew House';
+function shopKey(i) { return fsKey(i.item) + (i.cabinet === CT_CABINET ? '@CT' : ''); }
+function shopDocId(item, store, cabinet) { return fsDocId(item + '__' + store + (cabinet === CT_CABINET ? '__CT' : '')); }
+function cabLabel(c) { return c === 'Crew House' ? 'Thomas Slee Crew House' : (c || 'Other'); }
+// who asked for an item (cart colours): the request page's colour, or the store's colour for our own picks
+const SHOP_SRC = {
+  crewhouse:    { label: '🏠 Thomas Slee',   col: '#14B8A6', ink: '#5EEAD4' },
+  compasstrail: { label: '🏡 Compass Trail', col: '#A855F7', ink: '#D8B4FE' },
+  mechanics:    { label: '🔧 MX',            col: '#E8892E', ink: '#F5B072' },
+  siouxlookout: { label: '📍 Sioux Lookout', col: '#2ECC8A', ink: '#6EE7B7' },
+};
+const SHOP_PAGES_BASE = 'https://aristihernandez-svg.github.io/groomers-ykf/';
+const REQUEST_PAGES = [
+  { page: 'crewhouse.html',    name: '🏠 Thomas Slee Crew House',   col: '#14B8A6', title: 'Thomas Slee Crew House',   desc: 'Scan to add items to the shopping list from the Thomas Slee crew house.' },
+  { page: 'compasstrail.html', name: '🏡 Compass Trail Crew House', col: '#A855F7', title: 'Compass Trail Crew House', desc: 'Scan to add items to the shopping list from the Compass Trail crew house.' },
+  { page: 'mechanics.html',    name: '🔧 MX Hangar parts',          col: '#E8892E', title: 'MX Parts & Supplies',      desc: 'Scan to add parts or supplies needed in the MX hangar.' },
+  { page: 'siouxlookout.html', name: '📍 Sioux Lookout',            col: '#2ECC8A', title: 'Sioux Lookout Shopping',   desc: 'Scan to add items to the shopping list from Sioux Lookout — bought here and shipped up on the next flight.' },
+];
+const SHOP_LOC_ORDER = ['CR Office', "CR Groomers' Corner", 'MX Hangar', 'MX Office', 'Metro Cabinet', "Jet's Cabinet", 'Crew House', CT_CABINET];
+const SHOP_LOC_ICON = { 'CR Office': '🖥', "CR Groomers' Corner": '🧹', 'MX Hangar': '🔧', 'MX Office': '🗂', 'Metro Cabinet': '✈', "Jet's Cabinet": '✈', 'Crew House': '🏠', [CT_CABINET]: '🏡' };
+
+function shopSrcTag(item) {
+  const s = item.checked && SHOP_SRC[item.source];
+  return s ? `<span class="sh-tag" style="background:${s.col}33;color:${s.ink}">${s.label}</span>` : '';
+}
+function setShopView(v) {
+  S.shopView = v;
+  renderShopping(document.getElementById('content'));
+  const c = document.getElementById('content'); if (c) c.scrollTop = 0;
+}
+function shopTabsHtml(items) {
+  const n = items.filter(i => i.checked).length;
+  return `<div class="ct-seg sh-seg"><button class="${S.shopView !== 'cart' ? 'on' : ''}" onclick="setShopView('list')">List</button>
+    <button class="${S.shopView === 'cart' ? 'on' : ''}" onclick="setShopView('cart')">🛒${n ? `<em class="sh-count">${n}</em>` : ''}</button></div>`;
+}
+function openRequestPages() {
+  document.getElementById('mTitle').textContent = 'Request pages';
+  document.getElementById('mFields').innerHTML = `<div style="font-size:12px;color:var(--t2);margin-bottom:10px;line-height:1.5">Each page lets someone outside the app add to our list. Print its QR code and post it there.</div>
+    ${REQUEST_PAGES.map((p, i) => `<div class="sh-req">
+      <span class="sh-req-bar" style="background:${p.col}"></span>
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:700;color:var(--t1)">${p.name}</div><div style="font-size:11px;color:var(--t3);margin-top:2px">${p.page}</div></div>
+      <button class="sh-req-btn" onclick="closeModal();openRequestQr(${i})">QR</button>
+      <button class="sh-req-btn" onclick="window.open('${SHOP_PAGES_BASE}${p.page}','_blank')">Open</button></div>`).join('')}`;
+  document.getElementById('mSave').style.display = 'none';
+  document.getElementById('overlay').classList.add('open');
+}
+function openRequestQr(i) { const p = REQUEST_PAGES[i]; openQrWindow(SHOP_PAGES_BASE + p.page, p.title, p.desc); }
+
 function renderShopping(el) {
+  if(S.shopView==='cart') { renderCart(el, S.shopping); return; }
   setBar({title:'Shopping'});
   showFab(openAddShopItem);
   const scrollTop = el ? el.scrollTop : 0;
   const items=S.shopping;
-  const normStore = s => /mx\s*han[gh]?[ae]r/i.test(s) ? 'MX Hangar' : s;
-  const stores=[...new Set(items.map(i=>i.store).filter(Boolean).map(normStore))];
-  const locs=[...new Set(items.map(i=>i.cabinet).filter(Boolean))];
+  const stores=[...new Set(items.map(i=>i.store).filter(Boolean))].sort();
+  const locs=[...new Set(items.map(i=>i.cabinet).filter(Boolean))].sort((a,b)=>cabLabel(a).localeCompare(cabLabel(b)));
   const q=S.shopSearch.toLowerCase().trim();
+  if(S.shopFilter==='tobuy') S.shopFilter='all'; // "To Buy" filter removed — use the cart instead
 
-  // Filter
-  let filtered=items.filter(i=>{
-    const mStore = S.shopFilter==='all'?true:S.shopFilter==='tobuy'?i.checked:i.store===S.shopFilter;
-    const normCab = (s) => s.toLowerCase().replace(/\s+/g,' ').trim();
-    const mLoc   = S.shopLocFilter==='all'||(i.cabinet||'').toLowerCase().includes(S.shopLocFilter.toLowerCase());
-    const mSearch= !q||(i.item||'').toLowerCase().includes(q)||(i.store||'').toLowerCase().includes(q)||(i.cabinet||'').toLowerCase().includes(q);
+  const filtered=items.filter(i=>{
+    const mStore = S.shopFilter==='all' || i.store===S.shopFilter;
+    const mLoc   = S.shopLocFilter==='all' || (i.cabinet||'')===S.shopLocFilter;
+    const mSearch= !q||(i.item||'').toLowerCase().includes(q)||(i.store||'').toLowerCase().includes(q)||cabLabel(i.cabinet).toLowerCase().includes(q);
     return mStore&&mLoc&&mSearch;
   });
-
-  if(S.shopView==='cart') { renderCart(el,items); return; }
-
-  // Trip planner section
-  const tripHtml = `
-    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border)">
-      <div style="font-size:10px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-        <span>📍 Trip Planner / Errands</span>
-        ${S.tripNotes ? `<span onclick="clearTrip()" style="color:var(--t3);font-size:10px;cursor:pointer;font-weight:400">Clear</span>` : ''}
-      </div>
-      <textarea id="tripNotes" placeholder="Write your stops, errands, reminders for this run...&#10;e.g. Zehrs → Costco → Home Depot → Return washer fluid at Canadian Tire"
-        oninput="saveTripNotes(this.value)"
-        style="
-          width:100%;min-height:80px;padding:10px 12px;
-          border-radius:var(--radius-sm);border:1px solid var(--border2);
-          background:var(--glass2);color:var(--t1);font-size:13px;
-          font-family:inherit;resize:none;line-height:1.5;outline:none;
-        ">${S.tripNotes}</textarea>
-    </div>`;
-
-  // "To Buy" filter removed — use Cart view instead
-  if(S.shopFilter==='tobuy') S.shopFilter='all';
 
   // Buyer-out sticky note
   const buyerBanner = S.buyerOut ? `
@@ -3930,51 +4021,16 @@ function renderShopping(el) {
       <button onclick="setBuyerOut(false)" style="margin-top:10px;padding:7px 14px;border-radius:20px;border:none;background:#2a2200;color:#FFF4C2;font-size:12px;font-weight:600;cursor:pointer">✅ Back from shopping</button>
     </div>` : '';
 
-  const cartCount = items.filter(i=>i.checked).length;
-  const storeActive = S.shopFilter!=='all';
-  const locActive = S.shopLocFilter!=='all';
-  const storeCol = storeActive ? (STORE_COLORS[S.shopFilter]||'var(--accent)') : '';
+  const storeActive = S.shopFilter!=='all', locActive = S.shopLocFilter!=='all';
   let html=`<div class="shop-filters">
+    ${shopTabsHtml(items)}
     ${buyerBanner}
-    <div style="padding:10px 14px 6px;display:flex;justify-content:space-between;align-items:center">
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crewhouse.html','Crew House Shopping','Scan to add items to the shopping list from the crew house.')"
-          style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
-          <span style="font-size:16px">🔗</span> Crew House QR
-        </button>
-        <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/mechanics.html','MX Parts &amp; Supplies','Scan to add parts or supplies needed in the MX hangar.')"
-          style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
-          <span style="font-size:16px">🔧</span> MX QR
-        </button>
-        <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/siouxlookout.html','Sioux Lookout Shopping','Scan to add items to the shopping list from Sioux Lookout — bought here and shipped up on the next flight.')"
-          style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:8px 14px;color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:7px">
-          <span style="font-size:16px">📍</span> Sioux Lookout QR
-        </button>
-      </div>
-      <div onclick="setSV()" style="position:relative;background:${cartCount>0?'var(--green-dim)':'var(--glass2)'};border:1.5px solid ${cartCount>0?'var(--green)':'var(--border2)'};border-radius:50px;width:58px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0">
-        <span style="font-size:26px;line-height:1">🛒</span>
-        ${cartCount>0?`<div style="position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;background:var(--red);border-radius:50%;font-size:11px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;border:2px solid var(--bg)">${cartCount}</div>`:''}
-      </div>
-    </div>
-    <div style="padding:0 14px 6px;display:flex;gap:8px">
-      <div style="flex:1;position:relative">
-        <select onchange="setSF(this.value)" style="width:100%;background:${storeActive?'color-mix(in srgb,'+storeCol+' 15%,var(--glass2))':'var(--glass2)'};border:1px solid ${storeActive?storeCol:'var(--border2)'};border-radius:8px;padding:9px 32px 9px 10px;color:${storeActive?'var(--t1)':'var(--t2)'};font-size:13px;font-weight:${storeActive?'600':'400'};appearance:none;cursor:pointer;outline:none">
-          <option value="all" ${!storeActive?'selected':''}>🏪 Store</option>
-          ${stores.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${S.shopFilter===s?'selected':''}>${s}</option>`).join('')}
-        </select>
-        ${storeActive
-          ? `<span onclick="setSF('all');event.stopPropagation()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t2);cursor:pointer;padding:4px">✕</span>`
-          : `<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none">▾</span>`}
-      </div>
-      <div style="flex:1;position:relative">
-        <select onchange="setSLF(this.value)" style="width:100%;background:${locActive?'var(--glass2)':'var(--glass2)'};border:1px solid ${locActive?'var(--accent)':'var(--border2)'};border-radius:8px;padding:9px 32px 9px 10px;color:${locActive?'var(--t1)':'var(--t2)'};font-size:13px;font-weight:${locActive?'600':'400'};appearance:none;cursor:pointer;outline:none">
-          <option value="all" ${!locActive?'selected':''}>📍 Location</option>
-          ${locs.map(l=>`<option value="${l.replace(/"/g,'&quot;')}" ${S.shopLocFilter===l?'selected':''}>${l}</option>`).join('')}
-        </select>
-        ${locActive
-          ? `<span onclick="setSLF('all');event.stopPropagation()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--t2);cursor:pointer;padding:4px">✕</span>`
-          : `<span style="position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:11px;color:var(--t3);pointer-events:none">▾</span>`}
-      </div>
+    <div class="sh-chips">
+      <div class="sh-chip${storeActive?' on':''}"><select onchange="setSF(this.value)"><option value="all">🏪 Store</option>${stores.map(s=>`<option value="${s.replace(/"/g,'&quot;')}" ${S.shopFilter===s?'selected':''}>${s}</option>`).join('')}</select>
+        ${storeActive?`<span class="sh-x" onclick="setSF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
+      <div class="sh-chip${locActive?' on':''}"><select onchange="setSLF(this.value)"><option value="all">📍 Location</option>${locs.map(l=>`<option value="${l.replace(/"/g,'&quot;')}" ${S.shopLocFilter===l?'selected':''}>${cabLabel(l)}</option>`).join('')}</select>
+        ${locActive?`<span class="sh-x" onclick="setSLF('all');event.stopPropagation()">✕</span>`:'<span class="sh-car">▾</span>'}</div>
+      <button class="sh-chip sh-reqbtn" onclick="openRequestPages()">🔗 Request pages <span class="sh-car" style="position:static">▾</span></button>
     </div>
     <div class="search-wrap">
       <div class="search-inner">
@@ -3993,126 +4049,134 @@ function renderShopping(el) {
       ${q?`<button onclick="setSSearch('')">Clear search</button>`:''}
     </div>`;
   } else {
-    filtered.forEach(item=>{
-      const ri=items.indexOf(item);
-      const dot=STORE_COLORS[item.store]||'#888';
-      const qty=item.qty||1;
-      html+=`
-      <div class="swipe-wrap" data-idx="${ri}">
-        <div class="swipe-action-left">✏️ Edit</div>
-        <div class="swipe-action-right">🗑 Delete</div>
-        <div class="srow ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
-          <div class="scb ${item.checked?'on':''}">${item.checked?'✓':''}</div>
-          <div class="sinfo">
-            <div class="sname">${item.item}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
-            <div class="smeta">
-              <span style="font-weight:600;color:var(--t1)"><span class="sdot" style="background:${dot}"></span>${item.store}</span>
-              <span style="color:var(--t2)">${item.cabinet}</span>
+    // grouped by where things go
+    const groups = {};
+    filtered.forEach(i => { const k = i.cabinet || ''; (groups[k] = groups[k] || []).push(i); });
+    const order = Object.keys(groups).sort((a, b) => {
+      const ia = SHOP_LOC_ORDER.indexOf(a), ib = SHOP_LOC_ORDER.indexOf(b);
+      if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      if (!a) return 1; if (!b) return -1;
+      return a.localeCompare(b);
+    });
+    order.forEach(loc => {
+      const g = groups[loc].sort((a, b) => a.item.localeCompare(b.item));
+      const nBuy = g.filter(i => i.checked).length;
+      html += `<div class="sh-sec"><span class="sh-sec-ic">${SHOP_LOC_ICON[loc] || '📦'}</span>${cabLabel(loc)}<span class="sh-sec-n">${nBuy ? `<b>${nBuy} to buy</b>` : 'all stocked'}</span></div><div class="sh-card">`;
+      g.forEach(item => {
+        const ri = items.indexOf(item), qty = item.qty || 1;
+        const notes = item.notes && String(item.notes)!=='false' && item.notes.trim() ? item.notes : '';
+        html += `
+        <div class="swipe-wrap" data-idx="${ri}">
+          <div class="swipe-action-left">✏️ Edit</div>
+          <div class="swipe-action-right">🗑 Delete</div>
+          <div class="srow sh-row ${item.checked?'tobuy':''}" onclick="toggleShop(${ri})">
+            <div class="sh-chk">${item.checked?'✓':''}</div>
+            <div class="sh-info">
+              <div class="sh-name">${item.item}${shopSrcTag(item)}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
+              ${notes?`<div class="sh-note">${notes}</div>`:''}
+            </div>
+            ${item.store?`<span class="sh-store" style="--sc:${STORE_COLORS[item.store]||'#5A6478'}">${item.store}</span>`:''}
+            <div class="sh-qty" onclick="event.stopPropagation()">
+              <button onclick="changeQty(${ri},-1)">−</button><b>${qty}</b><button onclick="changeQty(${ri},1)">+</button>
             </div>
           </div>
-          <div onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:3px;padding:0 4px;flex-shrink:0">
-            <button onclick="changeQty(${ri},-1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--glass);color:var(--t1);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">−</button>
-            <span style="min-width:22px;text-align:center;font-size:13px;font-weight:700;color:var(--t1)">${qty}</span>
-            <button onclick="changeQty(${ri},1)" style="width:26px;height:26px;border-radius:50%;border:1px solid var(--border2);background:var(--glass);color:var(--t1);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">+</button>
-          </div>
-        </div>
-      </div>`;
+        </div>`;
+      });
+      html += `</div>`;
     });
   }
-  html+='<div style="height:80px"></div>';
+  html+='<div style="height:90px"></div>';
   el.innerHTML=html;
-  const rb=document.createElement('div');
-  rb.className='reset-bar';
-  rb.innerHTML=`<button class="reset-btn" onclick="resetShop()">✅ Reset all to In Stock</button>`;
-  el.appendChild(rb);
   // Setup two-way swipe on shopping rows
   el.querySelectorAll('.swipe-wrap[data-idx]').forEach(w=>{
     const i=parseInt(w.dataset.idx);
     if(!isNaN(i)) setupSwipeTwoWay(w, ()=>editShopItem(i), ()=>deleteShopItem(i));
   });
-  // Restore vertical + horizontal scroll positions — done after layout
-  // settles (rAF) so the browser doesn't clamp scrollTop back to 0 when
-  // tapping a filter chip near the end of the scrollable row.
-  requestAnimationFrame(() => {
-    if(el) el.scrollTop = scrollTop;
-    const b1 = document.querySelector('.shop-bar');
-    const b2 = document.querySelector('.shop-bar2');
-    if(b1 && bar1Scroll) b1.scrollLeft = bar1Scroll;
-    if(b2 && bar2Scroll) b2.scrollLeft = bar2Scroll;
-  });
+  requestAnimationFrame(() => { if(el) el.scrollTop = scrollTop; });
   // Keep search focus
   const si=document.getElementById('shopSrch');
   if(si&&q){si.focus();si.setSelectionRange(q.length,q.length);}
 }
 
+// One sticky note per crew house: what they asked for, ✓ once bought, until "Delivered"
+function houseNotesHtml() {
+  const notes = S.houseNotes || {};
+  const fmt = iso => iso ? new Date(iso).toLocaleString('en-CA', {weekday:'short', hour:'numeric', minute:'2-digit'}) : '';
+  return [['ts', 'Thomas Slee', 'sh-note-ts'], ['ct', 'Compass Trail', 'sh-note-ct']].map(([id, name, cls]) => {
+    const n = notes[id]; if (!n || !n.items) return '';
+    const list = Object.entries(n.items).filter(([, v]) => v && v.n).sort((a, b) => String(a[1].at).localeCompare(String(b[1].at)));
+    if (!list.length) return '';
+    let got = 0;
+    const rows = list.map(([key, v]) => {
+      const it = S.shopping.find(i => shopKey(i) === key);
+      const bought = !!it && !it.checked;
+      if (bought) got++;
+      return `<li class="${bought ? 'done' : ''}">${bought ? '<i>✓</i>' : ''}<b>${v.n}</b>${(v.q || 1) > 1 ? ` ×${v.q}` : ''}<span>${fmt(v.at)}</span></li>`;
+    }).join('');
+    return `<div class="sh-sticky ${cls}"><h4>${id === 'ct' ? '🏡' : '🏠'} ${name} · requests<small>since ${fmt(n.since)}</small></h4>
+      <ul>${rows}</ul>
+      <button class="sh-del" onclick="deliverHouseNote('${id}')">✓ Delivered — remove note</button><span class="sh-stat">${got} of ${list.length} bought</span></div>`;
+  }).join('');
+}
+function deliverHouseNote(id) {
+  const name = id === 'ct' ? 'Compass Trail' : 'Thomas Slee';
+  openModal(`Delivered to ${name}?`,
+    `<p style="font-size:14px;color:var(--t2);line-height:1.5;margin:0">This removes the <b style="color:var(--t1)">${name}</b> request note for everyone. The next request starts a new one.</p>`,
+    () => {
+      closeModal();
+      if (S.houseNotes) delete S.houseNotes[id];
+      renderShopping(document.getElementById('content'));
+      if (db) db.collection('teamData').doc('houseNotes').set({[id]: firebase.firestore.FieldValue.delete()}, {merge: true})
+        .catch(e => console.log('deliverHouseNote failed:', e));
+      toast('✓ Note removed');
+    });
+  const b = document.getElementById('mSave'); if (b) b.textContent = 'Remove note';
+}
+
 function renderCart(el, items) {
-  setBar({title:'Cart'});
+  setBar({title:'Shopping'});
+  document.getElementById('fab').style.display='none';
   const toBuy=items.filter(i=>i.checked);
   const byStore={};
-  toBuy.forEach(i=>{ (byStore[i.store]=byStore[i.store]||[]).push(i); });
+  toBuy.forEach(i=>{ (byStore[i.store||'Other']=byStore[i.store||'Other']||[]).push(i); });
+  const notes = houseNotesHtml();
 
-  // Trip planner section
-  const tripHtml = `
-    <div style="padding:10px 14px;background:var(--glass);border-bottom:1px solid var(--border)">
-      <div style="font-size:10px;color:var(--t2);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
-        <span>📍 Trip Planner / Errands</span>
-        ${S.tripNotes ? `<span onclick="clearTrip()" style="color:var(--t3);font-size:10px;cursor:pointer;font-weight:400">Clear</span>` : ''}
-      </div>
-      <textarea id="tripNotes" placeholder="Write your stops, errands, reminders for this run...&#10;e.g. Zehrs → Costco → Home Depot → Return washer fluid at Canadian Tire"
-        oninput="saveTripNotes(this.value)"
-        style="
-          width:100%;min-height:80px;padding:10px 12px;
-          border-radius:var(--radius-sm);border:1px solid var(--border2);
-          background:var(--glass2);color:var(--t1);font-size:13px;
-          font-family:inherit;resize:none;line-height:1.5;outline:none;
-        ">${S.tripNotes}</textarea>
-    </div>`;
-
-  let html=`<div class="shop-filters">
-    <div class="shop-bar" style="flex-wrap:wrap;gap:6px;padding-bottom:8px">
-      <button class="chip" onclick="setSV()"
-        style="background:#2E7D32;color:#fff;border-color:#2E7D32">← Back to list</button>
-      <button class="chip" onclick="resetShop()"
-        style="background:var(--green-dim);color:var(--green);border-color:rgba(46,204,138,0.3);font-weight:600">✅ Reset all to stock</button>
+  let html=`<div class="shop-filters">${shopTabsHtml(items)}
+    ${S.buyerOut?`<div class="sh-out">🛒 You’re out shopping · the team is notified when they add something</div>`:''}
+    <div class="sh-actions">
       ${S.buyerOut
-        ? `<button class="chip" onclick="setBuyerOut(false)" style="background:rgba(46,204,138,0.2);color:var(--green);border-color:rgba(46,204,138,0.4);font-weight:600">🛍 Out shopping — tap when back</button>`
-        : `<button class="chip" onclick="setBuyerOut(true)" style="background:var(--glass);color:var(--t2)">🚗 Mark as out shopping</button>`}
-      <span style="padding:5px 4px;font-size:12px;color:var(--t3)">${toBuy.length} item${toBuy.length!==1?'s':''} to buy</span>
+        ? `<button class="sh-act green" onclick="setBuyerOut(false)">✓ I’m back</button>`
+        : `<button class="sh-act amber" onclick="setBuyerOut(true)">🛒 I’m going shopping</button>`}
+      <button class="sh-act" onclick="resetShop()">✓ Reset all to stock</button>
     </div>
   </div>`;
+  if (notes) html += `<div class="sh-sec">Crew House requests</div><div class="sh-notes">${notes}</div>`;
 
   if(!toBuy.length) {
     html+=`<div class="empty"><div class="empty-icon">✅</div><p>Nothing to buy!</p></div>`;
   } else {
-    Object.entries(byStore).forEach(([store,sitems])=>{
-      const col=STORE_COLORS[store]||'#444';
-      html+=`
-      <div style="margin-top:8px">
-        <div class="cart-store-hdr" style="background:${col}">
-          ✈ ${store} <span class="cart-count">${sitems.length} item${sitems.length>1?'s':''}</span>
-        </div>
-        <div class="cart-store-divider" style="background:${col};opacity:0.4"></div>
-      </div>`;
+    html += `<div class="sh-sec">By store<span class="sh-sec-n">${toBuy.length} item${toBuy.length!==1?'s':''}</span></div>`;
+    Object.keys(byStore).sort().forEach(store=>{
+      const col=STORE_COLORS[store]||'#5A6478', sitems=byStore[store].sort((a,b)=>a.item.localeCompare(b.item));
+      html+=`<div class="sh-card"><div class="sh-store-hdr" style="background:${col}">✈ ${store}<span>${sitems.length} item${sitems.length>1?'s':''}</span></div>`;
       sitems.forEach(item=>{
-        const ri=items.indexOf(item);
-        const cqty = item.qty||1;
-        const isCH = item.source === 'crewhouse';
-        const isSL = item.source === 'siouxlookout';
-        const isMX = item.source === 'mechanics';
-        const srcCol = isCH ? '#4A90D9' : isSL ? 'var(--green)' : isMX ? '#E8892E' : col;
-        html+=`<div class="srow" style="background:${isCH?'rgba(74,144,217,0.13)':isSL?'rgba(46,204,138,0.13)':isMX?'rgba(232,137,46,0.13)':'var(--glass)'};border-left:3px solid ${srcCol}" onclick="toggleShop(${ri})">
-          <div class="scb" style="background:${srcCol};border-color:${srcCol};color:#fff">✓</div>
-          <div class="sinfo">
-            <div class="sname" style="font-weight:600;color:var(--t1)">${item.item}${isCH?` <span style="background:rgba(74,144,217,0.25);color:#4A90D9;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🏠 Crew House</span>`:''}${isSL?` <span style="background:rgba(46,204,138,0.25);color:var(--green);border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">📍 Sioux Lookout</span>`:''}${isMX?` <span style="background:rgba(232,137,46,0.25);color:#E8892E;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:700;vertical-align:middle">🔧 MX</span>`:''}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
-            <div class="smeta"><span>${item.cabinet}</span></div>
-            ${item.notes && String(item.notes)!=='false' && item.notes.trim() ? `<div style="font-size:11px;color:var(--t3);margin-top:2px;font-style:italic">${item.notes}</div>` : ''}
+        const ri=items.indexOf(item), cqty=item.qty||1;
+        const src=SHOP_SRC[item.source], c=src?src.col:col;
+        const notes = item.notes && String(item.notes)!=='false' && item.notes.trim() ? item.notes : '';
+        html+=`<div class="srow sh-row sh-cart-row" style="border-left:3px solid ${c};background:color-mix(in srgb,${c} 11%,transparent)" onclick="toggleShop(${ri})">
+          <div class="sh-chk" style="background:${c};border-color:${c};color:#fff">✓</div>
+          <div class="sh-info">
+            <div class="sh-name" style="color:var(--t1)">${item.item}${src?`<span class="sh-tag" style="background:${src.col}33;color:${src.ink}">${src.label}</span>`:''}${item.url?` <a href="${item.url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:inline-flex;align-items:center;vertical-align:middle;margin-left:5px;color:var(--accent);opacity:0.8;text-decoration:none" title="Open product page">🔗</a>`:''}</div>
+            <div class="sh-note" style="font-style:normal">${cabLabel(item.cabinet)}</div>
+            ${notes?`<div class="sh-note">${notes}</div>`:''}
           </div>
-          ${cqty>1?`<span style="background:${srcCol};color:#fff;border-radius:10px;padding:2px 8px;font-size:12px;font-weight:700;flex-shrink:0">×${cqty}</span>`:''}
+          ${cqty>1?`<span class="sh-pill" style="background:${c}">×${cqty}</span>`:''}
         </div>`;
       });
+      html+=`</div>`;
     });
   }
-  html+='<div style="height:80px"></div>';
+  html+='<div style="height:90px"></div>';
   el.innerHTML=html;
 }
 
@@ -10859,10 +10923,11 @@ function _doToggleShop(idx) {
   const item = S.shopping[idx];
   item.checked = !item.checked;
   item.status = item.checked ? 'To Buy' : 'In Stock';
+  item.source = '';
   haptic('medium');
   saveShoppingState();
   _lastShopWrite = Date.now();
-  fsSetShopState(item.item, item.checked, item.status);
+  fsSetShopState(item, item.checked, item.status, undefined, '');
   renderShopping(document.getElementById('content'));
   if(item.checked) {
     broadcastNotif('🛒 Shopping', `${item.item} needs restocking`, 'shopping');
@@ -10877,7 +10942,7 @@ function changeQty(idx, delta) {
   if(!item) return;
   item.qty = Math.max(1, (item.qty||1) + delta);
   saveShoppingState();
-  fsSetShopState(item.item, item.checked, item.status, item.qty);
+  fsSetShopState(item, item.checked, item.status, item.qty);
   renderShopping(document.getElementById('content'));
 }
 
@@ -10907,7 +10972,7 @@ function resetShop() {
   // Sync to Firestore so all phones see the reset instantly
   if(db) {
     const clearState = {};
-    S.shopping.forEach(i=>{ clearState[fsKey(i.item)]={checked:false,status:'In Stock'}; });
+    S.shopping.forEach(i=>{ clearState[shopKey(i)]={checked:false,status:'In Stock'}; });
     _lastShopWrite = Date.now();
     db.collection('shopState').doc('state').set(clearState, {merge:true})
       .catch(e=>console.log('resetShop Firestore sync failed:', e));
@@ -11775,13 +11840,13 @@ function showShopMatch(name) {
 }
 
 function openAddShopItem() {
-  const existingLocs = [...new Set(S.shopping.map(i=>i.cabinet).filter(Boolean))].sort();
+  const existingLocs = [...new Set([...S.shopping.map(i=>i.cabinet).filter(Boolean), CT_CABINET])].sort((a,b)=>cabLabel(a).localeCompare(cabLabel(b)));
   openModal('Add Shopping Item',
     `<label>Item name</label>
      <input id="mSI" placeholder="Item..." oninput="checkShopDuplicate()">
      <div id="mSIWarn" style="display:none;font-size:12px;color:#E67E22;background:rgba(230,126,34,0.12);border-radius:8px;padding:7px 10px;margin-top:4px;line-height:1.4"></div>
      <label>Location / Cabinet</label>
-     <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${l}</option>`).join('')}</select>
+     <select id="mSC"><option value="">— Select location —</option>${existingLocs.map(l=>`<option value="${l}">${cabLabel(l)}</option>`).join('')}</select>
      <label>Store</label>
      <select id="mSS" onchange="onStoreChange(this)">${storeSelectHtml()}</select>
      <div id="mSSNewWrap" style="display:none"><input id="mSSNew" placeholder="New store name..." style="margin-top:6px"></div>
@@ -11798,10 +11863,10 @@ function openAddShopItem() {
       }
       if(!item) return;
       const url=document.getElementById('mSU').value.trim();
-      const id=fsDocId(item+'__'+store);
-      S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:'',url});
+      const id=shopDocId(item,store,cabinet);
+      S.shopping.push({id,item,cabinet,store,status:'To Buy',checked:true,notes:'',url,source:''});
       _lastShopWrite = Date.now();
-      fsSetShopState(item,true,'To Buy'); // it's a new item, default to "to buy"
+      fsSetShopState({item,cabinet},true,'To Buy',undefined,''); // it's a new item, default to "to buy"
       closeModal(); renderShopping(document.getElementById('content')); toast('Item added ✓');
       if(db) {
         db.collection('shoppingCatalog').doc(id).set({item,cabinet,store,notes:'',url})
@@ -12614,9 +12679,15 @@ function editShopItem(idx) {
       }
       if(!newItem) return;
       const newUrl=document.getElementById('eSU').value.trim();
-      const oldId = item.id || fsDocId(item.item+'__'+item.store);
-      const newId = fsDocId(newItem+'__'+newStore);
+      const oldId = item.id || shopDocId(item.item,item.store,item.cabinet);
+      const newId = shopDocId(newItem,newStore,newCab);
+      const oldKey = shopKey(item);
       S.shopping[idx] = {...item, id:newId, item:newItem, cabinet:newCab, store:newStore, url:newUrl};
+      if(shopKey(S.shopping[idx]) !== oldKey && item.checked) {
+        _lastShopWrite = Date.now();
+        fsSetShopState(S.shopping[idx], true, item.status||'To Buy', item.qty||1, item.source||'');
+        fsSetShopState(item, false, 'In Stock');
+      }
       saveShoppingState();
       closeModal();
       renderShopping(document.getElementById('content'));
@@ -12683,7 +12754,7 @@ function deleteBoredItem(id) {
 function saveShoppingState() {
   // Save checked state of all items keyed by item name
   const state = {};
-  S.shopping.forEach(i=>{ state[i.item] = i.checked; });
+  S.shopping.forEach(i=>{ state[shopKey(i)] = i.checked; });
   localStorage.setItem('gykf_shop_state', JSON.stringify(state));
 }
 
@@ -12692,8 +12763,9 @@ function restoreShoppingState() {
   try {
     const state = JSON.parse(localStorage.getItem('gykf_shop_state') || '{}');
     S.shopping.forEach(i=>{
-      if(i.item in state) {
-        i.checked = state[i.item];
+      const k = shopKey(i) in state ? shopKey(i) : i.item;
+      if(k in state) {
+        i.checked = state[k];
         i.status = i.checked ? 'To Buy' : 'In Stock';
       }
     });
@@ -13040,13 +13112,19 @@ async function setupLiveSync() {
       }
     }, e => console.log('taskState listener error:', e));
 
+    // Crew house request notes (one per house, shown as sticky notes in the Cart)
+    db.collection('teamData').doc('houseNotes').onSnapshot(snap => {
+      S.houseNotes = snap.exists ? (snap.data() || {}) : {};
+      if(S.tab==='shopping' && S.shopView==='cart' && !touchActive) renderShopping(document.getElementById('content'));
+    }, e => console.log('houseNotes listener error:', e));
+
     // Shopping checked/to-buy state.
     db.collection('shopState').doc('state').onSnapshot(snap => {
       const data = snap.data(); if(!data) return;
       _cachedShopState = data; // always cache so catalog listener can use it
       if(Date.now() - _lastShopWrite < 1500) return; // suppress echo of own write
       S.shopping.forEach(i => {
-        const v=data[fsKey(i.item)];
+        const v=data[shopKey(i)];
         if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; i.source=v.source||''; }
       });
       saveShoppingState();
@@ -13165,13 +13243,13 @@ async function setupLiveSync() {
     // groomer shows up on every phone immediately, not just the checked flag.
     db.collection('shoppingCatalog').onSnapshot(snap => {
       if(snap.empty) return; // nothing imported/added yet — keep Sheets-sourced fallback
-      const prevChecked = {}; S.shopping.forEach(i=>prevChecked[i.item]={checked:i.checked,status:i.status,source:i.source||''});
+      const prevChecked = {}; S.shopping.forEach(i=>prevChecked[shopKey(i)]={checked:i.checked,status:i.status,source:i.source||''});
       S.shopping = snap.docs.filter(d=>{
         const v=d.data();
         return v.item && !v.deleted; // skip malformed docs and soft-deleted ones (swipe-delete on satellite pages)
       }).map(d=>{
         const v=d.data();
-        const prior = prevChecked[v.item];
+        const prior = prevChecked[shopKey({item:v.item, cabinet:v.cabinet||''})];
         return {id:d.id, item:v.item, cabinet:v.cabinet||'', store:v.store||'', notes:v.notes||'', url:v.url||'',
           checked: prior?.checked||false, status: prior?.status||'In Stock', source: prior?.source||''};
       });
@@ -13179,7 +13257,7 @@ async function setupLiveSync() {
       // shopState listener fires before shoppingCatalog on page load.
       if(_cachedShopState) {
         S.shopping.forEach(i => {
-          const v=_cachedShopState[fsKey(i.item)];
+          const v=_cachedShopState[shopKey(i)];
           if(v!==undefined) { i.checked=v.checked; i.status=v.status; if(v.qty!==undefined) i.qty=v.qty; i.source=v.source||''; }
         });
       }
@@ -13817,11 +13895,12 @@ function fsSetTaskDone(tabName, task, done) {
     {[fsKey(task)]:done, [tsKey]: now.toISOString(), _date: now.toDateString()}, {merge:true}
   ).catch(e => console.log('fsSetTaskDone failed (offline?):', e));
 }
-function fsSetShopState(item, checked, status, qty) {
+function fsSetShopState(item, checked, status, qty, source) {
   if(!db) return;
   const upd = {checked, status};
   if(qty !== undefined) upd.qty = qty;
-  db.collection('shopState').doc('state').set({[fsKey(item)]:upd}, {merge:true})
+  if(source !== undefined) upd.source = source;
+  db.collection('shopState').doc('state').set({[shopKey(item)]:upd}, {merge:true})
     .catch(e => console.log('fsSetShopState failed (offline?):', e));
 }
 // ── BORED BOARD (Firestore) ────────────────────────────────────────

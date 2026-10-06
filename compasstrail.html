@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Skycare — Thomas Slee Crew House</title>
+<title>Skycare — Compass Trail Crew House</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-:root{--bg:#0B1120;--bg2:#111827;--bg3:#1a2235;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;--accent:#14B8A6;--accent2:#0F8F82;--green:#27AE60;--red:#E74C3C;--radius:16px;--radius-sm:10px}
+:root{--bg:#0B1120;--bg2:#111827;--bg3:#1a2235;--glass:rgba(255,255,255,0.05);--glass2:rgba(255,255,255,0.08);--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.14);--t1:#f0f4ff;--t2:#9aa5be;--t3:#5a6478;--accent:#A855F7;--accent2:#7E3BD1;--green:#27AE60;--red:#E74C3C;--radius:16px;--radius-sm:10px}
 body{background:var(--bg);color:var(--t1);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding-bottom:100px}
 .bar{position:sticky;top:0;z-index:50;background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px}
 .bar-title{font-size:16px;font-weight:800;color:var(--t1);flex:1}
@@ -56,15 +56,15 @@ textarea{resize:none;min-height:60px;font-size:14px}
 // crewhouse.html = Thomas Slee (the original link, its items use the 'Crew House' location).
 // compasstrail.html is this same page with the Compass Trail settings below swapped in.
 const HOUSE = {
-  id: 'ts',                          // key of this house's note in teamData/houseNotes
-  name: 'Thomas Slee Crew House',
-  short: 'Thomas Slee',
-  cabinet: 'Crew House',             // shoppingCatalog location of this house's items
-  source: 'crewhouse',               // marks requests from this page in the main app's cart
-  suffix: '',                        // shopState key suffix (Compass Trail: '@CT', so the same item can be requested at both houses)
-  idSuffix: '',                      // catalog doc id suffix (Compass Trail: '__CT')
-  accent: '#14B8A6', accent2: '#0F8F82',
-  seedFrom: null,                    // Compass Trail only: copy this location's items once, the first time the page opens
+  id: 'ct',
+  name: 'Compass Trail Crew House',
+  short: 'Compass Trail',
+  cabinet: 'Compass Trail Crew House',
+  source: 'compasstrail',
+  suffix: '@CT',
+  idSuffix: '__CT',
+  accent: '#A855F7', accent2: '#7E3BD1',
+  seedFrom: 'Crew House',            // starts as a copy of Thomas Slee's list, then lives on its own
 };
 
 firebase.initializeApp({
@@ -154,7 +154,7 @@ function renderList() {
 
   if(!catalog.length) {
     document.getElementById('app').innerHTML = `<div class="empty">
-      <div class="empty-icon">🏠</div>
+      <div class="empty-icon">🏡</div>
       <p style="font-size:15px;font-weight:600;color:var(--t2)">No items yet</p>
       <p style="font-size:13px;margin-top:6px">Tap + to add something you need</p>
     </div>`;
