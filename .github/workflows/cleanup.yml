@@ -4,6 +4,15 @@ on:
   schedule:
     - cron: '0 4 * * *'     # 4:00 AM UTC daily (midnight EDT / 11 PM EST)
   workflow_dispatch:         # manual trigger
+    inputs:
+      only:
+        description: 'Run only one step ("handoff"), or leave empty for the full nightly cleanup'
+        required: false
+        default: ''
+      dry_run:
+        description: 'Handoff step: list what would be deleted, delete nothing'
+        type: boolean
+        default: false
 
 jobs:
   cleanup:
@@ -26,3 +35,5 @@ jobs:
         working-directory: notif
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          ONLY: ${{ inputs.only }}
+          DRY_RUN: ${{ inputs.dry_run }}

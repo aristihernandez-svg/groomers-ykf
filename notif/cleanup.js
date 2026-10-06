@@ -227,6 +227,33 @@ async function cleanPastDayNotes() {
   console.log(`dayNotes: deleted ${ok} past note(s) dated before ${today}: ${past.map(d => d.id).join(', ')}`);
 }
 
+// Handoff notes: only the open one(s) matter — the app shows notes that are NOT marked complete,
+// and the next shift's note is always open. Completed notes were never shown again but were still
+// downloaded on every app open (with their voice memos, ~1.6 MB by Oct 2026). Delete a note only
+// when it is marked complete AND older than 3 days; open notes are never touched, whatever their age.
+const HANDOFF_KEEP_MS = 3 * 24 * 60 * 60 * 1000;
+async function cleanOldHandoffNotes() {
+  const cutoff = Date.now() - HANDOFF_KEEP_MS;
+  const snap = await db.collection('handoffNotes').where('resolved', '==', true).get();
+  const old = snap.docs.filter(d => {
+    const ts = d.get('ts');
+    const when = ts && ts.toMillis ? ts.toMillis() : d.createTime.toMillis();
+    return when < cutoff;
+  });
+  if (!old.length) { console.log('handoffNotes: no completed notes older than 3 days'); return; }
+  if (process.env.DRY_RUN === 'true') {
+    console.log(`handoffNotes (dry run): would delete ${old.length} completed note(s): ${old.map(d => d.get('date') || d.id).join(' | ')}`);
+    return;
+  }
+  let ok = 0;
+  for (const d of old) {
+    // precondition: skip it if anyone changed the note after we read it
+    try { await d.ref.delete({ lastUpdateTime: d.updateTime }); ok++; }
+    catch (e) { console.warn(`handoffNotes/${d.id}: not deleted (${e.message})`); }
+  }
+  console.log(`handoffNotes: deleted ${ok} of ${old.length} completed note(s) older than 3 days`);
+}
+
 // YAV keeps its own day notes in skycare-yav. Its rules block deletes, so past notes are
 // blanked instead (a blank note shows nowhere). Read over REST, one narrow write per note.
 function yavRest(method, url, body) {
@@ -267,6 +294,8 @@ async function blankPastYavDayNotes() {
 }
 
 async function main() {
+  // Manual runs can do just the handoff step (workflow input "only: handoff")
+  if (process.env.ONLY === 'handoff') { await cleanOldHandoffNotes(); console.log('Cleanup done (handoff notes only).'); return; }
   await cleanQueue('mxNotifQueue');
   await cleanQueue('shopNotifQueue');
   await cleanCoffeeSent();
@@ -276,6 +305,7 @@ async function main() {
   // Last, and each on its own: a day-note problem must never stop the cleanups above.
   try { await cleanPastDayNotes(); } catch (e) { console.error('dayNotes cleanup failed:', e.message); }
   try { await blankPastYavDayNotes(); } catch (e) { console.error('YAV dayNotes cleanup failed:', e.message); }
+  try { await cleanOldHandoffNotes(); } catch (e) { console.error('handoffNotes cleanup failed:', e.message); }
   console.log('Cleanup done.');
 }
 
