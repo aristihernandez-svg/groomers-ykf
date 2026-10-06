@@ -4027,6 +4027,17 @@ function saveCrewCarData() {
       .catch(e=>console.log('crewCarData Firestore write failed:', e));
   }
 }
+function _carEsc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function markDamageHandled(key) {
+  const d = carData(key);
+  if (!d.damage) return;
+  d.damage.open = false;
+  d.damage.handledAt = new Date().toISOString();
+  renderCarDetail(document.getElementById('content'), key);
+  toast('✓ Damage marked handled');
+  if (db) db.collection('crewCarData').doc('all').update({ [key + '.damage.open']: false, [key + '.damage.handledAt']: d.damage.handledAt })
+    .catch(e => console.log('markDamageHandled failed:', e));
+}
 function saveCarStatus(key, val) {
   const d = carData(key);
   d.status = (d.status === val) ? '' : val;
@@ -4484,7 +4495,7 @@ function renderCrewCarsList(el) {
   }
   document.getElementById('fab').style.display='none';
   let html = `<div style="display:flex;align-items:center;justify-content:flex-end;padding:8px 14px 4px">
-    <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Update','Scan to update fuel level and KM after using a crew car.')"
+    <button onclick="openQrWindow('https://aristihernandez-svg.github.io/groomers-ykf/crew-access.html','Crew Car Check-in','Scan to check in with a crew car and report any damage.')"
       style="background:var(--glass2);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;color:var(--t1);font-size:12px;font-weight:600;cursor:pointer">🔗 QR</button>
   </div>`;
   if (BOUNCIE_WORKER_URL && S.bouncieSyncFailed) {
@@ -4541,7 +4552,7 @@ function renderCrewCarsList(el) {
       const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
       return (ckm>0&&nsKm>0&&(nsKm-ckm)<=500)||(fuelPct!==null&&fuelPct<=0.25)||
              (bOk&&b.milOn)||(bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown'))||
-             !!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
+             !!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso)||!!(d.damage&&d.damage.open);
     };
     const _buildCard=car=>{
       const d=carData(car.key);
@@ -4556,7 +4567,8 @@ function renderCrewCarsList(el) {
       const fuelLabel=bOk&&b.fuelLevel!=null?Math.round(b.fuelLevel)+'%':(d.fuel||'—');
       const milAlert=bOk&&b.milOn;
       const battAlert=bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown');
-      const anyAlert=oilWarn||fuelAlert||milAlert||battAlert||!!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
+      const dmgAlert=!!(d.damage&&d.damage.open);
+      const anyAlert=oilWarn||fuelAlert||milAlert||battAlert||dmgAlert||!!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
       const svcRemain=ckm>0&&nsKm>0?Math.max(0,nsKm-ckm):null;
       const svcPct=svcRemain!==null?Math.min(100,Math.max(0,Math.round((10000-(nsKm-ckm))/10000*100))):0;
       const svcCol=svcRemain===null?'#2A4A6A':svcRemain<=500?'#EF4444':svcRemain<=2000?'#F59E0B':'#3B82F6';
@@ -4565,11 +4577,12 @@ function renderCrewCarsList(el) {
       const fpNum=fuelPctNum??0;
       const cardBorder=anyAlert?'rgba(239,68,68,.42)':'#1A2840';
       const cardBg=anyAlert?'linear-gradient(110deg,#160F14,#130C18)':'linear-gradient(110deg,#0D1828,#0B1625)';
-      const chip=milAlert||battAlert||fuelAlert?
+      const chip=milAlert||battAlert||fuelAlert||dmgAlert?
         `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(239,68,68,.18);color:#F87171;flex-shrink:0;margin-left:6px;white-space:nowrap">Alert</span>`:
         oilWarn?`<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(245,158,11,.18);color:#FBB040;flex-shrink:0;margin-left:6px;white-space:nowrap">Service</span>`:
         `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ADE80;flex-shrink:0;margin-left:6px;white-space:nowrap">OK</span>`;
       const tagItems=[];
+      if(dmgAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">🚨 Damage</span>`);
       if(milAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">⚠️ MIL ${b.dtcList?.join(' ')||''}</span>`);
       if(battAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">🔋 Battery ${b.battery}</span>`);
       if(oilWarn) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(245,158,11,.18);color:#FBB040">🛢️ Oil due in ${svcRemain} km</span>`);
@@ -4830,9 +4843,16 @@ function renderCarDetail(el, key) {
           </div>
         </div>
       </div>
-      ${d.crewNote?`<div style="background:#FFF59D;background-image:linear-gradient(225deg,rgba(0,0,0,0.13) 24px,transparent 24px);border-radius:4px 4px 0 4px;padding:12px 14px;box-shadow:2px 4px 12px rgba(0,0,0,0.25)">
-        <div style="font-size:10px;font-weight:700;color:#8a6d00;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:4px">📋 Crew Note</div>
-        <div style="font-size:13px;color:#1c1c1c;line-height:1.5">${d.crewNote}</div>
+      ${d.damage&&d.damage.open?`<div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.45);border-radius:14px;padding:12px 14px">
+        <div style="font-size:10px;font-weight:800;color:#F87171;letter-spacing:0.6px;text-transform:uppercase;margin-bottom:4px">🚨 Damage reported</div>
+        <div style="font-size:13px;color:var(--t1);line-height:1.5">${_carEsc(d.damage.text)}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:6px">${_carEsc(d.damage.by||'')}${d.damage.at?' · '+new Date(d.damage.at).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</div>
+        <button onclick="markDamageHandled('${key}')" style="margin-top:10px;padding:8px 14px;border-radius:20px;border:1px solid rgba(239,68,68,0.5);background:transparent;color:#F87171;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">✓ Mark handled</button>
+      </div>`:''}
+      ${d.lastUse&&d.lastUse.name?`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:14px;background:var(--glass2);border:1px solid var(--border2)">
+        <span style="font-size:18px">👤</span>
+        <span style="flex:1;font-size:12px;color:var(--t2)">Last used by <b style="color:var(--t1)">${_carEsc(d.lastUse.name)}</b>${d.lastUse.at?' · '+new Date(d.lastUse.at).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}):''}</span>
+        <span style="font-size:11px;font-weight:700;color:${d.lastUse.damage?'#F87171':'#4ADE80'}">${d.lastUse.damage?'Damage':'No damage'}</span>
       </div>`:''}
     </div>
 
