@@ -39,6 +39,7 @@ function easternHour(d = new Date()) {
   return Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', hourCycle: 'h23' }).format(d));
 }
 const PREV_MAX_AGE_MS = 15 * 60 * 1000; // last run's positions older than this are too stale to compare with
+const WORLD_EVERY_MS = 5 * 60 * 1000;    // how often OpenSky is asked worldwide (see fetchOpenSky)
 
 // YAV (St. Andrews) gets its own alert, measured only from CYAV, sent to the
 // YAV app's own subscribers (skycare-yav) with YAV's own push key.
@@ -133,14 +134,18 @@ function getJson(url, headers) {
   });
 }
 
-// Two small requests: our planes' ICAO24 codes inside a 5° × 5° box around each base.
+// Most runs: two small requests, our planes' ICAO24 codes inside a 5° × 5° box around each base.
 // OpenSky charges by box size — 25 sq° or less is 1 credit, so 2 a run (measured 2026-10-06;
 // codes with no box are charged as a whole-world search, 4). Each box reaches ~100–150 nm from
-// its base, well past the 60 / 40 nm alert rings; adsb.lol still finds our planes anywhere.
-function fetchOpenSky() {
+// its base, well past the 60 / 40 nm alert rings.
+// Every 5 min instead: one whole-world request for our planes (4 credits), so planes far away
+// (Florida, California…) have OpenSky as a second source next to adsb.lol.
+// 840 runs a day (every minute, 6 AM – 8 PM): 168 × 4 + 672 × 2 ≈ 2,000 of the 4,000 daily credits.
+function fetchOpenSky(world) {
   const codes = FLEET.map(a => 'icao24=' + a.icao24).join('&');
   const box = (lat, lon) => `&lamin=${(lat - 2.5).toFixed(2)}&lamax=${(lat + 2.5).toFixed(2)}&lomin=${(lon - 2.5).toFixed(2)}&lomax=${(lon + 2.5).toFixed(2)}`;
   const auth = 'Basic ' + Buffer.from(`aristihernandez@gmail.com:${process.env.OPENSKY_PASSWORD}`).toString('base64');
+  if (world) return getJson('https://opensky-network.org/api/states/all?' + codes, { Authorization: auth });
   const ask = (lat, lon) => getJson('https://opensky-network.org/api/states/all?' + codes + box(lat, lon), { Authorization: auth });
   // Either base failing must not lose the other
   return Promise.allSettled([ask(CYKF_LAT, CYKF_LON), ask(CYAV_LAT, CYAV_LON)]).then(([k, v]) => {
@@ -308,9 +313,23 @@ async function main() {
     console.log(`${h}:xx Eastern — outside live tracking hours (6 AM – 8 PM), no requests made.`);
     return;
   }
+  // Last run's positions (about a minute ago) — to tell an arrival from a departure —
+  // and when OpenSky was last asked worldwide
+  let prevLive = {}, worldAt = null;
+  try {
+    const ps = await db.collection('fleetPositions').doc('live').get();
+    const pv = ps.exists ? ps.data() : null;
+    const at = pv?.fetchedAt?.toMillis?.() || 0;
+    worldAt = pv?.openskyWorldAt || null;
+    if (pv && Date.now() - at < PREV_MAX_AGE_MS) prevLive = pv.positions || {};
+    else console.log("Last run's positions missing or stale — first sightings only this run");
+  } catch (e) { console.error("Could not read last run's positions:", e.message); }
+  // 30 s of slack so a run that starts a few seconds early still counts
+  const world = Date.now() - (worldAt?.toMillis?.() || 0) >= WORLD_EVERY_MS - 30 * 1000;
+
   // Ask both sources at once; either one failing must not stop the other.
-  console.log('Fetching OpenSky + adsb.lol for fleet...');
-  const [osRes, lolRes] = await Promise.allSettled([fetchOpenSky(), fetchAdsbLol()]);
+  console.log(`Fetching OpenSky (${world ? 'worldwide' : 'near CYKF / CYAV'}) + adsb.lol for fleet...`);
+  const [osRes, lolRes] = await Promise.allSettled([fetchOpenSky(world), fetchAdsbLol()]);
   if (osRes.status === 'rejected')  console.error('OpenSky error:', osRes.reason?.message);
   if (lolRes.status === 'rejected') console.error('adsb.lol error:', lolRes.reason?.message);
   if (osRes.status === 'rejected' && lolRes.status === 'rejected') process.exit(0); // nothing to go on; keep last saved positions
@@ -319,7 +338,7 @@ async function main() {
   const bySource = { opensky: {}, 'adsb.lol': {} };
   if (osRes.status === 'fulfilled') {
     const states = osRes.value?.states || [];
-    console.log(`OpenSky: ${states.length} of our planes near CYKF / CYAV`);
+    console.log(`OpenSky: ${states.length} of our planes ${world ? 'worldwide' : 'near CYKF / CYAV'}`);
     const nowS = Date.now() / 1000;
     states.forEach(s => {
       const ac = matchAircraft(s[0], s[1]);
@@ -369,16 +388,6 @@ async function main() {
     live[ac.tail] = { reg: ac.reg, tail: ac.tail, type: ac.type, ...best, distNm, src };
   });
   console.log('Fleet found:', Object.values(live).map(a => `${a.tail}(${a.src})`).join(', ') || 'none');
-
-  // Last run's positions (about 2 min ago) — to tell an arrival from a departure
-  let prevLive = {};
-  try {
-    const ps = await db.collection('fleetPositions').doc('live').get();
-    const pv = ps.exists ? ps.data() : null;
-    const at = pv?.fetchedAt?.toMillis?.() || 0;
-    if (pv && Date.now() - at < PREV_MAX_AGE_MS) prevLive = pv.positions || {};
-    else console.log('Last run\'s positions missing or stale — first sightings only this run');
-  } catch (e) { console.error('Could not read last run\'s positions:', e.message); }
 
   // Check each live aircraft against alert rules
   const now = Date.now();
@@ -448,7 +457,9 @@ async function main() {
   });
   await db.collection('fleetPositions').doc('live').set({
     positions: positionData,
-    fetchedAt: admin.firestore.FieldValue.serverTimestamp()
+    fetchedAt: admin.firestore.FieldValue.serverTimestamp(),
+    // when OpenSky was last asked worldwide (kept as it was if this run only asked near the bases)
+    openskyWorldAt: world && osRes.status === 'fulfilled' ? admin.firestore.FieldValue.serverTimestamp() : worldAt,
   });
   console.log('Fleet positions written to Firestore.');
 
