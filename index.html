@@ -13578,7 +13578,16 @@ let _fleetLastFetch = 0;
 let _fleetTimer = null;
 
 let _fleetFeedAt = 0; // when the alert job last wrote positions (ms)
+// Live tracking runs 6 AM – 8 PM Eastern: the fleet job makes no requests overnight,
+// so the tab says it's paused instead of showing planes frozen where they were at 8 PM.
+let _fleetPaused = false;
+function fleetTrackingPaused() {
+  const h = Number(new Intl.DateTimeFormat('en-US', {timeZone:'America/Toronto', hour:'numeric', hourCycle:'h23'}).format(new Date()));
+  return h < 6 || h >= 20;
+}
 async function fetchFleetOpenSky() {
+  _fleetPaused = fleetTrackingPaused();
+  if(_fleetPaused) return [];
   // Positions come from the fleet-alert GitHub job (OpenSky, about every 2 min), which
   // saves them to fleetPositions/live. Browsers can't call OpenSky (CORS) and
   // airplanes.live now returns 403, so Firestore is the only path.
@@ -13691,7 +13700,7 @@ function renderFleet(el) {
   document.getElementById('fab').style.display='none';
   clearTimeout(_fleetTimer);
 
-  const fetchAge = _fleetLastFetch
+  const fetchAge = _fleetPaused ? 'Live tracking 6 AM – 8 PM Eastern' : _fleetLastFetch
     ? (() => { const s=Math.floor((Date.now()-_fleetLastFetch)/1000); return 'Updated '+(s<60?s+' s ago':Math.floor(s/60)+' min ago'); })()
     : 'Not fetched yet';
 
@@ -13713,7 +13722,7 @@ function renderFleet(el) {
   const etaText = m => m<60 ? m+' min' : Math.floor(m/60)+'h '+String(m%60).padStart(2,'0');
   const row = ac => {
     const d=_fleetData[ac.tail];
-    if(!d) return `<div class="fl-row"><span class="fl-dot off"></span><div class="fl-grow"><span class="fl-reg off">${ac.reg}</span> <span class="fl-type">${ac.type}</span><div class="fl-sub off">No signal</div></div></div>`;
+    if(!d) return `<div class="fl-row"><span class="fl-dot off"></span><div class="fl-grow"><span class="fl-reg off">${ac.reg}</span> <span class="fl-type">${ac.type}</span><div class="fl-sub off">${_fleetPaused?'Overnight — tracking resumes 6 AM':'No signal'}</div></div></div>`;
     const sub = d.onGround
       ? (d.distNm!=null&&d.distNm<=5 ? 'On the ground · CYKF' : 'On the ground')
       : [d.distNm!=null ? d.distNm+' nm' : null, d.altFt ? d.altFt.toLocaleString()+' ft' : null, d.speedKts ? d.speedKts+' kts' : null].filter(Boolean).join(' · ');
@@ -13755,11 +13764,11 @@ function renderFleet(el) {
     ${onGround.length ? `<div class="fl-sec">On the ground<span>${onGround.length}</span></div><div class="fl-card">${onGround.map(row).join('')}</div>` : ''}
     ${noSignal.length ? `
     <div class="fl-more" onclick="S.fleetOffOpen=!S.fleetOffOpen;renderFleet(document.getElementById('content'))">
-      <span class="fl-dot off"></span>${noSignal.length} aircraft with no signal<span style="margin-left:auto">${S.fleetOffOpen?'▾':'▸'}</span></div>
+      <span class="fl-dot off"></span>${noSignal.length} aircraft ${_fleetPaused?'· overnight, resumes 6 AM':'with no signal'}<span style="margin-left:auto">${S.fleetOffOpen?'▾':'▸'}</span></div>
     ${S.fleetOffOpen ? `<div class="fl-card" style="margin-top:8px">${noSignal.map(row).join('')}</div>` : ''}` : ''}
 
     ${notifBtn}
-    <p class="fl-fine">Live ADS-B, refreshed about every 2 min. The push alert fires once per inbound arrival, within ${FLEET_ALERT_NM} nm of CYKF.</p>
+    <p class="fl-fine">Live ADS-B, refreshed about every minute from 6 AM to 8 PM Eastern (no tracking or alerts overnight). The push alert fires once per inbound arrival, within ${FLEET_ALERT_NM} nm of CYKF.</p>
     <div style="height:90px"></div>
   </div>`;
 

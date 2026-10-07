@@ -1,7 +1,13 @@
 name: Fleet 60 nm Arrival Alert
 
 on:
-  workflow_dispatch:          # triggered by cron-job.org every 2 minutes
+  workflow_dispatch:          # triggered by cron-job.org every minute, 6 AM – 8 PM Eastern
+
+# One run at a time: if GitHub is slow and the next trigger arrives, it waits instead of
+# running alongside (two runs at once could send the same arrival alert twice).
+concurrency:
+  group: fleet-alert
+  cancel-in-progress: false
 
 jobs:
   fleet-alert:

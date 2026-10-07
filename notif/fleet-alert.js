@@ -1,5 +1,5 @@
 // Skycare YKF — Fleet 60 nm arrival alert
-// Runs every 2 minutes via GitHub Actions (triggered by cron-job.org).
+// Runs every minute via GitHub Actions (triggered by cron-job.org), 6 AM – 8 PM Eastern only.
 // Sends a push notification when a fleet aircraft crosses inside 60 nm of CYKF.
 // Firestore collection `fleetNotifications/{tail}` tracks last-notified state
 // so each inbound arrival fires exactly once. A plane must also be getting closer and not
@@ -32,6 +32,12 @@ const ALERT_EXPIRE_MS = 60 * 60 * 1000;
 const MIN_ALERT_NM = 5;             // inside this it's departing or over the field, not "approaching"
 const INBOUND_TOL_DEG = 75;         // heading must point within this of the airport to count as inbound
 const MAX_AGE_S = 180;              // ignore positions older than this
+// Live tracking only runs 6 AM – 8 PM Eastern (the apps say so overnight). Outside it the job
+// makes no requests at all — not OpenSky, not adsb.lol, not Firestore.
+const TRACK_FROM_H = 6, TRACK_TO_H = 20;
+function easternHour(d = new Date()) {
+  return Number(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Toronto', hour: 'numeric', hourCycle: 'h23' }).format(d));
+}
 const PREV_MAX_AGE_MS = 15 * 60 * 1000; // last run's positions older than this are too stale to compare with
 
 // YAV (St. Andrews) gets its own alert, measured only from CYAV, sent to the
@@ -127,8 +133,10 @@ function getJson(url, headers) {
   });
 }
 
+// Asks for our planes only, by their ICAO24 codes, wherever they are: 1 credit a call
+// (an area search cost 3, and its box stopped at 50°N — just short of CYAV and CYXL).
 function fetchOpenSky() {
-  const url = 'https://opensky-network.org/api/states/all?lamin=41.0&lomin=-95.0&lamax=50.0&lomax=-60.0';
+  const url = 'https://opensky-network.org/api/states/all?' + FLEET.map(a => 'icao24=' + a.icao24).join('&');
   const auth = 'Basic ' + Buffer.from(`aristihernandez@gmail.com:${process.env.OPENSKY_PASSWORD}`).toString('base64');
   return getJson(url, { Authorization: auth });
 }
@@ -285,6 +293,11 @@ async function checkYav(live, prevLive) {
 
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
+  const h = easternHour();
+  if (h < TRACK_FROM_H || h >= TRACK_TO_H) {
+    console.log(`${h}:xx Eastern — outside live tracking hours (6 AM – 8 PM), no requests made.`);
+    return;
+  }
   // Ask both sources at once; either one failing must not stop the other.
   console.log('Fetching OpenSky + adsb.lol for fleet...');
   const [osRes, lolRes] = await Promise.allSettled([fetchOpenSky(), fetchAdsbLol()]);
@@ -296,7 +309,7 @@ async function main() {
   const bySource = { opensky: {}, 'adsb.lol': {} };
   if (osRes.status === 'fulfilled') {
     const states = osRes.value?.states || [];
-    console.log(`OpenSky: ${states.length} state vectors in bounding box`);
+    console.log(`OpenSky: ${states.length} of our planes`);
     const nowS = Date.now() / 1000;
     states.forEach(s => {
       const ac = matchAircraft(s[0], s[1]);
