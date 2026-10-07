@@ -133,12 +133,22 @@ function getJson(url, headers) {
   });
 }
 
-// Asks for our planes only, by their ICAO24 codes, wherever they are: 1 credit a call
-// (an area search cost 3, and its box stopped at 50°N — just short of CYAV and CYXL).
+// Two small requests: our planes' ICAO24 codes inside a 5° × 5° box around each base.
+// OpenSky charges by box size — 25 sq° or less is 1 credit, so 2 a run (measured 2026-10-06;
+// codes with no box are charged as a whole-world search, 4). Each box reaches ~100–150 nm from
+// its base, well past the 60 / 40 nm alert rings; adsb.lol still finds our planes anywhere.
 function fetchOpenSky() {
-  const url = 'https://opensky-network.org/api/states/all?' + FLEET.map(a => 'icao24=' + a.icao24).join('&');
+  const codes = FLEET.map(a => 'icao24=' + a.icao24).join('&');
+  const box = (lat, lon) => `&lamin=${(lat - 2.5).toFixed(2)}&lamax=${(lat + 2.5).toFixed(2)}&lomin=${(lon - 2.5).toFixed(2)}&lomax=${(lon + 2.5).toFixed(2)}`;
   const auth = 'Basic ' + Buffer.from(`aristihernandez@gmail.com:${process.env.OPENSKY_PASSWORD}`).toString('base64');
-  return getJson(url, { Authorization: auth });
+  const ask = (lat, lon) => getJson('https://opensky-network.org/api/states/all?' + codes + box(lat, lon), { Authorization: auth });
+  // Either base failing must not lose the other
+  return Promise.allSettled([ask(CYKF_LAT, CYKF_LON), ask(CYAV_LAT, CYAV_LON)]).then(([k, v]) => {
+    if (k.status === 'rejected') console.error('OpenSky (CYKF box):', k.reason?.message);
+    if (v.status === 'rejected') console.error('OpenSky (CYAV box):', v.reason?.message);
+    if (k.status === 'rejected' && v.status === 'rejected') throw k.reason;
+    return { states: [...(k.value?.states || []), ...(v.value?.states || [])] };
+  });
 }
 
 // Free community ADS-B network (no key). Second opinion next to OpenSky:
@@ -309,7 +319,7 @@ async function main() {
   const bySource = { opensky: {}, 'adsb.lol': {} };
   if (osRes.status === 'fulfilled') {
     const states = osRes.value?.states || [];
-    console.log(`OpenSky: ${states.length} of our planes`);
+    console.log(`OpenSky: ${states.length} of our planes near CYKF / CYAV`);
     const nowS = Date.now() / 1000;
     states.forEach(s => {
       const ac = matchAircraft(s[0], s[1]);
