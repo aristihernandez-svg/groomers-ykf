@@ -1,6 +1,6 @@
 // Coming or going? ADS-B carries no destination, so a departure that turns back over the
 // field can point at the airport exactly like an arrival. This compares each plane with
-// where it was on the job's previous run (fleetPositions/live, ~5 min ago) and with the
+// where it was on the job's previous run (fleetPositions/live, ~2 min ago) and with the
 // climb rate it reports:
 //   leaving  — just took off, climbing, or further from the airport than last time
 //   arriving — closer than last time (and not climbing), or first seen while descending

@@ -1,5 +1,5 @@
 // Skycare YKF — Fleet 60 nm arrival alert
-// Runs every 5 minutes via GitHub Actions.
+// Runs every 2 minutes via GitHub Actions (triggered by cron-job.org).
 // Sends a push notification when a fleet aircraft crosses inside 60 nm of CYKF.
 // Firestore collection `fleetNotifications/{tail}` tracks last-notified state
 // so each inbound arrival fires exactly once. A plane must also be getting closer and not
@@ -347,7 +347,7 @@ async function main() {
   });
   console.log('Fleet found:', Object.values(live).map(a => `${a.tail}(${a.src})`).join(', ') || 'none');
 
-  // Last run's positions (about 5 min ago) — to tell an arrival from a departure
+  // Last run's positions (about 2 min ago) — to tell an arrival from a departure
   let prevLive = {};
   try {
     const ps = await db.collection('fleetPositions').doc('live').get();

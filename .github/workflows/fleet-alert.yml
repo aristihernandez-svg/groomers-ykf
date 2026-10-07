@@ -1,7 +1,7 @@
 name: Fleet 60 nm Arrival Alert
 
 on:
-  workflow_dispatch:          # triggered by cron-job.org every 5 minutes
+  workflow_dispatch:          # triggered by cron-job.org every 2 minutes
 
 jobs:
   fleet-alert:
