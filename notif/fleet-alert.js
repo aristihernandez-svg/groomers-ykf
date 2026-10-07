@@ -2,11 +2,13 @@
 // Runs every 5 minutes via GitHub Actions.
 // Sends a push notification when a fleet aircraft crosses inside 60 nm of CYKF.
 // Firestore collection `fleetNotifications/{tail}` tracks last-notified state
-// so each inbound arrival fires exactly once.
+// so each inbound arrival fires exactly once. A plane must also be getting closer and not
+// climbing since the last run (fleet-motion.js) — departures turning back over the field used to alert.
 
 const admin   = require('firebase-admin');
 const webpush = require('web-push');
 const https   = require('https');
+const { comingOrGoing } = require('./fleet-motion');
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
@@ -30,6 +32,7 @@ const ALERT_EXPIRE_MS = 60 * 60 * 1000;
 const MIN_ALERT_NM = 5;             // inside this it's departing or over the field, not "approaching"
 const INBOUND_TOL_DEG = 75;         // heading must point within this of the airport to count as inbound
 const MAX_AGE_S = 180;              // ignore positions older than this
+const PREV_MAX_AGE_MS = 15 * 60 * 1000; // last run's positions older than this are too stale to compare with
 
 // YAV (St. Andrews) gets its own alert, measured only from CYAV, sent to the
 // YAV app's own subscribers (skycare-yav) with YAV's own push key.
@@ -231,7 +234,7 @@ async function sendToYav(title, body, tag, type) {
 }
 // 40 nm arrival alert for CYAV. Every distance here is from CYAV; alert state is
 // kept apart from YKF's (fleetNotificationsYAV) so the two bases never share a trigger.
-async function checkYav(live) {
+async function checkYav(live, prevLive) {
   try {
     webpush.getVapidHeaders('https://fcm.googleapis.com', 'mailto:aristihernandez@gmail.com', YAV_VAPID_PUBLIC, process.env.VAPID_PRIVATE_KEY_YAV || '', 'aes128gcm');
     console.log('YAV push key OK');
@@ -242,6 +245,7 @@ async function checkYav(live) {
     const ref  = db.collection('fleetNotificationsYAV').doc(ac.tail);
     const snap = await ref.get();
     const prev = snap.exists ? snap.data() : null;
+    ac.leavingYav = false;
 
     // Under 50 kts it's rolling on a runway or taxiing, not "approaching" -- treat as on the ground.
     if (ac.onGround || (ac.speedKts != null && ac.speedKts < 50)) {
@@ -252,11 +256,13 @@ async function checkYav(live) {
       continue;
     }
     const inbound = isInbound(ac, CYAV_LAT, CYAV_LON);
+    const move = comingOrGoing(ac, prevLive[ac.tail], CYAV_LAT, CYAV_LON);
+    ac.leavingYav = move.verdict === 'leaving';
     if (distNm <= YAV_ALERT_NM) {
       const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
       const alreadyActive = prev?.active === true && (now - lastNotified) < ALERT_EXPIRE_MS;
       const tooClose = distNm < MIN_ALERT_NM;
-      if (!alreadyActive && !tooClose && inbound && (now - lastNotified) > COOLDOWN_MS) {
+      if (!alreadyActive && !tooClose && inbound && move.verdict === 'arriving' && (now - lastNotified) > COOLDOWN_MS) {
         const eta  = etaStr(distNm, ac.speedKts);
         const body = [
           `${distNm} nm from CYAV`,
@@ -268,7 +274,7 @@ async function checkYav(live) {
         await sendToYav(`✈ ${ac.reg} approaching CYAV`, body, `fleet-yav-${ac.tail}`, ac.type);
         await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm });
       } else {
-        console.log(`YAV: ${ac.reg} ${distNm} nm — no alert (${alreadyActive ? 'already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYAV' : 'cooldown'})`);
+        console.log(`YAV: ${ac.reg} ${distNm} nm — no alert (${alreadyActive ? 'already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYAV' : move.verdict !== 'arriving' ? (move.verdict === 'leaving' ? 'departing — ' : 'not sure yet — ') + move.why : 'cooldown'})`);
       }
     } else if (distNm > YAV_RESET_NM && prev?.active) {
       console.log(`YAV: ${ac.reg} beyond ${YAV_RESET_NM} nm — resetting`);
@@ -305,6 +311,7 @@ async function main() {
         altFt:    s[7] ? Math.round(s[7] * 3.28084) : null,
         onGround: !!s[8],
         track:    s[10] != null ? Math.round(s[10]) : null,
+        vRateFpm: s[11] != null ? Math.round(s[11] * 196.85) : null,
       };
     });
   }
@@ -323,6 +330,7 @@ async function main() {
         altFt:    onGround ? 0 : (typeof p.alt_baro === 'number' ? Math.round(p.alt_baro) : null),
         onGround,
         track:    typeof p.track === 'number' ? Math.round(p.track) : null,
+        vRateFpm: typeof p.baro_rate === 'number' ? Math.round(p.baro_rate) : typeof p.geom_rate === 'number' ? Math.round(p.geom_rate) : null,
       };
     });
   }
@@ -339,6 +347,16 @@ async function main() {
   });
   console.log('Fleet found:', Object.values(live).map(a => `${a.tail}(${a.src})`).join(', ') || 'none');
 
+  // Last run's positions (about 5 min ago) — to tell an arrival from a departure
+  let prevLive = {};
+  try {
+    const ps = await db.collection('fleetPositions').doc('live').get();
+    const pv = ps.exists ? ps.data() : null;
+    const at = pv?.fetchedAt?.toMillis?.() || 0;
+    if (pv && Date.now() - at < PREV_MAX_AGE_MS) prevLive = pv.positions || {};
+    else console.log('Last run\'s positions missing or stale — first sightings only this run');
+  } catch (e) { console.error('Could not read last run\'s positions:', e.message); }
+
   // Check each live aircraft against alert rules
   const now = Date.now();
   for (const [tail, ac] of Object.entries(live)) {
@@ -346,6 +364,7 @@ async function main() {
     const snap = await ref.get();
     const prev = snap.exists ? snap.data() : null;
 
+    ac.leavingYkf = false;
     if (ac.onGround) {
       // Landed (or parked): re-arm so the next arrival alerts, even on short local hops
       if (prev?.active) {
@@ -356,7 +375,9 @@ async function main() {
     }
 
     const inbound = isInbound(ac);
-    const info = `${ac.reg} [${ac.src}] ${ac.distNm} nm, ${ac.altFt ?? '?'} ft, trk ${ac.track ?? '?'}°, ${inbound ? 'inbound' : 'not inbound'}, ${prev?.active ? 'alert active' : 'armed'}`;
+    const move = comingOrGoing(ac, prevLive[tail], CYKF_LAT, CYKF_LON);
+    ac.leavingYkf = move.verdict === 'leaving'; // the app leaves it out of "Inbound"
+    const info = `${ac.reg} [${ac.src}] ${ac.distNm} nm, ${ac.altFt ?? '?'} ft, trk ${ac.track ?? '?'}°, ${inbound ? 'inbound' : 'not inbound'}, ${move.verdict} (${move.why}), ${prev?.active ? 'alert active' : 'armed'}`;
 
     if (ac.distNm <= ALERT_NM) {
       // Within 60 nm — should we notify?
@@ -364,7 +385,7 @@ async function main() {
       const alreadyActive = prev?.active === true && (now - lastNotified) < ALERT_EXPIRE_MS;
       const tooClose = ac.distNm < MIN_ALERT_NM;
 
-      if (!alreadyActive && !tooClose && inbound && (now - lastNotified) > COOLDOWN_MS) {
+      if (!alreadyActive && !tooClose && inbound && move.verdict === 'arriving' && (now - lastNotified) > COOLDOWN_MS) {
         // Fire the alert
         const eta  = etaStr(ac.distNm, ac.speedKts);
         const body = [
@@ -378,7 +399,7 @@ async function main() {
         await sendToAll(`✈ ${ac.reg} approaching CYKF`, body, `fleet-${tail}`);
         await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm: ac.distNm });
       } else {
-        const why = alreadyActive ? 'alert already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYKF' : 'cooldown';
+        const why = alreadyActive ? 'alert already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYKF' : move.verdict !== 'arriving' ? (move.verdict === 'leaving' ? 'departing — ' : 'not sure yet — ') + move.why : 'cooldown';
         console.log(`${info} — no alert (${why})`);
       }
 
@@ -392,14 +413,14 @@ async function main() {
   }
 
   // YAV's own 40 nm alert — kept separate so a YAV problem can never stop YKF's
-  try { await checkYav(live); } catch (e) { console.error('YAV alert check failed:', e.message); }
+  try { await checkYav(live, prevLive); } catch (e) { console.error('YAV alert check failed:', e.message); }
 
   // Write live positions to Firestore so the browser map can read them
   // without calling OpenSky directly (OpenSky blocks browser CORS requests)
   const positionData = {};
   FLEET.forEach(ac => {
     positionData[ac.tail] = live[ac.tail]
-      ? { ...live[ac.tail], updatedAt: admin.firestore.FieldValue.serverTimestamp() }
+      ? { ...live[ac.tail], leavingYkf: !!live[ac.tail].leavingYkf, leavingYav: !!live[ac.tail].leavingYav, updatedAt: admin.firestore.FieldValue.serverTimestamp() }
       : null;
   });
   await db.collection('fleetPositions').doc('live').set({

@@ -2980,7 +2980,7 @@ async function homeFleetRefresh() {
   try {
     const pos = await fetchFleetOpenSky();
     const air = pos.filter(p=>!p.onGround);
-    const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250 && fleetHeadingToward(p.lat,p.lon,p.trackRaw,CYKF_LAT,CYKF_LON))
+    const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250 && !p.leaving && fleetHeadingToward(p.lat,p.lon,p.trackRaw,CYKF_LAT,CYKF_LON))
       .map(p=>({...p, eta:etaMinutes(p.distNm,p.speedKts)})).filter(p=>p.eta!==null)
       .sort((a,b)=>a.distNm-b.distNm)[0] || null;
     S.homeFleet = {inbound, airborne:air.length, ground:pos.length-air.length};
@@ -13591,7 +13591,8 @@ async function fetchFleetOpenSky() {
       tail: p.tail, reg: p.reg, lat: p.lat, lon: p.lon,
       altFt: p.onGround ? 0 : (p.altFt ?? null),
       speedKts: p.speedKts || 0, track: p.track || 0, trackRaw: p.track ?? null,
-      onGround: !!p.onGround, distNm: p.distNm ?? null
+      onGround: !!p.onGround, distNm: p.distNm ?? null,
+      leaving: !!p.leavingYkf // the alert job saw it climbing out or moving away from CYKF
     }));
   } catch(e) { return []; }
 }
@@ -13614,7 +13615,7 @@ async function refreshFleet() {
     positions.forEach(p => {
       if(!p || !p.tail) return;
       // Only a plane heading for the base gets an ETA (and so shows under "Inbound")
-      const headingIn = fleetHeadingToward(p.lat, p.lon, p.trackRaw, CYKF_LAT, CYKF_LON);
+      const headingIn = !p.leaving && fleetHeadingToward(p.lat, p.lon, p.trackRaw, CYKF_LAT, CYKF_LON);
       const eta = headingIn && p.distNm && p.speedKts ? etaMinutes(p.distNm, p.speedKts) : null;
       _fleetData[p.tail] = {
         callsign: p.reg || p.tail,
