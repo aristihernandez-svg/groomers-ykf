@@ -9,16 +9,28 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "cars/skycare-icon-192.png",
+      "src": "cars/groomers-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "cars/skycare-icon-512.png",
+      "src": "cars/groomers-icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "cars/groomers-icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "cars/groomers-icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
