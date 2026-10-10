@@ -69,9 +69,11 @@ async function getPendingAircraft(db, month) {
   return pending;
 }
 
-async function getPendingFacilities(db) {
+// One doc per facility per month ("crewhouse-October 2026"), like the app's facilityDocKey() since the
+// Aug 5 2026 change — the old un-dated docs ("crewhouse") are no longer updated.
+async function getPendingFacilities(db, month) {
   const snaps = await Promise.all(
-    FACILITY_AUDITS.map(f => db.collection('facilityAudits').doc(f.doc).get())
+    FACILITY_AUDITS.map(f => db.collection('facilityAudits').doc(`${f.doc}-${month}`).get())
   );
   return FACILITY_AUDITS
     .filter((f, i) => !snaps[i].exists || !snaps[i].data().done)
@@ -108,7 +110,7 @@ async function main() {
   const pendingCars = CREW_CAR_KEYS.filter(k => !doneCars.has(k));
 
   const pendingAircraft   = await getPendingAircraft(db, month);
-  const pendingFacilities = await getPendingFacilities(db);
+  const pendingFacilities = await getPendingFacilities(db, month);
 
   const pending = [...pendingCars, ...pendingAircraft, ...pendingFacilities];
   console.log(`Month: ${month} — ${pendingCars.length} car(s), ${pendingAircraft.length} aircraft, ${pendingFacilities.length} facility audit(s) pending`);
