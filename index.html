@@ -26,7 +26,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&family=Bangers&family=Comic+Neue:ital,wght@0,700;1,700&family=Barlow+Condensed:ital,wght@0,500;0,700;1,800&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -386,25 +386,6 @@ body::before{
 .hd-bsm{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}
 .hd-bs{aspect-ratio:1;border-radius:18px;background:var(--c);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font-size:9.5px;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .hd-bs svg{width:22px;height:22px}
-/* 2 · Aurora glass */
-.hd-aurora{background:#070914;font-family:Sora,sans-serif;color:#fff}
-.hd-blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.7;z-index:-1;animation:hdDrift 14s ease-in-out infinite alternate}
-.hd-blob.b1{width:260px;height:260px;background:#2f6bff;top:-60px;left:-70px}
-.hd-blob.b2{width:240px;height:240px;background:#12c6a8;top:340px;right:-90px;animation-delay:-4s}
-.hd-blob.b3{width:250px;height:250px;background:#8a3bff;bottom:60px;left:-60px;animation-delay:-8s}
-@keyframes hdDrift{to{transform:translate(30px,40px) scale(1.15)}}
-.hd-glass{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.18);border-radius:24px;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
-.hd-ahero{height:170px;margin:12px 0;position:relative;overflow:hidden}
-.hd-ahero .cap{position:absolute;left:14px;right:14px;bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px;z-index:2;text-shadow:0 1px 6px rgba(0,0,0,.6)}
-.hd-ahero .cap b{font-size:13px}
-.hd-ahero .cap i{font-style:normal;background:rgba(46,204,138,.25);border:1px solid rgba(46,204,138,.5);color:#8ff0c6;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600}
-.hd-arow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.hd-arow .hd-glass{padding:12px 14px;font-size:12px;cursor:pointer}
-.hd-arow small{opacity:.65;font-size:10px;letter-spacing:1px;font-weight:600}
-.hd-arow p{margin-top:4px;line-height:1.3}
-.hd-atg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.hd-at{padding:15px 4px 12px;text-align:center;font-size:11px;font-weight:600;display:flex;flex-direction:column;gap:7px;align-items:center;cursor:pointer;color:#fff}
-.hd-at svg{width:26px;height:26px;color:var(--g);filter:drop-shadow(0 0 8px var(--g))}
 /* 3 · Neo-brutal */
 .hd-brutal{background:#FFF0B8;font-family:"Bricolage Grotesque",sans-serif;color:#111;padding-top:0}
 .hd-mq{margin:0 -14px 14px;background:#111;color:#FFF0B8;font-weight:800;font-size:12px;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;padding:7px 0}
@@ -427,22 +408,6 @@ body::before{
 .hd-btg .hd-bt:nth-child(2n){rotate:1.4deg}.hd-btg .hd-bt:nth-child(3n){rotate:-1.2deg}
 .hd-bt svg{width:26px;height:26px;margin:0 auto 5px;display:block;stroke-width:2}
 .hd-brutal .hd-foot,.hd-brutal .hd-share button{color:#111}
-/* 4 · Sky + bottom sheet */
-.hd-sky{background:linear-gradient(#0d2a5a 0,#3c5fa8 110px,#f0a06a 200px,#ffd0a0 290px,#0f1729 290px);font-family:Manrope,sans-serif;color:#fff;padding:0 0 calc(100px + var(--safe-b))}
-.hd-skyarea{position:relative;height:300px;overflow:hidden}
-.hd-skyarea .dt{position:absolute;left:18px;top:16px;font-size:12px;font-weight:700;opacity:.9;letter-spacing:.5px;text-transform:uppercase;z-index:2}
-.hd-chip{position:absolute;left:16px;bottom:48px;z-index:2;background:rgba(10,20,45,.62);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:9px 13px;font-size:12px;line-height:1.35;cursor:pointer}
-.hd-chip b{display:block;font-size:14px}
-.hd-chip i{font-style:normal;color:#7dffc4;font-weight:800}
-.hd-sheet{position:relative;margin-top:-34px;background:#0f1729;border-radius:30px 30px 0 0;padding:10px 14px 10px;box-shadow:0 -14px 40px rgba(0,0,0,.35)}
-.hd-grab{width:42px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 14px}
-.hd-sheet h3{font-size:19px;font-weight:800;padding:0 4px}
-.hd-sheet .pb{height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin:9px 4px 5px;overflow:hidden}
-.hd-sheet .pb i{display:block;height:100%;background:linear-gradient(90deg,#ff9b5e,#ffcf7a);border-radius:4px}
-.hd-sheet .ps{font-size:12px;color:#9aa6c2;padding:0 4px;margin-bottom:6px}
-.hd-stg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
-.hd-st{background:#182241;border-radius:20px;padding:15px 4px 11px;text-align:center;font-size:11.5px;font-weight:700;color:#dfe6f7;cursor:pointer}
-.hd-st svg{margin:0 auto 7px;display:block;color:var(--c);width:26px;height:26px}
 .hd-mi{display:inline-block}.hd-mi svg{width:13px;height:13px;vertical-align:-2px}
 .hd-vis{width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.2);display:grid;place-items:center;flex-shrink:0;overflow:hidden}
 .hd-vis svg{width:42px;height:42px}.hd-vis img{width:125%;max-width:none;height:64px;object-fit:contain}
@@ -450,9 +415,6 @@ body::before{
 .hd-pb i{display:block;height:100%;background:linear-gradient(90deg,#3a7bff,#5fb0ff)}
 .hd-bigico{position:absolute;left:0;right:0;bottom:36px;display:grid;place-items:center}
 .hd-bigico svg{width:52px;height:52px;color:#5fb0ff;opacity:.9}
-.hd-aheroin{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
-.hd-aheroin .hd-mi svg{width:46px;height:46px;color:#8ff0c6;filter:drop-shadow(0 0 10px #5ff0d0)}
-.hd-aheroin b{font-size:22px}.hd-aheroin small{opacity:.7;font-size:12px}
 .hd-bsub{font-weight:700;font-size:12px;margin-top:2px}
 .hd-bcard.fl .pl.ico{display:grid;place-items:center;filter:none;background:none}
 .hd-bcard.fl .pl.ico svg{width:44px;height:44px;stroke-width:2}
@@ -487,26 +449,6 @@ body::before{
 .hs-w b{display:block;font-size:12px;font-weight:700}
 .hs-w small{display:block;font-size:10px;color:var(--t3);margin-top:2px;padding:0 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hs-reset{text-align:center;margin-top:14px;font-size:12px;font-weight:700;color:var(--t3);cursor:pointer;padding:6px}
-/* 6 · Airline App */
-.hd-airline{background:#fff;color:#12203c}
-.hd-airline .hd-top{background:#0B3B8C;color:#fff;margin:-18px -14px 0;padding:20px 18px 46px;border-radius:0 0 28px 28px}
-.hd-airline .hd-top small{font-size:11px;opacity:.75;letter-spacing:.5px;text-transform:uppercase}
-.hd-airline .hd-top h2{font-size:24px;font-weight:700;margin-top:4px}
-.ap-card{background:#fff;border-radius:18px;box-shadow:0 10px 26px rgba(11,59,140,.14);padding:16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ap-photo{margin:-30px 0 12px;position:relative;z-index:2}
-.ap-img{height:56px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
-.ap-img img{max-height:56px;object-fit:contain}
-.ap-img svg{width:38px;height:38px;color:#0B3B8C}
-.ap-row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:#5a6b8c}
-.ap-row b{font-size:15px;color:#12203c;font-weight:700}
-.ap-pill{background:#E8F5E9;color:#1B8A3A;font-weight:700;padding:3px 10px;border-radius:12px;font-size:11px;flex-shrink:0}
-.ap-prog{background:#F4F7FC;margin-bottom:12px}
-.ap-bar{height:8px;border-radius:4px;background:#DCE6F5;margin-top:8px;overflow:hidden}
-.ap-bar i{display:block;height:100%;background:#0B3B8C;border-radius:4px}
-.ap-sub{font-size:12px;color:#5a6b8c;margin-top:6px}
-.ap-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.ap-t{background:#F4F7FC;border-radius:16px;padding:14px 4px 10px;text-align:center;font-size:11px;font-weight:600;color:#12203c;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ap-t svg{width:22px;height:22px;color:#0B3B8C;margin:0 auto 6px;display:block}
 /* 7 · Corkboard */
 .hd-cork{background:#8a6a45;background-image:radial-gradient(rgba(0,0,0,.14) 1px,transparent 1px);background-size:6px 6px;color:#3a2a18;font-family:Kalam,cursive}
 .hd-cork .hd-top small{font-size:11px;letter-spacing:1px;font-weight:700;opacity:.8;text-transform:uppercase;font-family:"Inter Tight",Inter,sans-serif}
@@ -540,7 +482,203 @@ body::before{
 .hp-pc.on small{color:var(--accent2)}
 .hp-mini{width:64px;height:44px;flex-shrink:0;border-radius:8px;position:relative;overflow:hidden}
 .hp-mini u{position:absolute;border-radius:3px;text-decoration:none}
-@media (prefers-reduced-motion:reduce){.hd-blob,.hd-mq span{animation:none}}
+/* 8 · Comic Book */
+.hd-comic{background:radial-gradient(#E3C98C 1px,transparent 1.3px) 0 0/6px 6px,#F8EDD0;color:#111;font-family:'Comic Neue','Trebuchet MS',sans-serif}
+.hd-comic .hd-notes{display:none}
+.cm-fx{font-family:Bangers,Impact,'Arial Black',sans-serif;font-weight:400;letter-spacing:.8px}
+.cm-let{font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-mast{display:flex;border:3px solid #111;background:#FFD43B;box-shadow:4px 4px 0 #111}
+.cm-mast h3{flex:1;font-family:Bangers,Impact,sans-serif;font-weight:400;font-size:50px;line-height:.9;letter-spacing:1px;color:#E5322D;-webkit-text-stroke:2px #111;text-shadow:3px 3px 0 #111;padding:8px 10px 4px;transform:skew(-6deg)}
+.cm-mast h3 small{display:block;font-family:'Comic Neue',sans-serif;font-weight:700;font-style:italic;font-size:12px;-webkit-text-stroke:0;color:#111;text-shadow:none;letter-spacing:1.5px;margin-top:4px;text-transform:uppercase}
+.cm-mast .iss{width:76px;border-left:3px solid #111;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;font-weight:700;text-align:center;line-height:1.2;text-transform:uppercase}
+.cm-mast .iss b{font-family:Bangers,Impact,sans-serif;font-weight:400;font-size:24px;letter-spacing:1px}
+.cm-hero{position:relative;height:200px;margin-top:14px;border:3px solid #111;box-shadow:4px 4px 0 #111;overflow:hidden;transform:rotate(-1deg);cursor:pointer;
+  background:repeating-conic-gradient(from 0deg at 72% 55%,rgba(255,255,255,.22) 0 4deg,transparent 4deg 12deg),radial-gradient(circle at 72% 55%,#4B8BFF,#173D9A 70%)}
+.cm-hero::after{content:'';position:absolute;inset:0;background:radial-gradient(rgba(0,0,0,.25) 1px,transparent 1.4px) 0 0/5px 5px;mix-blend-mode:multiply;pointer-events:none}
+.cm-hero img{position:absolute;width:62%;max-width:250px;right:-6px;top:58px;transform:rotate(-8deg);filter:drop-shadow(3px 3px 0 #111);z-index:2}
+.cm-cap{position:absolute;left:8px;top:8px;z-index:3;background:#FFD43B;border:2.5px solid #111;padding:4px 8px;font-size:11px;max-width:62%;line-height:1.25;font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-boom{position:absolute;left:10px;bottom:10px;z-index:3;width:128px;height:90px;background:#E5322D;display:grid;place-items:center;
+  clip-path:polygon(50% 0,60% 22%,84% 6%,78% 32%,100% 34%,82% 52%,98% 74%,72% 70%,70% 100%,52% 78%,32% 98%,30% 72%,4% 82%,18% 56%,0 38%,24% 34%,14% 8%,40% 22%)}
+.cm-boom span{font-family:Bangers,Impact,sans-serif;font-size:23px;letter-spacing:1px;color:#FFD43B;-webkit-text-stroke:1.2px #111;transform:rotate(-8deg);margin-top:4px}
+.cm-panel{margin-top:16px;border:3px solid #111;background:#fff;box-shadow:4px 4px 0 #111;position:relative;padding-bottom:14px}
+.cm-narr{background:#FFD43B;border-bottom:3px solid #111;padding:5px 9px;font-size:11.5px;font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-panel p{padding:9px 11px 0;font-size:14px;line-height:1.4;font-weight:700}
+.cm-panel audio{width:calc(100% - 22px);margin:8px 11px 0;height:32px}
+.cm-ok{position:absolute;right:-6px;bottom:-14px;background:#3BB273;color:#fff;border:2.5px solid #111;padding:4px 12px;font-family:Bangers,Impact,sans-serif;font-size:15px;letter-spacing:1px;transform:rotate(4deg);box-shadow:2px 2px 0 #111;cursor:pointer}
+.cm-bub{margin:22px 4px 0 18px;background:#fff;border:3px solid #111;border-radius:50% / 42%;padding:14px 20px;text-align:center;font-size:12.5px;line-height:1.3;position:relative;font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-bub small{display:block;font-size:10px;margin-top:3px;text-transform:none}
+.cm-bub::before{content:'';position:absolute;left:18px;bottom:-17px;border:10px solid transparent;border-top:16px solid #111;transform:skew(28deg)}
+.cm-bub::after{content:'';position:absolute;left:21px;bottom:-11px;border:7px solid transparent;border-top:12px solid #fff;transform:skew(28deg)}
+.cm-pow{margin:24px 0 0;display:flex;align-items:center;gap:8px;border:3px solid #111;background:#1D3E8F;color:#fff;padding:8px 10px;box-shadow:4px 4px 0 #111;cursor:pointer}
+.cm-pow>span{font-size:10.5px;line-height:1.1;font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-pow .cm-bar{flex:1;height:18px;border:2px solid #111;background:#fff;display:flex}
+.cm-pow .cm-bar i{flex:1;border-right:1.5px solid #111}
+.cm-pow .cm-bar i:last-child{border-right:none}
+.cm-pow .cm-bar i.f{background:#E5322D}
+.cm-pow .cm-bar em{color:#111;font-size:11px;font-weight:700;padding:0 6px;line-height:14px}
+.cm-pow b{font-family:Bangers,Impact,sans-serif;font-weight:400;font-size:27px;letter-spacing:1px;color:#FFD43B;-webkit-text-stroke:1px #111}
+.cm-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:26px 10px;margin-top:20px;padding:0 2px 8px}
+.cm-t{position:relative;background:#fff;border:3px solid #111;border-radius:50% / 46%;height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;filter:drop-shadow(3px 3px 0 #111);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.cm-t::before{content:'';position:absolute;left:16px;bottom:-16px;border:8px solid transparent;border-top:15px solid #111;transform:skew(26deg)}
+.cm-t::after{content:'';position:absolute;left:19px;bottom:-9px;border:6px solid transparent;border-top:11px solid #fff;transform:skew(26deg)}
+.cm-t:nth-child(even)::before{left:auto;right:16px;transform:skew(-26deg)}
+.cm-t:nth-child(even)::after{left:auto;right:19px;transform:skew(-26deg)}
+.cm-t svg{width:28px;height:28px;stroke-width:1.8}
+.cm-t:nth-child(4n+1) svg{color:#E5322D}.cm-t:nth-child(4n+2) svg{color:#1D3E8F}.cm-t:nth-child(4n+3) svg{color:#2E9E4F}.cm-t:nth-child(4n+4) svg{color:#D97706}
+.cm-t b{font-size:11px;font-weight:700;font-style:italic;text-transform:uppercase}
+.cm-end{margin:16px 0 0;text-align:center;font-size:14px;font-weight:700;font-style:italic;text-transform:uppercase}
+.hd-comic .hd-foot{opacity:.75}
+.hd-comic .hd-share button{background:#fff;border:2.5px solid #111;border-radius:0;box-shadow:3px 3px 0 #111;color:#111;font-style:italic;text-transform:uppercase}
+
+/* 9 · Starting Lineup */
+.hd-lineup{background:linear-gradient(#060914,#0B1430 55%,#0A0F22);color:#fff;font-family:'Barlow Condensed','Arial Narrow',sans-serif}
+.sl-beam{position:absolute;top:-30px;width:150px;height:440px;background:linear-gradient(rgba(255,255,255,.2),transparent 85%);clip-path:polygon(42% 0,58% 0,100% 100%,0 100%);pointer-events:none;z-index:-1}
+.sl-beam.l{left:-30px;transform:rotate(-14deg)}.sl-beam.r{right:-30px;transform:rotate(14deg)}
+.sl-h{text-align:center;margin-top:4px}
+.sl-h small{font-size:12px;letter-spacing:4px;color:#9FB2D6;font-weight:500}
+.sl-h h3{font-size:40px;font-weight:800;font-style:italic;letter-spacing:-.3px;line-height:.95;text-transform:uppercase}
+.sl-h h3 span{color:#E8304A}
+.sl-h .ln{height:4px;width:150px;margin:7px auto 0;background:linear-gradient(90deg,transparent,#E8304A,transparent)}
+.sl-h em{display:block;font-style:normal;font-size:12px;color:#9FB2D6;letter-spacing:2px;margin-top:6px;font-weight:500}
+.sl-star{position:relative;margin-top:16px;height:268px;border-radius:12px;overflow:hidden;background:linear-gradient(125deg,#E8304A 0 38%,#0D1B45 38% 100%);box-shadow:0 18px 40px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.15);cursor:pointer}
+.sl-star .num{position:absolute;right:-6px;top:-20px;font-size:160px;font-weight:800;font-style:italic;color:transparent;-webkit-text-stroke:2px rgba(255,255,255,.28);line-height:1}
+.sl-star img{position:absolute;width:80%;max-width:300px;left:10%;top:58px;filter:drop-shadow(0 14px 14px rgba(0,0,0,.6))}
+.sl-star .tag{position:absolute;left:12px;top:12px;font-size:12px;font-weight:700;letter-spacing:2px;background:#fff;color:#0D1B45;padding:3px 9px;border-radius:2px}
+.sl-star .tag i{font-style:normal;color:#9FB2D6}.sl-star .tag.in i{color:#16A34A}
+.sl-name{position:absolute;left:0;right:0;bottom:58px;padding:0 14px}
+.sl-name b{display:block;font-size:34px;font-weight:800;font-style:italic;letter-spacing:.5px;text-shadow:0 3px 10px rgba(0,0,0,.6);line-height:1}
+.sl-name small{font-size:12px;letter-spacing:2px;color:#C9D6F2;font-weight:500}
+.sl-star.empty .sl-name{bottom:16px}
+.sl-stats{position:absolute;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(3,1fr);background:rgba(0,0,0,.55);border-top:2px solid #E8304A}
+.sl-stats div{text-align:center;padding:6px 0}
+.sl-stats div+div{border-left:1px solid rgba(255,255,255,.15)}
+.sl-stats b{display:block;font-size:21px;font-weight:800}
+.sl-stats small{font-size:10px;letter-spacing:2px;color:#9FB2D6}
+.sl-bench{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}
+.sl-bench>div{background:linear-gradient(#16224A,#0D1530);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:6px 6px 7px;position:relative;overflow:hidden;min-width:0}
+.sl-bench img{width:100%;height:36px;object-fit:contain}
+.sl-bench b{display:block;font-size:15px;font-weight:800;font-style:italic;white-space:nowrap}
+.sl-bench small{font-size:9.5px;letter-spacing:.8px;color:#9FB2D6;white-space:nowrap;display:block;overflow:hidden;text-overflow:ellipsis}
+.sl-bench em{position:absolute;right:5px;top:5px;font-style:normal;font-size:9px;font-weight:700;padding:1px 4px;border-radius:2px;background:#16A34A}
+.sl-bench em.g{background:#B45309}
+.sl-team{margin-top:12px;display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:9px 11px;cursor:pointer}
+.sl-team>b{font-size:26px;font-weight:800;font-style:italic}
+.sl-team .grow{flex:1}
+.sl-team small{font-size:11px;letter-spacing:1.5px;color:#9FB2D6;display:block;text-transform:uppercase}
+.sl-team .sl-bar{height:8px;border-radius:4px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:3px}
+.sl-team .sl-bar i{display:block;height:100%;background:linear-gradient(90deg,#E8304A,#FF6B81)}
+.sl-coach{margin-top:12px;background:#F4F6FA;color:#1C2440;border-radius:8px;padding:10px 12px 11px;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.sl-coach>small{font-size:11px;font-weight:700;letter-spacing:2px;color:#E8304A;text-transform:uppercase}
+.sl-coach p{font-family:Kalam,'Bradley Hand',cursive;font-size:15px;line-height:1.35;margin-top:3px;color:#1D3E8F}
+.sl-coach audio{width:100%;height:32px;margin-top:6px}
+.sl-coach .ok{display:inline-block;margin-top:6px;font-family:inherit;font-size:12px;font-weight:700;background:#16A34A;color:#fff;padding:4px 11px;border-radius:12px;border:none;cursor:pointer}
+.sl-coach .note{margin-top:9px;padding-top:8px;border-top:1px dashed #C4CBDA;font-size:14px;color:#1C2440}
+.sl-coach .note:first-child{margin-top:0;padding-top:0;border-top:none}
+.sl-coach .note b{color:#E8304A}
+.sl-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.sl-r{background:#0F1A3C;border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 4px 9px;text-align:center;position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sl-r .no{position:absolute;left:7px;top:4px;font-size:12px;font-weight:800;font-style:italic;color:#E8304A}
+.sl-r svg{width:26px;height:26px;margin:4px auto 3px;display:block}
+.sl-r b{font-size:12.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700}
+
+/* 10 · Sectional Chart (the CYKF chart the user supplied, cars/ykf-chart.jpg) */
+.hd-chart{background:#FBFBF8;color:#111;font-family:'Barlow Condensed','Arial Narrow',sans-serif}
+.hd-chart .hd-notes{display:none}
+.sc-map{position:relative;height:250px;margin:-18px -14px 0;overflow:hidden;background:#fff;border-bottom:2px solid #111;cursor:pointer}
+.sc-img{position:absolute;max-width:none;pointer-events:none}
+.sc-chip{position:absolute;right:8px;top:8px;z-index:3;background:#111;color:#fff;font-size:10px;font-weight:700;letter-spacing:1.5px;padding:3px 8px;border-radius:2px}
+.sc-chip::before{content:'● ';color:#4ADE80}.sc-chip.off::before{color:#999}
+.sc-pulse{position:absolute;left:50%;top:125px;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:2px solid #C2185B;animation:scPulse 2s ease-out infinite}
+@keyframes scPulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(2.2);opacity:0}}
+.sc-crs{position:absolute;border-top:2.5px dashed #C2185B;transform-origin:0 0;z-index:1}
+.sc-pl{position:absolute;width:30px;height:30px;color:#C2185B;z-index:2;filter:drop-shadow(0 0 3px #fff)}
+.sc-pl.out{opacity:.5}
+.sc-pl svg{width:100%;height:100%;stroke-width:2}
+.sc-lbl{position:absolute;z-index:3;background:#fff;border:1.5px solid #C2185B;padding:3px 7px;font-size:12px;color:#C2185B;font-weight:700;line-height:1.15;white-space:nowrap}
+.sc-lbl small{display:block;font-weight:500;color:#6B1446;font-size:11px}
+.sc-edge{position:absolute;left:8px;bottom:6px;z-index:3;font-size:10px;color:#555;background:rgba(255,255,255,.88);padding:1px 5px}
+.sc-state{position:absolute;left:8px;top:8px;z-index:3;background:#fff;border:1.5px solid #111;padding:4px 8px;font-size:13px;font-weight:700}
+.sc-state small{display:block;font-weight:500;font-size:11px;color:#555}
+.sc-body{padding-top:12px}
+.sc-notam{background:#fff;border:1.5px solid #111;padding:8px 10px;font-family:'Courier New',monospace;font-size:12px;line-height:1.4;color:#111;margin-bottom:9px;text-transform:uppercase}
+.sc-notam b{color:#1E7A2E}
+.sc-notam audio{width:100%;height:32px;margin-top:6px}
+.sc-notam .ok{display:inline-block;margin-top:6px;border:1.5px solid #111;color:#111;background:none;padding:2px 9px;font-family:inherit;font-weight:700;font-size:11px;cursor:pointer}
+.sc-notam[onclick]{cursor:pointer}
+.sc-prog{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;margin-top:4px;cursor:pointer}
+.sc-prog .alt{flex:1;height:11px;border:1.5px solid #111;background:repeating-linear-gradient(90deg,transparent 0 9px,rgba(0,0,0,.25) 9px 10px)}
+.sc-prog .alt i{display:block;height:100%;background:#2E9E3E}
+.sc-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:12px}
+.sc-w{background:#fff;border:1.5px solid #111;border-radius:6px;padding:9px 2px 7px;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sc-w .hex{width:34px;height:34px;margin:0 auto 4px;display:grid;place-items:center;clip-path:polygon(25% 4%,75% 4%,100% 50%,75% 96%,25% 96%,0 50%);background:#111;color:#fff}
+.sc-w:nth-child(3n+2) .hex{background:#2E9E3E}
+.sc-w .hex svg{width:19px;height:19px}
+.sc-w b{font-size:12.5px;letter-spacing:1px;text-transform:uppercase;display:block}
+.sc-w small{display:block;font-size:11px;color:#555;min-height:13px}
+.hd-chart .hd-share button{border:1.5px solid #111;color:#111;background:#fff}
+
+/* 11 · Crew Passport */
+.hd-pass{background:#1B2A4A;color:#222;font-family:Georgia,'Times New Roman',serif;padding-left:0;padding-right:0}
+.hd-pass .hd-notes{display:none}
+.pp-cov{margin-top:-18px;padding:18px 14px 20px;text-align:center;color:#D8B45A;background:radial-gradient(circle at 50% 0,#26386A,#1B2A4A 70%);border-bottom:3px solid #0F1A33}
+.pp-crest{width:62px;height:62px;margin:0 auto;border:2px solid #D8B45A;border-radius:50%;display:grid;place-items:center}
+.pp-crest img{width:52px;filter:sepia(1) saturate(3) hue-rotate(-12deg) brightness(.95)}
+.pp-cov h3{font-size:13px;letter-spacing:5px;margin-top:9px;font-weight:400;text-transform:uppercase}
+.pp-cov b{display:block;font-size:22px;letter-spacing:3px;font-weight:400;margin-top:2px}
+.pp-cov small{display:block;font-size:10px;letter-spacing:3px;margin-top:4px;color:#B89848;text-transform:uppercase}
+.pp-pg{margin:12px 12px 0;background:radial-gradient(circle at 20% 30%,rgba(120,170,200,.18),transparent 40%),repeating-radial-gradient(circle at 70% 120%,rgba(90,140,170,.12) 0 2px,transparent 2px 9px),#F3EEDF;border-radius:4px;padding:12px 12px 12px;position:relative;box-shadow:0 8px 20px rgba(0,0,0,.4)}
+.pp-pg .pn{position:absolute;right:10px;top:8px;font-size:10px;color:#8B7F62;letter-spacing:2px}
+.pp-pg .hdr{font-size:10px;letter-spacing:3px;color:#8B7F62;text-transform:uppercase}
+.pp-row{display:flex;justify-content:center;align-items:center;margin-top:6px}
+.pp-date{width:112px;height:112px;color:#B3261E;transform:rotate(-10deg);opacity:.9;mix-blend-mode:multiply;flex-shrink:0;margin-right:-22px;position:relative;z-index:2;cursor:pointer}
+.pp-date svg{width:100%;height:100%;overflow:visible}
+.pp-date text{fill:currentColor;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700}
+.pp-radar{position:relative;width:174px;height:174px;flex-shrink:0;color:#1E4E9E;cursor:pointer}
+.pp-radar svg.frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pp-radar svg.frame text{fill:currentColor;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700}
+.pp-radar .sweep{position:absolute;left:24.4px;top:24.4px;width:125.3px;height:125.3px;border-radius:50%;background:conic-gradient(from 0deg,rgba(30,78,158,.42),rgba(30,78,158,0) 80deg,transparent);animation:ppSpin 4s linear infinite;mix-blend-mode:multiply}
+@keyframes ppSpin{to{transform:rotate(360deg)}}
+.pp-radar .apt{position:absolute;left:80px;top:80px;width:14px;height:14px;border:2px solid currentColor;border-radius:50%}
+.pp-radar .blip{position:absolute;width:16px;height:16px;color:#B3261E}
+.pp-radar .blip>span{display:block;width:100%;height:100%}
+.pp-radar .blip svg{width:100%;height:100%;stroke-width:2.2}
+.pp-radar .blip.out{opacity:.45}
+.pp-radar .blip:not(.out)::after{content:'';position:absolute;inset:-6px;border-radius:50%;border:1.5px solid #B3261E;animation:ppPing 2s ease-out infinite;opacity:0}
+@keyframes ppPing{0%{transform:scale(.4);opacity:.9}100%{transform:scale(1.4);opacity:0}}
+.pp-radar .trail{position:absolute;width:3px;height:3px;border-radius:50%;background:#B3261E;opacity:.5}
+.pp-radar .lbl{position:absolute;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:10px;line-height:1.15;color:#B3261E;white-space:nowrap;background:rgba(243,238,223,.92);padding:1px 3px;border-radius:2px;z-index:2}
+.pp-radar .none{position:absolute;left:0;right:0;top:100px;text-align:center;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:10px;letter-spacing:1px;color:#1E4E9E;line-height:1.2}
+.pp-radar .live{position:absolute;right:-2px;top:2px;font-family:Arial,sans-serif;font-size:9px;font-weight:700;color:#fff;background:#B3261E;border-radius:2px;padding:1px 5px;letter-spacing:.5px}
+.pp-radar .live::before{content:'● ';animation:ppBlink 1.2s steps(1) infinite}
+.pp-radar .live.off{background:#6B7280}.pp-radar .live.off::before{animation:none}
+@keyframes ppBlink{50%{opacity:0}}
+.pp-cap{font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-size:12.5px;color:#5B5340;text-align:center;margin-top:4px;letter-spacing:.3px}
+.pp-cap b{color:#B3261E}
+.pp-note{margin-top:12px;background:#FFFDF6;padding:9px 11px;font-family:Kalam,'Bradley Hand',cursive;font-size:15px;line-height:1.4;color:#1D3E8F;transform:rotate(-1deg);box-shadow:0 3px 8px rgba(0,0,0,.18);position:relative}
+.pp-note.ev{color:#6B2FA0;transform:rotate(.8deg)}
+.pp-note::before{content:'';position:absolute;right:16px;top:-8px;width:12px;height:26px;border:2px solid #9CA3AF;border-radius:6px}
+.pp-note small{font-family:Georgia,serif;font-size:10px;letter-spacing:2px;color:#8B7F62;display:block;text-transform:uppercase}
+.pp-note audio{width:100%;height:32px;margin-top:6px}
+.pp-note .ok{display:inline-block;margin-top:5px;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;font-size:12px;color:#1E7B34;background:none;border:2px solid #1E7B34;padding:1px 8px;transform:rotate(-3deg);letter-spacing:1px;cursor:pointer}
+.pp-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 6px;margin-top:8px}
+.pp-s{height:92px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pp-s .st{width:90px;height:78px;border:2.5px solid currentColor;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;text-align:center;font-family:'Barlow Condensed','Arial Narrow',sans-serif;font-weight:700;letter-spacing:1px;text-transform:uppercase;font-size:12px;opacity:.86;mix-blend-mode:multiply}
+.pp-s .st svg{width:24px;height:24px}
+.pp-s .st small{font-size:9.5px}
+.pp-s:nth-child(9n+1) .st{color:#B3261E;transform:rotate(-8deg);border-radius:50%}
+.pp-s:nth-child(9n+2) .st{color:#1E4E9E;transform:rotate(6deg)}
+.pp-s:nth-child(9n+3) .st{color:#1E7B34;transform:rotate(-4deg);border-style:double;border-width:4px}
+.pp-s:nth-child(9n+4) .st{color:#6B2FA0;transform:rotate(9deg);border-radius:50%}
+.pp-s:nth-child(9n+5) .st{color:#B45309;transform:rotate(-6deg);border-radius:18px}
+.pp-s:nth-child(9n+6) .st{color:#0F766E;transform:rotate(3deg)}
+.pp-s:nth-child(9n+7) .st{color:#B3261E;transform:rotate(-10deg);border-style:dashed}
+.pp-s:nth-child(9n+8) .st{color:#1E4E9E;transform:rotate(7deg);border-radius:50%}
+.pp-s:nth-child(9n+9) .st{color:#4B5563;transform:rotate(-3deg);border-style:double;border-width:4px}
+.pp-mrz{margin-top:12px;font-family:'Courier New',monospace;font-size:10.5px;letter-spacing:1.5px;color:#3B3B3B;line-height:1.4;word-break:break-all}
+.hd-pass .hd-foot{color:#9BA7C2;opacity:1}
+.hd-pass .hd-share button{border:1px solid #D8B45A;color:#D8B45A;background:none}
+@media (prefers-reduced-motion:reduce){.sc-pulse,.pp-radar .sweep,.pp-radar .blip::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.hd-mq span{animation:none}}
 
 /* NAV */
 .nav{
@@ -2785,7 +2923,7 @@ async function renderHome(el) {
   if(!_tileEditMode) _tileOrder = getOrderedHomeTiles(HOME_TILES);
   _refreshTileGrid();
 
-  // Cinematic slideshow (Classic, Aurora and Sky have the aircraft images; Bento and Neo-Brutal don't)
+  // Cinematic slideshow (only Classic has the aircraft images)
   let _hIdx = 0;
   const _hImgs = HERO_IMGS.map((_,i) => document.getElementById('hImg'+i));
   if(_hImgs.every(Boolean)) {
@@ -2829,16 +2967,17 @@ async function renderHome(el) {
 // ── HOME DESIGNS ───────────────────────────────────────────────────
 // The 🎨 button on the home tab picks a layout (saved on this device only). Only the home
 // page changes; every other tab is untouched. Classic is the original layout, in renderHome.
-// In Bento, Aurora, Neo-Brutal and Neon, holding a big card lets you choose which window it shows.
+// In Bento, Neo-Brutal, Neon and Corkboard, holding a big card lets you choose which window it shows.
 const HOME_DESIGNS = [
   {id:'classic', label:'Classic'},
   {id:'bento',   label:'Bento'},
-  {id:'aurora',  label:'Aurora Glass'},
   {id:'brutal',  label:'Neo-Brutal'},
   {id:'neon',    label:'Neon Night Ops'},
-  {id:'sky',     label:'Sky + Sheet'},
-  {id:'airline', label:'Airline App'},
   {id:'cork',    label:'Corkboard'},
+  {id:'comic',   label:'Comic Book'},
+  {id:'lineup',  label:'Starting Lineup'},
+  {id:'chart',   label:'Sectional Chart'},
+  {id:'passport',label:'Crew Passport'},
 ];
 const HOME_PLANE_IMGS = [
   'cars/Westwind-removebg-preview.png',
@@ -2858,15 +2997,10 @@ const HD_SLOTS = {
            {id:'s2',def:'fleet',   size:'tall',    cls:'hd-bx fleet'},
            {id:'s3',def:'calendar',size:'compact', cls:'hd-bx cal'},
            {id:'s4',def:'shopping',size:'compact', cls:'hd-bx shop'}],
-  aurora: [{id:'a1',def:'fleet',   size:'hero',    cls:'hd-glass hd-ahero'},
-           {id:'a2',def:'today',   size:'card',    cls:'hd-glass'},
-           {id:'a3',def:'calendar',size:'card',    cls:'hd-glass'}],
   brutal: [{id:'b1',def:'today',   size:'bar',     cls:'hd-bcard prog'},
            {id:'b2',def:'fleet',   size:'plane',   cls:'hd-bcard fl'}],
   neon:   [{id:'n1',def:'today',   size:'bar',     cls:'hd-nbar'},
            {id:'n2',def:'fleet',   size:'bar',     cls:'hd-nbar cy'}],
-  airline:[{id:'p1',def:'fleet',   size:'photo',   cls:'ap-card ap-photo'},
-           {id:'p2',def:'today',   size:'bar',     cls:'ap-card ap-prog'}],
   cork:   [{id:'k1',def:'fleet',   size:'polaroid',cls:'ck-polaroid'},
            {id:'k2',def:'today',   size:'bar',     cls:'ck-prog'}],
 };
@@ -2896,9 +3030,6 @@ function homeFooterHtml() {
     <div class="hd-share"><button onclick="openShareInstallSheet()">Share &amp; Install App</button></div>`;
 }
 function homeNotesHtml() { return `<div class="hd-notes">${renderHandoffNotesHtml()}${renderTodayEventsHtml()}</div>`; }
-function homePlaneImgsHtml(pad) {
-  return HOME_PLANE_IMGS.map((src,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${src}" id="hImg${i}" style="object-fit:contain;padding:${pad};object-position:center" alt="">`).join('');
-}
 
 // ── which window each big card shows (saved per device) ──
 let _hdSlots = null;
@@ -2943,6 +3074,7 @@ function homeFleetInfo() {
   const hf = S.homeFleet;
   const plane = {Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Navajo:HOME_PLANE_IMGS[2], Astra:HOME_PLANE_IMGS[3]};
   if(!hf) return {reg:'Checking…', line:'', sub:'', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
+  if(_fleetPaused) return {reg:'Overnight', line:'Tracking resumes 6 AM', sub:'', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
   if(!_fleetFeedAt || Date.now()-_fleetFeedAt > 15*60000)
     return {reg:'No live feed', line:'', sub:'Open the Fleet tab', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
   if(hf.inbound) {
@@ -2954,25 +3086,15 @@ function homeFleetInfo() {
   if(hf.airborne) return {reg:'Airborne', line:`${hf.airborne} in the air`, sub:'None inbound yet', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
   return {reg:'No arrivals', line:'Nothing airborne', sub:hf.ground?`${hf.ground} on the ground`:'Live ADS-B', tone:'idle', img:HOME_PLANE_IMGS[0], inbound:false};
 }
-function hdFleetSky() {
-  const f = homeFleetInfo();
-  return `<b>${_hdEsc(f.reg)}</b>${f.inbound?`<i>${_hdEsc(f.line)}</i> · ${_hdEsc(f.sub)}`:_hdEsc([f.line,f.sub].filter(Boolean).join(' · '))}`;
-}
-function hdAuroraCap() {
-  const f = homeFleetInfo();
-  return `<b>${f.inbound?_hdEsc(f.reg)+' · inbound':_hdEsc(f.reg)}</b>${f.line?`<i>${_hdEsc(f.line)}${f.inbound?' · '+_hdEsc(f.sub):''}</i>`:''}`;
-}
 function homeFleetPaint() {
   if(S.tab!=='home') return;
   document.querySelectorAll('[data-hfslot]').forEach(n=>{
     const key = n.dataset.hfslot;
-    if(key==='sky') { n.innerHTML = hdFleetSky(); return; }
+    if(HD_LIVE[key]) { n.innerHTML = HD_LIVE[key](); return; }
     const [design, slotId] = key.split(':');
     const slot = (HD_SLOTS[design]||[]).find(s=>s.id===slotId);
     if(!slot) return;
-    const cap = n.querySelector('[data-hfcap]');           // aurora hero: only the caption, so the slideshow keeps running
-    if(cap) cap.innerHTML = hdAuroraCap();
-    else n.innerHTML = hdCardInner(design, slot, 'fleet');
+    n.innerHTML = hdCardInner(design, slot, 'fleet');
   });
 }
 async function homeFleetRefresh() {
@@ -2983,7 +3105,13 @@ async function homeFleetRefresh() {
     const inbound = air.filter(p=>p.distNm!=null && p.distNm<=250 && !p.leaving && fleetHeadingToward(p.lat,p.lon,p.trackRaw,CYKF_LAT,CYKF_LON))
       .map(p=>({...p, eta:etaMinutes(p.distNm,p.speedKts)})).filter(p=>p.eta!==null)
       .sort((a,b)=>a.distNm-b.distNm)[0] || null;
-    S.homeFleet = {inbound, airborne:air.length, ground:pos.length-air.length};
+    S.homeFleet = {inbound, airborne:air.length, ground:pos.length-air.length, all:pos};
+    pos.forEach(p=>{
+      if(p.onGround || p.lat==null) { delete _hdTrail[p.tail]; return; }
+      const t = _hdTrail[p.tail] || (_hdTrail[p.tail] = []), last = t[t.length-1];
+      if(!last || last.lat!==p.lat || last.lon!==p.lon) t.push({lat:p.lat, lon:p.lon});
+      if(t.length>4) t.shift();
+    });
   } catch(e) { return; }
   homeFleetPaint();
 }
@@ -3016,11 +3144,6 @@ function hdCardInner(design, slot, w) {
     }
     case 'bento:compact':
       return `<small>${ico} ${U}</small><p>${_hdEsc(m.big)}<br>${_hdEsc(m.sub)}</p>`;
-    case 'aurora:hero':
-      if(w==='fleet') return `${homePlaneImgsHtml('18px 30px 34px')}<div class="cap" data-hfcap>${hdAuroraCap()}</div>`;
-      return `<div class="hd-aheroin"><span class="hd-mi">${m.svg}</span><b>${_hdEsc(m.big)}</b><small>${_hdEsc(m.sub)}</small></div>`;
-    case 'aurora:card':
-      return `<small>${U}</small><p><b style="font-size:24px">${_hdEsc(m.big)}</b><br>${_hdEsc(m.sub)}</p>`;
     case 'brutal:bar':
       return w==='today' ? `<b>${_hdEsc(m.main)}</b><div class="hd-pbar"><i style="width:${m.pct}%"></i></div>`
                          : `<b>${_hdEsc(m.label)} · ${_hdEsc(m.big)}</b><div class="hd-bsub">${_hdEsc(m.sub)}</div>`;
@@ -3030,12 +3153,6 @@ function hdCardInner(design, slot, w) {
     case 'neon:bar':
       return w==='today' ? `<b>TODAY</b> · ${_hdEsc(m.main)}<div class="p"><i style="width:${m.pct}%"></i></div>`
                          : `<b>${U}</b> · ${_hdEsc(m.main)}`;
-    case 'airline:photo':
-      return `<div class="ap-img">${w==='fleet'&&f?`<img src="${f.img}" alt="">`:m.svg}</div><div class="ap-row"><b>${_hdEsc(m.label)} · ${_hdEsc(m.big)}</b><span class="ap-pill">${_hdEsc(m.sub)}</span></div>`;
-    case 'airline:bar':
-      return m.pct!=null
-        ? `<div class="ap-row"><b>${_hdEsc(m.label)}</b><span>${m.pct}%</span></div><div class="ap-bar"><i style="width:${m.pct}%"></i></div><div class="ap-sub">${_hdEsc(m.sub)}</div>`
-        : `<div class="ap-row"><b>${_hdEsc(m.label)}</b><span>${_hdEsc(m.big)}</span></div><div class="ap-sub">${_hdEsc(m.sub)}</div>`;
     case 'cork:polaroid':
       return `<div class="ck-pin"></div><div class="ck-img">${w==='fleet'&&f?`<img src="${f.img}" alt="">`:m.svg}</div><figcaption>${_hdEsc(m.label)} — ${_hdEsc(m.big)}</figcaption>`;
     case 'cork:bar':
@@ -3100,13 +3217,6 @@ function homeDesignHtml(d, dateStr) {
     <div class="hd-bg">${cards('bento').join('')}</div>
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
-  if(d==='aurora') { const c = cards('aurora'); return `<div class="hd hd-aurora"><i class="hd-blob b1"></i><i class="hd-blob b2"></i><i class="hd-blob b3"></i>
-    <div class="hd-top"><small>${dt}</small><h2>Skycare YKF</h2></div>
-    ${homeNotesHtml()}
-    ${c[0]}
-    <div class="hd-arow">${c[1]}${c[2]}</div>
-    <div id="homeTileWrap"></div>
-    ${homeFooterHtml()}</div>`; }
   if(d==='brutal') {
     const bits = [];
     st.evs.forEach(e=>bits.push((e.type==='charter'?'✈ CHARTER TODAY: ':'📆 TODAY: ')+String(e.title||'').toUpperCase()));
@@ -3132,21 +3242,6 @@ function homeDesignHtml(d, dateStr) {
     ${c[0]}${c[1]}
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`; }
-  if(d==='sky') return `<div class="hd hd-sky">
-    <div class="hd-skyarea"><div class="dt">${dt}</div>${homePlaneImgsHtml('44px 6px 60px')}${fleetOn?`<div class="hd-chip" data-hfslot="sky" onclick="goTab('fleet')">${hdFleetSky()}</div>`:''}</div>
-    <div class="hd-sheet"><div class="hd-grab"></div>
-      <h3 onclick="goTab('today')">Today</h3><div class="pb"><i style="width:${st.pct}%"></i></div><div class="ps">${prog}${st.evs.length?' · '+homeEventsLine(st):''}</div>
-      ${homeNotesHtml()}
-      <div id="homeTileWrap"></div>
-      ${homeFooterHtml()}
-    </div></div>`;
-  if(d==='airline') { const c = cards('airline'); return `<div class="hd hd-airline">
-    <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()}</h2></div>
-    ${c[0]}
-    ${c[1]}
-    ${homeNotesHtml()}
-    <div id="homeTileWrap"></div>
-    ${homeFooterHtml()}</div>`; }
   if(d==='cork') { const c = cards('cork'); return `<div class="hd hd-cork">
     <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()}</h2></div>
     ${c[0]}
@@ -3154,6 +3249,8 @@ function homeDesignHtml(d, dateStr) {
     ${c[1]}
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`; }
+  const h4 = hdLayout4(d, st, fleetOn);
+  if(h4) return h4;
   throw new Error('unknown home design '+d);
 }
 
@@ -3168,12 +3265,12 @@ function _hdTileAttrs(t, i, extraStyle) {
 function homeDesignTilesHtml(d) {
   const cls = _tileEditMode ? 'tile-wobble' : 'tile-anim';
   let list = _tileOrder || [];
+  const t4 = hdTiles4(d, list, cls);
+  if(t4) return t4;
   const pal = {
-    aurora:['#6fa8ff','#5ff0d0','#c79bff','#ffd27a','#ff8fb6'],
     brutal:['#FF5CA8','#B6FF3B','#7CB4FF','#FF9A3C','#ffffff','#C7A6FF'],
     neon:  ['#ff4fa8','#29e0ff','#ffe45c','#a52dff','#3dff8b'],
-    sky:   ['#7db8ff','#ffb86b','#ff8fb6','#7dffc4','#c79bff'],
-    airline:['#0B3B8C'], cork:['#3a2a18'], // fixed colours — these two designs don't tint per tile
+    cork:['#3a2a18'], // fixed colour — Corkboard doesn't tint per tile
   };
   if(d==='bento') {
     const shown = hdSlotWins('bento');                    // windows already in a big card aren't repeated as small tiles
@@ -3181,11 +3278,10 @@ function homeDesignTilesHtml(d) {
     list = list.filter(t=>!shown.includes(t.id));
     return `<div class="hd-bsm">${list.map((t,i)=>`<div class="hd-bs ${cls}" ${_hdTileAttrs(t,i,`--c:${colors[HD_WINDOWS.findIndex(w=>w.id===t.id)%colors.length]}`)}>${t.svg}${t.label==='Crew Cars'?'Cars':t.label}</div>`).join('')}</div>`;
   }
-  const c = pal[d] || pal.aurora;
-  const grid = {aurora:'hd-atg', brutal:'hd-btg', neon:'hd-ntg', sky:'hd-stg', airline:'ap-tg', cork:'ck-tg'}[d];
-  const item = {aurora:'hd-at hd-glass', brutal:'hd-bt', neon:'hd-nt', sky:'hd-st', airline:'ap-t', cork:'ck-t'}[d];
-  const cvar = d==='aurora' ? '--g' : '--c';
-  return `<div class="${grid}">${list.map((t,i)=>`<div class="${item} ${cls}" ${_hdTileAttrs(t,i,`${cvar}:${c[i%c.length]}`)}>${t.svg}${t.label}</div>`).join('')}</div>`;
+  const c = pal[d] || pal.brutal;
+  const grid = {brutal:'hd-btg', neon:'hd-ntg', cork:'ck-tg'}[d];
+  const item = {brutal:'hd-bt', neon:'hd-nt', cork:'ck-t'}[d];
+  return `<div class="${grid}">${list.map((t,i)=>`<div class="${item} ${cls}" ${_hdTileAttrs(t,i,`--c:${c[i%c.length]}`)}>${t.svg}${t.label}</div>`).join('')}</div>`;
 }
 
 // ── the 🎨 picker ──
@@ -3193,11 +3289,12 @@ function homeMiniHtml(id) {
   const m = {
     classic:`<div class="hp-mini" style="background:#0B1120"><u style="left:0;right:0;top:0;height:18px;border-radius:0;background:linear-gradient(#1a2c52,#0B1120)"></u><u style="left:24px;top:6px;width:16px;height:7px;background:#cfd8e8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*20}px;top:24px;width:16px;height:15px;background:rgba(255,255,255,.12)"></u>`).join('')}</div>`,
     bento:`<div class="hp-mini" style="background:#0B1120"><u style="left:4px;right:4px;top:4px;height:13px;background:#3a7bff;border-radius:5px"></u><u style="left:4px;top:20px;width:26px;height:20px;background:#141F3A;border:1px solid #2a3a60"></u><u style="left:33px;top:20px;width:27px;height:9px;background:#5b46ff"></u><u style="left:33px;top:31px;width:27px;height:9px;background:#e0567a"></u></div>`,
-    aurora:`<div class="hp-mini" style="background:radial-gradient(circle at 20% 20%,#2f6bff,transparent 55%),radial-gradient(circle at 85% 80%,#8a3bff,transparent 55%),#070914"><u style="left:5px;right:5px;top:6px;height:15px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:6px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:26px;width:15px;height:13px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:5px"></u>`).join('')}</div>`,
     brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
     neon:`<div class="hp-mini" style="background:linear-gradient(#0a0518,#2b0a4a)"><u style="left:19px;top:5px;width:26px;height:18px;border-radius:50%;background:linear-gradient(#ffe45c,#ff4fa8)"></u><u style="left:4px;right:4px;top:27px;height:2px;background:#ff4fa8;box-shadow:0 0 5px #ff4fa8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:32px;width:15px;height:9px;border:1px solid ${['#ff4fa8','#29e0ff','#ffe45c'][i]};border-radius:3px;box-shadow:0 0 4px ${['#ff4fa8','#29e0ff','#ffe45c'][i]}"></u>`).join('')}</div>`,
-    sky:`<div class="hp-mini" style="background:linear-gradient(#0d2a5a,#3c5fa8 30%,#f0a06a 60%)"><u style="left:14px;top:8px;width:36px;height:7px;background:#e8eef8;border-radius:4px"></u><u style="left:0;right:0;top:22px;bottom:0;background:#0f1729;border-radius:10px 10px 0 0"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:30px;width:15px;height:11px;background:#182241;border-radius:4px"></u>`).join('')}</div>`,
-    airline:`<div class="hp-mini" style="background:#fff"><u style="left:0;right:0;top:0;height:20px;background:#0B3B8C"></u><u style="left:6px;top:14px;right:6px;height:16px;background:#fff;border:1px solid #dce6f5;border-radius:4px;box-shadow:0 2px 4px rgba(0,0,0,.15)"></u><u style="left:6px;top:33px;right:6px;height:8px;background:#F4F7FC;border-radius:3px"></u></div>`,
+    comic:`<div class="hp-mini" style="background:#F8EDD0;border:2px solid #111"><u style="left:4px;right:4px;top:4px;height:9px;background:#FFD43B;border:1.5px solid #111;border-radius:0"></u><u style="left:4px;right:4px;top:16px;height:12px;background:#1D3E8F;border:1.5px solid #111;border-radius:0"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:31px;width:15px;height:9px;background:#fff;border:1.5px solid #111;border-radius:50%"></u>`).join('')}</div>`,
+    lineup:`<div class="hp-mini" style="background:#0B1430"><u style="left:14px;right:14px;top:4px;height:5px;background:#fff;border-radius:1px"></u><u style="left:5px;right:5px;top:12px;height:18px;background:linear-gradient(125deg,#E8304A 0 40%,#16224A 40%);border-radius:3px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:33px;width:15px;height:8px;background:#0F1A3C;border:1px solid #2a3a6a"></u>`).join('')}</div>`,
+    chart:`<div class="hp-mini" style="background:#fff;border:1px solid #ccc"><u style="left:18px;top:3px;width:26px;height:26px;border:2px dashed #2E9E3E;border-radius:50%;background:none"></u><u style="left:28px;top:13px;width:6px;height:6px;border:1.5px solid #111;border-radius:50%;background:#fff"></u><u style="left:4px;right:4px;top:33px;height:7px;background:#111;border-radius:2px"></u></div>`,
+    passport:`<div class="hp-mini" style="background:#1B2A4A"><u style="left:27px;top:3px;width:10px;height:10px;border:1.5px solid #D8B45A;border-radius:50%;background:none"></u><u style="left:4px;right:4px;top:16px;bottom:3px;background:#F3EEDF;border-radius:2px"></u><u style="left:9px;top:20px;width:17px;height:17px;border:2px solid #B3261E;border-radius:50%;background:none"></u><u style="left:31px;top:19px;width:20px;height:20px;border:2px solid #1E4E9E;border-radius:50%;background:none"></u></div>`,
     cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
   return m[id] || '';
@@ -3235,6 +3332,240 @@ function homeAfterRender() {
     homeFleetRefresh();
     _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
   }
+}
+
+// ── Comic Book, Starting Lineup, Sectional Chart and Crew Passport ──
+// These four draw the handoff notes and today's events in their own style (same Complete
+// button, same charter link) and keep a live fleet part that homeFleetPaint() redraws.
+const HD_CALLSIGN = {IOC:632,IOE:706,IOJ:594,IOA:680,IOB:614,IOH:432,TIM:274,CPX:11,KKC:370,XAW:280,XDP:303,DAX:58,AJR:410,AQR:411,TJX:412,CJH:413,JHX:414,JRH:415,QXD:416,QXX:417,TJF:418,BHO:419};
+const _hdTrail = {};   // tail → the last few positions seen this session (newest last), for the radar trail
+function hdType(tail) { return (FLEET_AIRCRAFT.find(a=>a.tail===tail)||{}).type || 'Metroliner'; }
+function hdImgFor(tail) { return ({Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Navajo:HOME_PLANE_IMGS[2], Astra:HOME_PLANE_IMGS[3]})[hdType(tail)] || HOME_PLANE_IMGS[1]; }
+function hdBearing(lat, lon) {   // from CYKF to the point, degrees true
+  const r = Math.PI/180;
+  const y = Math.sin((lon-CYKF_LON)*r)*Math.cos(lat*r);
+  const x = Math.cos(CYKF_LAT*r)*Math.sin(lat*r) - Math.sin(CYKF_LAT*r)*Math.cos(lat*r)*Math.cos((lon-CYKF_LON)*r);
+  return (Math.atan2(y,x)/r + 360) % 360;
+}
+function hdCompass(b) { return ['N','NE','E','SE','S','SW','W','NW'][Math.round(b/45)%8]; }
+function hdEta(m) { return m==null ? '' : m>=60 ? Math.floor(m/60)+'h '+(m%60)+'m' : m+' min'; }
+// The plane a design features: the inbound one, else the closest one in the air
+function hdFeatured() {
+  const hf = S.homeFleet; if(!hf) return null;
+  if(hf.inbound) return {...hf.inbound, inbound:true};
+  const air = (hf.all||[]).filter(p=>!p.onGround && p.distNm!=null).sort((a,b)=>a.distNm-b.distNm)[0];
+  return air ? {...air, inbound:false} : null;
+}
+function hdNoteText(t) { return _hdEsc(t||'').replace(/\n/g,'<br>'); }
+function hdAudio(n) { return n.audio ? `<audio controls src="${n.audio}"></audio>` : ''; }
+function hdEvents() {
+  return calEventsOn(localDateISO()).map(ev=>{
+    const charter = ev.type==='charter';
+    const open = charter ? (ev.items||[]).filter(x=>!x.done) : [];
+    const sub = charter
+      ? (open.length ? `${open.length} item${open.length===1?'':'s'} still open — ${open.slice(0,2).map(x=>x.text).join(', ')}` : (ev.items||[]).length ? 'All items done' : 'No requested items yet')
+      : (ev.notes||'');
+    return {id:ev.id, title:ev.title||'', sub, charter, rep:calRepeats(ev)?calRepeatLabel(ev):''};
+  });
+}
+function hdEvClick(e) { return e.charter ? `onclick="openCalendarToCharter('${e.id}')"` : ''; }
+// Short status under a window's name (chart waypoints, passport stamps)
+function hdTileStat(id) {
+  const st = homeStats();
+  if(id==='today') return st.total ? (st.total-st.done ? `${st.total-st.done} left` : 'all done') : '';
+  if(id==='calendar') return st.evs.length ? `${st.evs.length} today` : 'clear';
+  if(id==='shopping') { const n=(S.shopping||[]).filter(i=>i.checked).length; return n ? `${n} to buy` : 'stocked'; }
+  if(id==='fleet') { const hf=S.homeFleet; return !hf ? '' : hf.inbound ? '1 inbound' : hf.airborne ? `${hf.airborne} in the air` : ''; }
+  if(id==='audits') return new Date().getDate()<=10 ? 'due 10th' : '';
+  return '';
+}
+function hdDateBits() {
+  const d = new Date();
+  return {d, dow:DAY_NAMES[d.getDay()], dow3:DAY_NAMES[d.getDay()].slice(0,3).toUpperCase(),
+          mon:d.toLocaleDateString('en-CA',{month:'short'}).replace('.','').toUpperCase(), day:d.getDate(), yr:d.getFullYear()};
+}
+
+// Comic: the action panel
+function hdComicHero() {
+  const f = homeFleetInfo(), p = hdFeatured();
+  let cap, boom;
+  if(p && p.inbound) { cap = `Suddenly… ${p.reg}! ${p.distNm} nm out${p.altFt?` · ${p.altFt.toLocaleString()} ft`:''} · ETA ${hdEta(p.eta)}!`; boom = 'INBOUND!'; }
+  else if(p) { cap = `Up, up and away… ${p.reg}, ${p.distNm} nm from YKF.`; boom = 'AIRBORNE!'; }
+  else if(f.reg==='Overnight') { cap = 'Night falls over YKF… tracking resumes at 6 AM.'; boom = 'ZZZ…'; }
+  else if(f.reg==='Checking…') { cap = 'Scanning the skies…'; boom = 'STAND BY!'; }
+  else if(f.reg==='No live feed') { cap = 'The radar has gone quiet…'; boom = 'NO SIGNAL!'; }
+  else { cap = 'All quiet over YKF…'; boom = 'ALL CLEAR!'; }
+  return `<div class="cm-cap">${_hdEsc(cap)}</div><img src="${p?hdImgFor(p.tail):HOME_PLANE_IMGS[1]}" alt=""><div class="cm-boom"><span>${boom}</span></div>`;
+}
+
+// Lineup: the featured plane + the bench
+function hdLineupFleet() {
+  const f = homeFleetInfo(), p = hdFeatured();
+  const cs = t => HD_CALLSIGN[t];
+  const alt = a => a ? (a>=10000 ? (a/1000).toFixed(1)+'K' : a.toLocaleString()) : '—';
+  const star = p
+    ? `<div class="sl-star"><span class="num">${cs(p.tail)||_hdEsc(p.tail)}</span>
+        <span class="tag ${p.inbound?'in':''}"><i>●</i> ${p.inbound?'INBOUND':p.leaving?'OUTBOUND':'AIRBORNE'}</span>
+        <img src="${hdImgFor(p.tail)}" alt="">
+        <div class="sl-name"><b>${_hdEsc(p.reg)}</b><small>${hdType(p.tail).toUpperCase()}${cs(p.tail)?' · PHX'+cs(p.tail):''}</small></div>
+        <div class="sl-stats"><div><b>${p.distNm??'—'}</b><small>NM</small></div><div><b>${alt(p.altFt)}</b><small>FT</small></div>
+          <div><b>${p.inbound&&p.eta!=null?(p.eta>=60?Math.floor(p.eta/60)+'h':p.eta+"'"):'—'}</b><small>ETA</small></div></div></div>`
+    : `<div class="sl-star empty"><span class="num">YKF</span><span class="tag">${_hdEsc(f.reg.toUpperCase())}</span>
+        <img src="${HOME_PLANE_IMGS[1]}" alt="">
+        <div class="sl-name"><b>${_hdEsc(f.reg)}</b><small>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · ').toUpperCase())}</small></div></div>`;
+  const bench = ((S.homeFleet||{}).all||[]).filter(q=>!p || q.tail!==p.tail)
+    .sort((a,b)=>(a.onGround-b.onGround) || ((a.distNm??999)-(b.distNm??999))).slice(0,3);
+  return star + (bench.length ? `<div class="sl-bench">${bench.map(q=>`<div><em class="${q.onGround?'g':''}">${q.onGround?'GND':'AIR'}</em>
+      <img src="${hdImgFor(q.tail)}" alt=""><b>${_hdEsc(q.tail)}${cs(q.tail)?' #'+cs(q.tail):''}</b>
+      <small>${hdType(q.tail).toUpperCase()} · ${q.onGround&&(q.distNm??99)<=5?'CYKF':(q.distNm??'?')+' NM'}</small></div>`).join('')}</div>` : '');
+}
+
+// Sectional: the user's CYKF chart (cars/ykf-chart.jpg, 1899×1295 px). The CYKF airport symbol
+// is at (1063,515); about 70 px per nm, measured from the NUBER and TETOS fixes printed on it.
+const HD_CHART = {src:'cars/ykf-chart.jpg', w:1899, ax:1063, ay:515, pxPerNm:70, show:480, h:250};
+function hdChartMap() {
+  const C = HD_CHART, s = C.show/C.w, f = homeFleetInfo(), p = hdFeatured();
+  const state = f.reg==='Overnight' ? 'OVERNIGHT' : f.reg==='No live feed' ? 'NO FEED' : 'LIVE';
+  let over = '';
+  if(p && p.lat!=null) {
+    const halfW = Math.min(window.innerWidth||390, 640)/2 - 30, halfH = C.h/2 - 28;
+    const b = hdBearing(p.lat, p.lon), r = b*Math.PI/180, px = (p.distNm||0)*C.pxPerNm*s;
+    let x = Math.sin(r)*px, y = -Math.cos(r)*px;
+    const k = Math.max(Math.abs(x)/halfW, Math.abs(y)/halfH, 1);   // beyond the chart: pin it to the edge
+    x /= k; y /= k;
+    const len = Math.hypot(x,y), ang = Math.atan2(-y,-x)*180/Math.PI;
+    const rot = (p.trackRaw ?? (b+180)%360) - 45;                 // the plane icon points north-east
+    const lblX = x<0 ? `left:calc(50% + ${Math.round(x+20)}px)` : `right:calc(50% - ${Math.round(x-20)}px)`;
+    const lblY = Math.max(4, Math.min(C.h-46, Math.round(C.h/2 + y + (y<0 ? 16 : -46))));
+    over = `<i class="sc-crs" style="left:calc(50% + ${x}px);top:${C.h/2+y}px;width:${len}px;transform:rotate(${ang}deg)"></i>
+      <div class="sc-pl ${p.leaving?'out':''}" style="left:calc(50% + ${x-15}px);top:${C.h/2+y-15}px;transform:rotate(${rot}deg)">${ICONS.fleet}</div>
+      <div class="sc-lbl" style="${lblX};top:${lblY}px">${_hdEsc(p.reg)}${p.altFt?` ${p.altFt.toLocaleString()} ft`:''}<small>${p.distNm} NM ${hdCompass(b)}${p.inbound&&p.eta!=null?' · ETA '+hdEta(p.eta).toUpperCase():''}</small></div>
+      ${k>1?'<span class="sc-edge">Beyond the chart · shown at the edge, pointing in</span>':''}`;
+  } else {
+    over = `<div class="sc-state">${_hdEsc(f.reg)}${f.line?`<small>${_hdEsc(f.line)}</small>`:''}</div>`;
+  }
+  return `<img class="sc-img" src="${C.src}" alt="" style="width:${C.show}px;left:calc(50% - ${(C.ax*s).toFixed(1)}px);top:${(C.h/2-C.ay*s).toFixed(1)}px">
+    <span class="sc-chip ${state==='LIVE'?'':'off'}">CYKF · ${state}</span><i class="sc-pulse"></i>${over}`;
+}
+
+// Passport: the date stamp, the live radar (60 nm outer ring, 30 nm inner) and its caption
+function hdDateStampSvg(st) {
+  const t = hdDateBits();
+  return `<svg viewBox="0 0 120 120" aria-label="${t.dow} ${t.mon} ${t.day}">
+    <defs><path id="hdpT" d="M 14.5,60 A 45.5,45.5 0 0,1 105.5,60"/><path id="hdpB" d="M 10,60 A 50,50 0 0,0 110,60"/></defs>
+    <circle cx="60" cy="60" r="58" fill="none" stroke="currentColor" stroke-width="2.5"/>
+    <circle cx="60" cy="60" r="53.5" fill="none" stroke="currentColor" stroke-width="1"/>
+    <circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="1"/>
+    <text font-size="9" letter-spacing="1.2"><textPath href="#hdpT" startOffset="50%" text-anchor="middle">SKYCARE YKF · CREW ENTRY</textPath></text>
+    <text font-size="8" letter-spacing="1"><textPath href="#hdpB" startOffset="50%" text-anchor="middle">${st.total?`★ ${st.done} OF ${st.total} TASKS ★`:'★ NO TASKS YET ★'}</textPath></text>
+    <text x="60" y="49" font-size="8" text-anchor="middle" letter-spacing="1.5">${t.dow3}</text>
+    <text x="60" y="68" font-size="${String(t.day).length>1?19:21}" text-anchor="middle">${t.mon}. ${t.day}</text>
+    <text x="60" y="80" font-size="8.5" text-anchor="middle" letter-spacing="2">${t.yr}</text>
+  </svg>`;
+}
+function hdRadar() {
+  const f = homeFleetInfo(), lead = hdFeatured(), k = 174/150, c = 87, R = 54*k;
+  const at = (lat, lon, nm) => { const r = hdBearing(lat,lon)*Math.PI/180, d = R*Math.min(nm,60)/60; return [c+Math.sin(r)*d, c-Math.cos(r)*d]; };
+  const planes = ((S.homeFleet||{}).all||[]).filter(p=>!p.onGround && p.lat!=null && p.distNm!=null && p.distNm<=60);
+  let marks = '', lbl = '';
+  planes.forEach(p=>{
+    (_hdTrail[p.tail]||[]).slice(0,-1).forEach(t=>{
+      const nm = haversineNm(t.lat,t.lon,CYKF_LAT,CYKF_LON); if(nm>60) return;
+      const [tx,ty] = at(t.lat,t.lon,nm); marks += `<i class="trail" style="left:${(tx-1.5).toFixed(1)}px;top:${(ty-1.5).toFixed(1)}px"></i>`;
+    });
+    const [x,y] = at(p.lat,p.lon,p.distNm);
+    marks += `<span class="blip ${p.leaving?'out':''}" style="left:${(x-8).toFixed(1)}px;top:${(y-8).toFixed(1)}px"><span style="transform:rotate(${(p.trackRaw??0)-45}deg)">${ICONS.fleet}</span></span>`;
+    if(lead && lead.tail===p.tail) {
+      const side = x<c ? `left:${Math.max(2,Math.round(x-14))}px` : `right:${Math.max(2,Math.round(174-x-14))}px`;
+      lbl = `<span class="lbl" style="${side};top:${Math.round(y<c ? y+12 : y-34)}px">${_hdEsc(p.reg)}<br>${p.distNm} NM${lead.inbound&&lead.eta!=null?' · ETA '+lead.eta:''}</span>`;
+    }
+  });
+  const none = planes.length ? '' : `<span class="none">${f.reg==='Overnight'?'TRACKING RESUMES<br>6 AM':f.reg==='No live feed'?'NO LIVE FEED':f.reg==='Checking…'?'SCANNING…':'NO ARRIVALS'}</span>`;
+  return `<svg class="frame" viewBox="0 0 150 150">
+      <defs><path id="hdrT" d="M 12,75 A 63,63 0 0,1 138,75"/><path id="hdrB" d="M 8,75 A 67,67 0 0,0 142,75"/></defs>
+      <circle cx="75" cy="75" r="73" fill="none" stroke="currentColor" stroke-width="2.4"/>
+      <circle cx="75" cy="75" r="69" fill="none" stroke="currentColor" stroke-width=".8"/>
+      <text font-size="8.5" letter-spacing="1.3"><textPath href="#hdrT" startOffset="50%" text-anchor="middle">ARRIVALS · CYKF · LIVE</textPath></text>
+      <text font-size="7" letter-spacing="1"><textPath href="#hdrB" startOffset="50%" text-anchor="middle">RINGS 30 · 60 NM</textPath></text>
+      <circle cx="75" cy="75" r="54" fill="none" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 2"/>
+      <circle cx="75" cy="75" r="27" fill="none" stroke="currentColor" stroke-width=".8" stroke-dasharray="2 2"/>
+      <path d="M75 21V129M21 75H129" stroke="currentColor" stroke-width=".5" opacity=".5"/>
+      <text x="77" y="27" font-size="6">60</text><text x="77" y="54" font-size="6">30</text>
+    </svg><i class="sweep"></i><i class="apt"></i>${marks}${lbl}${none}<span class="live ${f.reg==='Overnight'?'off':''}">${f.reg==='Overnight'?'OFF':'LIVE'}</span>`;
+}
+function hdRadarCap() {
+  const f = homeFleetInfo(), p = hdFeatured();
+  if(p && p.inbound) return `Radar · <b>${_hdEsc(p.reg)} inbound</b> · ${p.distNm} nm · ETA ${hdEta(p.eta)}`;
+  if(p) return `Radar · <b>${_hdEsc(p.reg)}</b> · ${p.distNm} nm${p.lat!=null?" "+hdCompass(hdBearing(p.lat,p.lon)):""}`;
+  return `Radar · ${_hdEsc([f.reg,f.line].filter(Boolean).join(' · '))}`;
+}
+// Live parts that homeFleetPaint() redraws, by their data-hfslot key
+const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap};
+
+function hdLayout4(d, st, fleetOn) {
+  const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
+  if(d==='comic') {
+    const n = Math.min(st.total, 30), filled = st.total ? Math.round(st.done/st.total*n) : 0;
+    const seg = st.total ? Array.from({length:n},(_,i)=>`<i class="${i<filled?'f':''}"></i>`).join('') : '<em>No tasks yet</em>';
+    const day = notes.length && notes[0].day ? `${_hdEsc(notes[0].day)}'s` : 'the next';
+    return `<div class="hd hd-comic">
+    <div class="cm-mast"><h3>SKYCARE<small>The groomers of YKF!</small></h3><div class="iss">No.<b>${t.d.getMonth()+1}${String(t.day).padStart(2,'0')}</b>${t.dow3} · ${t.mon} ${t.day}</div></div>
+    ${fleetOn?`<div class="cm-hero" data-hfslot="comic" onclick="goTab('fleet')">${hdComicHero()}</div>`:''}
+    ${notes.map(n=>`<div class="cm-panel"><div class="cm-narr">To be continued next shift…</div>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="cm-ok" onclick="markHandoffComplete('${n.id}')">Complete!</button></div>`).join('')}
+    ${evs.map(e=>`<div class="cm-bub" ${hdEvClick(e)}>${_hdEsc(e.title)}${e.sub?` — ${_hdEsc(e.sub)}`:''}${/[!?.…]$/.test(e.sub||e.title)?'':'!'}${e.rep?`<small>🔁 ${_hdEsc(e.rep)}</small>`:''}</div>`).join('')}
+    <div class="cm-pow" onclick="goTab('today')"><span>Task<br>power</span><div class="cm-bar">${seg}</div><b>${st.done}/${st.total}</b></div>
+    <div id="homeTileWrap"></div>
+    <div class="cm-end">Meanwhile, on ${day} shift…</div>
+    ${homeFooterHtml()}</div>`;
+  }
+  if(d==='lineup') {
+    const coach = notes.map(n=>`<small>Coach's board · from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button>`).join('<div style="height:10px"></div>')
+      + evs.map(e=>`<div class="note" ${hdEvClick(e)}><b>Game note:</b> ${_hdEsc(e.title)}${e.sub?` — ${_hdEsc(e.sub)}`:''}${e.rep?` · 🔁 ${_hdEsc(e.rep)}`:''}</div>`).join('');
+    return `<div class="hd hd-lineup"><i class="sl-beam l"></i><i class="sl-beam r"></i>
+    <div class="sl-h"><small>${t.dow.toUpperCase()}'S</small><h3>Starting <span>lineup</span></h3><div class="ln"></div><em>SKYCARE YKF · ${t.mon} ${t.day}</em></div>
+    ${fleetOn?`<div data-hfslot="lineup" onclick="goTab('fleet')">${hdLineupFleet()}</div>`:''}
+    <div class="sl-team" onclick="goTab('today')"><b>${st.done}/${st.total}</b><div class="grow"><small>Team tasks today · ${st.pct}%</small><div class="sl-bar"><i style="width:${st.pct}%"></i></div></div></div>
+    ${coach?`<div class="sl-coach">${coach}</div>`:''}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  }
+  if(d==='chart') {
+    const mm = String(t.d.getMonth()+1).padStart(2,'0');
+    let seq = 0;
+    const notams = notes.map(n=>`<div class="sc-notam"><b>!YKF ${mm}/${String(++seq).padStart(3,'0')} HANDOFF FROM ${_hdEsc((n.day||'last shift').toUpperCase())}</b><br>${hdNoteText(n.text)}${hdAudio(n)}<br><button class="ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button></div>`).join('')
+      + evs.map(e=>`<div class="sc-notam" ${hdEvClick(e)}><b>!YKF ${mm}/${String(++seq).padStart(3,'0')} ${_hdEsc(e.title)}</b>${e.sub?` ${_hdEsc(e.sub)}`:''}${e.rep?` · ${_hdEsc(e.rep)}`:''}</div>`).join('');
+    return `<div class="hd hd-chart">
+    <div class="sc-map" ${fleetOn?`data-hfslot="chart" onclick="goTab('fleet')"`:''}>${fleetOn?hdChartMap():`<img class="sc-img" src="${HD_CHART.src}" alt="" style="width:${HD_CHART.show}px;left:calc(50% - ${(HD_CHART.ax*HD_CHART.show/HD_CHART.w).toFixed(1)}px);top:${(HD_CHART.h/2-HD_CHART.ay*HD_CHART.show/HD_CHART.w).toFixed(1)}px">`}</div>
+    <div class="sc-body">${notams}
+      <div class="sc-prog" onclick="goTab('today')">TASKS<div class="alt"><i style="width:${st.pct}%"></i></div>${st.done} / ${st.total}</div>
+      <div id="homeTileWrap"></div>
+      ${homeFooterHtml()}</div></div>`;
+  }
+  if(d==='passport') {
+    const yymmdd = String(t.yr).slice(2)+String(t.d.getMonth()+1).padStart(2,'0')+String(t.day).padStart(2,'0');
+    const p = hdFeatured();
+    const mrz = `P&lt;YKF&lt;SKYCARE&lt;&lt;GROOMERS&lt;CREW&lt;&lt;&lt;&lt;&lt;&lt;&lt;<br>${yymmdd}&lt;&lt;${st.done}&lt;${st.total}&lt;&lt;${p&&p.inbound?_hdEsc(p.reg.replace('-',''))+'&lt;ETA'+p.eta:'NOARR'}&lt;&lt;&lt;&lt;&lt;&lt;`;
+    return `<div class="hd hd-pass">
+    <div class="pp-cov"><div class="pp-crest"><img src="cars/Skycare_logo-removebg-preview.png" alt=""></div><h3>Crew passport</h3><b>SKYCARE · YKF</b><small>${t.dow} · ${String(t.day).padStart(2,'0')} ${t.mon} ${t.yr}</small></div>
+    <div class="pp-pg"><span class="pn">PAGE ${String(t.day).padStart(2,'0')}</span><span class="hdr">Visas · entries</span>
+      <div class="pp-row"><div class="pp-date" onclick="goTab('today')">${hdDateStampSvg(st)}</div>${fleetOn?`<div class="pp-radar" data-hfslot="passport" onclick="goTab('fleet')">${hdRadar()}</div>`:''}</div>
+      ${fleetOn?`<div class="pp-cap" data-hfslot="passcap">${hdRadarCap()}</div>`:''}
+      ${notes.map(n=>`<div class="pp-note"><small>From ${_hdEsc(n.day||'last shift')}</small>${hdNoteText(n.text)}${hdAudio(n)}<br><button class="ok" onclick="markHandoffComplete('${n.id}')">✓ COMPLETE</button></div>`).join('')}
+      ${evs.map(e=>`<div class="pp-note ev" ${hdEvClick(e)}><small>Today${e.rep?' · '+_hdEsc(e.rep):''}</small>${_hdEsc(e.title)}${e.sub?` — ${_hdEsc(e.sub)}`:''}</div>`).join('')}
+    </div>
+    <div class="pp-pg"><span class="pn">PAGE ${String(t.day+1).padStart(2,'0')}</span><span class="hdr">Your windows</span>
+      <div id="homeTileWrap"></div>
+      <div class="pp-mrz">${mrz}</div></div>
+    ${homeFooterHtml()}</div>`;
+  }
+  return null;
+}
+function hdTiles4(d, list, cls) {
+  if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='chart') return `<div class="sc-tg">${list.map((t,i)=>`<div class="sc-w ${cls}" ${_hdTileAttrs(t,i)}><span class="hex">${t.svg}</span><b>${t.label}</b><small>${_hdEsc(hdTileStat(t.id))}</small></div>`).join('')}</div>`;
+  if(d==='passport') return `<div class="pp-tg">${list.map((t,i)=>{ const s = hdTileStat(t.id); return `<div class="pp-s ${cls}" ${_hdTileAttrs(t,i)}><div class="st">${t.svg}<span>${t.label}</span>${s?`<small>${_hdEsc(s)}</small>`:''}</div></div>`; }).join('')}</div>`;
+  return null;
 }
 
 // ── TODAY ──────────────────────────────────────────────────────────
