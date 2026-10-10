@@ -1290,8 +1290,8 @@ body::before{
         $('bpStamp').style.transform = `rotate(-12deg) scale(${1.6 - s * .6})`;
         common(p, live, 'Printing your pass', 'Boarded — you are live', 'Tasks, shopping and audits are up to date');
       } },
-    // Wednesday — Emerson circles the ring as it fills
-    3: { build: r => r.innerHTML = shell(`<div style="position:relative;width:280px;height:280px">
+    // Thursday — Emerson circles the ring as it fills (Thursday is Emerson's day at work)
+    4: { build: r => r.innerHTML = shell(`<div style="position:relative;width:280px;height:280px">
           <svg width="280" height="280" viewBox="0 0 280 280" style="position:absolute;inset:0">
             <circle cx="140" cy="140" r="110" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/>
             <circle id="rgArc" cx="140" cy="140" r="110" fill="none" stroke="#E8C86A" stroke-width="10" stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="691" transform="rotate(-90 140 140)"/>
@@ -1311,8 +1311,8 @@ body::before{
         $('rgSub').textContent = live ? 'ready to go' : 'syncing';
         common(p, live, 'Syncing with the team', 'Everything is up to date', 'Tasks, shopping and audits are live');
       } },
-    // Thursday — a cockpit altimeter climbs to 35,000 ft (long hand: 1 turn / 10,000 ft · small hand: 1 turn / 100,000 ft)
-    4: { build: r => {
+    // Wednesday — a cockpit altimeter climbs to 35,000 ft (long hand: 1 turn / 10,000 ft · small hand: 1 turn / 100,000 ft)
+    3: { build: r => {
           let ticks = '', nums = '';
           for (let i = 0; i < 50; i++) ticks += `<div style="position:absolute;left:129px;top:8px;width:2px;height:${i % 5 ? 7 : 14}px;opacity:${i % 5 ? .55 : 1};background:#EDEFF3;transform-origin:1px 122px;transform:rotate(${i * 7.2}deg)"></div>`;
           for (let i = 0; i < 10; i++) { const a = (i * 36 - 90) * Math.PI / 180; nums += `<div class="ld-cond" style="position:absolute;width:30px;height:24px;margin:-12px 0 0 -15px;text-align:center;font-size:24px;font-weight:700;color:#F4F5F7;left:${130 + 92 * Math.cos(a)}px;top:${130 + 92 * Math.sin(a)}px">${i}</div>`; }
