@@ -107,7 +107,10 @@ async function main() {
   const auditSnap = await db.collection('auditCars').where('month', '==', month).get();
   const doneCars = new Set();
   auditSnap.docs.forEach(d => { if (d.data().done) doneCars.add(d.data().carKey); });
-  const pendingCars = CREW_CAR_KEYS.filter(k => !doneCars.has(k));
+  // cars switched off for this month (out of service) don't count, same as in the app
+  const carOffSnap = await db.collection('carsState').doc('disabled').get();
+  const carsOff = new Set(((carOffSnap.exists ? carOffSnap.data().data : {}) || {})[month] || []);
+  const pendingCars = CREW_CAR_KEYS.filter(k => !carsOff.has(k) && !doneCars.has(k));
 
   const pendingAircraft   = await getPendingAircraft(db, month);
   const pendingFacilities = await getPendingFacilities(db, month);

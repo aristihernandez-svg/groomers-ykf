@@ -2963,18 +2963,27 @@ async function auditReminderCheck(popKey) {
 }
 async function auditPendingFresh() {
   const read = ref => ref.get().then(d => d.exists ? (d.data() || {}) : {});
-  const items = [];   // [label, read]
-  const keep = r => !isAcDisabled(r) && !isAcHidden(r);
-  const ac = (regs, label) => regs.filter(keep).forEach(r => items.push([label + ' · ' + r, read(db.collection('auditAircraft').doc(acAuditDocKey(r)))]));
-  CREW_CARS.filter(c => !isCarDisabled(c.key)).forEach(c => items.push(['Crew Car · ' + c.name, read(db.collection('auditCars').doc(auditDocKey(c.key)))]));
-  ac([...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro || [])], 'Metro');
-  ac([...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind || [])], 'Westwind');
-  ac([...AIRCRAFT_ASTRA], 'Astra');
-  (S.customAcTypesList || []).forEach(ct => ac(ct.regs, ct.name));
-  if(BASE_CONFIG.features?.facilityAudits !== false)
-    [['crewhouse','Crew House'], ['hangar','Hangar & Office'], ['msds','MSDS'], ['parking','Parking Lot MX'], ['ykfbase','YKF Base']]
-      .forEach(([t, label]) => items.push([label, read(db.collection('facilityAudits').doc(facilityDocKey(t)))]));
   try {
+    // Which aircraft and cars count this month (skipped for maintenance, hidden, added) — also read fresh,
+    // so an aircraft switched off on another phone isn't listed as missing here
+    const month = auditMonth(), acMonth = acAuditMonthKey();
+    const [acOff, acHid, carOff, acAdded] = await Promise.all([
+      read(db.collection('acState').doc('disabled')), read(db.collection('acState').doc('hidden')),
+      read(db.collection('carsState').doc('disabled')), read(db.collection('appConfig').doc('acCustomAircraft'))]);
+    const offAc = new Set(((acOff.data || {})[acMonth]) || []), hidAc = new Set(acHid.regs || []);
+    const offCar = new Set(((carOff.data || {})[month]) || []);
+    const added = acAdded.metro || acAdded.westwind ? acAdded : (S.acCustomAircraft || {});
+    const items = [];   // [label, read]
+    const ac = (regs, label) => [...new Set(regs)].filter(r => !offAc.has(r) && !hidAc.has(r))
+      .forEach(r => items.push([label + ' · ' + r, read(db.collection('auditAircraft').doc(acAuditDocKey(r)))]));
+    CREW_CARS.filter(c => !offCar.has(c.key)).forEach(c => items.push(['Crew Car · ' + c.name, read(db.collection('auditCars').doc(auditDocKey(c.key)))]));
+    ac([...AIRCRAFT_METRO, ...(added.metro || [])], 'Metro');
+    ac([...AIRCRAFT_WESTWIND, ...(added.westwind || [])], 'Westwind');
+    ac([...AIRCRAFT_ASTRA], 'Astra');
+    (S.customAcTypesList || []).forEach(ct => ac(ct.regs, ct.name));
+    if(BASE_CONFIG.features?.facilityAudits !== false)
+      [['crewhouse','Crew House'], ['hangar','Hangar & Office'], ['msds','MSDS'], ['parking','Parking Lot MX'], ['ykfbase','YKF Base']]
+        .forEach(([t, label]) => items.push([label, read(db.collection('facilityAudits').doc(facilityDocKey(t)))]));
     const docs = await Promise.all(items.map(i => i[1]));
     return items.filter((_, i) => !docs[i].done).map(i => i[0]);
   } catch(e) { console.log('Audit reminder: could not read the audits —', e); return null; }
