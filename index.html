@@ -2942,25 +2942,42 @@ async function renderHome(el) {
   // Audit reminder popup — fires on 8th, 9th, 10th if audits are pending
   const _popDay = new Date().getDate();
   const _popKey = 'gykf_auditPopup_' + localDateISO();
-  if([8,9,10].includes(_popDay) && !localStorage.getItem(_popKey)) {
-    const _mRegs = [...AIRCRAFT_METRO,...(S.acCustomAircraft.metro||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-    const _wRegs = [...AIRCRAFT_WESTWIND,...(S.acCustomAircraft.westwind||[])].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-    const _aRegs = [...AIRCRAFT_ASTRA].filter(r=>!isAcDisabled(r)&&!isAcHidden(r));
-    const _pend  = [];
-    CREW_CARS.filter(c=>!isCarDisabled(c.key)).forEach(c=>{if(!carAuditData(c.key).done)_pend.push('Crew Car · '+c.name);});
-    _mRegs.forEach(r=>{if(!acIsDone(r,'metro'))_pend.push('Metro · '+r);});
-    _wRegs.forEach(r=>{if(!acIsDone(r,'westwind'))_pend.push('Westwind · '+r);});
-    _aRegs.forEach(r=>{if(!acIsDone(r,'astra'))_pend.push('Astra · '+r);});
-    (S.customAcTypesList||[]).forEach(ct=>{
-      ct.regs.filter(r=>!isAcDisabled(r)&&!isAcHidden(r)).forEach(r=>{if(!acIsDone(r,ct.id))_pend.push(ct.name+' · '+r);});
-    });
-    if(!chData().done)  _pend.push('Crew House');
-    if(!hoData().done)  _pend.push('Hangar & Office');
-    if(!msData().done)  _pend.push('MSDS');
-    if(!plData().done)  _pend.push('Parking Lot MX');
-    if(!ykfData().done) _pend.push('YKF Base');
-    if(_pend.length) setTimeout(()=>showAuditReminderPopup(_pend,_popKey), 800);
-  }
+  if([8,9,10].includes(_popDay) && !localStorage.getItem(_popKey)) auditReminderCheck(_popKey);
+}
+
+// The reminder decides from a fresh read of this month's audit documents — the same ones the
+// Audits tab shows — not from this phone's saved copy, which can be days old when someone else
+// finished the audits (it listed everything as missing right after the app opened, though all
+// were done). All done: no popup, and no more checking today. Can't read: say nothing.
+let _auditReminderBusy = false;
+async function auditReminderCheck(popKey) {
+  if(_auditReminderBusy || !db) return;
+  _auditReminderBusy = true;
+  try {
+    const pend = await auditPendingFresh();
+    if(pend === null) return;
+    if(!pend.length) { try { localStorage.setItem(popKey, '1'); } catch(e) {} return; }
+    if(S.tab !== 'home' || localStorage.getItem(popKey) || document.getElementById('overlay').classList.contains('open')) return;
+    showAuditReminderPopup(pend, popKey);
+  } finally { _auditReminderBusy = false; }
+}
+async function auditPendingFresh() {
+  const read = ref => ref.get().then(d => d.exists ? (d.data() || {}) : {});
+  const items = [];   // [label, read]
+  const keep = r => !isAcDisabled(r) && !isAcHidden(r);
+  const ac = (regs, label) => regs.filter(keep).forEach(r => items.push([label + ' · ' + r, read(db.collection('auditAircraft').doc(acAuditDocKey(r)))]));
+  CREW_CARS.filter(c => !isCarDisabled(c.key)).forEach(c => items.push(['Crew Car · ' + c.name, read(db.collection('auditCars').doc(auditDocKey(c.key)))]));
+  ac([...AIRCRAFT_METRO, ...(S.acCustomAircraft.metro || [])], 'Metro');
+  ac([...AIRCRAFT_WESTWIND, ...(S.acCustomAircraft.westwind || [])], 'Westwind');
+  ac([...AIRCRAFT_ASTRA], 'Astra');
+  (S.customAcTypesList || []).forEach(ct => ac(ct.regs, ct.name));
+  if(BASE_CONFIG.features?.facilityAudits !== false)
+    [['crewhouse','Crew House'], ['hangar','Hangar & Office'], ['msds','MSDS'], ['parking','Parking Lot MX'], ['ykfbase','YKF Base']]
+      .forEach(([t, label]) => items.push([label, read(db.collection('facilityAudits').doc(facilityDocKey(t)))]));
+  try {
+    const docs = await Promise.all(items.map(i => i[1]));
+    return items.filter((_, i) => !docs[i].done).map(i => i[0]);
+  } catch(e) { console.log('Audit reminder: could not read the audits —', e); return null; }
 }
 
 // ── HOME DESIGNS ───────────────────────────────────────────────────
