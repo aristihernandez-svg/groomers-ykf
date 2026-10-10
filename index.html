@@ -10474,9 +10474,55 @@ function buildFlaggedSummaryHTML() {
 // exactly as when printed) and rasterizes it into a real, paginated PDF via
 // html2canvas + jsPDF. Needed because mail apps commonly block raw .html
 // attachments outright (phishing precaution) — a real PDF just opens.
-// Renders one HTML document into a jsPDF (adding letter pages). Used for single files and
-// for the all-audits bundle, so both paginate exactly the same way.
-async function htmlIntoPdf(pdf, html, startNewPage) {
+// html2canvas (which draws each audit page for the PDF) ignores two things these pages use:
+// object-fit — so photos and logos came out stretched to their box — and vertical text
+// (the Metro side bar). Before drawing, each such image becomes a box showing the same
+// picture as a background (drawn in proportion), and vertical text becomes normal text
+// turned 90°. Only the off-screen copy used for the PDF is changed.
+function pdfSafeLayout(doc) {
+  const win = doc.defaultView;
+  doc.querySelectorAll('img').forEach(img => {
+    const cs = win.getComputedStyle(img), fit = cs.objectFit, src = img.currentSrc || img.src;
+    if (!src || !fit || fit === 'fill') return;
+    const w = img.offsetWidth, h = img.offsetHeight;
+    if (!w || !h) return;
+    const box = doc.createElement('div');
+    box.className = img.className;
+    box.setAttribute('style', img.getAttribute('style') || '');
+    const st = box.style;
+    st.boxSizing = 'border-box'; st.width = w+'px'; st.height = h+'px';
+    st.display = cs.display === 'inline' ? 'inline-block' : cs.display;
+    st.margin = cs.margin; st.padding = cs.padding; st.borderRadius = cs.borderRadius; st.verticalAlign = cs.verticalAlign;
+    st.flexShrink = cs.flexShrink; st.flexGrow = cs.flexGrow; st.alignSelf = cs.alignSelf;
+    if (cs.transform && cs.transform !== 'none') st.transform = cs.transform;
+    if (cs.position !== 'static') { st.position = cs.position; st.top = cs.top; st.left = cs.left; st.right = cs.right; st.bottom = cs.bottom; }
+    st.backgroundImage = `url("${src}")`;
+    st.backgroundRepeat = 'no-repeat';
+    st.backgroundPosition = cs.objectPosition || 'center';
+    st.backgroundSize = fit === 'none' ? 'auto' : fit === 'scale-down' ? 'contain' : fit;
+    st.backgroundOrigin = 'content-box'; st.backgroundClip = 'content-box';
+    st.objectFit = ''; st.objectPosition = '';
+    img.replaceWith(box);
+  });
+  doc.querySelectorAll('body *').forEach(el => {
+    const cs = win.getComputedStyle(el);
+    if (!/^vertical|^sideways/.test(cs.writingMode||'')) return;
+    const w = el.offsetWidth, h = el.offsetHeight;
+    if (!w || !h) return;
+    const pl = parseFloat(cs.paddingLeft)||0, pr = parseFloat(cs.paddingRight)||0, pt = parseFloat(cs.paddingTop)||0, pb = parseFloat(cs.paddingBottom)||0;
+    const cw = el.clientWidth - pl - pr, ch = el.clientHeight - pt - pb;
+    // vertical-rl reads top-to-bottom (turn +90°); the side bars add rotate(180deg) to read bottom-to-top (turn -90°)
+    const m = /matrix\(([-\d.e]+)/.exec(cs.transform||''), flipped = m && parseFloat(m[1]) < -0.99;
+    const inner = doc.createElement('span');
+    inner.innerHTML = el.innerHTML;
+    inner.style.cssText = `position:absolute;left:${pl + cw/2 - ch/2}px;top:${pt + ch/2 - cw/2}px;width:${ch}px;height:${cw}px;display:flex;align-items:center;justify-content:center;white-space:nowrap;writing-mode:horizontal-tb;transform:rotate(${flipped?-90:90}deg)`;
+    el.innerHTML = '';
+    el.appendChild(inner);
+    Object.assign(el.style, {writingMode:'horizontal-tb', transform:'none', boxSizing:'border-box', width:w+'px', height:h+'px', position: cs.position==='static' ? 'relative' : cs.position});
+  });
+}
+// Draws an audit's HTML page onto a canvas (what goes into the PDF).
+async function auditHtmlCanvas(html) {
   const stripped = html.replace(/<div class="pdf-back-btn"[\s\S]*?<\/script>/, '');
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;left:-99999px;top:0;width:850px;height:1100px;border:none';
@@ -10484,7 +10530,17 @@ async function htmlIntoPdf(pdf, html, startNewPage) {
   try {
     await new Promise(resolve => { iframe.onload = resolve; iframe.srcdoc = stripped; });
     await new Promise(resolve => setTimeout(resolve, 400)); // let images finish loading
-    const canvas = await html2canvas(iframe.contentDocument.body, {scale:2, useCORS:true, windowWidth:850});
+    try { pdfSafeLayout(iframe.contentDocument); } catch(e) { console.log('pdfSafeLayout failed:', e); }
+    return await html2canvas(iframe.contentDocument.body, {scale:2, useCORS:true, windowWidth:850});
+  } finally {
+    document.body.removeChild(iframe);
+  }
+}
+// Renders one HTML document into a jsPDF (adding letter pages). Used for single files and
+// for the all-audits bundle, so both paginate exactly the same way.
+async function htmlIntoPdf(pdf, html, startNewPage) {
+  {
+    const canvas = await auditHtmlCanvas(html);
     // jsPDF's built-in html()+autoPaging badly over-estimates page count on these
     // documents (7 pages for content that's really 2) — slice the rendered canvas
     // into real letter-page-height chunks ourselves for predictable pagination.
@@ -10504,8 +10560,6 @@ async function htmlIntoPdf(pdf, html, startNewPage) {
       y += sliceH; page++;
     }
     return page;
-  } finally {
-    document.body.removeChild(iframe);
   }
 }
 async function htmlToPdfFile(html, filename) {
