@@ -10474,7 +10474,9 @@ function buildFlaggedSummaryHTML() {
 // exactly as when printed) and rasterizes it into a real, paginated PDF via
 // html2canvas + jsPDF. Needed because mail apps commonly block raw .html
 // attachments outright (phishing precaution) — a real PDF just opens.
-async function htmlToPdfFile(html, filename) {
+// Renders one HTML document into a jsPDF (adding letter pages). Used for single files and
+// for the all-audits bundle, so both paginate exactly the same way.
+async function htmlIntoPdf(pdf, html, startNewPage) {
   const stripped = html.replace(/<div class="pdf-back-btn"[\s\S]*?<\/script>/, '');
   const iframe = document.createElement('iframe');
   iframe.style.cssText = 'position:absolute;left:-99999px;top:0;width:850px;height:1100px;border:none';
@@ -10490,8 +10492,6 @@ async function htmlToPdfFile(html, filename) {
     const usableWpt = pageWpt - 2*marginPt, usableHpt = pageHpt - 2*marginPt;
     const pxPerPt = canvas.width / usableWpt;
     const pageHpx = Math.floor(usableHpt * pxPerPt);
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF({unit:'pt', format:'letter'});
     let y = 0, page = 0;
     while (y < canvas.height) {
       const sliceH = Math.min(pageHpx, canvas.height - y);
@@ -10499,67 +10499,144 @@ async function htmlToPdfFile(html, filename) {
       tmp.width = canvas.width; tmp.height = sliceH;
       tmp.getContext('2d').drawImage(canvas, 0, y, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
       const imgData = tmp.toDataURL('image/jpeg', 0.85);
-      if (page>0) pdf.addPage();
+      if (page>0 || startNewPage) pdf.addPage();
       pdf.addImage(imgData, 'JPEG', marginPt, marginPt, usableWpt, sliceH/pxPerPt);
       y += sliceH; page++;
     }
-    return new File([pdf.output('blob')], filename, {type:'application/pdf'});
+    return page;
   } finally {
     document.body.removeChild(iframe);
   }
 }
+async function htmlToPdfFile(html, filename) {
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'pt', format:'letter'});
+  await htmlIntoPdf(pdf, html, false);
+  return new File([pdf.output('blob')], filename, {type:'application/pdf'});
+}
 
-// "Share all" — bundles every already-saved file for the current month (whatever's
-// actually done — nothing forces completion) plus a freshly-built summary, converts
-// each to a real PDF, and hands them to the device's native share sheet so they land
-// as real email attachments.
-async function shareAllRecords() {
-  const month = auditMonth();
-  const files = [];
-  toast('Preparing PDFs…');
-
-  const summaryHtml = buildFlaggedSummaryHTML();
-  // Keep Records' Flagged Items Summary in sync every time this runs.
-  uploadAuditPDF(summaryHtml, `audits/${month}/summary.html`).then(url => {
-    if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
-  });
-  try {
-    files.push(await htmlToPdfFile(summaryHtml, `Flagged Summary - ${month}.pdf`));
-  } catch(e) { console.error('Summary PDF conversion failed:', e); }
-
+// "Send PDFs via e-mail" — builds ONE PDF with the flagged summary first and then every audit
+// saved this month, then shows buttons to share, download or print it. Phones only open the
+// share sheet within a few seconds of a tap, and building 20+ audits takes longer than that,
+// so the old version (share straight after building) was refused; now the share is its own tap.
+let _auditBundle = null;   // {key, month, file, parts:[{name,html}], failed:[]}
+function auditBundleSources(month) {
   const facilityNames = {crewhouse:'Crew House', hangar:'Hangar', parking:'Parking Lot', ykfbase:'YKF Base', msds:'MSDS'};
-  const sources = [];
+  const order = {ykfbase:0, hangar:1, crewhouse:2, parking:3, msds:4, cars:5, aircraft:6};
+  const out = [];
   Object.values(S.auditRecords).forEach(rec => {
     if (rec.monthLabel !== month || !rec.pdfUrl) return;
     let name;
     if (rec.type === 'cars') name = (CREW_CARS.find(c=>c.key===rec.carKey)||{}).name || rec.carKey;
     else if (rec.type === 'aircraft') name = rec.reg;
     else name = facilityNames[rec.type] || rec.type;
-    sources.push({name, url: rec.pdfUrl});
+    out.push({name, url: rec.pdfUrl, o: order[rec.type] ?? 9});
   });
+  return out.sort((a,b)=>a.o-b.o || String(a.name).localeCompare(String(b.name)));
+}
+async function shareAllRecords() {
+  const month = auditMonth();
+  const summaryHtml = buildFlaggedSummaryHTML();
+  const sources = auditBundleSources(month);
+  const key = month + '|' + sources.map(s=>s.url).join(',') + '|' + summaryHtml.length;
+  // Keep Records' Flagged Items Summary in sync every time this runs.
+  uploadAuditPDF(summaryHtml, `audits/${month}/summary.html`).then(url => {
+    if (url && db) db.collection('monthSummaries').doc(month).set({pdfUrl:url, month}, {merge:true});
+  });
+  if (_auditBundle && _auditBundle.key === key) { auditBundlePanel(); return; }   // already built, nothing changed
 
-  if (!sources.length) {
-    toast('No completed audits saved yet this month — sharing the summary only');
-  }
+  openModal('Preparing the audit PDF', `<div id="abProg" style="text-align:center;padding:18px 4px 8px">
+      <div class="ptr-spin" style="margin:0 auto 12px;width:28px;height:28px"></div>
+      <div style="font-size:14px;font-weight:700;color:var(--t1)">Building one PDF with every audit…</div>
+      <div id="abStep" style="font-size:12.5px;color:var(--t2);margin-top:6px">Flagged summary</div>
+      <div style="font-size:11.5px;color:var(--t3);margin-top:10px;line-height:1.45">Keep the app open — this takes about a minute.</div></div>`, null);
+  document.getElementById('mSave').style.display = 'none';
+  const step = t => { const el = document.getElementById('abStep'); if (el) el.textContent = t; };
 
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'pt', format:'letter'});
+  const parts = [], failed = [];
+  let pages = 0;
+  try { pages += await htmlIntoPdf(pdf, summaryHtml, false); parts.push({name:'Flagged Summary', html:summaryHtml}); }
+  catch(e) { console.error('Summary PDF conversion failed:', e); failed.push('Flagged Summary'); }
   let i = 0;
   for (const {name, url} of sources) {
     i++;
-    toast(`Converting ${i} of ${sources.length} — ${name}…`);
+    step(`${i} of ${sources.length} — ${name}`);
     try {
       const html = await (await fetch(url)).text();
-      files.push(await htmlToPdfFile(html, `${name} - ${month}.pdf`));
-    } catch(e) { console.error('PDF conversion failed for', name, e); }
+      pages += await htmlIntoPdf(pdf, html, pages > 0);
+      parts.push({name, html});
+    } catch(e) { console.error('PDF conversion failed for', name, e); failed.push(name); }
   }
-
-  toast('Opening share sheet…');
+  if (!pages) { closeModal(); toast('Could not build the PDF — check the connection and try again'); return; }
+  const file = new File([pdf.output('blob')], `YKF Audits - ${month}.pdf`, {type:'application/pdf'});
+  _auditBundle = {key, month, file, parts, failed, pages, count: sources.length};
+  // Show the buttons only if this pop-up is still the one on screen
+  if (document.getElementById('abProg') && document.getElementById('overlay').classList.contains('open')) auditBundlePanel();
+  else toast('📎 Audit PDF ready — tap Send PDFs again to share it');
+}
+function auditBundlePanel() {
+  const b = _auditBundle; if (!b) return;
+  const mb = (b.file.size/1048576).toFixed(1);
+  const btn = (fn, bg, fg, label, sub) => `<button onclick="${fn}" style="width:100%;display:flex;align-items:center;gap:12px;text-align:left;padding:13px 14px;border-radius:14px;border:1px solid var(--border2);background:${bg};color:${fg};font-family:inherit;cursor:pointer;margin-top:9px">
+      <span style="font-size:22px">${label.split(' ')[0]}</span><span style="flex:1"><b style="display:block;font-size:14.5px">${label.split(' ').slice(1).join(' ')}</b><small style="font-size:11.5px;opacity:.8">${sub}</small></span></button>`;
+  openModal(`${b.month} audits`, `
+    <div style="display:flex;align-items:center;gap:12px;padding:4px 2px 6px">
+      <div style="width:44px;height:54px;border-radius:6px;background:#E84040;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;flex-shrink:0">PDF</div>
+      <div style="min-width:0"><b style="font-size:14px;color:var(--t1);display:block;word-break:break-word">${_hdEsc(b.file.name)}</b>
+        <small style="font-size:12px;color:var(--t2)">Summary + ${b.count} audit${b.count===1?'':'s'} · ${b.pages} pages · ${mb} MB</small></div>
+    </div>
+    ${b.failed.length ? `<div style="font-size:12px;color:var(--amber);margin:4px 0 2px">⚠️ Left out (couldn't load): ${_hdEsc(b.failed.join(', '))}</div>` : ''}
+    ${btn('auditBundleShare()', 'var(--accent)', '#fff', '📧 Share / e-mail', 'Opens your share sheet — Mail, Gmail, Outlook…')}
+    ${btn('auditBundleDownload()', 'var(--glass2)', 'var(--t1)', '⬇️ Download', 'Saves the PDF to this phone')}
+    ${btn('auditBundleOpen()', 'var(--glass2)', 'var(--t1)', '🖨️ Open to print', 'Opens the PDF — print it from there')}
+    <div style="text-align:center;margin-top:12px"><span onclick="auditBundleShareSeparate()" style="font-size:12px;color:var(--t3);text-decoration:underline;cursor:pointer">Need separate files? Share them one PDF per audit</span></div>`, null);
+  document.getElementById('mSave').style.display = 'none';
+}
+async function auditBundleShare() {
+  const b = _auditBundle; if (!b) return;
+  if (navigator.canShare && navigator.canShare({files:[b.file]})) {
+    try { await navigator.share({files:[b.file], title:`${b.month} Audits`, text:`${b.month} audits — flagged summary and every audit, in one PDF.`}); }
+    catch(e) { if (e.name !== 'AbortError') { toast('Sharing failed — downloading the PDF instead'); auditBundleDownload(); } }
+  } else { toast("This browser can't share files — downloading the PDF instead"); auditBundleDownload(); }
+}
+function auditBundleDownload() {
+  const b = _auditBundle; if (!b) return;
+  const url = URL.createObjectURL(b.file);
+  const a = document.createElement('a');
+  a.href = url; a.download = b.file.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 120000);
+  toast('⬇️ Downloading ' + b.file.name);
+}
+function auditBundleOpen() {
+  const b = _auditBundle; if (!b) return;
+  const url = URL.createObjectURL(b.file);
+  const w = window.open(url, '_blank');
+  if (!w) auditBundleDownload();          // pop-up blocked: download instead
+  setTimeout(()=>URL.revokeObjectURL(url), 600000);
+}
+async function auditBundleShareSeparate() {
+  const b = _auditBundle; if (!b) return;
+  closeModal();
+  toast('Making one PDF per audit…');
+  const files = [];
+  for (const p of b.parts) {
+    try { files.push(await htmlToPdfFile(p.html, `${p.name} - ${b.month}.pdf`)); } catch(e) { console.error('PDF failed for', p.name, e); }
+  }
+  // Building takes a while, so the share is again its own tap
+  openModal('Separate PDFs ready', `<p style="font-size:13px;color:var(--t2);line-height:1.5;margin-bottom:6px">${files.length} PDFs, one per audit.</p>
+    <button onclick="auditBundleShareFiles()" style="width:100%;padding:13px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-family:inherit;font-size:14.5px;font-weight:700;cursor:pointer">📧 Share the ${files.length} PDFs</button>`, null);
+  document.getElementById('mSave').style.display = 'none';
+  b.separate = files;
+}
+async function auditBundleShareFiles() {
+  const files = (_auditBundle||{}).separate || [];
   if (navigator.canShare && navigator.canShare({files})) {
-    try { await navigator.share({files, title:`${month} Audits`}); }
-    catch(e) { if (e.name !== 'AbortError') toast('Share cancelled or failed'); }
-  } else {
-    openModal('Share All',
-      `<p style="font-size:13px;color:var(--t2);line-height:1.5">Your browser can't share multiple files directly. Open each file from its card or Records and share/save it individually instead.</p>`, null);
-  }
+    try { await navigator.share({files, title:`${_auditBundle.month} Audits`}); }
+    catch(e) { if (e.name !== 'AbortError') toast('Sharing the separate files failed — use the single PDF instead'); }
+  } else toast("This browser can't share several files — use the single PDF instead");
 }
 
 
