@@ -1738,7 +1738,9 @@ body::before{
 
   // Christmas — Emerson's whole Santa picture fills the screen with the Skycare logo on top. The only
   // loading bar is five Christmas bulbs on a wire at the bottom: they light one by one, and all glow once live.
+  // Snow falls over the whole picture.
   const xmasView = photo => {
+    const N_SNOW = 85;
     const COLORS = ['#FF3B3B', '#FFD34E', '#2ECC71', '#4AA3FF', '#FF7AD9'];
     const BULB = i => `<svg width="34" height="50" viewBox="0 0 34 50"><rect x="11" y="0" width="12" height="11" rx="2" fill="#2F4A33"/><rect x="11" y="3" width="12" height="2" fill="#1E3324"/>
       <path id="xsB${i}" d="M17 10 C27 10 31 22 29 32 C27 42 21 48 17 48 C13 48 7 42 5 32 C3 22 7 10 17 10 Z" fill="#3A4150"/>
@@ -1747,12 +1749,19 @@ body::before{
       build: r => r.innerHTML = `<img src="${photo}" alt="Merry Christmas" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%">
         <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,0))"></div>
         <div style="position:absolute;left:0;right:0;bottom:0;height:240px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.8))"></div>
+        <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">${Array.from({ length: N_SNOW }, (_, i) => { const big = fxRnd(i, 1) > .78, sz = big ? 6 + fxRnd(i, 2) * 4 : 2.5 + fxRnd(i, 2) * 3.5;
+          return `<i id="xsS${i}" style="position:absolute;left:${(fxRnd(i, 3) * 100).toFixed(1)}%;top:0;width:${sz.toFixed(1)}px;height:${sz.toFixed(1)}px;border-radius:50%;background:#fff;opacity:${(big ? .75 : .7 + fxRnd(i, 4) * .3).toFixed(2)};${big ? 'filter:blur(1.2px);' : ''}will-change:transform"></i>`; }).join('')}</div>
         <img class="ld-logo" src="${LOGO}" alt="Skycare" style="position:absolute;left:50%;top:calc(env(safe-area-inset-top, 0px) + 34px);transform:translateX(-50%);margin:0">
         <div style="position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 52px);width:290px;margin-left:-145px;height:70px">
           <svg width="290" height="24" viewBox="0 0 290 24" style="position:absolute;left:0;top:0"><path d="M0 4 Q72 22 145 10 T290 4" fill="none" stroke="#1E3B22" stroke-width="2.5"/></svg>
           <div style="position:absolute;left:0;right:0;top:8px;display:flex;justify-content:space-around">${Array.from({ length: 5 }, (_, i) => `<div id="xsP${i}" style="margin-top:${[2, 9, 6, 2, 1][i]}px">${BULB(i)}</div>`).join('')}</div>
         </div>`,
       update: (p, live, lt, sec) => {
+        const H = (window.innerHeight || 800) + 20;   // each flake falls at its own speed and drifts side to side
+        for (let i = 0; i < N_SNOW; i++) {
+          const y = ((sec * (30 + fxRnd(i, 5) * 45) + fxRnd(i, 6) * H) % H) - 10;
+          $('xsS' + i).style.transform = `translate(${(Math.sin(sec * 1.1 + i) * 14).toFixed(1)}px,${y.toFixed(1)}px)`;
+        }
         for (let i = 0; i < 5; i++) {
           const on = live || p >= (i + 1) / 5.4, g = .75 + .25 * Math.sin(sec * 5 + i * 2.1), c = COLORS[i];
           $('xsB' + i).setAttribute('fill', on ? c : '#3A4150');
