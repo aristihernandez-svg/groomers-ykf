@@ -677,55 +677,38 @@ body::before{
 .hd-pass .hd-foot{color:#9BA7C2;opacity:1}
 .hd-pass .hd-share button{border:1px solid #D8B45A;color:#D8B45A;background:none}
 
-/* 12 · Haunted Hangar (Halloween: a giant jack-o'-lantern carrying the live fleet, tombstone handoffs, wooden signs, pumpkin tiles) */
-.hd-haunt{background:radial-gradient(ellipse at 50% 0,#2A1A4A 0,transparent 60%),linear-gradient(#0E0A1C,#07060F 40%,#0A0710);color:#F3E6CF;font-family:Inter,system-ui,sans-serif}
+/* 12 · Haunted Hangar (Halloween): the castle and full moon from Emerson's picture fill the screen behind everything
+   (set on #content, so the photo stays still while the page scrolls) and a plane's shadow crosses the moon */
+.content.hh-bg{background:linear-gradient(rgba(7,6,15,.12),rgba(7,6,15,.3) 42%,rgba(7,6,15,.72) 75%,rgba(7,6,15,.88)),url('Emerson/halloween-castle-bg.jpg') 20% 0/cover #07060F}
+.hd-haunt{background:transparent;color:#F3E6CF;font-family:Inter,system-ui,sans-serif}
 .hh-cz{font-family:Cinzel,Georgia,serif;letter-spacing:2px;text-transform:uppercase}
-@keyframes hhFlick{0%,100%{opacity:1}38%{opacity:.78}42%{opacity:.95}66%{opacity:.68}70%{opacity:.9}}
-.hh-title{position:relative;z-index:2;text-align:center;margin-top:4px}
-.hh-title small{display:block;font-size:11px;color:#B9A9D6}
-.hh-title h2{font-family:Creepster,Bangers,Impact,sans-serif;font-weight:400;font-size:44px;line-height:1;letter-spacing:2px;color:#FF8A1F;text-shadow:0 0 16px rgba(255,120,20,.65),0 3px 0 #3A1405;margin:4px 0 2px}
-.hh-gp{position:relative;z-index:2;width:min(330px,100%);margin:4px auto 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.hh-gp .pk{position:relative;aspect-ratio:330/270}
-.hh-gp .pk>svg{position:absolute;inset:0;width:100%;height:100%;animation:hhGlow 3.4s ease-in-out infinite}
-@keyframes hhGlow{0%,100%{filter:drop-shadow(0 0 28px rgba(255,120,20,.35))}50%{filter:drop-shadow(0 0 52px rgba(255,140,30,.7))}}
-.hh-gp .mouth{position:absolute;left:19%;right:19%;top:61%;height:17%;display:flex;align-items:center;justify-content:center;white-space:nowrap;font-weight:800;font-size:28px;letter-spacing:2px;color:#3A1405;animation:hhFlick 2.4s infinite}
-.hh-gp .mouth.sm{font-size:20px;letter-spacing:1px}
-.hh-gp .det{margin-top:2px;text-align:center;font-size:13px;line-height:1.4;color:#F3E6CF}
-.hh-gp .det b{color:#FFB061}
-.hh-gp .off .pk>svg{animation:none}
-.hh-gp .off .cut{fill:#2A1206}
-.hh-gp .off .mouth{color:#C08A55;animation:none}
-.hh-tomb{position:relative;z-index:2;margin:18px 6px 0;padding:24px 18px 16px;text-align:center;border-radius:90px 90px 8px 8px;background:linear-gradient(#5E6272,#3A3D48);color:#ECE8F3;box-shadow:0 10px 22px rgba(0,0,0,.55),inset 0 2px 0 rgba(255,255,255,.12);transform:rotate(-.8deg);border-bottom:7px solid #2E3B1E}
-.hh-tomb .rip{display:block;font-size:20px;font-weight:800;color:#C9CDD8}
-.hh-tomb small{display:block;font-size:9.5px;color:#B3B7C4;margin-top:2px}
-.hh-tomb p{margin:10px 0 0;font-size:14px;line-height:1.45;text-align:left}
-.hh-tomb audio{width:100%;height:32px;margin-top:8px}
-.hh-ok{margin-top:12px;padding:6px 16px;border-radius:999px;border:1.5px solid #FF8A1F;background:rgba(0,0,0,.25);color:#FFB061;font-family:Cinzel,Georgia,serif;font-weight:800;font-size:11px;letter-spacing:1.5px;cursor:pointer}
-.hh-sign{position:relative;z-index:2;margin:16px 10px 0;padding:12px 16px;border-radius:4px;background:repeating-linear-gradient(0deg,#4E321B 0 15px,#5B3B21 15px 30px);border:2px solid #2C1B0D;box-shadow:0 8px 18px rgba(0,0,0,.5);transform:rotate(.8deg);cursor:pointer}
-.hh-sign::before,.hh-sign::after{content:'';position:absolute;top:8px;width:6px;height:6px;border-radius:50%;background:#1A1009;box-shadow:0 0 0 1px #7A5A3A}
-.hh-sign::before{left:8px}.hh-sign::after{right:8px}
-.hh-sign small{display:block;font-size:9.5px;color:#E8C9A0}
-.hh-sign b{display:block;font-family:Cinzel,Georgia,serif;font-weight:800;font-size:16px;color:#FFE9C7;margin-top:2px}
-.hh-sign span{display:block;font-size:12.5px;color:#F1DDBF;margin-top:3px;line-height:1.35}
-.hh-pow{position:relative;z-index:2;margin-top:18px;padding:12px 10px 10px;border-radius:16px;background:rgba(20,12,34,.7);border:1px solid rgba(255,138,31,.25);text-align:center;cursor:pointer}
-.hh-pks{display:flex;justify-content:center;gap:2px}
-.hh-pks svg{width:30px;height:29px;flex-shrink:1;min-width:0}
-.hh-pks .lit{filter:drop-shadow(0 0 6px rgba(255,140,30,.85))}
-.hh-pks .lit .fc{animation:hhFlick 2.4s infinite}
-.hh-pks svg:nth-child(2n) .fc{animation-delay:-.9s}.hh-pks svg:nth-child(3n) .fc{animation-delay:-1.6s}
-.hh-pow-t{margin-top:7px;font-size:12px;color:#D9CBEA}
-.hh-pow-t b{color:#FFB061;font-size:15px}
-.hh-tg{position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-top:20px}
-.hh-t{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.hh-t .pk{position:relative;width:86px;height:70px}
-.hh-t .pk>svg:first-child{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
-.hh-t .ic{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);color:#FFD66E;filter:drop-shadow(0 0 4px #FF9A1F) drop-shadow(0 0 9px rgba(255,140,30,.7));animation:hhFlick 3s infinite}
-.hh-t:nth-child(2n) .ic{animation-delay:-1.2s}.hh-t:nth-child(3n) .ic{animation-delay:-2.1s}
-.hh-t .ic svg{width:26px;height:26px;stroke-width:2.2}
-.hh-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F3E6CF}
-.hd-haunt .hd-foot{color:#9C8FB5;opacity:1;position:relative;z-index:2}
-.hd-haunt .hd-share{position:relative;z-index:2}
-.hd-haunt .hd-share button{border:1px solid rgba(255,138,31,.6);color:#FFB061;background:rgba(0,0,0,.3)}
+.hh-plane{position:fixed;left:0;top:240px;width:110px;z-index:-1;pointer-events:none;filter:brightness(0);opacity:.92;animation:hhCross 16s linear infinite}
+@keyframes hhCross{from{transform:translateX(-140px) rotate(-6deg)}to{transform:translateX(calc(100vw + 30px)) rotate(-6deg)}}
+.hh-title{text-align:center;margin-top:4px}
+.hh-title small{display:block;font-size:11px;color:#E9DCC4;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.hh-title h2{font-family:Creepster,Bangers,Impact,sans-serif;font-weight:400;font-size:54px;line-height:1;letter-spacing:3px;color:#FF8A1F;text-shadow:0 0 18px rgba(255,120,20,.75),0 3px 0 #3A1405;margin-top:4px}
+.hh-fly{margin-top:6px;text-align:center;font-size:13.5px;color:#F3E6CF;text-shadow:0 1px 8px rgba(0,0,0,.95);cursor:pointer}
+.hh-fly b{color:#FFB061}
+.hh-scene{height:240px}
+.hh-line{border-top:1px solid rgba(255,255,255,.25);margin-top:14px;padding-top:12px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
+.hh-scene+.hh-line{margin-top:0}
+.hh-line small.k{display:block;font-size:9.5px;color:#FFB061}
+.hh-line p{font-size:13.5px;line-height:1.45;margin-top:6px}
+.hh-line b{display:block;font-size:16px;margin:2px 0}
+.hh-line span{font-size:12.5px}
+.hh-line audio{width:100%;height:32px;margin-top:8px}
+.hh-ok{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.6);background:none;color:#fff;font:800 11px Cinzel,Georgia,serif;letter-spacing:1.5px;cursor:pointer}
+.hh-prog{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(26,26,40,.78);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.hh-prog .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
+.hh-prog .row span{font-size:10px}
+.hh-prog .hh-bar{height:9px;border-radius:9px;margin-top:8px;overflow:hidden;background:rgba(255,255,255,.1)}
+.hh-prog .hh-bar i{display:block;height:100%;border-radius:9px;background:#FF8A1F;box-shadow:0 0 10px rgba(255,138,31,.8)}
+.hh-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
+.hh-t{height:84px;border-radius:16px;background:rgba(26,26,40,.78);border:1px solid rgba(255,255,255,.08);color:#E9E4DA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hh-t svg{width:26px;height:26px;color:#FFB061}
+.hh-t b{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+.hd-haunt .hd-foot{color:#C9BFD9;opacity:1}
+.hd-haunt .hd-share button{border:1px solid rgba(255,138,31,.6);color:#FFB061;background:rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.hd-haunt *{animation:none!important}}
 @media (prefers-reduced-motion:reduce){.sc-pulse,.pp-radar .sweep,.pp-radar .blip::after{animation:none}}
 @media (prefers-reduced-motion:reduce){.hd-mq span{animation:none}}
@@ -2558,6 +2541,7 @@ function render() {
     document.getElementById('hpVeil').classList.remove('show');
     document.getElementById('hsMenu').classList.remove('show'); document.getElementById('hsVeil').classList.remove('show');
     if(_homeFleetTimer){ clearInterval(_homeFleetTimer); _homeFleetTimer=null; }
+    el.classList.remove('hh-bg');
   }
   switch(S.tab) {
     case 'home':       renderHome(el); break;
@@ -3074,6 +3058,7 @@ async function renderHome(el) {
     catch(e) { console.log('Home design error, using Classic:', e); _designHtml = null; }
   }
   _homeActiveDesign = _designHtml ? _wantDesign : 'classic';
+  el.classList.toggle('hh-bg', _homeActiveDesign === 'haunt');
 
   el.innerHTML = _designHtml ? _designHtml : `
     <style>
@@ -3521,7 +3506,7 @@ function homeMiniHtml(id) {
     lineup:`<div class="hp-mini" style="background:#0B1430"><u style="left:14px;right:14px;top:4px;height:5px;background:#fff;border-radius:1px"></u><u style="left:5px;right:5px;top:12px;height:18px;background:linear-gradient(125deg,#E8304A 0 40%,#16224A 40%);border-radius:3px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:33px;width:15px;height:8px;background:#0F1A3C;border:1px solid #2a3a6a"></u>`).join('')}</div>`,
     chart:`<div class="hp-mini" style="background:#fff;border:1px solid #ccc"><u style="left:18px;top:3px;width:26px;height:26px;border:2px dashed #2E9E3E;border-radius:50%;background:none"></u><u style="left:28px;top:13px;width:6px;height:6px;border:1.5px solid #111;border-radius:50%;background:#fff"></u><u style="left:4px;right:4px;top:33px;height:7px;background:#111;border-radius:2px"></u></div>`,
     passport:`<div class="hp-mini" style="background:#1B2A4A"><u style="left:27px;top:3px;width:10px;height:10px;border:1.5px solid #D8B45A;border-radius:50%;background:none"></u><u style="left:4px;right:4px;top:16px;bottom:3px;background:#F3EEDF;border-radius:2px"></u><u style="left:9px;top:20px;width:17px;height:17px;border:2px solid #B3261E;border-radius:50%;background:none"></u><u style="left:31px;top:19px;width:20px;height:20px;border:2px solid #1E4E9E;border-radius:50%;background:none"></u></div>`,
-    haunt:`<div class="hp-mini" style="background:linear-gradient(#22143A,#07060F)"><u style="left:40px;top:4px;width:14px;height:14px;border-radius:50%;background:#F3EED8;box-shadow:0 0 6px #F3EED8"></u><u style="left:6px;top:14px;width:22px;height:4px;border-radius:2px;background:#FF8A1F;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:27px;width:15px;height:12px;border-radius:50%;background:#E8741F;box-shadow:0 0 6px rgba(255,140,30,.8)"></u>`).join('')}</div>`,
+    haunt:`<div class="hp-mini" style="background:linear-gradient(rgba(7,6,15,.1),rgba(7,6,15,.6)),url('Emerson/halloween-castle-bg.jpg') 20% 35%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FF8A1F;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:30px;width:15px;height:10px;background:rgba(26,26,40,.85)"></u>`).join('')}</div>`,
     cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
   return m[id] || '';
@@ -3555,6 +3540,7 @@ function setHomeDesign(d) {
 function homeAfterRender() {
   document.getElementById('hpDial').style.display = '';
   renderHomePicker();
+  if(_homeActiveDesign === 'haunt') requestAnimationFrame(hdHauntPlane);
   if(_homeActiveDesign !== 'classic' && hdFleetOn()) {
     homeFleetRefresh();
     _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
@@ -3726,35 +3712,22 @@ function hdRadarCap() {
   if(p) return `Radar · <b>${_hdEsc(p.reg)}</b> · ${p.distNm} nm${p.lat!=null?" "+hdCompass(hdBearing(p.lat,p.lon)):""}`;
   return `Radar · ${_hdEsc([f.reg,f.line].filter(Boolean).join(' · '))}`;
 }
-// Haunted Hangar: a giant jack-o'-lantern; the featured plane's registration glows in its carved mouth.
-// Overnight / no feed, the pumpkin goes dark.
-function hdGreatPumpkin(word, det, off) {
-  const cut = 'class="cut" fill="url(#hhCut)"';
-  return `<div class="${off?'off':''}"><div class="pk"><svg viewBox="0 0 330 270" aria-hidden="true">
-      <defs><radialGradient id="hhCut" cx="50%" cy="55%"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".5" stop-color="#FFC24A"/><stop offset="1" stop-color="#FF8A1F"/></radialGradient></defs>
-      <path d="M158 40 C156 18 168 6 184 4 L186 14 C176 18 172 28 174 44 Z" fill="#3E5B24"/>
-      <ellipse cx="96" cy="150" rx="80" ry="108" fill="#C2541A"/><ellipse cx="234" cy="150" rx="80" ry="108" fill="#C2541A"/>
-      <ellipse cx="130" cy="150" rx="70" ry="114" fill="#D9651E"/><ellipse cx="200" cy="150" rx="70" ry="114" fill="#D9651E"/><ellipse cx="165" cy="150" rx="64" ry="118" fill="#E8741F"/>
-      <path d="M78 110 L118 70 L132 124 Z" ${cut}/><path d="M252 110 L212 70 L198 124 Z" ${cut}/><path d="M152 138 L165 116 L178 138 Z" ${cut}/>
-      <path d="M56 158 C80 236 250 236 274 158 L250 170 L238 158 L222 176 L206 160 L190 178 L174 160 L158 178 L142 160 L126 176 L110 158 L94 172 L80 160 Z" ${cut}/>
-    </svg><div class="mouth ${word.length>7?'sm':''}">${_hdEsc(word)}</div></div><div class="det">${det}</div></div>`;
-}
-function hdHauntPumpkin() {
+// Haunted Hangar: the live plane on one line under the title
+function hdHauntFly() {
   const f = homeFleetInfo(), p = hdFeatured();
-  if(p && p.inbound) return hdGreatPumpkin(p.reg, `<b>Inbound · ETA ${hdEta(p.eta)}</b> · ${p.distNm} nm${p.altFt?' · '+p.altFt.toLocaleString()+' ft':''}`, false);
-  if(p) return hdGreatPumpkin(p.reg, `<b>Airborne</b> · ${p.distNm} nm${p.lat!=null?' '+hdCompass(hdBearing(p.lat,p.lon)):''} from YKF`, false);
-  if(f.reg==='Overnight') return hdGreatPumpkin('ZZZ', 'The pumpkin sleeps · tracking resumes at 6 AM', true);
-  if(f.reg==='Checking…') return hdGreatPumpkin('· · ·', 'Checking the live fleet…', false);
-  if(f.reg==='No live feed') return hdGreatPumpkin('? ? ?', 'No live feed · open the Fleet tab', true);
-  return hdGreatPumpkin('YKF', 'All quiet · ' + _hdEsc([f.line, f.sub].filter(Boolean).join(' · ')), false);
+  if(p && p.inbound) return `✈ <b>${_hdEsc(p.reg)}</b> inbound · ETA ${hdEta(p.eta)} · ${p.distNm} nm${p.altFt?' · '+p.altFt.toLocaleString()+' ft':''}`;
+  if(p) return `✈ <b>${_hdEsc(p.reg)}</b> airborne · ${p.distNm} nm${p.lat!=null?' '+hdCompass(hdBearing(p.lat,p.lon)):''} from YKF`;
+  return '✈ ' + _hdEsc([f.reg, f.line].filter(Boolean).join(' · '));
 }
-function hdPumpkinSvg(lit, face) {
-  return `<svg viewBox="0 0 44 42" class="${lit?'lit':''}"><path d="M21 4 C21 1 24 0 26 1 L25 6 Z" fill="#3E5B24"/>
-    <ellipse cx="13" cy="25" rx="11" ry="15" fill="${lit?'#D2601A':'#7A3A12'}"/><ellipse cx="31" cy="25" rx="11" ry="15" fill="${lit?'#D2601A':'#7A3A12'}"/><ellipse cx="22" cy="25" rx="11" ry="16" fill="${lit?'#E8741F':'#8C4516'}"/>
-    ${face?`<g class="fc" fill="${lit?'#FFD66E':'#2A1206'}"><path d="M12 20 L17 15 L19 22 Z"/><path d="M32 20 L27 15 L25 22 Z"/><path d="M20 26 L22 23 L24 26 Z"/><path d="M10 29 C14 36 30 36 34 29 L30 31 L28 29 L25 32 L22 29 L19 32 L16 29 L14 31 Z"/></g>`:''}</svg>`;
+// The plane's shadow flies across the moon. The castle picture (1044×1320) covers #content from its top
+// edge and the moon's centre is 42% of the way down it.
+function hdHauntPlane() {
+  const pl = document.querySelector('.hh-plane'), c = document.getElementById('content'); if(!pl || !c) return;
+  const r = c.getBoundingClientRect(), sc = Math.max(r.width/1044, r.height/1320);
+  pl.style.top = Math.round(r.top + 1320*sc*0.42 - 22) + 'px';
 }
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntPumpkin};
+const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
@@ -3813,27 +3786,23 @@ function hdLayout4(d, st, fleetOn) {
     ${homeFooterHtml()}</div>`;
   }
   if(d==='haunt') {
-    // Title: "Happy Halloween" on the 31st; in October, a countdown of nights to Halloween
+    // Date line: the nights to Halloween in October, "Happy Halloween" on the 31st
     const nights = Math.round((new Date(t.yr, 9, 31) - new Date(t.yr, t.d.getMonth(), t.day)) / 864e5);
     const isHw = nights === 0, soon = nights > 0 && nights <= 30;
-    const lit = st.total ? Math.round(st.done/st.total*10) : 0;   // ten pumpkins = today's task progress
-    const powLine = !st.total ? 'No tasks yet — the pumpkins wait in the dark'
-      : st.done===st.total ? `<b>${st.done} / ${st.total}</b> tasks · every pumpkin lit, the hangar is safe`
-      : `<b>${st.done} / ${st.total}</b> tasks · ${lit} of 10 pumpkins lit`;
-    return `<div class="hd hd-haunt">
-    <div class="hh-title"><small class="hh-cz">${t.dow3} · ${t.mon} ${t.day}${soon?` · ${nights} night${nights===1?'':'s'} to Halloween`:''}</small>
-      <h2>${isHw?'Happy Halloween':'Haunted Hangar'}</h2></div>
-    ${fleetOn?`<div class="hh-gp" data-hfslot="haunt" onclick="goTab('fleet')">${hdHauntPumpkin()}</div>`:`<div class="hh-gp">${hdGreatPumpkin('YKF', 'Skycare · YKF', false)}</div>`}
-    ${notes.map(n=>`<div class="hh-tomb"><span class="rip hh-cz">R.I.P.</span><small class="hh-cz">Here lies the handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="hh-ok" onclick="markHandoffComplete('${n.id}')">✓ Lay it to rest</button></div>`).join('')}
-    ${evs.map(e=>`<div class="hh-sign" ${hdEvClick(e)}><small class="hh-cz">On today's rounds${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}</div>`).join('')}
-    <div class="hh-pow" onclick="goTab('today')"><div class="hh-pks">${Array.from({length:10},(_,i)=>hdPumpkinSvg(i<lit, true)).join('')}</div><div class="hh-pow-t">${powLine}</div></div>
+    return `<div class="hd hd-haunt">${fleetOn?`<img class="hh-plane" src="${HOME_PLANE_IMGS[1]}" alt="">`:''}
+    <div class="hh-title"><small class="hh-cz">${isHw?'Happy Halloween · ':''}${t.dow3} · ${t.mon} ${t.day}${soon?` · ${nights} night${nights===1?'':'s'} to Halloween`:''}</small><h2>Skycare</h2></div>
+    ${fleetOn?`<div class="hh-fly" data-hfslot="haunt" onclick="goTab('fleet')">${hdHauntFly()}</div>`:''}
+    <div class="hh-scene"></div>
+    ${notes.map(n=>`<div class="hh-line"><small class="k hh-cz">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="hh-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button></div>`).join('')}
+    ${evs.map(e=>`<div class="hh-line" ${hdEvClick(e)}><small class="k hh-cz">Today${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}</div>`).join('')}
+    <div class="hh-prog" onclick="goTab('today')"><div class="row"><span class="hh-cz">Today's tasks</span><b>${st.done} / ${st.total}</b></div><div class="hh-bar"><i style="width:${st.pct}%"></i></div></div>
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
   }
   return null;
 }
 function hdTiles4(d, list, cls) {
-  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk">${hdPumpkinSvg(false, false)}<span class="ic">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='chart') return `<div class="sc-tg">${list.map((t,i)=>`<div class="sc-w ${cls}" ${_hdTileAttrs(t,i)}><span class="hex">${t.svg}</span><b>${t.label}</b><small>${_hdEsc(hdTileStat(t.id))}</small></div>`).join('')}</div>`;
