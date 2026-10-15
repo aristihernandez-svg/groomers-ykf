@@ -1781,7 +1781,8 @@ body::before{
     '10-31': () => hauntView('Emerson/emerson-halloween-full.jpg'),
     '12-25': () => xmasView('Emerson/emerson-christmas-full.jpg'),
   };
-  const special = SPECIAL_DAYS[_bdKey] || SPECIAL_DAYS[_mmdd];
+  const _advent = _bd.getMonth() === 11 && _bd.getDate() <= 25;   // Dec 1–25: the Christmas screen every day
+  const special = SPECIAL_DAYS[_bdKey] || SPECIAL_DAYS[_mmdd] || (_advent ? SPECIAL_DAYS['12-25'] : null);
 
   const view = special ? special() : VIEWS[new Date().getDay()];
   try { view.build($('ldRoot')); } catch (e) { console.log('loader build error', e); }
@@ -3250,7 +3251,7 @@ const HOME_DESIGNS = [
   {id:'chart',   label:'Sectional Chart'},
   {id:'passport',label:'Crew Passport'},
   {id:'haunt',   label:'Haunted Hangar'},
-  {id:'xmas',    label:'Christmas Village'},
+  {id:'xmas',    label:'Christmas Village', when:d=>d.getMonth()===11 || (d.getMonth()===0 && d.getDate()<=6)},   // Dec 1 – Jan 6 only
 ];
 const HOME_PLANE_IMGS = [
   'cars/Westwind-removebg-preview.png',
@@ -3280,7 +3281,9 @@ const HD_SLOTS = {
 let _homeActiveDesign = 'classic';
 let _homeFleetTimer = null;
 
-function homeDesign() { return HOME_DESIGNS.some(d=>d.id===S.homeDesign) ? S.homeDesign : 'classic'; }
+// A design with a season (when) is only offered, and only shown, in that season; outside it the phone falls back to Classic
+function hdAvailable(d) { return !d.when || d.when(new Date()); }
+function homeDesign() { return HOME_DESIGNS.some(d=>d.id===S.homeDesign && hdAvailable(d)) ? S.homeDesign : 'classic'; }
 function _hdEsc(s) { return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function homeGreeting() { const h=new Date().getHours(); return h<12?'Good morning':h<18?'Good afternoon':'Good evening'; }
 function hdFleetOn() { return BASE_CONFIG.features?.fleet !== false; }
@@ -3576,7 +3579,7 @@ function homeMiniHtml(id) {
 }
 function renderHomePicker() {
   const cur = homeDesign();
-  document.getElementById('hpFan').innerHTML = HOME_DESIGNS.map(d=>
+  document.getElementById('hpFan').innerHTML = HOME_DESIGNS.filter(hdAvailable).map(d=>
     `<div class="hp-pc ${cur===d.id?'on':''}" onclick="setHomeDesign('${d.id}')">${homeMiniHtml(d.id)}<small>${d.label}</small></div>`).join('');
   const open = !!S.homePickerOpen;
   document.getElementById('hpFan').classList.toggle('show', open);
@@ -3586,7 +3589,7 @@ function renderHomePicker() {
 function toggleHomePicker() { S.homePickerOpen = !S.homePickerOpen; renderHomePicker(); }
 function closeHomePicker() { S.homePickerOpen = false; renderHomePicker(); }
 function setHomeDesign(d) {
-  if(!HOME_DESIGNS.some(x=>x.id===d)) return;
+  if(!HOME_DESIGNS.some(x=>x.id===d && hdAvailable(x))) return;
   S.homeDesign = d;
   S.homePickerOpen = false;
   try { localStorage.setItem('gykf_home_design', d); } catch(e) {}
