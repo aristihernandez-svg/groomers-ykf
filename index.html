@@ -703,10 +703,15 @@ body::before{
 .hh-prog .row span{font-size:10px}
 .hh-prog .hh-bar{height:9px;border-radius:9px;margin-top:8px;overflow:hidden;background:rgba(255,255,255,.1)}
 .hh-prog .hh-bar i{display:block;height:100%;border-radius:9px;background:#FF8A1F;box-shadow:0 0 10px rgba(255,138,31,.8)}
-.hh-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:16px}
-.hh-t{height:84px;border-radius:16px;background:rgba(26,26,40,.78);border:1px solid rgba(255,255,255,.08);color:#E9E4DA;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.hh-t svg{width:26px;height:26px;color:#FFB061}
-.hh-t b{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px}
+@keyframes hhFlick{0%,100%{opacity:1}38%{opacity:.78}42%{opacity:.95}66%{opacity:.68}70%{opacity:.9}}
+.hh-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-top:20px}
+.hh-t{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hh-t .pk{position:relative;width:86px;height:70px}
+.hh-t .pk>svg:first-child{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.hh-t .ic{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);color:#FFD66E;filter:drop-shadow(0 0 4px #FF9A1F) drop-shadow(0 0 9px rgba(255,140,30,.7));animation:hhFlick 3s infinite}
+.hh-t:nth-child(2n) .ic{animation-delay:-1.2s}.hh-t:nth-child(3n) .ic{animation-delay:-2.1s}
+.hh-t .ic svg{width:26px;height:26px;stroke-width:2.2}
+.hh-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F3E6CF;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .hd-haunt .hd-foot{color:#C9BFD9;opacity:1}
 .hd-haunt .hd-share button{border:1px solid rgba(255,138,31,.6);color:#FFB061;background:rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.hd-haunt *{animation:none!important}}
@@ -3726,6 +3731,8 @@ function hdHauntPlane() {
   const r = c.getBoundingClientRect(), sc = Math.max(r.width/1044, r.height/1320);
   pl.style.top = Math.round(r.top + 1320*sc*0.42 - 22) + 'px';
 }
+// Haunted Hangar tile: a pumpkin with no face; the window's icon is carved into it
+const HH_PUMPKIN = '<svg viewBox="0 0 44 42" aria-hidden="true"><path d="M21 4 C21 1 24 0 26 1 L25 6 Z" fill="#3E5B24"/><ellipse cx="13" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="31" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="22" cy="25" rx="11" ry="16" fill="#8C4516"/></svg>';
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
 const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly};
 
@@ -3802,7 +3809,7 @@ function hdLayout4(d, st, fleetOn) {
   return null;
 }
 function hdTiles4(d, list, cls) {
-  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk">${HH_PUMPKIN}<span class="ic">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='chart') return `<div class="sc-tg">${list.map((t,i)=>`<div class="sc-w ${cls}" ${_hdTileAttrs(t,i)}><span class="hex">${t.svg}</span><b>${t.label}</b><small>${_hdEsc(hdTileStat(t.id))}</small></div>`).join('')}</div>`;
