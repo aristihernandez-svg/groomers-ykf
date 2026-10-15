@@ -1540,7 +1540,70 @@ body::before{
       } },
   };
 
-  const view = VIEWS[new Date().getDay()];
+  // Birthdays: on that date only, the person's own screen replaces the weekday one.
+  // Wyatt's photo (cockpit selfie) in a gold frame, balloons and confetti, HAPPY BIRTHDAY bouncing,
+  // five candles light up as the app loads; at live, a confetti burst and "Make a wish!".
+  const bdayView = (name, photo) => {
+    const BAL = ['#E8C86A', '#4A9EFF', '#FF5A6E', '#2ECC8A', '#B57BFF', '#FF9F43'];
+    const CONF = ['#E8C86A', '#4A9EFF', '#FF5A6E', '#2ECC8A', '#B57BFF', '#FFFFFF'];
+    const rnd = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };   // fixed "random" per piece
+    const N_CONF = 42, N_BAL = 6;
+    return {
+      build: r => r.innerHTML = shell(`<div id="bdBox" style="position:relative;width:330px;height:430px">
+          ${Array.from({ length: N_BAL }, (_, i) => `<div id="bdB${i}" style="position:absolute;left:0;top:0;z-index:1;width:46px;height:110px;will-change:transform">
+            <svg width="46" height="110" viewBox="0 0 46 110"><ellipse cx="23" cy="27" rx="20" ry="25" fill="${BAL[i % BAL.length]}"/><ellipse cx="16" cy="18" rx="5" ry="8" fill="rgba(255,255,255,.35)"/>
+            <path d="M20 51 L26 51 L23 56 Z" fill="${BAL[i % BAL.length]}"/><path d="M23 56 C 17 68, 29 78, 22 92 S 26 104, 23 110" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.2"/></svg></div>`).join('')}
+          <div style="position:absolute;left:0;right:0;top:0;z-index:4;text-align:center;font-size:24px;font-weight:900;letter-spacing:3px;color:#E8C86A;text-shadow:0 2px 10px rgba(0,0,0,.6)" id="bdHb">${
+            [...'HAPPY BIRTHDAY'].map((c, i) => c === ' ' ? '<span style="display:inline-block;width:10px"></span>' : `<span id="bdL${i}" style="display:inline-block">${c}</span>`).join('')}</div>
+          <div id="bdCard" style="position:absolute;z-index:3;left:50px;top:42px;width:230px;height:306px;border-radius:22px;overflow:hidden;border:4px solid #E8C86A;box-shadow:0 0 0 2px rgba(0,0,0,.4),0 20px 46px rgba(0,0,0,.65),0 0 40px rgba(232,200,106,.35);background:#0B1120">
+            <img id="bdImg" src="${photo}" alt="${name}" style="width:100%;height:100%;object-fit:cover;transform-origin:50% 40%"></div>
+          <div id="bdWish" style="position:absolute;z-index:5;left:0;right:0;top:296px;text-align:center;opacity:0"><span style="display:inline-block;padding:7px 16px;border-radius:999px;background:rgba(11,17,32,.82);border:1.5px solid #E8C86A;font-size:19px;font-weight:900;color:#fff">🎂 Make a wish!</span></div>
+          <div style="position:absolute;z-index:4;left:0;right:0;top:364px;display:flex;justify-content:center;gap:16px">${Array.from({ length: 5 }, (_, i) => `
+            <svg width="22" height="60" viewBox="0 0 22 60"><g id="bdF${i}" style="opacity:0;transform-origin:11px 16px"><ellipse cx="11" cy="12" rx="6" ry="10" fill="#FFB347"/><ellipse cx="11" cy="14" rx="3" ry="6" fill="#FFF3B0"/></g>
+              <rect x="10" y="20" width="2" height="6" fill="#333"/><rect x="5" y="26" width="12" height="32" rx="3" fill="${BAL[i % BAL.length]}"/><path d="M5 34 L17 30 M5 42 L17 38 M5 50 L17 46" stroke="rgba(255,255,255,.45)" stroke-width="2"/></svg>`).join('')}</div>
+          ${Array.from({ length: N_CONF }, (_, i) => `<i id="bdC${i}" style="position:absolute;left:0;top:0;width:${5 + Math.round(rnd(i, 1) * 5)}px;height:${8 + Math.round(rnd(i, 2) * 6)}px;border-radius:2px;background:${CONF[i % CONF.length]};will-change:transform"></i>`).join('')}
+        </div>`, false),
+      update: (p, live, lt, sec) => {
+        // card: slow zoom + sway; a little pop when live
+        const pop = live ? 1 + .06 * Math.max(0, 1 - lt * 2.5) : 1;
+        $('bdCard').style.transform = `rotate(${(Math.sin(sec * 1.3) * 2.2).toFixed(2)}deg) scale(${pop.toFixed(3)})`;
+        $('bdImg').style.transform = `scale(${(1.04 + .08 * ((sec % 12) / 12)).toFixed(3)})`;
+        // HAPPY BIRTHDAY wave
+        [...'HAPPY BIRTHDAY'].forEach((c, i) => { const el = $('bdL' + i); if (el) el.style.transform = `translateY(${(Math.sin(sec * 5 - i * .55) * 5).toFixed(1)}px)`; });
+        // balloons float up behind and beside the card, swaying
+        for (let i = 0; i < N_BAL; i++) {
+          const speed = 26 + rnd(i, 3) * 18, x = (i % 2 ? 250 : 10) + rnd(i, 4) * 60 - 20 + Math.sin(sec * 1.4 + i) * 10;
+          const y = 430 - ((sec * speed + rnd(i, 5) * 540) % 540);
+          $('bdB' + i).style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${(Math.sin(sec * 1.7 + i) * 8).toFixed(1)}deg)`;
+        }
+        // confetti falls the whole time; at live a burst flies out from the card
+        for (let i = 0; i < N_CONF; i++) {
+          const el = $('bdC' + i); let x, y, rot;
+          const burst = live && lt < 1.6 && i % 2 === 0;
+          el.style.zIndex = burst ? 6 : 2;   // falling confetti stays behind the photo, the burst flies in front
+          if (burst) {
+            const a = rnd(i, 6) * Math.PI * 2, v = 160 + rnd(i, 7) * 180, t2 = lt;
+            x = 165 + Math.cos(a) * v * t2; y = 190 + Math.sin(a) * v * t2 + 220 * t2 * t2; rot = lt * 720 * (rnd(i, 8) - .5);
+          } else {
+            const speed = 60 + rnd(i, 9) * 70;
+            y = ((sec * speed + rnd(i, 10) * 480) % 480) - 30; x = rnd(i, 11) * 330 + Math.sin(sec * 2 + i) * 12; rot = sec * 200 * (rnd(i, 12) - .5);
+          }
+          el.style.transform = `translate(${x.toFixed(1)}px,${y.toFixed(1)}px) rotate(${rot.toFixed(0)}deg)`;
+        }
+        // candles light one by one as the app loads, then flicker
+        for (let i = 0; i < 5; i++) {
+          const on = live || p >= (i + 1) / 5.4, f = $('bdF' + i);
+          f.style.opacity = on ? 1 : 0;
+          f.style.transform = on ? `scale(${(1 + Math.sin(sec * 18 + i * 2) * .1).toFixed(2)},${(1 + Math.sin(sec * 23 + i) * .14).toFixed(2)})` : 'scale(.4)';
+        }
+        $('bdWish').style.opacity = live ? Math.min(1, lt * 3).toFixed(2) : 0;
+        common(p, live, `Happy birthday, ${name}! 🎂`, `Happy birthday, ${name}! 🎉`, 'Have an amazing day — from the whole team');
+      } };
+  };
+  const _bd = new Date(), _bdKey = `${_bd.getFullYear()}-${String(_bd.getMonth() + 1).padStart(2, '0')}-${String(_bd.getDate()).padStart(2, '0')}`;
+  const BIRTHDAYS = { '2026-10-17': () => bdayView('Wyatt', 'Emerson/wyatt-birthday.jpg') };
+
+  const view = BIRTHDAYS[_bdKey] ? BIRTHDAYS[_bdKey]() : VIEWS[new Date().getDay()];
   try { view.build($('ldRoot')); } catch (e) { console.log('loader build error', e); }
   function frame(now) {
     if (LD.done) return;
