@@ -25,7 +25,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&family=Bangers&family=Creepster&family=Cinzel:wght@600;800&family=Comic+Neue:ital,wght@0,700;1,700&family=Barlow+Condensed:ital,wght@0,500;0,700;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&family=Bangers&family=Mountains+of+Christmas:wght@700&family=Creepster&family=Cinzel:wght@600;800&family=Comic+Neue:ital,wght@0,700;1,700&family=Barlow+Condensed:ital,wght@0,500;0,700;1,800&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -715,6 +715,49 @@ body::before{
 .hd-haunt .hd-foot{color:#C9BFD9;opacity:1}
 .hd-haunt .hd-share button{border:1px solid rgba(255,138,31,.6);color:#FFB061;background:rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.hd-haunt *{animation:none!important}}
+
+/* 13 · Christmas Village: the snowy houses and their lights from Emerson's Christmas picture fill the screen
+   (on #content, still while the page scrolls), snow falls over the whole page, a plane crosses the sky */
+.content.xm-bg{background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.28) 40%,rgba(6,10,24,.7) 72%,rgba(6,10,24,.88)),url('Emerson/christmas-village-bg.jpg') 30% 0/cover #060A18}
+.hd-xmas{background:transparent;color:#F7F2E8;font-family:Inter,system-ui,sans-serif}
+.xm-cz{font-family:Cinzel,Georgia,serif;letter-spacing:2px;text-transform:uppercase}
+.xm-plane{position:fixed;left:0;top:200px;width:100px;z-index:-1;pointer-events:none;filter:brightness(0);opacity:.85;animation:hhCross 18s linear infinite}
+.xm-snow{position:fixed;left:0;right:0;top:0;height:100vh;overflow:hidden;pointer-events:none;z-index:3;visibility:hidden}
+.xm-snow i{position:absolute;top:-14px;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:var(--o);filter:blur(var(--b));animation:xmFall var(--d) linear infinite;animation-delay:var(--dl)}
+@keyframes xmFall{0%{transform:translate(0,0)}25%{transform:translate(12px,26vh)}50%{transform:translate(-8px,52vh)}75%{transform:translate(10px,78vh)}100%{transform:translate(0,106vh)}}
+.xm-title{text-align:center;margin-top:4px}
+.xm-title small{display:block;font-size:11px;color:#F3E7CF;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.xm-title h2{font-family:'Mountains of Christmas',Georgia,serif;font-weight:700;font-size:58px;line-height:1;letter-spacing:2px;color:#FFF6E5;text-shadow:0 0 18px rgba(255,205,120,.75),0 3px 0 #8E1020,0 5px 10px rgba(0,0,0,.6);margin-top:2px}
+.xm-fly{margin-top:4px;text-align:center;font-size:13.5px;color:#F7F2E8;text-shadow:0 1px 8px rgba(0,0,0,.95);cursor:pointer}
+.xm-fly b{color:#F2C14E}
+.xm-scene{height:240px}
+.xm-line{border-top:1px solid rgba(255,255,255,.28);margin-top:14px;padding-top:12px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
+.xm-scene+.xm-line{margin-top:0}
+.xm-line small.k{display:block;font-size:9.5px;color:#F2C14E}
+.xm-line p{font-size:13.5px;line-height:1.45;margin-top:6px}
+.xm-line b{display:block;font-size:16px;margin:2px 0}
+.xm-line span{font-size:12.5px}
+.xm-line audio{width:100%;height:32px;margin-top:8px}
+.xm-ok{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.65);background:none;color:#fff;font:800 11px Cinzel,Georgia,serif;letter-spacing:1.5px;cursor:pointer}
+.xm-prog{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(14,20,40,.78);border:1px solid rgba(255,255,255,.1);cursor:pointer}
+.xm-prog .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
+.xm-prog .row span{font-size:10px}
+.xm-prog .xm-bar{height:10px;border-radius:10px;margin-top:8px;overflow:hidden;background:rgba(255,255,255,.12)}
+.xm-prog .xm-bar i{display:block;height:100%;border-radius:10px;background:repeating-linear-gradient(-45deg,#D7263D 0 7px,#FFF6E5 7px 14px);box-shadow:0 0 10px rgba(255,120,120,.5)}
+.xm-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:22px}
+.xm-t{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;--c1:#E0344A;--c2:#7A0E1B}
+.xm-t:nth-child(3n+2){--c1:#2FA36B;--c2:#0F3D24}
+.xm-t:nth-child(3n){--c1:#F0BE4E;--c2:#8A5A12}
+.xm-t .orn{position:relative;width:70px;height:70px;margin-top:10px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.6),rgba(255,255,255,0) 24%),radial-gradient(circle at 50% 58%,var(--c1),var(--c2) 78%);
+  box-shadow:0 8px 14px rgba(0,0,0,.55),inset 0 -8px 14px rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--c1) 45%,transparent)}
+.xm-t .orn::before{content:'';position:absolute;left:50%;top:-9px;width:18px;height:11px;margin-left:-9px;border-radius:3px;background:linear-gradient(90deg,#8A6A22,#F3D27A,#8A6A22)}
+.xm-t .orn::after{content:'';position:absolute;left:50%;top:-17px;width:8px;height:8px;margin-left:-5px;border:1.5px solid #D9B85C;border-radius:50%}
+.xm-t .orn svg{width:26px;height:26px;stroke-width:2.2;color:#FFF8E8;filter:drop-shadow(0 0 5px rgba(255,240,200,.9))}
+.xm-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F7F2E8;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.hd-xmas .hd-foot{color:#D9DEEA;opacity:1}
+.hd-xmas .hd-share button{border:1px solid rgba(242,193,78,.7);color:#F2C14E;background:rgba(0,0,0,.35)}
+@media (prefers-reduced-motion:reduce){.hd-xmas *{animation:none!important}.xm-snow{display:none}}
 @media (prefers-reduced-motion:reduce){.sc-pulse,.pp-radar .sweep,.pp-radar .blip::after{animation:none}}
 @media (prefers-reduced-motion:reduce){.hd-mq span{animation:none}}
 
@@ -2546,7 +2589,7 @@ function render() {
     document.getElementById('hpVeil').classList.remove('show');
     document.getElementById('hsMenu').classList.remove('show'); document.getElementById('hsVeil').classList.remove('show');
     if(_homeFleetTimer){ clearInterval(_homeFleetTimer); _homeFleetTimer=null; }
-    el.classList.remove('hh-bg');
+    el.classList.remove('hh-bg', 'xm-bg');
   }
   switch(S.tab) {
     case 'home':       renderHome(el); break;
@@ -3064,6 +3107,7 @@ async function renderHome(el) {
   }
   _homeActiveDesign = _designHtml ? _wantDesign : 'classic';
   el.classList.toggle('hh-bg', _homeActiveDesign === 'haunt');
+  el.classList.toggle('xm-bg', _homeActiveDesign === 'xmas');
 
   el.innerHTML = _designHtml ? _designHtml : `
     <style>
@@ -3194,6 +3238,7 @@ const HOME_DESIGNS = [
   {id:'chart',   label:'Sectional Chart'},
   {id:'passport',label:'Crew Passport'},
   {id:'haunt',   label:'Haunted Hangar'},
+  {id:'xmas',    label:'Christmas Village'},
 ];
 const HOME_PLANE_IMGS = [
   'cars/Westwind-removebg-preview.png',
@@ -3512,6 +3557,7 @@ function homeMiniHtml(id) {
     chart:`<div class="hp-mini" style="background:#fff;border:1px solid #ccc"><u style="left:18px;top:3px;width:26px;height:26px;border:2px dashed #2E9E3E;border-radius:50%;background:none"></u><u style="left:28px;top:13px;width:6px;height:6px;border:1.5px solid #111;border-radius:50%;background:#fff"></u><u style="left:4px;right:4px;top:33px;height:7px;background:#111;border-radius:2px"></u></div>`,
     passport:`<div class="hp-mini" style="background:#1B2A4A"><u style="left:27px;top:3px;width:10px;height:10px;border:1.5px solid #D8B45A;border-radius:50%;background:none"></u><u style="left:4px;right:4px;top:16px;bottom:3px;background:#F3EEDF;border-radius:2px"></u><u style="left:9px;top:20px;width:17px;height:17px;border:2px solid #B3261E;border-radius:50%;background:none"></u><u style="left:31px;top:19px;width:20px;height:20px;border:2px solid #1E4E9E;border-radius:50%;background:none"></u></div>`,
     haunt:`<div class="hp-mini" style="background:linear-gradient(rgba(7,6,15,.1),rgba(7,6,15,.6)),url('Emerson/halloween-castle-bg.jpg') 20% 35%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FF8A1F;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:30px;width:15px;height:10px;background:rgba(26,26,40,.85)"></u>`).join('')}</div>`,
+    xmas:`<div class="hp-mini" style="background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.55)),url('Emerson/christmas-village-bg.jpg') 30% 40%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FFF6E5;box-shadow:0 0 5px #F2C14E"></u>${['#E0344A','#2FA36B','#F0BE4E'].map((c,i)=>`<u style="left:${8+i*18}px;top:27px;width:12px;height:12px;border-radius:50%;background:${c}"></u>`).join('')}</div>`,
     cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
   return m[id] || '';
@@ -3546,6 +3592,7 @@ function homeAfterRender() {
   document.getElementById('hpDial').style.display = '';
   renderHomePicker();
   if(_homeActiveDesign === 'haunt') requestAnimationFrame(hdHauntPlane);
+  if(_homeActiveDesign === 'xmas') requestAnimationFrame(hdXmasPlace);
   if(_homeActiveDesign !== 'classic' && hdFleetOn()) {
     homeFleetRefresh();
     _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
@@ -3733,8 +3780,26 @@ function hdHauntPlane() {
 }
 // Haunted Hangar tile: a pumpkin with no face; the window's icon is carved into it
 const HH_PUMPKIN = '<svg viewBox="0 0 44 42" aria-hidden="true"><path d="M21 4 C21 1 24 0 26 1 L25 6 Z" fill="#3E5B24"/><ellipse cx="13" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="31" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="22" cy="25" rx="11" ry="16" fill="#8C4516"/></svg>';
+// Christmas Village: snowflakes for the falling-snow layer (fixed sizes/speeds per flake so it looks the same each visit)
+function hdXmasSnow() {
+  let h = '';
+  for(let i=0; i<46; i++) {
+    const r = k => { const x = Math.sin(i*127.1 + k*311.7)*43758.5453; return x - Math.floor(x); };
+    const big = r(1) > .8, size = big ? 5 + r(2)*3 : 2 + r(2)*3;
+    h += `<i style="--x:${(r(3)*100).toFixed(1)}%;--s:${size.toFixed(1)}px;--o:${(big ? .55 : .6 + r(4)*.35).toFixed(2)};--b:${big ? 1.5 : 0}px;--d:${(9 + r(5)*10).toFixed(1)}s;--dl:-${(r(6)*18).toFixed(1)}s"></i>`;
+  }
+  return h;
+}
+// The village picture (1014×1500) covers #content from its top edge; the plane crosses the snowy sky
+// 30% of the way down it, and the snow covers exactly the scrolling area (not the top bar or the menu).
+function hdXmasPlace() {
+  const c = document.getElementById('content'); if(!c) return;
+  const r = c.getBoundingClientRect(), sc = Math.max(r.width/1014, r.height/1500);
+  const pl = document.querySelector('.xm-plane'); if(pl) pl.style.top = Math.round(r.top + 1500*sc*0.3 - 18) + 'px';
+  const sn = document.querySelector('.xm-snow'); if(sn) { sn.style.top = Math.round(r.top) + 'px'; sn.style.height = Math.round(r.height) + 'px'; sn.style.visibility = 'visible'; }
+}
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly};
+const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly, xmas:hdHauntFly};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
@@ -3806,9 +3871,24 @@ function hdLayout4(d, st, fleetOn) {
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
   }
+  if(d==='xmas') {
+    // Date line: the sleeps to Christmas in December, "Merry Christmas" on the 25th
+    const sleeps = Math.round((new Date(t.yr, 11, 25) - new Date(t.yr, t.d.getMonth(), t.day)) / 864e5);
+    const isXm = sleeps === 0, soon = sleeps > 0 && sleeps <= 24;
+    return `<div class="hd hd-xmas"><div class="xm-snow" aria-hidden="true">${hdXmasSnow()}</div>${fleetOn?`<img class="xm-plane" src="${HOME_PLANE_IMGS[1]}" alt="">`:''}
+    <div class="xm-title"><small class="xm-cz">${isXm?'Merry Christmas · ':''}${t.dow3} · ${t.mon} ${t.day}${soon?` · ${sleeps} sleep${sleeps===1?'':'s'} to Christmas`:''}</small><h2>Skycare</h2></div>
+    ${fleetOn?`<div class="xm-fly" data-hfslot="xmas" onclick="goTab('fleet')">${hdHauntFly()}</div>`:''}
+    <div class="xm-scene"></div>
+    ${notes.map(n=>`<div class="xm-line"><small class="k xm-cz">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="xm-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button></div>`).join('')}
+    ${evs.map(e=>`<div class="xm-line" ${hdEvClick(e)}><small class="k xm-cz">Today${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}</div>`).join('')}
+    <div class="xm-prog" onclick="goTab('today')"><div class="row"><span class="xm-cz">Today's tasks</span><b>${st.done} / ${st.total}</b></div><div class="xm-bar"><i style="width:${st.pct}%"></i></div></div>
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  }
   return null;
 }
 function hdTiles4(d, list, cls) {
+  if(d==='xmas') return `<div class="xm-tg">${list.map((t,i)=>`<div class="xm-t ${cls}" ${_hdTileAttrs(t,i)}><div class="orn">${t.svg}</div><b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk">${HH_PUMPKIN}<span class="ic">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
