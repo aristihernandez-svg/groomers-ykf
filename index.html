@@ -717,43 +717,69 @@ body::before{
 @media (prefers-reduced-motion:reduce){.hd-haunt *{animation:none!important}}
 
 /* 13 · Christmas Village: the snowy houses and their lights from Emerson's Christmas picture fill the screen
-   (on #content, still while the page scrolls), snow falls over the whole page, a plane crosses the sky */
+   (on #content, still while the page scrolls) and snow falls over the page. The fleet is a "sleigh tracker", notes are
+   advent-calendar doors, the task bar is a string of lights, and the windows are lit fir trees under a bulb garland */
 .content.xm-bg{background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.28) 40%,rgba(6,10,24,.7) 72%,rgba(6,10,24,.88)),url('Emerson/christmas-village-bg.jpg') 30% 0/cover #060A18}
 .hd-xmas{background:transparent;color:#F7F2E8;font-family:Inter,system-ui,sans-serif}
 .xm-cz{font-family:Cinzel,Georgia,serif;letter-spacing:2px;text-transform:uppercase}
-.xm-plane{position:fixed;left:0;top:200px;width:100px;z-index:-1;pointer-events:none;filter:brightness(0);opacity:.85;animation:hhCross 18s linear infinite}
+@keyframes xmTw{0%,100%{opacity:1}50%{opacity:.5}}
 .xm-snow{position:fixed;left:0;right:0;top:0;height:100vh;overflow:hidden;pointer-events:none;z-index:3;visibility:hidden}
 .xm-snow i{position:absolute;top:-14px;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:var(--o);filter:blur(var(--b));animation:xmFall var(--d) linear infinite;animation-delay:var(--dl)}
 @keyframes xmFall{0%{transform:translate(0,0)}25%{transform:translate(12px,26vh)}50%{transform:translate(-8px,52vh)}75%{transform:translate(10px,78vh)}100%{transform:translate(0,106vh)}}
 .xm-title{text-align:center;margin-top:4px}
 .xm-title small{display:block;font-size:11px;color:#F3E7CF;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .xm-title h2{font-family:'Mountains of Christmas',Georgia,serif;font-weight:700;font-size:58px;line-height:1;letter-spacing:2px;color:#FFF6E5;text-shadow:0 0 18px rgba(255,205,120,.75),0 3px 0 #8E1020,0 5px 10px rgba(0,0,0,.6);margin-top:2px}
-.xm-fly{margin-top:4px;text-align:center;font-size:13.5px;color:#F7F2E8;text-shadow:0 1px 8px rgba(0,0,0,.95);cursor:pointer}
-.xm-fly b{color:#F2C14E}
-.xm-scene{height:240px}
-.xm-line{border-top:1px solid rgba(255,255,255,.28);margin-top:14px;padding-top:12px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
-.xm-scene+.xm-line{margin-top:0}
-.xm-line small.k{display:block;font-size:9.5px;color:#F2C14E}
-.xm-line p{font-size:13.5px;line-height:1.45;margin-top:6px}
-.xm-line b{display:block;font-size:16px;margin:2px 0}
-.xm-line span{font-size:12.5px}
-.xm-line audio{width:100%;height:32px;margin-top:8px}
-.xm-ok{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.65);background:none;color:#fff;font:800 11px Cinzel,Georgia,serif;letter-spacing:1.5px;cursor:pointer}
+.xm-trk{margin-top:12px;border-radius:16px;overflow:hidden;background:rgba(10,16,34,.74);border:1px solid rgba(242,193,78,.45);box-shadow:0 10px 24px rgba(0,0,0,.45);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);cursor:pointer}
+.xm-trk .hdr{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;background:linear-gradient(90deg,#8E1020,#B3192D);color:#FFE7A8;font:800 10px Cinzel,Georgia,serif;letter-spacing:2px}
+.xm-trk .live{display:flex;align-items:center;gap:5px;font:800 9.5px Inter,sans-serif;letter-spacing:1px;color:#fff}
+.xm-trk .live i{width:7px;height:7px;border-radius:50%;background:#3DFF8B;box-shadow:0 0 8px #3DFF8B;animation:xmTw 1.6s infinite}
+.xm-trk .live.off i{background:#9AA3B5;box-shadow:none;animation:none}
+.xm-trk .bd{display:flex;align-items:center;gap:14px;padding:12px 14px 4px}
+.xm-trk .eta{min-width:84px;text-align:center}
+.xm-trk .eta b{display:block;font-family:'Mountains of Christmas',Georgia,serif;font-weight:700;font-size:40px;line-height:.95;color:#FFF6E5;text-shadow:0 0 12px rgba(255,205,120,.6)}
+.xm-trk .eta small{font-size:9px;letter-spacing:1.5px;color:#F2C14E}
+.xm-trk .who{flex:1;min-width:0}
+.xm-trk .who b{display:block;font-size:20px;font-weight:800;color:#F2C14E}
+.xm-trk .who span{display:block;font-size:12.5px;color:#E8EAF2;line-height:1.4}
+.xm-trk .rt{position:relative;margin:12px 16px 4px;height:16px}
+.xm-trk .rt::before{content:'';position:absolute;left:0;right:0;top:8px;border-top:2px dashed rgba(242,193,78,.55)}
+.xm-trk .rt::after{content:'★';position:absolute;right:-6px;top:-3px;font-size:16px;color:#F2C14E;text-shadow:0 0 8px #F2C14E}
+.xm-trk .rt .sl{position:absolute;top:-8px;margin-left:-13px;font-size:22px;filter:drop-shadow(0 0 6px rgba(255,220,150,.8))}
+.xm-trk .rl{display:flex;justify-content:space-between;margin:2px 16px 0;font-size:10px;color:#C9CFDD}
+.xm-trk .ft{display:flex;gap:8px;flex-wrap:wrap;padding:10px 14px 12px}
+.xm-trk .ft span{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);font-size:10.5px;color:#E8EAF2}
+.xm-scene{height:150px}
+.xm-adv{display:flex;gap:14px;align-items:flex-start;margin-top:14px;padding:14px;border-radius:10px;background:linear-gradient(#B3192D,#8E1020);border:2px solid #E8C26A;box-shadow:0 10px 20px rgba(0,0,0,.45)}
+.xm-adv .day{flex-shrink:0;width:52px;height:60px;border:2px dashed rgba(255,230,170,.8);border-radius:6px;display:grid;place-items:center;font-family:'Mountains of Christmas',Georgia,serif;font-weight:700;font-size:34px;color:#FFE7A8}
+.xm-adv .tx{flex:1;min-width:0}
+.xm-adv small.k{display:block;font-size:9.5px;color:#FFE7A8}
+.xm-adv p{font-size:13.5px;line-height:1.45;margin-top:6px}
+.xm-adv b{display:block;font-size:16px;margin:2px 0}
+.xm-adv span{font-size:12.5px}
+.xm-adv audio{width:100%;height:32px;margin-top:8px}
+.xm-ok{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid #FFE7A8;background:none;color:#FFE7A8;font:800 11px Cinzel,Georgia,serif;letter-spacing:1.5px;cursor:pointer}
 .xm-prog{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(14,20,40,.78);border:1px solid rgba(255,255,255,.1);cursor:pointer}
 .xm-prog .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
 .xm-prog .row span{font-size:10px}
-.xm-prog .xm-bar{height:10px;border-radius:10px;margin-top:8px;overflow:hidden;background:rgba(255,255,255,.12)}
-.xm-prog .xm-bar i{display:block;height:100%;border-radius:10px;background:repeating-linear-gradient(-45deg,#D7263D 0 7px,#FFF6E5 7px 14px);box-shadow:0 0 10px rgba(255,120,120,.5)}
-.xm-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:16px 8px;margin-top:22px}
-.xm-t{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;--c1:#E0344A;--c2:#7A0E1B}
-.xm-t:nth-child(3n+2){--c1:#2FA36B;--c2:#0F3D24}
-.xm-t:nth-child(3n){--c1:#F0BE4E;--c2:#8A5A12}
-.xm-t .orn{position:relative;width:70px;height:70px;margin-top:10px;border-radius:50%;display:grid;place-items:center;
-  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.6),rgba(255,255,255,0) 24%),radial-gradient(circle at 50% 58%,var(--c1),var(--c2) 78%);
-  box-shadow:0 8px 14px rgba(0,0,0,.55),inset 0 -8px 14px rgba(0,0,0,.35),0 0 18px color-mix(in srgb,var(--c1) 45%,transparent)}
-.xm-t .orn::before{content:'';position:absolute;left:50%;top:-9px;width:18px;height:11px;margin-left:-9px;border-radius:3px;background:linear-gradient(90deg,#8A6A22,#F3D27A,#8A6A22)}
-.xm-t .orn::after{content:'';position:absolute;left:50%;top:-17px;width:8px;height:8px;margin-left:-5px;border:1.5px solid #D9B85C;border-radius:50%}
-.xm-t .orn svg{width:26px;height:26px;stroke-width:2.2;color:#FFF8E8;filter:drop-shadow(0 0 5px rgba(255,240,200,.9))}
+.xm-lights{position:relative;display:flex;justify-content:space-between;padding:14px 4px 2px;margin-top:4px}
+.xm-lights::before{content:'';position:absolute;left:0;right:0;top:8px;height:12px;border-top:2px solid #1E3B22;border-radius:50%}
+.xm-lights i{position:relative;width:13px;height:19px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:#3A4150}
+.xm-lights i::before{content:'';position:absolute;left:3px;top:-5px;width:7px;height:6px;border-radius:2px;background:#2F4A33}
+.xm-lights i.on{background:var(--c);box-shadow:0 0 10px var(--c),0 0 18px var(--c);animation:xmTw 2.4s infinite}
+.xm-lights i:nth-child(5n+1){--c:#FF3B3B}.xm-lights i:nth-child(5n+2){--c:#FFD34E}.xm-lights i:nth-child(5n+3){--c:#2ECC71}.xm-lights i:nth-child(5n+4){--c:#4AA3FF}.xm-lights i:nth-child(5n){--c:#FF7AD9}
+.xm-lights i:nth-child(2n).on{animation-delay:-1.1s}
+.xm-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 8px;margin-top:18px}
+.xm-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:20px;cursor:pointer;-webkit-tap-highlight-color:transparent;--c1:#E0344A;--c2:#7A0E1B}
+.xm-t:nth-child(3n+2){--c1:#3E7BFA;--c2:#123A8A}.xm-t:nth-child(3n){--c1:#F0BE4E;--c2:#8A5A12}
+.xm-t::before{content:'';position:absolute;left:-8px;right:-8px;top:0;height:14px;border-bottom:2px solid #1E3B22;border-radius:0 0 50% 50%}
+.xm-t .bulb{position:absolute;left:-8px;top:10px;width:12px;height:17px;border-radius:50% 50% 50% 50%/40% 40% 60% 60%;background:var(--bc);box-shadow:0 0 10px var(--bc),0 0 18px var(--bc);animation:xmTw 2.6s infinite}
+.xm-t .bulb::before{content:'';position:absolute;left:3px;top:-4px;width:6px;height:5px;border-radius:2px;background:#2F4A33}
+.xm-t:nth-child(3n+1) .bulb{display:none}
+.xm-t:nth-child(4n+1) .bulb{--bc:#FF3B3B}.xm-t:nth-child(4n+2) .bulb{--bc:#FFD34E}.xm-t:nth-child(4n+3) .bulb{--bc:#2ECC71;animation-delay:-1.2s}.xm-t:nth-child(4n) .bulb{--bc:#4AA3FF;animation-delay:-.6s}
+.xm-t .tree{position:relative;width:94px;height:120px;background:url('cars/xmas-tree.svg') center/contain no-repeat;filter:drop-shadow(0 6px 8px rgba(0,0,0,.5))}
+.xm-t .orn{position:absolute;left:50%;top:64%;width:32px;height:32px;margin:-16px 0 0 -16px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.65),rgba(255,255,255,0) 30%),radial-gradient(circle at 50% 58%,var(--c1),var(--c2) 80%);box-shadow:0 3px 6px rgba(0,0,0,.5)}
+.xm-t .orn::before{content:'';position:absolute;left:50%;top:-5px;width:10px;height:6px;margin-left:-5px;border-radius:2px;background:linear-gradient(90deg,#8A6A22,#F3D27A,#8A6A22)}
+.xm-t .orn svg{width:17px;height:17px;stroke-width:2.2;color:#fff}
 .xm-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F7F2E8;text-shadow:0 1px 6px rgba(0,0,0,.9)}
 .hd-xmas .hd-foot{color:#D9DEEA;opacity:1}
 .hd-xmas .hd-share button{border:1px solid rgba(242,193,78,.7);color:#F2C14E;background:rgba(0,0,0,.35)}
@@ -3557,7 +3583,7 @@ function homeMiniHtml(id) {
     chart:`<div class="hp-mini" style="background:#fff;border:1px solid #ccc"><u style="left:18px;top:3px;width:26px;height:26px;border:2px dashed #2E9E3E;border-radius:50%;background:none"></u><u style="left:28px;top:13px;width:6px;height:6px;border:1.5px solid #111;border-radius:50%;background:#fff"></u><u style="left:4px;right:4px;top:33px;height:7px;background:#111;border-radius:2px"></u></div>`,
     passport:`<div class="hp-mini" style="background:#1B2A4A"><u style="left:27px;top:3px;width:10px;height:10px;border:1.5px solid #D8B45A;border-radius:50%;background:none"></u><u style="left:4px;right:4px;top:16px;bottom:3px;background:#F3EEDF;border-radius:2px"></u><u style="left:9px;top:20px;width:17px;height:17px;border:2px solid #B3261E;border-radius:50%;background:none"></u><u style="left:31px;top:19px;width:20px;height:20px;border:2px solid #1E4E9E;border-radius:50%;background:none"></u></div>`,
     haunt:`<div class="hp-mini" style="background:linear-gradient(rgba(7,6,15,.1),rgba(7,6,15,.6)),url('Emerson/halloween-castle-bg.jpg') 20% 35%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FF8A1F;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:30px;width:15px;height:10px;background:rgba(26,26,40,.85)"></u>`).join('')}</div>`,
-    xmas:`<div class="hp-mini" style="background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.55)),url('Emerson/christmas-village-bg.jpg') 30% 40%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FFF6E5;box-shadow:0 0 5px #F2C14E"></u>${['#E0344A','#2FA36B','#F0BE4E'].map((c,i)=>`<u style="left:${8+i*18}px;top:27px;width:12px;height:12px;border-radius:50%;background:${c}"></u>`).join('')}</div>`,
+    xmas:`<div class="hp-mini" style="background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.55)),url('Emerson/christmas-village-bg.jpg') 30% 40%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FFF6E5;box-shadow:0 0 5px #F2C14E"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:22px;width:14px;height:18px;border-radius:0;background:url('cars/xmas-tree.svg') center/contain no-repeat"></u>`).join('')}</div>`,
     cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
   return m[id] || '';
@@ -3790,16 +3816,34 @@ function hdXmasSnow() {
   }
   return h;
 }
-// The village picture (1014×1500) covers #content from its top edge; the plane crosses the snowy sky
-// 30% of the way down it, and the snow covers exactly the scrolling area (not the top bar or the menu).
+// The snow covers exactly the scrolling area (not the top bar or the menu).
 function hdXmasPlace() {
-  const c = document.getElementById('content'); if(!c) return;
-  const r = c.getBoundingClientRect(), sc = Math.max(r.width/1014, r.height/1500);
-  const pl = document.querySelector('.xm-plane'); if(pl) pl.style.top = Math.round(r.top + 1500*sc*0.3 - 18) + 'px';
-  const sn = document.querySelector('.xm-snow'); if(sn) { sn.style.top = Math.round(r.top) + 'px'; sn.style.height = Math.round(r.height) + 'px'; sn.style.visibility = 'visible'; }
+  const c = document.getElementById('content'), sn = document.querySelector('.xm-snow'); if(!c || !sn) return;
+  const r = c.getBoundingClientRect();
+  sn.style.top = Math.round(r.top) + 'px'; sn.style.height = Math.round(r.height) + 'px'; sn.style.visibility = 'visible';
+}
+// Christmas Village fleet: a "sleigh tracker" — big ETA, the plane, a sleigh sliding along the route to YKF
+function hdXmasTracker() {
+  const f = homeFleetInfo(), p = hdFeatured(), hf = S.homeFleet || {};
+  const off = f.reg === 'Overnight' || f.reg === 'No live feed';
+  let eta, unit, who, sub, route = '';
+  if(p && p.inbound) {
+    eta = p.eta >= 60 ? `${Math.floor(p.eta/60)}h${String(p.eta%60).padStart(2,'0')}` : String(p.eta); unit = p.eta >= 60 ? 'ETA' : 'MIN TO YKF';
+    who = p.reg; sub = `${hdType(p.tail)}${p.altFt ? ' · ' + p.altFt.toLocaleString() + ' ft' : ''}`;
+    const k = Math.max(.06, Math.min(.94, 1 - (p.distNm || 0) / 150));
+    route = `<div class="rt"><span class="sl" style="left:${(k*100).toFixed(1)}%">🛷</span></div><div class="rl"><span>${p.distNm} nm out</span><span>YKF</span></div>`;
+  } else if(p) { eta = '—'; unit = 'AIRBORNE'; who = p.reg; sub = `${p.distNm} nm${p.lat!=null ? ' ' + hdCompass(hdBearing(p.lat,p.lon)) : ''} of YKF · nothing inbound yet`; }
+  else if(f.reg === 'Overnight') { eta = '6 AM'; unit = 'TRACKING RESUMES'; who = 'Sleighs in the hangar'; sub = 'Live tracking runs 6 AM – 8 PM'; }
+  else if(f.reg === 'Checking…') { eta = '…'; unit = 'CHECKING'; who = 'Checking the sky'; sub = 'Reading the live fleet'; }
+  else if(f.reg === 'No live feed') { eta = '—'; unit = 'NO FEED'; who = 'No live feed'; sub = 'Open the Fleet tab'; }
+  else { eta = '0'; unit = 'INBOUND'; who = 'All quiet over YKF'; sub = [f.line, f.sub].filter(Boolean).join(' · '); }
+  const chips = [hf.airborne ? `✈ ${hf.airborne} in the air` : '', hf.ground ? `${hf.ground} on the ground` : ''].filter(Boolean);
+  return `<div class="hdr"><span>Skycare sleigh tracker</span><span class="live ${off ? 'off' : ''}"><i></i>${off ? 'OFF' : 'LIVE'}</span></div>
+    <div class="bd"><div class="eta"><b>${_hdEsc(eta)}</b><small>${unit}</small></div><div class="who"><b>${_hdEsc(who)}</b><span>${_hdEsc(sub)}</span></div></div>
+    ${route}${chips.length ? `<div class="ft">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : '<div style="height:10px"></div>'}`;
 }
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly, xmas:hdHauntFly};
+const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly, xmas:hdXmasTracker};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
@@ -3875,20 +3919,22 @@ function hdLayout4(d, st, fleetOn) {
     // Date line: the sleeps to Christmas in December, "Merry Christmas" on the 25th
     const sleeps = Math.round((new Date(t.yr, 11, 25) - new Date(t.yr, t.d.getMonth(), t.day)) / 864e5);
     const isXm = sleeps === 0, soon = sleeps > 0 && sleeps <= 24;
-    return `<div class="hd hd-xmas"><div class="xm-snow" aria-hidden="true">${hdXmasSnow()}</div>${fleetOn?`<img class="xm-plane" src="${HOME_PLANE_IMGS[1]}" alt="">`:''}
+    const lit = st.total ? Math.round(st.done/st.total*10) : 0;   // ten bulbs = today's task progress
+    const door = inner => `<div class="xm-adv"><div class="day">${t.day}</div><div class="tx">${inner}</div></div>`;
+    return `<div class="hd hd-xmas"><div class="xm-snow" aria-hidden="true">${hdXmasSnow()}</div>
     <div class="xm-title"><small class="xm-cz">${isXm?'Merry Christmas · ':''}${t.dow3} · ${t.mon} ${t.day}${soon?` · ${sleeps} sleep${sleeps===1?'':'s'} to Christmas`:''}</small><h2>Skycare</h2></div>
-    ${fleetOn?`<div class="xm-fly" data-hfslot="xmas" onclick="goTab('fleet')">${hdHauntFly()}</div>`:''}
+    ${fleetOn?`<div class="xm-trk" data-hfslot="xmas" onclick="goTab('fleet')">${hdXmasTracker()}</div>`:''}
     <div class="xm-scene"></div>
-    ${notes.map(n=>`<div class="xm-line"><small class="k xm-cz">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="xm-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button></div>`).join('')}
-    ${evs.map(e=>`<div class="xm-line" ${hdEvClick(e)}><small class="k xm-cz">Today${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}</div>`).join('')}
-    <div class="xm-prog" onclick="goTab('today')"><div class="row"><span class="xm-cz">Today's tasks</span><b>${st.done} / ${st.total}</b></div><div class="xm-bar"><i style="width:${st.pct}%"></i></div></div>
+    ${notes.map(n=>door(`<small class="k xm-cz">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="xm-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button>`)).join('')}
+    ${evs.map(e=>`<div ${hdEvClick(e)}>${door(`<small class="k xm-cz">Today${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}`)}</div>`).join('')}
+    <div class="xm-prog" onclick="goTab('today')"><div class="row"><span class="xm-cz">Today's tasks</span><b>${st.done} / ${st.total}</b></div><div class="xm-lights">${Array.from({length:10},(_,i)=>`<i class="${i<lit?'on':''}"></i>`).join('')}</div></div>
     <div id="homeTileWrap"></div>
     ${homeFooterHtml()}</div>`;
   }
   return null;
 }
 function hdTiles4(d, list, cls) {
-  if(d==='xmas') return `<div class="xm-tg">${list.map((t,i)=>`<div class="xm-t ${cls}" ${_hdTileAttrs(t,i)}><div class="orn">${t.svg}</div><b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='xmas') return `<div class="xm-tg">${list.map((t,i)=>`<div class="xm-t ${cls}" ${_hdTileAttrs(t,i)}><i class="bulb"></i><div class="tree"><span class="orn">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk">${HH_PUMPKIN}<span class="ic">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
