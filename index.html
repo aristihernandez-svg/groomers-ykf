@@ -25,7 +25,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&family=Bangers&family=Mountains+of+Christmas:wght@700&family=Creepster&family=Cinzel:wght@600;800&family=Comic+Neue:ital,wght@0,700;1,700&family=Barlow+Condensed:ital,wght@0,500;0,700;1,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Figtree:wght@400;600;800&family=Sora:wght@400;600;700&family=Bricolage+Grotesque:wght@400;700;800&family=Manrope:wght@400;600;800&family=Audiowide&family=Exo+2:wght@400;600;700&family=Kalam:wght@400;700&family=Bangers&family=Mountains+of+Christmas:wght@700&family=Creepster&family=Pirata+One&family=Cinzel:wght@600;800&family=Comic+Neue:ital,wght@0,700;1,700&family=Barlow+Condensed:ital,wght@0,500;0,700;1,800&display=swap');
 
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 
@@ -677,41 +677,81 @@ body::before{
 .hd-pass .hd-foot{color:#9BA7C2;opacity:1}
 .hd-pass .hd-share button{border:1px solid #D8B45A;color:#D8B45A;background:none}
 
-/* 12 · Haunted Hangar (Halloween): the castle and full moon from Emerson's picture fill the screen behind everything
-   (set on #content, so the photo stays still while the page scrolls) and a plane's shadow crosses the moon */
-.content.hh-bg{background:linear-gradient(rgba(7,6,15,.12),rgba(7,6,15,.3) 42%,rgba(7,6,15,.72) 75%,rgba(7,6,15,.88)),url('Emerson/halloween-castle-bg.jpg') 20% 0/cover #07060F}
+/* 12 · Haunted Hangar (Halloween): Emerson's cemetery gate (mirrored, lanterns lit, jack-o'-lanterns at its feet)
+   fills the screen behind everything, fog drifts and the lanterns flicker. The fleet hangs on an iron sign with a
+   candle that burns down as the plane comes in; handoff notes are bronze crypt plaques set in stone */
+.content.hh-bg{background:linear-gradient(rgba(6,4,10,.05),rgba(6,4,10,.3) 45%,rgba(6,4,10,.78) 78%,rgba(6,4,10,.9)),url('Emerson/halloween-gate-bg.jpg') center 0/cover #07060F}
 .hd-haunt{background:transparent;color:#F3E6CF;font-family:Inter,system-ui,sans-serif}
 .hh-cz{font-family:Cinzel,Georgia,serif;letter-spacing:2px;text-transform:uppercase}
-.hh-plane{position:fixed;left:0;top:240px;width:110px;z-index:-1;pointer-events:none;filter:brightness(0);opacity:.92;animation:hhCross 16s linear infinite}
-@keyframes hhCross{from{transform:translateX(-140px) rotate(-6deg)}to{transform:translateX(calc(100vw + 30px)) rotate(-6deg)}}
+@keyframes hhFlick{0%,100%{opacity:1}38%{opacity:.75}42%{opacity:.95}66%{opacity:.62}70%{opacity:.9}}
+.hh-fx{position:fixed;left:0;right:0;top:0;height:100vh;overflow:hidden;pointer-events:none;z-index:-1;visibility:hidden}
+.hh-fx .fog{position:absolute;left:-40%;width:180%;height:200px;background:radial-gradient(ellipse at 30% 50%,rgba(200,190,230,.22),transparent 55%),radial-gradient(ellipse at 75% 60%,rgba(200,190,230,.18),transparent 50%);filter:blur(8px);animation:hhFog 14s ease-in-out infinite alternate}
+.hh-fx .fog.b{animation-duration:20s;animation-direction:alternate-reverse}
+@keyframes hhFog{from{transform:translateX(-10%)}to{transform:translateX(10%)}}
+.hh-fx .lamp{position:absolute;width:140px;height:140px;margin:-70px 0 0 -70px;border-radius:50%;background:radial-gradient(circle,rgba(255,170,60,.5),transparent 65%);animation:hhFlick 2.2s infinite}
+.hh-fx .lamp.s{width:90px;height:90px;margin:-45px 0 0 -45px;animation-duration:1.7s}
 .hh-title{text-align:center;margin-top:4px}
-.hh-title small{display:block;font-size:11px;color:#E9DCC4;text-shadow:0 1px 6px rgba(0,0,0,.9)}
-.hh-title h2{font-family:Creepster,Bangers,Impact,sans-serif;font-weight:400;font-size:54px;line-height:1;letter-spacing:3px;color:#FF8A1F;text-shadow:0 0 18px rgba(255,120,20,.75),0 3px 0 #3A1405;margin-top:4px}
-.hh-fly{margin-top:6px;text-align:center;font-size:13.5px;color:#F3E6CF;text-shadow:0 1px 8px rgba(0,0,0,.95);cursor:pointer}
-.hh-fly b{color:#FFB061}
-.hh-scene{height:240px}
+.hh-title small{display:block;font-size:11px;color:#E9DCC4;text-shadow:0 1px 6px #000}
+.hh-title h2{font-family:'Pirata One',Georgia,serif;font-weight:400;font-size:64px;line-height:1;letter-spacing:2px;color:#FFCF8A;text-shadow:0 0 20px rgba(255,120,20,.85),0 3px 0 #000;margin-top:2px}
+.hh-gate{position:relative;margin:30px 4px 0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hh-gate::before,.hh-gate::after{content:'';position:absolute;top:-28px;width:4px;height:30px;background:repeating-linear-gradient(#6A6E78 0 5px,#2A2C32 5px 8px);border-radius:2px}
+.hh-gate::before{left:18%}.hh-gate::after{right:18%}
+.hh-gate .fr{border-radius:10px;padding:9px 14px 12px;background:linear-gradient(160deg,#2C2E36,#121318);border:2px solid #4A4E5A;box-shadow:inset 0 0 0 4px #121318,inset 0 0 0 5px #3A3E48,0 12px 24px rgba(0,0,0,.6),0 0 30px rgba(255,140,40,.15)}
+.hh-gate .hdr{display:flex;justify-content:space-between;align-items:center;font:800 9.5px Cinzel,Georgia,serif;letter-spacing:2px;color:#FF9A2A;text-transform:uppercase}
+.hh-gate .live{display:flex;align-items:center;gap:5px;font:800 9px Inter,sans-serif;letter-spacing:1px;color:#F3E6CF}
+.hh-gate .live i{width:7px;height:7px;border-radius:50%;background:#FF6A1A;box-shadow:0 0 8px #FF6A1A;animation:hhFlick 1.4s infinite}
+.hh-gate .live.off i{background:#6A6E78;box-shadow:none;animation:none}
+.hh-gate .row{display:flex;align-items:flex-end;gap:14px;margin-top:8px}
+.hh-gate .cd{position:relative;width:16px;height:64px;display:flex;align-items:flex-end;flex-shrink:0}
+.hh-gate .cd i{position:relative;display:block;width:16px;border-radius:3px 3px 2px 2px;background:linear-gradient(90deg,#CFC4A8,#F2EBD8,#B9AD8E)}
+.hh-gate .cd i::before{content:'';position:absolute;left:2px;top:-18px;width:12px;height:17px;border-radius:50% 50% 40% 40%;background:radial-gradient(circle at 50% 70%,#FFF3B0,#FFB347 60%,rgba(255,120,20,0));filter:drop-shadow(0 0 8px #FFB347);animation:hhFlick 1.3s infinite}
+.hh-gate .cd.out i::before{display:none}
+.hh-gate .cd::after{content:'';position:absolute;left:-5px;right:-5px;bottom:-4px;height:5px;border-radius:3px;background:#3A2A18}
+.hh-gate .who{flex:1;min-width:0}
+.hh-gate .who b{display:block;font-family:'Pirata One',Georgia,serif;font-weight:400;font-size:32px;line-height:1;color:#FFB061;text-shadow:0 0 12px rgba(255,120,20,.7)}
+.hh-gate .who span{display:block;font-size:12px;color:#E6DCC8;margin-top:3px;line-height:1.35}
+.hh-gate .eta{text-align:center;min-width:64px}
+.hh-gate .eta b{display:block;font-family:'Pirata One',Georgia,serif;font-weight:400;font-size:42px;line-height:.9;color:#FFE2A8;text-shadow:0 0 12px rgba(255,170,60,.6)}
+.hh-gate .eta small{font:800 9px Cinzel,Georgia,serif;letter-spacing:1.5px;color:#FF9A2A}
+.hh-gate .ft{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.hh-gate .ft span{padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);font-size:10.5px;color:#E6DCC8}
+.hh-scene{height:150px}
+.hh-crypt{margin-top:14px;padding:12px;border-radius:6px;background:repeating-linear-gradient(0deg,#3E3A42 0 22px,#2E2A32 22px 23px),#3E3A42;box-shadow:0 10px 20px rgba(0,0,0,.55)}
+.hh-crypt .pl{position:relative;padding:16px 18px;border-radius:4px;background:linear-gradient(135deg,#B58A4A,#7A5A2A 50%,#A07838);color:#2A1A08;box-shadow:inset 0 2px 0 rgba(255,230,180,.5),inset 0 -3px 0 rgba(0,0,0,.35),0 3px 6px rgba(0,0,0,.5);text-shadow:0 1px 0 rgba(255,220,160,.5)}
+.hh-crypt .pl::before,.hh-crypt .pl::after{content:'';position:absolute;top:8px;width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#F0D090,#5A4020)}
+.hh-crypt .pl::before{left:8px}.hh-crypt .pl::after{right:8px}
+.hh-crypt small.k{display:block;font:800 10px Cinzel,Georgia,serif;letter-spacing:2px;text-transform:uppercase;color:#3A1A04}
+.hh-crypt p{font-family:Georgia,serif;font-size:13.5px;line-height:1.5;margin-top:6px}
+.hh-crypt audio{width:100%;height:32px;margin-top:8px}
+.hh-crypt .hh-ok{color:#2A1A08;border-color:#2A1A08}
 .hh-line{border-top:1px solid rgba(255,255,255,.25);margin-top:14px;padding-top:12px;text-shadow:0 1px 6px rgba(0,0,0,.85)}
-.hh-scene+.hh-line{margin-top:0}
 .hh-line small.k{display:block;font-size:9.5px;color:#FFB061}
-.hh-line p{font-size:13.5px;line-height:1.45;margin-top:6px}
 .hh-line b{display:block;font-size:16px;margin:2px 0}
 .hh-line span{font-size:12.5px}
-.hh-line audio{width:100%;height:32px;margin-top:8px}
 .hh-ok{margin-top:10px;padding:6px 14px;border-radius:999px;border:1.5px solid rgba(255,255,255,.6);background:none;color:#fff;font:800 11px Cinzel,Georgia,serif;letter-spacing:1.5px;cursor:pointer}
-.hh-prog{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(26,26,40,.78);border:1px solid rgba(255,255,255,.08);cursor:pointer}
+.hh-prog{margin-top:16px;padding:12px 14px;border-radius:16px;background:rgba(18,10,16,.8);border:1px solid rgba(255,255,255,.08);cursor:pointer}
 .hh-prog .row{display:flex;justify-content:space-between;align-items:center;font-size:12.5px}
 .hh-prog .row span{font-size:10px}
 .hh-prog .hh-bar{height:9px;border-radius:9px;margin-top:8px;overflow:hidden;background:rgba(255,255,255,.1)}
 .hh-prog .hh-bar i{display:block;height:100%;border-radius:9px;background:#FF8A1F;box-shadow:0 0 10px rgba(255,138,31,.8)}
-@keyframes hhFlick{0%,100%{opacity:1}38%{opacity:.78}42%{opacity:.95}66%{opacity:.68}70%{opacity:.9}}
 .hh-tg{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 8px;margin-top:20px}
-.hh-t{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hh-t{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .hh-t .pk{position:relative;width:86px;height:70px}
 .hh-t .pk>svg:first-child{position:absolute;inset:0;width:100%;height:100%;filter:drop-shadow(0 6px 10px rgba(0,0,0,.6))}
 .hh-t .ic{position:absolute;left:50%;top:56%;transform:translate(-50%,-50%);color:#FFD66E;filter:drop-shadow(0 0 4px #FF9A1F) drop-shadow(0 0 9px rgba(255,140,30,.7));animation:hhFlick 3s infinite}
 .hh-t:nth-child(2n) .ic{animation-delay:-1.2s}.hh-t:nth-child(3n) .ic{animation-delay:-2.1s}
 .hh-t .ic svg{width:26px;height:26px;stroke-width:2.2}
-.hh-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F3E6CF;text-shadow:0 1px 6px rgba(0,0,0,.9)}
+.hh-t b{font-family:Cinzel,Georgia,serif;font-weight:800;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:#F3E6CF;text-shadow:0 1px 6px #000}
+.hh-t .cauldron>svg:first-child{filter:drop-shadow(0 0 10px rgba(80,255,110,.45)) drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.hh-t .chest>svg:first-child{filter:drop-shadow(0 0 12px rgba(255,170,60,.6)) drop-shadow(0 6px 10px rgba(0,0,0,.6))}
+.hh-t .cauldron .ic{top:64%;color:#B8FFC4;filter:drop-shadow(0 0 4px #4CFF6A) drop-shadow(0 0 10px rgba(80,255,110,.8))}
+.hh-t .cauldron .ic svg{width:22px;height:22px}
+.hh-bub{animation:hhBub 2.2s ease-in infinite;transform-box:fill-box;transform-origin:center}
+@keyframes hhBub{0%{transform:translateY(4px) scale(.4);opacity:0}30%{opacity:1}100%{transform:translateY(-10px) scale(1);opacity:0}}
+.hh-t .chest .ic{top:66%;color:#FFE2A8;filter:drop-shadow(0 0 4px #FFB347) drop-shadow(0 0 10px rgba(255,170,60,.8))}
+.hh-t .chest .ic svg{width:20px;height:20px}
+.hh-leak{animation:hhFlick 2s infinite}
+.hh-badge{position:absolute;right:2px;top:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:#C21D1D;color:#fff;font:800 11px/20px Inter,sans-serif;text-align:center;box-shadow:0 0 8px rgba(255,40,40,.7);z-index:2}
 .hd-haunt .hd-foot{color:#C9BFD9;opacity:1}
 .hd-haunt .hd-share button{border:1px solid rgba(255,138,31,.6);color:#FFB061;background:rgba(0,0,0,.35)}
 @media (prefers-reduced-motion:reduce){.hd-haunt *{animation:none!important}}
@@ -3571,7 +3611,7 @@ function homeMiniHtml(id) {
     lineup:`<div class="hp-mini" style="background:#0B1430"><u style="left:14px;right:14px;top:4px;height:5px;background:#fff;border-radius:1px"></u><u style="left:5px;right:5px;top:12px;height:18px;background:linear-gradient(125deg,#E8304A 0 40%,#16224A 40%);border-radius:3px"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:33px;width:15px;height:8px;background:#0F1A3C;border:1px solid #2a3a6a"></u>`).join('')}</div>`,
     chart:`<div class="hp-mini" style="background:#fff;border:1px solid #ccc"><u style="left:18px;top:3px;width:26px;height:26px;border:2px dashed #2E9E3E;border-radius:50%;background:none"></u><u style="left:28px;top:13px;width:6px;height:6px;border:1.5px solid #111;border-radius:50%;background:#fff"></u><u style="left:4px;right:4px;top:33px;height:7px;background:#111;border-radius:2px"></u></div>`,
     passport:`<div class="hp-mini" style="background:#1B2A4A"><u style="left:27px;top:3px;width:10px;height:10px;border:1.5px solid #D8B45A;border-radius:50%;background:none"></u><u style="left:4px;right:4px;top:16px;bottom:3px;background:#F3EEDF;border-radius:2px"></u><u style="left:9px;top:20px;width:17px;height:17px;border:2px solid #B3261E;border-radius:50%;background:none"></u><u style="left:31px;top:19px;width:20px;height:20px;border:2px solid #1E4E9E;border-radius:50%;background:none"></u></div>`,
-    haunt:`<div class="hp-mini" style="background:linear-gradient(rgba(7,6,15,.1),rgba(7,6,15,.6)),url('Emerson/halloween-castle-bg.jpg') 20% 35%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FF8A1F;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:30px;width:15px;height:10px;background:rgba(26,26,40,.85)"></u>`).join('')}</div>`,
+    haunt:`<div class="hp-mini" style="background:linear-gradient(rgba(6,4,10,.1),rgba(6,4,10,.55)),url('Emerson/halloween-gate-bg.jpg') center 20%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FFCF8A;box-shadow:0 0 5px #FF8A1F"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:27px;width:15px;height:12px;border-radius:50%;background:#8C4516;box-shadow:0 0 6px rgba(255,140,30,.8)"></u>`).join('')}</div>`,
     xmas:`<div class="hp-mini" style="background:linear-gradient(rgba(6,10,24,.1),rgba(6,10,24,.55)),url('Emerson/christmas-village-bg.jpg') 30% 40%/cover"><u style="left:14px;top:5px;width:36px;height:7px;border-radius:2px;background:#FFF6E5;box-shadow:0 0 5px #F2C14E"></u>${[0,1,2].map(i=>`<u style="left:${6+i*19}px;top:22px;width:14px;height:18px;border-radius:0;background:url('cars/xmas-tree.svg') center/contain no-repeat"></u>`).join('')}</div>`,
     cork:`<div class="hp-mini" style="background:#8a6a45"><u style="left:6px;top:4px;width:24px;height:20px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:34px;top:6px;width:24px;height:16px;background:#FFF4C2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u><u style="left:6px;top:28px;right:6px;height:10px;background:#fdfaf2;box-shadow:0 2px 3px rgba(0,0,0,.4)"></u></div>`,
   };
@@ -3606,7 +3646,7 @@ function setHomeDesign(d) {
 function homeAfterRender() {
   document.getElementById('hpDial').style.display = '';
   renderHomePicker();
-  if(_homeActiveDesign === 'haunt') requestAnimationFrame(hdHauntPlane);
+  if(_homeActiveDesign === 'haunt') requestAnimationFrame(hhPlaceFx);
   if(_homeActiveDesign === 'xmas') requestAnimationFrame(hdXmasPlace);
   if(_homeActiveDesign !== 'classic' && hdFleetOn()) {
     homeFleetRefresh();
@@ -3779,22 +3819,40 @@ function hdRadarCap() {
   if(p) return `Radar · <b>${_hdEsc(p.reg)}</b> · ${p.distNm} nm${p.lat!=null?" "+hdCompass(hdBearing(p.lat,p.lon)):""}`;
   return `Radar · ${_hdEsc([f.reg,f.line].filter(Boolean).join(' · '))}`;
 }
-// Haunted Hangar: the live plane on one line under the title
-function hdHauntFly() {
-  const f = homeFleetInfo(), p = hdFeatured();
-  if(p && p.inbound) return `✈ <b>${_hdEsc(p.reg)}</b> inbound · ETA ${hdEta(p.eta)} · ${p.distNm} nm${p.altFt?' · '+p.altFt.toLocaleString()+' ft':''}`;
-  if(p) return `✈ <b>${_hdEsc(p.reg)}</b> airborne · ${p.distNm} nm${p.lat!=null?' '+hdCompass(hdBearing(p.lat,p.lon)):''} from YKF`;
-  return '✈ ' + _hdEsc([f.reg, f.line].filter(Boolean).join(' · '));
+// Haunted Hangar (gate): the fleet on an iron sign, handoff notes on crypt plaques, special Shopping tile
+function hhGateSign(m) {
+  return `<div class="fr"><div class="hdr"><span>✠ Arrivals at the gate ✠</span><span class="live ${m.off?'off':''}"><i></i>${m.off?'OFF':'LIVE'}</span></div>
+    <div class="row"><div class="cd ${m.off?'out':''}"><i style="height:${Math.round(14 + (m.wax ?? 1) * 46)}px"></i></div>
+      <div class="who"><b>${_hdEsc(m.reg)}</b><span>${_hdEsc(m.sub)}</span></div>
+      ${m.eta!=null?`<div class="eta"><b>${_hdEsc(m.eta)}</b><small>${m.unit}</small></div>`:''}</div>
+    ${(m.chips||[]).length?`<div class="ft">${m.chips.map(c=>`<span>${c}</span>`).join('')}</div>`:''}</div>`;
 }
-// The plane's shadow flies across the moon. The castle picture (1044×1320) covers #content from its top
-// edge and the moon's centre is 42% of the way down it.
-function hdHauntPlane() {
-  const pl = document.querySelector('.hh-plane'), c = document.getElementById('content'); if(!pl || !c) return;
-  const r = c.getBoundingClientRect(), sc = Math.max(r.width/1044, r.height/1320);
-  pl.style.top = Math.round(r.top + 1320*sc*0.42 - 22) + 'px';
+// The fleet as the gate sign: the candle burns down as the plane gets closer (a full candle = an hour or more out)
+function hhGateModel(p, info, counts) {
+  const chips = [counts.air ? `✈ ${counts.air} in the air` : '', counts.ground ? `${counts.ground} on the ground` : ''].filter(Boolean);
+  if(p && p.inbound) return {reg:p.reg, sub:`${p.type||''}${p.altFt?' · '+p.altFt.toLocaleString()+' ft':''} · ${p.distNm} nm out`, eta: p.eta>=60 ? Math.floor(p.eta/60)+'h'+String(p.eta%60).padStart(2,'0') : String(p.eta), unit: p.eta>=60?'ETA':'MIN', wax: Math.min(1, p.eta/60), chips};
+  if(p) return {reg:p.reg, sub:`Airborne · ${p.distNm} nm${p.dir?' '+p.dir:''} from the base · nothing inbound yet`, eta:null, chips};
+  if(info==='Overnight') return {off:true, reg:'The gate is locked', sub:'Tracking resumes at 6 AM', eta:null, chips:[]};
+  if(info==='No live feed') return {off:true, reg:'No live feed', sub:'Open the Fleet tab', eta:null, chips:[]};
+  if(info==='Checking…') return {reg:'Checking…', sub:'Reading the live fleet', eta:null, chips:[]};
+  return {reg:'All quiet', sub:'No arrivals at the gate', eta:null, chips};
 }
-// Haunted Hangar tile: a pumpkin with no face; the window's icon is carved into it
+function hdHauntGate() {
+  const f = homeFleetInfo(), p = hdFeatured(), hf = S.homeFleet || {};
+  const fp = p ? {...p, type: hdType(p.tail), dir: p.lat!=null ? hdCompass(hdBearing(p.lat,p.lon)) : ''} : null;
+  return hhGateSign(hhGateModel(fp, f.reg, {air: hf.airborne||0, ground: hf.ground||0}));
+}
+function hhCrypt(inner) { return `<div class="hh-crypt"><div class="pl">${inner}</div></div>`; }
 const HH_PUMPKIN = '<svg viewBox="0 0 44 42" aria-hidden="true"><path d="M21 4 C21 1 24 0 26 1 L25 6 Z" fill="#3E5B24"/><ellipse cx="13" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="31" cy="25" rx="11" ry="15" fill="#7A3A12"/><ellipse cx="22" cy="25" rx="11" ry="16" fill="#8C4516"/></svg>';
+// A witch's cauldron bubbling green (YKF Shopping) and an iron-bound chest leaking light (YAV Cargo)
+const HH_CAULDRON = '<svg viewBox="0 0 60 50" aria-hidden="true"><ellipse cx="30" cy="14" rx="21" ry="5" fill="#3CFF6A" opacity=".35"/><path d="M14 46 L10 50 M46 46 L50 50" stroke="#1A1A1E" stroke-width="3" stroke-linecap="round"/><path d="M8 18 C6 34 14 47 30 47 C46 47 54 34 52 18 Z" fill="#17181C"/><path d="M12 22 C12 34 18 42 26 44" stroke="#4A4C56" stroke-width="2" fill="none" opacity=".7"/><ellipse cx="30" cy="18" rx="23" ry="5" fill="#26282E"/><ellipse cx="30" cy="18" rx="19" ry="3.6" fill="#2ED158"/><ellipse cx="27" cy="17.5" rx="9" ry="1.5" fill="#9CFFB0" opacity=".6"/><circle class="hh-bub" cx="22" cy="15" r="2.2" fill="#8CFFA0"/><circle class="hh-bub" cx="34" cy="14" r="1.8" fill="#8CFFA0" style="animation-delay:-.8s"/><circle class="hh-bub" cx="28" cy="13" r="2.6" fill="#B8FFC4" style="animation-delay:-1.5s"/></svg>';
+const HH_CHEST = '<svg viewBox="0 0 60 50" aria-hidden="true"><rect x="7" y="22" width="46" height="26" rx="3" fill="#5A3418"/><path d="M7 22 C7 8 53 8 53 22 Z" fill="#6A3E1E"/><rect class="hh-leak" x="8" y="19.5" width="44" height="4" fill="#FFD47A"/><path d="M7 22 H53" stroke="#2A2C32" stroke-width="2"/><path d="M15 12 V48 M45 12 V48" stroke="#2A2C32" stroke-width="4"/><path d="M7 40 H53" stroke="#2A2C32" stroke-width="3"/><circle cx="15" cy="30" r="1.4" fill="#8A8E98"/><circle cx="45" cy="30" r="1.4" fill="#8A8E98"/><ellipse class="hh-leak" cx="30" cy="22" rx="22" ry="2.6" fill="#FFB347" opacity=".55"/></svg>';
+const HH_FX = '<div class="hh-fx" aria-hidden="true"><i class="fog" style="bottom:20%"></i><i class="fog b" style="bottom:-6%"></i><i class="lamp" style="left:21%;top:25%"></i><i class="lamp" style="left:79%;top:25%;animation-delay:-1s"></i><i class="lamp s" style="left:8%;top:30%;animation-delay:-.5s"></i><i class="lamp s" style="left:92%;top:30%;animation-delay:-1.6s"></i><i class="lamp s" style="left:50%;top:72%;animation-delay:-.9s"></i><i class="lamp s" style="left:36%;top:95%;animation-delay:-.3s"></i><i class="lamp s" style="left:64%;top:95%;animation-delay:-1.2s"></i></div>';
+function hhPlaceFx() {
+  const c = document.getElementById('content'), fx = document.querySelector('.hh-fx'); if(!c || !fx) return;
+  const r = c.getBoundingClientRect();
+  fx.style.top = Math.round(r.top) + 'px'; fx.style.height = Math.round(r.height) + 'px'; fx.style.visibility = 'visible';
+}
 // Christmas Village: snowflakes for the falling-snow layer (fixed sizes/speeds per flake so it looks the same each visit)
 function hdXmasSnow() {
   let h = '';
@@ -3832,7 +3890,7 @@ function hdXmasTracker() {
     ${route}${chips.length ? `<div class="ft">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : '<div style="height:10px"></div>'}`;
 }
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntFly, xmas:hdXmasTracker};
+const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntGate, xmas:hdXmasTracker};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
@@ -3894,11 +3952,11 @@ function hdLayout4(d, st, fleetOn) {
     // Date line: the nights to Halloween in October, "Happy Halloween" on the 31st
     const nights = Math.round((new Date(t.yr, 9, 31) - new Date(t.yr, t.d.getMonth(), t.day)) / 864e5);
     const isHw = nights === 0, soon = nights > 0 && nights <= 30;
-    return `<div class="hd hd-haunt">${fleetOn?`<img class="hh-plane" src="${HOME_PLANE_IMGS[1]}" alt="">`:''}
+    return `<div class="hd hd-haunt">${HH_FX}
     <div class="hh-title"><small class="hh-cz">${isHw?'Happy Halloween · ':''}${t.dow3} · ${t.mon} ${t.day}${soon?` · ${nights} night${nights===1?'':'s'} to Halloween`:''}</small><h2>Skycare</h2></div>
-    ${fleetOn?`<div class="hh-fly" data-hfslot="haunt" onclick="goTab('fleet')">${hdHauntFly()}</div>`:''}
+    ${fleetOn?`<div class="hh-gate" data-hfslot="haunt" onclick="goTab('fleet')">${hdHauntGate()}</div>`:''}
     <div class="hh-scene"></div>
-    ${notes.map(n=>`<div class="hh-line"><small class="k hh-cz">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="hh-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button></div>`).join('')}
+    ${notes.map(n=>hhCrypt(`<small class="k">Handoff from ${_hdEsc(n.day||'last shift')}</small>${n.text?`<p>${hdNoteText(n.text)}</p>`:''}${hdAudio(n)}<button class="hh-ok" onclick="markHandoffComplete('${n.id}')">✓ Complete</button>`)).join('')}
     ${evs.map(e=>`<div class="hh-line" ${hdEvClick(e)}><small class="k hh-cz">Today${e.rep?' · '+_hdEsc(e.rep):''}</small><b>${_hdEsc(e.title)}</b>${e.sub?`<span>${_hdEsc(e.sub)}</span>`:''}</div>`).join('')}
     <div class="hh-prog" onclick="goTab('today')"><div class="row"><span class="hh-cz">Today's tasks</span><b>${st.done} / ${st.total}</b></div><div class="hh-bar"><i style="width:${st.pct}%"></i></div></div>
     <div id="homeTileWrap"></div>
@@ -3924,7 +3982,8 @@ function hdLayout4(d, st, fleetOn) {
 }
 function hdTiles4(d, list, cls) {
   if(d==='xmas') return `<div class="xm-tg">${list.map((t,i)=>`<div class="xm-t ${cls}" ${_hdTileAttrs(t,i)}><i class="bulb"></i><div class="tree"><span class="orn">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
-  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>`<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk">${HH_PUMPKIN}<span class="ic">${t.svg}</span></div><b>${t.label}</b></div>`).join('')}</div>`;
+  if(d==='haunt') return `<div class="hh-tg">${list.map((t,i)=>{ const shop = t.id==='shopping', n = shop ? (S.shopping||[]).filter(x=>x.checked).length : 0;
+    return `<div class="hh-t ${cls}" ${_hdTileAttrs(t,i)}><div class="pk${shop?' cauldron':''}">${shop?HH_CAULDRON:HH_PUMPKIN}<span class="ic">${t.svg}</span>${n?`<span class="hh-badge">${n}</span>`:''}</div><b>${t.label}</b></div>`; }).join('')}</div>`;
   if(d==='comic') return `<div class="cm-tg">${list.map((t,i)=>`<div class="cm-t ${cls}" ${_hdTileAttrs(t,i)}>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='lineup') return `<div class="sl-tg">${list.map((t,i)=>`<div class="sl-r ${cls}" ${_hdTileAttrs(t,i)}><span class="no">${String(i+1).padStart(2,'0')}</span>${t.svg}<b>${t.label}</b></div>`).join('')}</div>`;
   if(d==='chart') return `<div class="sc-tg">${list.map((t,i)=>`<div class="sc-w ${cls}" ${_hdTileAttrs(t,i)}><span class="hex">${t.svg}</span><b>${t.label}</b><small>${_hdEsc(hdTileStat(t.id))}</small></div>`).join('')}</div>`;
