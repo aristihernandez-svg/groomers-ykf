@@ -4970,12 +4970,21 @@ function saveCrewCarStatus() {
 function loadCrewCarData() {
   try { S.crewCarData=JSON.parse(localStorage.getItem('gykf_ccd')||'{}'); } catch(e){ S.crewCarData={}; }
 }
-function saveCrewCarData() {
+// Who has the car (trip), who last used it (lastUse) and damage reports belong to the check-in page
+// (crew-access.html) and the narrow markCarReturned / markDamageHandled writes. The app never sends them back:
+// a phone's saved copy can be days old, and writing it whole put an old "out with …" back on a car (Civic, Oct 2026).
+const CAR_CHECKIN_FIELDS = new Set(['trip', 'lastUse', 'damage']);
+// Saves only the given car(s) — and only the given fields when listed — as narrow field writes.
+function saveCrewCarData(keys, fields) {
   try { localStorage.setItem('gykf_ccd',JSON.stringify(S.crewCarData)); } catch(e){}
-  if(db) {
-    db.collection('crewCarData').doc('all').set(S.crewCarData, {merge:true})
-      .catch(e=>console.log('crewCarData Firestore write failed:', e));
-  }
+  if(!db || !keys) return;
+  const upd = {};
+  (Array.isArray(keys) ? keys : [keys]).forEach(k => {
+    const d = S.crewCarData[k]; if(!d) return;
+    (fields || Object.keys(d)).forEach(f => { if(!CAR_CHECKIN_FIELDS.has(f)) upd[k + '.' + f] = d[f] === undefined ? null : d[f]; });
+  });
+  if(Object.keys(upd).length) db.collection('crewCarData').doc('all').update(upd)
+    .catch(e=>console.log('crewCarData Firestore write failed:', e));
 }
 function _carEsc(t) { return String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 // 🔑 Out · Alex · since 08:30  /  🅿 At base — from the pilot check-in page (crew-access.html)
@@ -5010,7 +5019,7 @@ function markDamageHandled(key) {
 function saveCarStatus(key, val) {
   const d = carData(key);
   d.status = (d.status === val) ? '' : val;
-  saveCrewCarData();
+  saveCrewCarData(key);
   renderCrewCarsList(document.getElementById('content'));
 }
 
@@ -5042,7 +5051,7 @@ function pickStatus(key, val) {
   document.querySelectorAll('.status-drop').forEach(d=>d.remove());
   const d=carData(key);
   d.status=val;
-  saveCrewCarData();
+  saveCrewCarData(key);
   renderCrewCarsList(document.getElementById('content'));
 }
 
@@ -5299,7 +5308,7 @@ function saveInlineKm(key, val) {
   const v = val.trim();
   if(!v) return;
   carData(key).currentKm = v;
-  saveCrewCarData();
+  saveCrewCarData(key);
 }
 
 function openOilServiceModal(key) {
@@ -5323,7 +5332,7 @@ function openOilServiceModal(key) {
       const logged = new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
       d.oilChange = today;
       d.log.push({type:'oil',value:'Oil changed',date:today,logged});
-      saveCrewCarData();
+      saveCrewCarData(key);
       renderCarDetail(document.getElementById('content'), key);
       toast('🛢 Oil service logged');
     });
@@ -5361,7 +5370,7 @@ function openRegInsuranceModal(key, type) {
       const val = document.getElementById('mREDate').value;
       if(!val) return;
       d[field] = val;
-      saveCrewCarData();
+      saveCrewCarData(key);
       renderCarDetail(document.getElementById('content'), key);
       toast(label+' date saved');
     });
@@ -5427,7 +5436,7 @@ async function fetchBouncieData() {
 }
 
 function applyBouncieOdometer() {
-  let changed = false;
+  const changed = [];   // only the cars whose km moved, and only their km
   const ownKeys = new Set(CREW_CARS.map(c => c.key));
   for (const [key, b] of Object.entries(S.bouncieData)) {
     if (!ownKeys.has(key)) continue; // Bouncie response now covers every base -- only touch our own
@@ -5441,10 +5450,10 @@ function applyBouncieOdometer() {
     const newKm = Math.round(baseKm + delta);
     if (String(newKm) !== String(d.currentKm)) {
       d.currentKm = String(newKm);
-      changed = true;
+      changed.push(key);
     }
   }
-  if (changed) saveCrewCarData();
+  if (changed.length) saveCrewCarData(changed, ['currentKm']);
 }
 
 function syncBouncieBaseline(key) {
@@ -5463,7 +5472,7 @@ function syncBouncieBaseline(key) {
   d.currentKm       = kmVal;
   d.bouncieBaseline = b.odometer;   // Bouncie km at time of calibration
   d.bouncieBaseKm   = kmVal;        // real odometer at time of calibration
-  saveCrewCarData();
+  saveCrewCarData(key);
   render();
 }
 
@@ -6124,7 +6133,7 @@ function _saveFuelAndClose(){
   const d=carData(key);
   d.log.push({type:'fuel',value,date:today,logged});
   d.fuel=value;
-  saveCrewCarData();
+  saveCrewCarData(key);
   closeModal();
   renderCarDetail(document.getElementById('content'),key);
   toast(`⛽ Fuel logged — ${value}`);
@@ -6202,12 +6211,12 @@ window._calPick=function(key,type,iso){
   const logged=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});
   const d=carData(key);
   if(type==='reg'){
-    d.regExpiry=iso; saveCrewCarData(); closeModal();
+    d.regExpiry=iso; saveCrewCarData(key); closeModal();
     renderCarDetail(document.getElementById('content'),key);
     toast(`📄 Registration expiry set — ${iso}`); return;
   }
   if(type==='insurance'){
-    d.insuranceExpiry=iso; saveCrewCarData(); closeModal();
+    d.insuranceExpiry=iso; saveCrewCarData(key); closeModal();
     renderCarDetail(document.getElementById('content'),key);
     toast(`🛡 Insurance expiry set — ${iso}`); return;
   }
@@ -6215,7 +6224,7 @@ window._calPick=function(key,type,iso){
   d.log.push({type,value,date:iso,logged});
   if(type==='oil') d.oilChange=iso;
   if(type==='wash') d.washed=iso;
-  saveCrewCarData();
+  saveCrewCarData(key);
   closeModal();
   renderCarDetail(document.getElementById('content'),key);
   toast(type==='oil'?`🛢 Oil change logged — ${iso}`:`🧹 Wash logged — ${iso}`);

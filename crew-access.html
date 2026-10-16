@@ -109,7 +109,13 @@ db.collection('crewCarData').doc('all').onSnapshot(snap => {
   if(snap.exists) Object.assign(carData, snap.data());
   // Bug fix 1: on first load, always render so QR deep-links populate with real data
   if(_initialLoad) { _initialLoad = false; render(); return; }
-  if(view === 'list') render();
+  if(view === 'list') { render(); return; }
+  const out = isOut(carData[view] || {});
+  if(out !== _shownOut) {
+    const name = document.getElementById('inName')?.value || '';
+    renderDetail(view);
+    const n = document.getElementById('inName'); if(n && name) n.value = name;
+  }
 });
 
 // ── Helpers ──
@@ -160,6 +166,10 @@ function renderList() {
 
 // ── Detail: take the car (name) or bring it back (name + any damage?) ──
 let _damage = null;   // return form: null until chosen, then true / false
+let _shownOut = null; // whether the open car was out when its form was drawn
+// The page used to remember one name per phone and offer it on every car, so the last name typed showed up
+// on the next car. Nothing is remembered any more; the old saved name is cleared.
+try { localStorage.removeItem('crewAccessName'); } catch(e){}
 function openDetail(key) { view=key; _damage=null; renderDetail(key); }
 
 function renderDetail(key) {
@@ -168,8 +178,8 @@ function renderDetail(key) {
   const d=carData[key]||{};
   const out=isOut(d);
   document.getElementById('barTitle').textContent=car.name;
-  let savedName=''; try { savedName=localStorage.getItem('crewAccessName')||''; } catch(e){}
-  const name = out ? (savedName || d.trip.by || '') : savedName;
+  _shownOut = out;
+  const name = out ? (d.trip.by || '') : '';
   const choice=(val,label,col)=>`<button type="button" onclick="setDamage(${val})" style="flex:1;padding:14px;border-radius:var(--radius-sm);font-size:15px;font-weight:800;font-family:inherit;cursor:pointer;border:2px solid ${_damage===val?col:'var(--border2)'};background:${_damage===val?col+'26':'var(--bg3)'};color:${_damage===val?col:'var(--t2)'}">${label}</button>`;
   document.getElementById('app').innerHTML=`
     <div class="detail-hero" style="background:linear-gradient(160deg,${car.color},${car.color2})">
@@ -180,7 +190,7 @@ function renderDetail(key) {
     <div class="section">
       <div class="section-label">${out?'↩️ Bringing the car back':'🔑 Taking the car'}</div>
       <label>Your name</label>
-      <input type="text" id="inName" placeholder="First and last name" value="${esc(name)}" autocomplete="name">
+      <input type="text" id="inName" placeholder="First and last name" value="${esc(name)}" autocomplete="off">
     </div>
     ${out?`<div class="section">
       <div class="section-label">🚗 Any damage to report?</div>
@@ -212,7 +222,6 @@ function thanks(icon, title, line) {
 async function takeCar(key) {
   const name=(document.getElementById('inName')?.value||'').trim();
   if(!name){toast('⚠️ Please enter your name');return;}
-  try { localStorage.setItem('crewAccessName', name); } catch(e){}
   const car=CREW_CARS.find(c=>c.key===key);
   try {
     await db.collection('crewCarData').doc('all').set({[key]: {trip:{out:true, by:name, outAt:new Date().toISOString(), backAt:null, returnedBy:null}}}, {merge:true});
@@ -225,7 +234,6 @@ async function returnCar(key) {
   if(!name){toast('⚠️ Please enter your name');return;}
   if(_damage===null){toast('⚠️ Is there any damage? Tap No or Yes');return;}
   if(_damage && !text){toast('⚠️ Please describe the damage');return;}
-  try { localStorage.setItem('crewAccessName', name); } catch(e){}
   const car=CREW_CARS.find(c=>c.key===key);
   const at=new Date().toISOString();
   const patch={trip:{out:false, backAt:at, returnedBy:name}, lastUse:{name, at, damage:!!_damage}};
