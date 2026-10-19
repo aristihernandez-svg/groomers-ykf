@@ -6334,7 +6334,7 @@ function auditSectionHTML(key) {
     if(p) {
       const rc=p.rating==='Good'?'rating-good':p.rating==='Fair'?'rating-fair':'rating-poor';
       h+=`<div style="position:relative;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);background:var(--glass)">
-        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer">
+        <img src="${p.thumb||p.src}" loading="lazy" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:4/3;object-fit:cover;display:block;cursor:pointer">
         <div class="audit-rating ${rc}" style="position:absolute;bottom:28px;left:4px">${p.rating}</div>
         ${locked?'':`<button onclick="removeAuditPhoto('${key}',${i})" style="position:absolute;top:4px;right:4px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:22px;height:22px;font-size:12px;cursor:pointer;line-height:1">✕</button>`}
         <div style="padding:4px 6px 6px;display:flex;gap:4px;align-items:center">
@@ -6362,7 +6362,7 @@ function auditSectionHTML(key) {
     h+=`<div style="margin-bottom:14px">`;
     takenPhotos.forEach(({p,i})=>{
       h+=`<div style="background:var(--glass);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:5px;border:1px solid var(--border);display:flex;align-items:center;gap:8px">
-        <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;cursor:pointer">
+        <img src="${p.thumb||p.src}" loading="lazy" onclick="viewPhoto('${p.src}')" style="width:28px;height:28px;border-radius:5px;object-fit:cover;flex-shrink:0;cursor:pointer">
         <span style="font-size:10px;color:var(--t3);flex-shrink:0;font-weight:600">${AUDIT_PHOTO_SLOTS[i]}</span>
         <input value="${p.note||''}" placeholder="Note..." ${locked?'disabled':''} data-ac-car="${key}" data-ac-field="photo:${i}" onblur="carAuditFieldDone('${key}')" oninput="setAuditPhotoNote('${key}',${i},this.value)"
           style="flex:1;min-width:0;padding:4px 8px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:11px;font-family:inherit;color:var(--t1);outline:none">
@@ -6655,7 +6655,7 @@ function renderPastAuditView(el, month) {
       </div>
       ${photos.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">
         ${photos.map(p=>`<div style="position:relative;width:calc(14.28% - 5px)">
-          <img src="${p.src}" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px">
+          <img src="${p.thumb||p.src}" loading="lazy" onclick="viewPhoto('${p.src}')" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px">
           <div style="position:absolute;bottom:2px;left:2px;font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;background:${p.rating==='Good'?'#1a7a40':p.rating==='Fair'?'#856404':'#842029'};color:#fff">${p.rating||''}</div>
         </div>`).join('')}</div>`:''}
       ${d.comments?`<div style="font-size:12px;color:var(--t2);background:var(--glass);padding:8px 10px;border-radius:var(--radius-sm)">${d.comments}</div>`:''}
@@ -12476,6 +12476,13 @@ async function uploadAuditPhoto(dataUrl, key, slotIdx) {
     await ref.put(blob,{contentType:'image/jpeg'});
     const url=await ref.getDownloadURL();
     const newPhoto={src:url,rating:'Good',note:''};
+    // Thumbnail (~25 KB instead of ~285 KB) for the small photo boxes, so an audit opens fast on mobile data
+    try {
+      const tRef=storage.ref(path.replace(/\.jpg$/,'_thumb.jpg'));
+      const tBlob=await (await fetch(await compressImage(dataUrl, 360, 0.7))).blob();
+      await tRef.put(tBlob,{contentType:'image/jpeg',cacheControl:'public, max-age=31536000'});
+      newPhoto.thumb=await tRef.getDownloadURL();
+    } catch(e) { console.log('Audit photo thumbnail failed (full photo kept):', e); }
     carAuditData(key).photos[slotIdx]=newPhoto;
     if(db) {
       await db.collection('auditCars').doc(auditDocKey(key)).set(
