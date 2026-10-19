@@ -1,0 +1,17 @@
+// The storage rules DEPLOYED to groomer-ykf (Oct 19 2026). storage.rules is a stricter draft that was never deployed.
+// To change the live rules, edit this file and deploy it (see project memory: firebase deploy --only storage from a folder whose firebase.json points here).
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /audits/{allPaths=**} {
+      allow read, write: if true;
+    }
+    // Procedure videos (Procedures → Edit → Upload video): anyone can watch; only new video files
+    // under 200 MB can be added; nothing here can be replaced or deleted.
+    match /procedures/{key}/{file} {
+      allow read: if true;
+      allow create: if request.resource.contentType.matches('video/.*')
+                    && request.resource.size < 200 * 1024 * 1024;
+    }
+  }
+}

@@ -1243,6 +1243,7 @@ body::before{
 .proc-act-btn{flex:1;padding:10px;border-radius:var(--radius-sm);font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--glass2);color:var(--t2)}
 .video-btn{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(64,144,255,0.06);border:1px solid rgba(64,144,255,0.15);border-radius:var(--radius-sm);margin:10px 0;cursor:pointer;text-decoration:none}
 .video-btn span{font-size:13px;color:#6EB0FF;font-weight:500}
+.proc-video{display:block;width:100%;max-height:70vh;border-radius:var(--radius-sm);background:#000;border:1px solid rgba(64,144,255,0.15)}
 .vicon{font-size:20px}
 .dmg-section{margin-top:12px;background:var(--red-dim);border-radius:var(--radius-sm);border:1px solid rgba(232,64,64,0.15);overflow:hidden}
 .dmg-hdr{background:rgba(232,64,64,0.08);color:var(--red);padding:8px 14px;font-size:11px;font-weight:600;letter-spacing:0.5px}
@@ -11486,7 +11487,9 @@ function renderProcDetail(el, key) {
 
     ${p.warn?`<div class="pwarn" style="margin:12px 14px 0">${p.warn}</div>`:''}
 
-    ${p.video
+    ${p.video && isVideoFile(p.video)
+      ? `<div style="padding:12px 14px 0"><video class="proc-video" src="${p.video}" controls playsinline preload="metadata"></video></div>`
+      : p.video
       ? `<div style="padding:12px 14px 0"><a class="video-btn" href="${p.video}" target="_blank"><span class="vicon">▶️</span><span>Watch procedure video</span></a></div>`
       : `<div style="padding:12px 14px 0"><div class="video-btn" style="opacity:0.4;cursor:default"><span class="vicon">▶️</span><span>Video coming soon</span></div></div>`}
 
@@ -13007,6 +13010,30 @@ function checkAdminPin(actionLabel) {
   return true;
 }
 
+// Procedure videos live in storage under procedures/<key>/ (anyone can watch; only new video files under
+// 200 MB can be added, nothing replaced or deleted — see the storage rules). A file link plays in the app.
+function isVideoFile(url) { return /firebasestorage\.googleapis\.com|\.(mp4|m4v|mov|webm)(\?|$)/i.test(url || ''); }
+function uploadProcVideo(key, file) {
+  if(!file) return;
+  const btn = document.getElementById('pVideoBtn'), field = document.getElementById('pVideo');
+  if(!storage) { toast('⚠️ Not connected — try again when online'); return; }
+  if(!/^video\//.test(file.type)) { toast('⚠️ That file is not a video'); return; }
+  if(file.size > 200 * 1024 * 1024) { toast('⚠️ Video is over 200 MB — trim it or send it to Ari to compress'); return; }
+  const name = Date.now() + '-' + (file.name || 'video').replace(/[^a-z0-9._-]+/gi, '-').slice(-60);
+  const task = storage.ref('procedures/' + key + '/' + name).put(file, {contentType: file.type, cacheControl: 'public, max-age=31536000'});
+  const save = document.getElementById('mSave'); if(save) save.disabled = true;
+  task.on('state_changed',
+    snap => { if(btn) btn.textContent = '⏫ Uploading… ' + Math.round(snap.bytesTransferred / snap.totalBytes * 100) + '%'; },
+    err => { console.log('Procedure video upload failed:', err); if(btn) btn.textContent = '🎬 Upload a video from this phone'; if(save) save.disabled = false; toast('❌ Upload failed — check the connection'); },
+    async () => {
+      const url = await task.snapshot.ref.getDownloadURL();
+      if(field) field.value = url;
+      if(btn) btn.textContent = '✅ Video uploaded — tap Save';
+      if(save) save.disabled = false;
+      toast('Video uploaded — tap Save to attach it');
+    });
+}
+
 function editProcedure(key) {
   if(!checkAdminPin('edit this procedure')) return;
   const p = S.procs[key];
@@ -13015,7 +13042,9 @@ function editProcedure(key) {
     `${emojiPickerHtml(p.icon||'✈', p.iconImg||null)}
      <label>Title</label><input id="pTitle" value="${p.title}">
      <label>Warning (optional)</label><input id="pWarn" value="${p.warn||''}">
-     <label>Video URL (optional)</label><input id="pVideo" value="${p.video||''}">
+     <label>Video (optional) — upload one, or paste a link</label><input id="pVideo" value="${p.video||''}" placeholder="https://…">
+     <button type="button" id="pVideoBtn" onclick="document.getElementById('pVideoFile').click()" style="margin-top:6px;width:100%;padding:11px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:var(--glass2);color:var(--t1);font:700 13px inherit;cursor:pointer">🎬 Upload a video from this phone</button>
+     <input type="file" id="pVideoFile" accept="video/*" style="display:none" onchange="uploadProcVideo('${key}', this.files[0])">
      <label>Steps — one per line, optionally "Step text | note"</label>
      <textarea id="pSteps" style="height:140px">${stepsToText(p.steps)}</textarea>`,
     ()=>{
