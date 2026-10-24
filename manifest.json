@@ -1,7 +1,7 @@
 {
-  "name": "Groomers YKF",
-  "short_name": "Skycare",
-  "description": "Skycare — Aviation Grooming Team YKF Operations",
+  "name": "Groomies YKF",
+  "short_name": "Groomies",
+  "description": "Groomies — Skycare aviation grooming team, YKF",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#0B1120",
