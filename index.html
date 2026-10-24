@@ -210,16 +210,16 @@ body::before{
 }
 #splash.out{opacity:0;pointer-events:none}
 /* Loading screen (one animation per weekday, see #ldRoot script) */
-#ldRoot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0;overflow:hidden;color:#F0F4FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+#ldRoot{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 0 90px;overflow:hidden;color:#F0F4FF;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 .ld-logo{height:46px;filter:brightness(0) invert(1);opacity:.95;margin-bottom:46px}
-/* Brand row on every loading screen: Skycare | Groomies emblem + name (font subset to the letters G R O M I E S) */
+/* Every loading screen: Groomies (eagle + name) on top, Skycare logo alone at the very bottom. Font subset to the letters G R O M I E S */
 @font-face{font-family:'Groomies';font-weight:800;font-display:block;src:url(data:font/woff2;base64,d09GMgABAAAAAAT0ABAAAAAACOAAAASaAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGhwbgWwcKAZgP1NUQVQqAGQRCAqFGIQvCxQAATYCJAMkBCAFhDgHIAwHG1EHyAQCwrmaTVIhxaWolafgxeXE1PrmhRfRvkmOxlyddvEoWvJqepn8bj+1LmKQLGQSCSINkpjlpUAl9MACO4O1FrR+dyIAVxQmiWmBLKd1GGTcfrlKDBakiqqGLriPGThlHBtBGej+YbSMHjppHMaU+AYFCWO6BpWFUFi7lRgkZAT8ugozSWIJS1xfcoe0JSsIRN5lYAS96EIXmsggqv9wAyAjoUeHnoloP+z2G5oTSXMia04UzYlOc6LXnBi0T8FR7ecQnBihCUwlXOc/nFMdR5zUGwvus5LcTuojm9FNSKukHkB9vBfRD4uIxVknSu8aNmngcB5gpl3+6v9/Qf5KKP168bVkz5pxORcYW8A3HAlFmj58xBSRcwmYd5HNjwqfH4O4DE4rtMhZTzzbTjZTSTW1NNJM+95X1ARtf6B9pd3Rbmu3tOvaNe3KXonTLhCahgcndmHeHPNS2TMqDwNwJeTKI/NLe+GKs4Q4xdPX21dRkk06D2WQm+zatb1rS+/WLm0mnUlRhRvD1NTAVR2sTCzs/JZptaO0y70OddWbb7LA4TCt7uwUXQcJNxa8+SYC2b8fqg43Kaoc20XtFi+hIg7HkMib3UYUFna8PsPxrzl6C9Pq+2LhPVUVHBYi6pCZLu/VvefAVR1t3e86TKtfEAvvPc/AyyJirynqcqpDXXWDBTefczheG/Gvtdkj7SenZXVmBRze9eyzu2SX22+8cQab/bI9dvuC7fMjNvfZ3Ntt+6ztbFVbV1iHDc5d0tScv2TkoDXWlv47y/6ePj2/a1Jefi9Ldu/iYkvfHln5+S3JSe35MxrLDJvmhczvff5QL2z2y3Zs9oUeu4rcdy20X9x7/dCvUw7+en0v213bVuYMG5y3rKkpd8nQwSutbW0rrUMH5y5taspdOnTICmvb/sLuWel9bWnB9dbqsNTC7pb0vsUZwQ3W6lBeDF+wPOWb2JjvUpYvPVAzJruor81W3G/8U/Vx4fbL9pdeSj8Q9083QtWei7J7TphY1Z6QneoeEpRxosq/ynw+ujq7oqT/5KzGxoVZeydO0Eoj4mN3BgYWHasKqIw4GF1vHbVl8jNzNYigXWt87f37exT+ZpTlr5gS7737+f/xcR/lByRp8/8f7FEml0H/FBMEfS8O7DFVm//f3x5lT+MyXKT92KTJ2OQAQkUmNnkQNjmFEGk7NqkLJm6u3O7CFdxp/K6scOhbklGZl/qU5zl/QnibFoEZp0XCnc8sMlbOrVX6LTrymWLRY6aL2R0r4VUhcGXuqHB5c35WyQymMImBlDGeMQyhO0MZyXBGMMUfnsIEJpNPunTVZAYziZFMYAqTSWOfMpIxpDGeSQwnnWaqaJAdpzKFYYzcLHV2YTeYhBsezzjMZJLGswypWMBwhnEwHjQ8md5kkEYev9NCDn1ZGDbf1oZTsJawbf/hTGUMA5kEdGZuL2c8E5h5RkrAuBkLGVjIJHS3EQzFPMNJLUxiPKMYyuAylPbACErYZG7jBBJhOOrkEUxlEGkMZjxjqVuYEROzSi2bShVZmHZ/4t8LydvtwYLTekNoSy8oawE=) format('woff2')}
-.ld-brand{display:flex;align-items:center;gap:14px;margin-bottom:40px;filter:drop-shadow(0 2px 6px rgba(0,0,0,.45))}
-.ld-brand .ld-logo{height:40px;margin:0}
-.ld-brand>i{width:1px;height:38px;background:rgba(240,244,255,.4)}
-.ld-gm{display:flex;align-items:center;gap:8px}
-.ld-gm img{width:44px;height:35px}
-.ld-gm span{font:800 21px/1 Groomies,'Arial Black',sans-serif;letter-spacing:.14em;color:#fff}
+.ld-brand{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:30px;filter:drop-shadow(0 3px 10px rgba(0,0,0,.45))}
+.ld-brand img{width:84px;height:67px}
+.ld-brand span{font:800 27px/1 Groomies,'Arial Black',sans-serif;letter-spacing:.16em;padding-left:.16em;color:#fff}
+.ld-brand.sm{gap:6px}.ld-brand.sm img{width:60px;height:48px}.ld-brand.sm span{font-size:21px}
+.ld-sky{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 26px);transform:translateX(-50%);height:38px;filter:brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5));opacity:.85}
+@media (max-height:740px){#ldRoot{padding-bottom:60px}.ld-brand{margin-bottom:16px;gap:6px}.ld-brand img{width:58px;height:46px}.ld-brand span{font-size:20px}.ld-sky{height:30px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px)}}
 .ld-stage{display:flex;flex-direction:column;align-items:center}
 .ld-title{margin-top:36px;font-size:17px;font-weight:800;text-align:center;padding:0 16px}
 .ld-sub{margin-top:6px;font-size:12px;color:#A8B8CC;text-align:center;padding:0 16px}
@@ -1449,7 +1449,7 @@ body::before{
   const LD = window.LD = { p: 0, target: 0, live: false, liveAt: 0, done: false, steps: {}, t0: performance.now() };
   const $ = id => document.getElementById(id);
   const pct = p => Math.round(p * 100) + '%';
-  const BRAND = style => `<div class="ld-brand"${style ? ` style="${style}"` : ''}><img class="ld-logo" src="${LOGO}" alt="Skycare"><i></i><div class="ld-gm"><img src="cars/groomies-emblem.svg" alt=""><span>GROOMIES</span></div></div>`;
+  const BRAND = style => `<div class="ld-brand${style ? ` sm" style="${style}` : ''}"><img src="cars/groomies-emblem.svg" alt=""><span>GROOMIES</span></div><img class="ld-sky" src="${LOGO}" alt="Skycare">`;
   const shell = (stage, withSteps) => `
     ${BRAND()}
     <div class="ld-stage">${stage}</div>
@@ -1773,8 +1773,8 @@ body::before{
       build: r => r.innerHTML = `<img src="${photo}" alt="Happy Halloween" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%">
         <div style="position:absolute;left:0;right:0;top:0;height:170px;background:linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,0))"></div>
         <div style="position:absolute;left:0;right:0;bottom:0;height:240px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.8))"></div>
-        ${BRAND('position:absolute;left:50%;top:calc(env(safe-area-inset-top, 0px) + 34px);transform:translateX(-50%);margin:0')}
-        <div style="position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom, 0px) + 56px);display:flex;justify-content:center;gap:12px">${Array.from({ length: 5 }, (_, i) => `<div id="hwP${i}">${PUMPKIN(i)}</div>`).join('')}</div>`,
+        ${BRAND('position:absolute;left:50%;top:calc(env(safe-area-inset-top, 0px) + 18px);transform:translateX(-50%);margin:0')}
+        <div style="position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom, 0px) + 96px);display:flex;justify-content:center;gap:12px">${Array.from({ length: 5 }, (_, i) => `<div id="hwP${i}">${PUMPKIN(i)}</div>`).join('')}</div>`,
       update: (p, live, lt, sec) => {
         for (let i = 0; i < 5; i++) {
           const on = live || p >= (i + 1) / 5.4, g = .7 + .3 * Math.sin(sec * 11 + i * 3) * Math.sin(sec * 4.3 + i);
@@ -1801,8 +1801,8 @@ body::before{
         <div style="position:absolute;left:0;right:0;bottom:0;height:240px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.8))"></div>
         <div style="position:absolute;inset:0;overflow:hidden;pointer-events:none">${Array.from({ length: N_SNOW }, (_, i) => { const big = fxRnd(i, 1) > .78, sz = big ? 6 + fxRnd(i, 2) * 4 : 2.5 + fxRnd(i, 2) * 3.5;
           return `<i id="xsS${i}" style="position:absolute;left:${(fxRnd(i, 3) * 100).toFixed(1)}%;top:0;width:${sz.toFixed(1)}px;height:${sz.toFixed(1)}px;border-radius:50%;background:#fff;opacity:${(big ? .75 : .7 + fxRnd(i, 4) * .3).toFixed(2)};${big ? 'filter:blur(1.2px);' : ''}will-change:transform"></i>`; }).join('')}</div>
-        ${BRAND('position:absolute;left:50%;top:calc(env(safe-area-inset-top, 0px) + 34px);transform:translateX(-50%);margin:0')}
-        <div style="position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 52px);width:290px;margin-left:-145px;height:70px">
+        ${BRAND('position:absolute;left:50%;top:calc(env(safe-area-inset-top, 0px) + 18px);transform:translateX(-50%);margin:0')}
+        <div style="position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 92px);width:290px;margin-left:-145px;height:70px">
           <svg width="290" height="24" viewBox="0 0 290 24" style="position:absolute;left:0;top:0"><path d="M0 4 Q72 22 145 10 T290 4" fill="none" stroke="#1E3B22" stroke-width="2.5"/></svg>
           <div style="position:absolute;left:0;right:0;top:8px;display:flex;justify-content:space-around">${Array.from({ length: 5 }, (_, i) => `<div id="xsP${i}" style="margin-top:${[2, 9, 6, 2, 1][i]}px">${BULB(i)}</div>`).join('')}</div>
         </div>`,
