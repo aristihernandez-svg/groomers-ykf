@@ -5074,6 +5074,27 @@ function auditDocKey(carKey) { return auditMonth()+'-'+carKey; }
 // key, never a delete of an existing one. See feedback_no_live_prod_testing memory
 // and the Aug 5 2026 incident for why nothing here ever deletes a live doc again.
 function facilityDocKey(type) { return type + '-' + auditMonth(); }
+
+// The auditor's name is saved on its own (just that one field), never as part of a whole-audit save.
+// Before, every save sent the whole audit as this phone had it, so a phone with an older copy (no name yet)
+// blanked the name for everyone, and an update arriving in the second before the name was saved replaced
+// it on screen. While a name waits to be saved, updates from the database keep the one being typed.
+var _auditNamePending = {};   // key -> {val, timer}
+function auditNameSave(key, val, write) {
+  const p = _auditNamePending[key] || (_auditNamePending[key] = {});
+  p.val = val; clearTimeout(p.timer);
+  p.timer = setTimeout(() => { delete _auditNamePending[key]; if (db) write(val).catch(e => console.log('auditor name save failed:', key, e)); }, 600);
+}
+function auditNameKeep(key, d, field) { if (d && _auditNamePending[key]) d[field] = _auditNamePending[key].val; return d; }
+function auditWithout(d, field) { const o = {...d}; delete o[field]; return o; }
+function facNameField(type) { return type === 'msds' ? 'auditor' : 'inspector'; }
+function facSetName(type, d, val) {
+  const f = facNameField(type);
+  d[f] = val;
+  auditNameSave('fac-' + type, val, v => db.collection('facilityAudits').doc(facilityDocKey(type)).set({[f]: v}, {merge:true}));
+}
+function facKeepName(type, d) { return auditNameKeep('fac-' + type, d, facNameField(type)); }
+function facForSave(type, d) { return auditWithout(d, facNameField(type)); }
 function loadCarAudits() {
   try { S.monthlyCarAudits=JSON.parse(localStorage.getItem('gykf_caudits')||'{}'); } catch(e){ S.monthlyCarAudits={}; }
   try { S.auditGroomer=localStorage.getItem('gykf_agroomer')||''; } catch(e){}
@@ -5089,7 +5110,7 @@ function loadCarAudits() {
       const ae = document.activeElement;
       const typing = !!(ae && ae.dataset && ae.dataset.acCar === car.key);
       const mine = typing ? JSON.parse(JSON.stringify(S.monthlyCarAudits[docKey] || {})) : null;
-      if(doc.exists) S.monthlyCarAudits[docKey]={...S.monthlyCarAudits[docKey],...doc.data()};
+      if(doc.exists) S.monthlyCarAudits[docKey]=auditNameKeep('car-' + car.key, {...S.monthlyCarAudits[docKey],...doc.data()}, 'groomer');
       if(typing) {
         const cur = S.monthlyCarAudits[docKey], f = ae.dataset.acField || '';
         if(f === 'comments') cur.comments = mine.comments;
@@ -5102,13 +5123,19 @@ function loadCarAudits() {
     }, e=>console.log('loadCarAudits onSnapshot failed:',car.key,e));
   });
 }
+function carAuditSetName(carKey, val) {
+  S.auditGroomer = val;
+  try { localStorage.setItem('gykf_agroomer', val); } catch(e){}
+  carAuditData(carKey).groomer = val;
+  auditNameSave('car-' + carKey, val, v => db.collection('auditCars').doc(auditDocKey(carKey)).set({groomer: v, month: auditMonth(), carKey}, {merge:true}));
+}
 function saveCarAudit(carKey) {
   try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
   try { localStorage.setItem('gykf_agroomer',S.auditGroomer); } catch(e){}
   updateAuditBadge();
   if(!db) return;
   const month=auditMonth();
-  const data={...S.monthlyCarAudits[auditDocKey(carKey)], month, carKey};
+  const data={...auditWithout(S.monthlyCarAudits[auditDocKey(carKey)] || {}, 'groomer'), month, carKey};
   db.collection('auditCars').doc(auditDocKey(carKey)).set(data, {merge:true})
     .catch(e=>console.log('saveCarAudit Firestore failed:',e));
 }
@@ -6321,7 +6348,7 @@ function auditSectionHTML(key) {
   <div id="auditSection_${key}" style="margin:16px 14px 0;border-top:1px solid var(--border);padding-top:16px">
     <div style="font-size:11px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">📋 Monthly Audit — ${month}</div>
 
-    <input value="${S.auditGroomer||''}" placeholder="Your name (groomer)..." ${locked?'disabled':''} oninput="S.auditGroomer=this.value;localStorage.setItem('gykf_agroomer',this.value)"
+    <input value="${(cd.groomer||S.auditGroomer||'').replace(/"/g,'&quot;')}" placeholder="Your name (groomer)..." ${locked?'disabled':''} oninput="carAuditSetName('${key}',this.value)"
       style="width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);font-size:13px;font-family:inherit;color:var(--t1);outline:none;margin-bottom:14px">
 
     <!-- Vehicle Inspection checklist -->
@@ -6421,7 +6448,10 @@ function carAuditFieldDone(key) {
 async function markCarAuditDone(key) {
   const cd=carAuditData(key);
   cd.done=!cd.done;
-  if(cd.done) { cd.completedAt=new Date().toISOString(); cd.groomer=S.auditGroomer||''; }
+  if(cd.done) {
+    cd.completedAt=new Date().toISOString(); cd.groomer=cd.groomer||S.auditGroomer||'';
+    if(db) db.collection('auditCars').doc(auditDocKey(key)).set({groomer: cd.groomer, month: auditMonth(), carKey: key}, {merge:true}).catch(()=>{});
+  }
   saveCarAudit(key);
   if (cd.done) {
     _pdfSavingKeys.add('car-'+key);
@@ -7808,7 +7838,7 @@ function loadCrewHouseAudit() {
   if(!S.crewHouseAudit.items) S.crewHouseAudit.items={};
   if(!db) return;
   db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).onSnapshot(doc=>{
-    if(doc.exists){ S.crewHouseAudit=doc.data(); if(!S.crewHouseAudit.items) S.crewHouseAudit.items={}; }
+    if(doc.exists){ S.crewHouseAudit=doc.data(); if(!S.crewHouseAudit.items) S.crewHouseAudit.items={}; facKeepName('crewhouse', S.crewHouseAudit); }
     else { S.crewHouseAudit={items:{}}; }
     try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
     render();
@@ -7817,7 +7847,7 @@ function loadCrewHouseAudit() {
 
 function saveCrewHouseAudit() {
   try { localStorage.setItem('gykf_crewhouse', JSON.stringify(S.crewHouseAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).set(S.crewHouseAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('crewhouse')).set(facForSave('crewhouse', S.crewHouseAudit),{merge:true}).catch(()=>{});
 }
 
 let _chSaveTimer = null;
@@ -7853,6 +7883,7 @@ function chExpandComment(key) {
 }
 
 function chSetField(field, val) {
+  if(field === 'inspector') { facSetName('crewhouse', chData(), val); return; }
   chData()[field] = val;
   saveCrewHouseDebounced();
 }
@@ -8450,7 +8481,7 @@ function loadHangarAudit() {
   if(!S.hangarAudit.items) S.hangarAudit.items={};
   if(!db) return;
   db.collection('facilityAudits').doc(facilityDocKey('hangar')).onSnapshot(doc=>{
-    if(doc.exists){ S.hangarAudit=doc.data(); if(!S.hangarAudit.items) S.hangarAudit.items={}; }
+    if(doc.exists){ S.hangarAudit=doc.data(); if(!S.hangarAudit.items) S.hangarAudit.items={}; facKeepName('hangar', S.hangarAudit); }
     else { S.hangarAudit={items:{}}; }
     try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
     render();
@@ -8459,7 +8490,7 @@ function loadHangarAudit() {
 
 function saveHangarAudit() {
   try { localStorage.setItem('gykf_hangar', JSON.stringify(S.hangarAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc(facilityDocKey('hangar')).set(S.hangarAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('hangar')).set(facForSave('hangar', S.hangarAudit),{merge:true}).catch(()=>{});
 }
 
 let _hoSaveTimer = null;
@@ -8495,6 +8526,7 @@ function hoExpandComment(key) {
 }
 
 function hoSetField(field, val) {
+  if(field === 'inspector') { facSetName('hangar', hoData(), val); return; }
   hoData()[field] = val;
   saveHangarDebounced();
 }
@@ -8920,7 +8952,7 @@ function loadParkingAudit() {
   if(!S.parkingAudit.items) S.parkingAudit.items={};
   if(!db) return;
   db.collection('facilityAudits').doc(facilityDocKey('parking')).onSnapshot(doc=>{
-    if(doc.exists){ S.parkingAudit=doc.data(); if(!S.parkingAudit.items) S.parkingAudit.items={}; }
+    if(doc.exists){ S.parkingAudit=doc.data(); if(!S.parkingAudit.items) S.parkingAudit.items={}; facKeepName('parking', S.parkingAudit); }
     else { S.parkingAudit={items:{}}; }
     try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
     render();
@@ -8929,7 +8961,7 @@ function loadParkingAudit() {
 
 function saveParkingAudit() {
   try { localStorage.setItem('gykf_parking', JSON.stringify(S.parkingAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc(facilityDocKey('parking')).set(S.parkingAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('parking')).set(facForSave('parking', S.parkingAudit),{merge:true}).catch(()=>{});
 }
 
 let _plSaveTimer = null;
@@ -8949,7 +8981,7 @@ function plSetComment(key, val) {
 
 function plExpandComment(key) { _plExpandedComments.add(key); render(); }
 
-function plSetField(field, val) { plData()[field]=val; saveParkingDebounced(); }
+function plSetField(field, val) { if(field === 'inspector') { facSetName('parking', plData(), val); return; } plData()[field]=val; saveParkingDebounced(); }
 
 async function plToggleDone() {
   const d = plData();
@@ -9275,7 +9307,7 @@ function loadYkfBaseAudit() {
   if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={};
   if(!db) return;
   db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).onSnapshot(doc=>{
-    if(doc.exists){ S.ykfBaseAudit=doc.data(); if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={}; }
+    if(doc.exists){ S.ykfBaseAudit=doc.data(); if(!S.ykfBaseAudit.items) S.ykfBaseAudit.items={}; facKeepName('ykfbase', S.ykfBaseAudit); }
     else { S.ykfBaseAudit={items:{}}; }
     try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
     render();
@@ -9284,7 +9316,7 @@ function loadYkfBaseAudit() {
 
 function saveYkfBaseAudit() {
   try { localStorage.setItem('gykf_ykfbase', JSON.stringify(S.ykfBaseAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).set(S.ykfBaseAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('ykfbase')).set(facForSave('ykfbase', S.ykfBaseAudit),{merge:true}).catch(()=>{});
 }
 
 let _ykfSaveTimer = null;
@@ -9306,7 +9338,7 @@ function ykfSetComment(key, text) {
   saveYkfBaseDebounced();
 }
 
-function ykfSetField(field, val) { ykfData()[field]=val; saveYkfBaseDebounced(); }
+function ykfSetField(field, val) { if(field === 'inspector') { facSetName('ykfbase', ykfData(), val); return; } ykfData()[field]=val; saveYkfBaseDebounced(); }
 
 function ykfSetExpiry(val) { ykfData().eyewashExpiry = val; saveYkfBaseDebounced(); render(); }
 
@@ -9721,7 +9753,7 @@ function loadMsdsAudit() {
   if(!S.msdsAudit.items) S.msdsAudit.items={};
   if(!db) return;
   db.collection('facilityAudits').doc(facilityDocKey('msds')).onSnapshot(doc=>{
-    if(doc.exists){ S.msdsAudit=doc.data(); if(!S.msdsAudit.items) S.msdsAudit.items={}; }
+    if(doc.exists){ S.msdsAudit=doc.data(); if(!S.msdsAudit.items) S.msdsAudit.items={}; facKeepName('msds', S.msdsAudit); }
     else { S.msdsAudit={items:{}}; }
     try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
     render();
@@ -9730,7 +9762,7 @@ function loadMsdsAudit() {
 
 function saveMsdsAudit() {
   try { localStorage.setItem('gykf_msds', JSON.stringify(S.msdsAudit)); } catch(e){}
-  if(db) db.collection('facilityAudits').doc(facilityDocKey('msds')).set(S.msdsAudit,{merge:true}).catch(()=>{});
+  if(db) db.collection('facilityAudits').doc(facilityDocKey('msds')).set(facForSave('msds', S.msdsAudit),{merge:true}).catch(()=>{});
 }
 
 let _msSaveTimer = null;
@@ -9758,6 +9790,7 @@ function msSelectAll() {
 }
 
 function msSetField(field, val) {
+  if(field === 'auditor') { facSetName('msds', msData(), val); return; }
   msData()[field] = val;
   saveMsdsDebounced();
 }
@@ -10182,7 +10215,7 @@ function refreshAcAudits() {
   if(!db) return;
   const month = acAuditMonthKey();
   db.collection('auditAircraft').where('month','==',month).get().then(snap=>{
-    snap.docs.forEach(d=>{ S.acAudits[d.id] = {...(S.acAudits[d.id]||{}), ...d.data()}; });
+    snap.docs.forEach(d=>{ S.acAudits[d.id] = auditNameKeep('ac-' + d.data().reg, {...(S.acAudits[d.id]||{}), ...d.data()}, 'auditorName'); });
     try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
     render();
   }).catch(e=>console.log('refreshAcAudits failed:',e));
@@ -10195,11 +10228,11 @@ function saveAcAudit(reg) {
   const type = S.acAuditType || (AIRCRAFT_WESTWIND.includes(reg)?'westwind':'metro');
   // Write to single-doc state (drives live sync, identical pattern to shopState)
   db.collection('auditAircraftState').doc(month).set(
-    {[reg]: {...acAuditData(reg), type}}, {merge:true}
+    {[reg]: {...auditWithout(acAuditData(reg), 'auditorName'), type}}, {merge:true}
   ).catch(e=>console.log('saveAcAudit state failed:',e));
   // Also write to legacy per-aircraft doc (used by PDF generation + past-months view)
   db.collection('auditAircraft').doc(acAuditDocKey(reg)).set(
-    {...acAuditData(reg), month, reg, type}, {merge:true}
+    {...auditWithout(acAuditData(reg), 'auditorName'), month, reg, type}, {merge:true}
   ).catch(e=>console.log('saveAcAudit legacy failed:',e));
 }
 
@@ -10488,6 +10521,14 @@ function openAcExpiryCal(reg, key, currentVal) {
 function setAcHeader(reg, field, value) {
   const d = acAuditData(reg);
   d[field] = value;
+  if(field === 'auditorName') {   // the name saves on its own (see auditNameSave)
+    try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e){}
+    const month = acAuditMonthKey(), type = S.acAuditType || (AIRCRAFT_WESTWIND.includes(reg)?'westwind':'metro');
+    auditNameSave('ac-' + reg, value, v => Promise.all([
+      db.collection('auditAircraftState').doc(month).set({[reg]: {auditorName: v}}, {merge:true}),
+      db.collection('auditAircraft').doc(acAuditDocKey(reg)).set({auditorName: v, month, reg, type}, {merge:true})]));
+    return;
+  }
   saveAcAuditDebounced(reg);
 }
 
@@ -14161,7 +14202,7 @@ async function setupLiveSync() {
       const data = snap.data();
       Object.entries(data).forEach(([reg, auditData]) => {
         const k = acAuditDocKey(reg);
-        S.acAudits[k] = {...(S.acAudits[k]||{}), ...auditData};
+        S.acAudits[k] = auditNameKeep('ac-' + reg, {...(S.acAudits[k]||{}), ...auditData}, 'auditorName');
       });
       try { localStorage.setItem('gykf_acaudits', JSON.stringify(S.acAudits)); } catch(e) {}
       render();
