@@ -2143,6 +2143,7 @@ function loadCustomCars() {
 const CAR_TYPES = ['SUV', 'Sedan', 'Hatchback', 'Pickup', 'Van', 'UTV'];
 let _newCar = null;   // the form while it's open
 function openAddCarFlow(editKey) {
+  if (editKey && !checkAdminPin('edit this car')) return;   // adding is open to everyone; changing a car needs a lead
   const ed = editKey ? carByKey(editKey) : null;
   _newCar = ed
     ? {key: ed.key, name: ed.name, label: ed.label, fuel: ed.fuel || 'gasoline', plate: ed.plate || '', img: ed.img === CAR_IMG_BLANK ? null : ed.img, color: ed.color, color2: ed.color2, facesRight: !!ed.facesRight, imgChanged: false}
@@ -2220,6 +2221,7 @@ async function saveNewCar() {
 }
 function removeCustomCarPrompt(key) {
   const car = carByKey(key); if (!car) return;
+  if (!checkAdminPin('remove ' + car.name)) return;
   openModal(`Remove ${car.name}?`,
     `<p style="font-size:14px;color:var(--t1);line-height:1.5;margin:0">${_hdEsc(car.name)} will leave the crew cars and the monthly audits. Its past audits and their PDFs stay in Records, and you can bring it back from the Crew Cars audit page.</p>`,
     () => setCustomCarRetired(key, true));
@@ -2283,6 +2285,7 @@ function bouncieLinkHtml(key) {
 }
 async function openBouncieLink(key) {
   const car = carByKey(key); if (!car) return;
+  if (!checkAdminPin('link ' + car.name + ' to Bouncie')) return;
   openModal('📡 Bouncie GPS — ' + car.name, '<div id="bxBody" style="font-size:13px;color:var(--t2)">Loading the trackers on the Bouncie account…</div>', closeModal);
   document.getElementById('mSave').textContent = 'Close';
   let devices;
