@@ -3638,11 +3638,27 @@ function renderHomePicker() {
 }
 function toggleHomePicker() { S.homePickerOpen = !S.homePickerOpen; renderHomePicker(); }
 function closeHomePicker() { S.homePickerOpen = false; renderHomePicker(); }
+// Design tally: each phone reports the home design it shows to appConfig/designTally, under a random phone id
+// (no names). Sent when the design changes, otherwise at most once a week so old phones can be told apart.
+function reportHomeDesign() {
+  if(!db) return;
+  try {
+    let id = localStorage.getItem('gykf_phone_id');
+    if(!id) { id = Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); localStorage.setItem('gykf_phone_id', id); }
+    const design = homeDesign(), last = JSON.parse(localStorage.getItem('gykf_design_sent') || '{}');
+    if(last.d === design && Date.now() - (last.at || 0) < 7 * 864e5) return;
+    db.collection('appConfig').doc('designTally').set({phones: {[id]: {design, at: Date.now()}}}, {merge: true})
+      .then(() => { try { localStorage.setItem('gykf_design_sent', JSON.stringify({d: design, at: Date.now()})); } catch(e) {} })
+      .catch(e => console.log('design tally failed:', e));
+  } catch(e) {}
+}
+setTimeout(reportHomeDesign, 8000);
 function setHomeDesign(d) {
   if(!HOME_DESIGNS.some(x=>x.id===d && hdAvailable(x))) return;
   S.homeDesign = d;
   S.homePickerOpen = false;
   try { localStorage.setItem('gykf_home_design', d); } catch(e) {}
+  reportHomeDesign();
   haptic('light');
   _tileEditMode = false;
   if(S.tab==='home') renderHome(document.getElementById('content'));
