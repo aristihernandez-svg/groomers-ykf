@@ -217,6 +217,25 @@ body::before{
 .ld-brand{display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:30px;filter:drop-shadow(0 3px 10px rgba(0,0,0,.45))}
 .ld-brand img{width:84px;height:67px}
 .ld-brand span{font:800 27px/1 Groomies,'Arial Black',sans-serif;letter-spacing:.16em;padding-left:.16em;color:#fff}
+/* Monday (Stardust) and Sunday (Origami): the eagle on a dark showroom stage, 390 × 844, scaled to the phone */
+.hx{position:absolute;inset:0;overflow:hidden;background:radial-gradient(120% 70% at 50% 108%,#15161B 0%,#08080A 45%,#020203 75%)}
+.hx-beam{position:absolute;left:50%;top:-60px;width:480px;height:76%;margin-left:-240px;background:radial-gradient(50% 100% at 50% 0%,rgba(225,232,255,.18),rgba(225,232,255,.05) 55%,transparent 75%);clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);filter:blur(10px);opacity:0}
+.hx-box{position:absolute;left:50%;top:50%;width:390px;height:844px;margin:-422px 0 0 -195px}
+.hx-pool{position:absolute;left:45px;top:470px;width:300px;height:54px;border-radius:50%;background:radial-gradient(closest-side,rgba(205,215,255,.26),rgba(205,215,255,.05) 60%,transparent);opacity:0}
+.hx-refl{position:absolute;left:75px;top:520px;width:240px;height:192px;opacity:0;-webkit-mask:linear-gradient(to bottom,rgba(0,0,0,.5),transparent 68%);mask:linear-gradient(to bottom,rgba(0,0,0,.5),transparent 68%)}
+.hx-refl img{position:absolute;inset:0;width:100%;height:100%;transform:scaleY(-1)}
+.hx-stage{position:absolute;left:75px;top:258px;width:240px;height:192px}
+.hx-lay{position:absolute;inset:0}.hx-lay img{position:absolute;inset:0;width:100%;height:100%}
+.hx-chrome img{filter:grayscale(1) brightness(1.22) contrast(1.55)}
+.hx-color img{filter:saturate(1.15) contrast(1.15)}
+.hx-shade,.hx-glint{position:absolute;inset:0;-webkit-mask:url(cars/groomies-emblem.svg) center/100% 100% no-repeat;mask:url(cars/groomies-emblem.svg) center/100% 100% no-repeat}
+.hx-shade{background:linear-gradient(180deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,0) 38%,rgba(0,0,0,0) 55%,rgba(0,0,0,.34) 100%)}
+.hx-glint{background:linear-gradient(100deg,transparent 40%,rgba(255,255,255,.18) 46%,rgba(255,255,255,.95) 50%,rgba(255,255,255,.18) 54%,transparent 60%);background-size:320% 100%;background-repeat:no-repeat;background-position:-30% 0}
+.hx canvas{position:absolute;left:0;top:0;width:390px;height:844px}
+.hx-name{position:absolute;left:0;right:0;top:640px;text-align:center;font:800 28px/1 Groomies,'Arial Black',sans-serif;color:#E9ECF3;opacity:0;padding-left:.2em}
+.hx-tag{position:absolute;left:0;right:0;top:682px;text-align:center;font-size:10.5px;font-weight:300;letter-spacing:.5em;padding-left:.5em;color:#9DA6C0;opacity:0;text-transform:uppercase}
+.hx-line{position:absolute;left:125px;width:140px;top:712px;height:1px;background:rgba(255,255,255,.12);opacity:0}
+.hx-line i{display:block;height:100%;width:0;background:linear-gradient(90deg,rgba(255,255,255,.2),#fff)}
 .ld-brand.sm{gap:6px}.ld-brand.sm img{width:60px;height:48px}.ld-brand.sm span{font-size:21px}
 .ld-sky{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom, 0px) + 26px);transform:translateX(-50%);height:38px;filter:brightness(0) invert(1) drop-shadow(0 2px 6px rgba(0,0,0,.5));opacity:.85}
 @media (max-height:740px){#ldRoot{padding-bottom:60px}.ld-brand{margin-bottom:16px;gap:6px}.ld-brand img{width:58px;height:46px}.ld-brand span{font-size:20px}.ld-sky{height:30px;bottom:calc(env(safe-area-inset-bottom, 0px) + 14px)}}
@@ -1465,98 +1484,78 @@ body::before{
     if (st) st.innerHTML = STEP_LABELS.map(([k, l]) => `<span style="color:${LD.steps[k] || live ? GREEN : '#7D8DA3'}">${LD.steps[k] || live ? '✓' : '·'} ${l}</span>`).join('');
   }
 
+  // Monday (Stardust) and Sunday (Origami): the Groomies eagle itself is the show, in a dark showroom under a
+  // spotlight, drawn on a 390 × 844 stage that is scaled to the phone. GROOMIES sits under it, Skycare at the bottom.
+  // These take longer than the data does, so they ask the splash to stay (LD.minShow); a tap skips once loaded.
+  const HX_REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const hxSeg = (t, a, b) => Math.max(0, Math.min(1, (t - a) / (b - a)));
+  const hxEo = x => 1 - Math.pow(1 - x, 3), hxSio = x => .5 - .5 * Math.cos(Math.PI * x);
+  const hxEio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  const hxRnd = (i, k) => { const x = Math.sin(i * 127.1 + k * 311.7) * 43758.5453; return x - Math.floor(x); };
+  const HX_EAGLE = 'cars/groomies-emblem.svg';
+  const GROOMIES_SVG = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"14 60 332 266\"><polygon points=\"178,120 120,150 160,170\" fill=\"#5B8FE0\"/><polygon points=\"182,120 240,150 200,170\" fill=\"#5B8FE0\"/><polygon points=\"120,150 40,108 90,170\" fill=\"#FFFFFF\"/><polygon points=\"240,150 320,108 270,170\" fill=\"#FFFFFF\"/><polygon points=\"90,170 40,108 20,150\" fill=\"#3E4BA8\"/><polygon points=\"270,170 320,108 340,150\" fill=\"#3E4BA8\"/><polygon points=\"90,170 120,150 160,170\" fill=\"#3E4BA8\"/><polygon points=\"270,170 240,150 200,170\" fill=\"#3E4BA8\"/><polygon points=\"160,170 90,170 150,210\" fill=\"#FFFFFF\"/><polygon points=\"200,170 270,170 210,210\" fill=\"#FFFFFF\"/><polygon points=\"150,210 90,170 120,230\" fill=\"#5B8FE0\"/><polygon points=\"210,210 270,170 240,230\" fill=\"#5B8FE0\"/><polygon points=\"178,120 160,170 176,200\" fill=\"#3E4BA8\"/><polygon points=\"182,120 200,170 184,200\" fill=\"#3E4BA8\"/><polygon points=\"168,250 180,320 192,250\" fill=\"#FFFFFF\"/><path d=\"M 166.7 92.9 C 164.8 75.8 174.3 64.4 185.7 66.3 L 204.7 73.9 L 189.5 77.7 C 193.3 85.3 191.4 92.9 187.6 100.5 Z\" fill=\"#FFFFFF\"/><polygon points=\"199.5,243.9 193.8,242.8 200.7,238.6\" fill=\"#7C8396\"/><polygon points=\"193.8,242.8 194.6,237.4 200.7,238.6\" fill=\"#666D80\"/><polygon points=\"199.9,235.9 195.4,240.1 195.1,230.5\" fill=\"#7C8396\"/><polygon points=\"195.4,240.1 190.3,234.9 195.1,230.5\" fill=\"#666D80\"/><polygon points=\"194.4,229.9 191.1,235.5 185.2,224.4\" fill=\"#7C8396\"/><polygon points=\"191.1,235.5 181.8,230.3 185.2,224.4\" fill=\"#666D80\"/><polygon points=\"185.1,224.3 181.9,230.4 174.8,218.8\" fill=\"#7C8396\"/><polygon points=\"181.9,230.4 171.5,225.2 174.8,218.8\" fill=\"#666D80\"/><polygon points=\"175.1,219.0 171.1,225.0 167.1,213.5\" fill=\"#7C8396\"/><polygon points=\"171.1,225.0 162.9,219.8 167.1,213.5\" fill=\"#666D80\"/><polygon points=\"168.3,214.8 161.7,218.6 165.5,209.4\" fill=\"#7C8396\"/><polygon points=\"161.7,218.6 158.5,213.3 165.5,209.4\" fill=\"#666D80\"/><polygon points=\"202.5,183.7 192.8,185.6 201.7,178.4\" fill=\"#7C8396\"/><polygon points=\"192.8,185.6 191.6,180.3 201.7,178.4\" fill=\"#666D80\"/><polygon points=\"199.8,175.3 193.4,183.3 193.3,169.9\" fill=\"#7C8396\"/><polygon points=\"193.4,183.3 186.7,178.1 193.3,169.9\" fill=\"#666D80\"/><polygon points=\"192.5,169.3 187.5,178.7 182.6,163.8\" fill=\"#7C8396\"/><polygon points=\"187.5,178.7 177.4,173.5 182.6,163.8\" fill=\"#666D80\"/><polygon points=\"182.6,163.8 177.4,173.5 172.7,158.3\" fill=\"#7C8396\"/><polygon points=\"177.4,173.5 167.3,168.4 172.7,158.3\" fill=\"#666D80\"/><polygon points=\"173.6,158.9 166.4,167.8 167.1,153.4\" fill=\"#7C8396\"/><polygon points=\"166.4,167.8 159.7,162.6 167.1,153.4\" fill=\"#666D80\"/><polygon points=\"169.1,156.9 157.6,159.1 168.3,151.5\" fill=\"#7C8396\"/><polygon points=\"157.6,159.1 156.4,153.8 168.3,151.5\" fill=\"#666D80\"/><rect x=\"175.5\" y=\"96\" width=\"9\" height=\"166\" rx=\"4.5\" fill=\"#9FB0EE\"/><polygon points=\"181.2,256.2 178.8,251.8 191.3,251.0\" fill=\"#E6E9F1\"/><polygon points=\"178.8,251.8 188.7,246.3 191.3,251.0\" fill=\"#B3B9C8\"/><polygon points=\"191.7,250.8 188.3,246.6 198.4,245.6\" fill=\"#E6E9F1\"/><polygon points=\"188.3,246.6 194.8,241.1 198.4,245.6\" fill=\"#B3B9C8\"/><polygon points=\"165.5,213.3 158.5,209.4 168.7,208.1\" fill=\"#E6E9F1\"/><polygon points=\"158.5,209.4 161.4,203.9 168.7,208.1\" fill=\"#B3B9C8\"/><polygon points=\"167.3,209.5 162.7,202.5 175.5,204.3\" fill=\"#E6E9F1\"/><polygon points=\"162.7,202.5 170.7,197.0 175.5,204.3\" fill=\"#B3B9C8\"/><polygon points=\"175.1,204.6 171.1,196.8 185.6,199.4\" fill=\"#E6E9F1\"/><polygon points=\"171.1,196.8 181.4,191.3 185.6,199.4\" fill=\"#B3B9C8\"/><polygon points=\"185.8,199.3 181.2,191.4 195.1,194.1\" fill=\"#E6E9F1\"/><polygon points=\"181.2,191.4 190.3,185.9 195.1,194.1\" fill=\"#B3B9C8\"/><polygon points=\"196.2,193.2 189.2,186.8 201.3,188.0\" fill=\"#E6E9F1\"/><polygon points=\"189.2,186.8 194.0,181.3 201.3,188.0\" fill=\"#B3B9C8\"/><polygon points=\"166.8,156.8 157.9,148.6 171.9,151.6\" fill=\"#E6E9F1\"/><polygon points=\"157.9,148.6 162.7,143.1 171.9,151.6\" fill=\"#B3B9C8\"/><polygon points=\"170.4,152.7 164.1,141.9 179.7,147.6\" fill=\"#E6E9F1\"/><polygon points=\"164.1,141.9 173.3,136.4 179.7,147.6\" fill=\"#B3B9C8\"/><polygon points=\"179.4,147.7 173.6,136.3 189.9,142.6\" fill=\"#E6E9F1\"/><polygon points=\"173.6,136.3 183.9,130.8 189.9,142.6\" fill=\"#B3B9C8\"/><polygon points=\"190.5,142.2 183.2,131.1 198.7,137.0\" fill=\"#E6E9F1\"/><polygon points=\"183.2,131.1 191.2,125.6 198.7,137.0\" fill=\"#B3B9C8\"/><polygon points=\"200.9,134.7 189.0,128.0 204.1,129.5\" fill=\"#E6E9F1\"/><polygon points=\"189.0,128.0 191.9,122.5 204.1,129.5\" fill=\"#B3B9C8\"/><polygon points=\"201.4,131.5 211.7,132.0 215.0,115.4 198.0,126.0\" fill=\"#E6E9F1\"/><polygon points=\"194.6,120.5 198.6,111.1 215.0,115.4 198.0,126.0\" fill=\"#B3B9C8\"/><circle cx=\"209.1\" cy=\"124.9\" r=\"1.7\" fill=\"#1E2560\"/></svg>";
+  const hxMetal = () => `<img src="${HX_EAGLE}" alt=""><div class="hx-shade"></div><div class="hx-glint"></div>`;
+  const hxScene = (stage, over = '') => `<div class="hx"><div class="hx-beam" id="hxBeam"></div><div class="hx-box" id="hxBox">
+      <div class="hx-pool" id="hxPool"></div><div class="hx-refl" id="hxRefl"><img id="hxReflImg" src="${HX_EAGLE}" alt=""></div>
+      <div class="hx-stage">${stage}</div>${over}
+      <div class="hx-name" id="hxName">GROOMIES</div><div class="hx-tag" id="hxTag"></div><div class="hx-line" id="hxLine"><i id="hxFill"></i></div></div></div>
+    <img class="ld-sky" src="${LOGO}" alt="Skycare">`;
+  const hxFit = r => { const f = () => { const b = $('hxBox'); if (b) b.style.transform = `scale(${Math.min(r.clientWidth / 390, r.clientHeight / 844)})`; }; f(); addEventListener('resize', f); };
+  const hxGlint = pos => document.querySelectorAll('#ldRoot .hx-glint').forEach(g => g.style.backgroundPosition = pos.toFixed(1) + '% 0');
+  // spotlight, floor, name and the loading line — shared by both
+  function hxCommon(t, p, live, reveal, nameAt) {
+    const light = hxEo(hxSeg(t, 0, 1.4)), n = hxEo(hxSeg(t, nameAt, nameAt + 1.6));
+    $('hxBeam').style.opacity = light; $('hxPool').style.opacity = light * .9; $('hxRefl').style.opacity = (.45 * reveal).toFixed(3);
+    $('hxName').style.opacity = n.toFixed(3); $('hxName').style.letterSpacing = (.55 - .35 * n).toFixed(3) + 'em';
+    const tg = hxEo(hxSeg(t, nameAt + .6, nameAt + 1.8));
+    $('hxTag').style.opacity = (tg * .9).toFixed(3); $('hxLine').style.opacity = tg.toFixed(3);
+    $('hxTag').textContent = live ? 'Ready' : `Getting your day ready · ${pct(p)}`; $('hxTag').style.color = live ? '#E9EDF8' : '#9DA6C0';
+    $('hxFill').style.width = (p * 100).toFixed(1) + '%';
+  }
+  // where Stardust's dust lands: points inside the eagle's shape (read once from the picture)
+  const HX_PIX = [];
+  function hxLoadPixels() {
+    if (HX_PIX.length) return;
+    const im = new Image();
+    im.onload = () => { try { const c = document.createElement('canvas'); c.width = 240; c.height = 192; const g = c.getContext('2d'); g.drawImage(im, 0, 0, 240, 192);
+      const d = g.getImageData(0, 0, 240, 192).data; for (let y = 0; y < 192; y += 3) for (let x = 0; x < 240; x += 3) if (d[(y * 240 + x) * 4 + 3] > 140) HX_PIX.push([x, y]); } catch (e) {} };
+    im.src = HX_EAGLE;
+  }
+  const OG = {facets: [], rest: []};
   const VIEWS = {
-    // Monday — pilot's view down runway 26 with Garmin G1000 tapes. The whole takeoff fits the loading time:
-    // roll to Vr 86 kt, rotate, positive rate / gear up, 200 ft flaps up, 400 ft climb power = live.
-    1: { build: r => r.innerHTML = shell(`<div style="position:relative;width:330px;height:400px;border-radius:26px;overflow:hidden;box-shadow:0 0 0 3px #1F2A40,0 24px 50px rgba(0,0,0,.6);background:#0D1626;font-family:'Arial Narrow','Roboto Condensed',Arial,sans-serif">
-          <div id="pvSky" style="position:absolute;left:0;right:0;top:0;background:linear-gradient(#1E3C6E,#7095C2)"></div>
-          <div id="pvGnd" style="position:absolute;left:0;right:0;bottom:0;background:linear-gradient(#2F3F27,#141E11)"></div>
-          <div id="pvRw" style="position:absolute;inset:0"></div>
-          <div style="position:absolute;left:10px;top:76px;width:74px;height:240px;background:rgba(36,40,48,.62);border:1px solid rgba(255,255,255,.28);overflow:hidden">
-            <div id="pvTape" style="position:absolute;inset:0"></div>
-            <div style="position:absolute;left:3px;top:102px;width:58px;height:36px;background:#000;border:1.5px solid #fff;clip-path:polygon(0 0,82% 0,82% 32%,100% 50%,82% 68%,82% 100%,0 100%)"></div>
-            <div id="pvIas" style="position:absolute;left:5px;top:104px;width:44px;height:32px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums"></div></div>
-          <div id="pvVs" style="position:absolute;left:86px;top:76px;width:64px;height:240px;overflow:hidden;pointer-events:none"></div>
-          <div style="position:absolute;left:10px;top:318px;width:74px;height:20px;background:#000;border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:space-between;padding:0 6px;box-sizing:border-box;font-size:11px;color:#fff"><span>TAS</span><b id="pvTas"></b></div>
-          <div style="position:absolute;right:10px;top:76px;width:74px;height:240px;background:rgba(36,40,48,.62);border:1px solid rgba(255,255,255,.28);overflow:hidden">
-            <div id="pvAltT" style="position:absolute;inset:0"></div>
-            <div style="position:absolute;right:3px;top:102px;width:62px;height:36px;background:#000;border:1.5px solid #fff;clip-path:polygon(18% 0,100% 0,100% 100%,18% 100%,18% 68%,0 50%,18% 32%)"></div>
-            <div id="pvAlt" style="position:absolute;right:7px;top:104px;width:48px;height:32px;display:flex;align-items:center;justify-content:flex-end;color:#fff;font-size:22px;font-weight:700;font-variant-numeric:tabular-nums"></div></div>
-          <div style="position:absolute;right:10px;top:318px;width:74px;height:20px;background:#000;border:1px solid rgba(255,255,255,.35);display:flex;align-items:center;justify-content:space-between;padding:0 6px;box-sizing:border-box;font-size:11px;color:#fff"><span>VS</span><b id="pvVsi"></b></div>
-          <div id="pvCap" style="position:absolute;left:0;right:0;bottom:14px;display:flex;justify-content:center;pointer-events:none"></div></div>`, false),
-      update: (() => {
-        let camZ = 0, last = null;
-        const ROT = .42, GEAR = .5, VSPEEDS = [['Vmca', 72, '#F87171'], ['Vx', 84, '#E9ECF1'], ['Vy', 101, '#E9ECF1'], ['Vyse', 107, '#60A5FA']];
-        return (p, live, lv, sec) => {
-          const dt = last == null ? 0 : Math.min(.1, sec - last); last = sec;
-          // flight profile, all driven by the loading progress
-          const ias = p < ROT ? 86 * Math.pow(p / ROT, 1.1) : 86 + 18 * (1 - Math.exp(-(p - ROT) * 9));
-          const air = p >= ROT;
-          const alt = p < GEAR - .02 ? 0 : 440 * Math.min(1, (p - GEAR + .02) / .5);
-          const pitch = air ? Math.min(1, (p - ROT) / .06) : 0;
-          const fpm = alt > 0 && alt < 440 ? 1400 : alt >= 440 ? 900 : 0;
-          const calls = [[ROT, 'Rotate'], [GEAR, 'Positive rate — gear up'], [GEAR - .02 + 200 / 440 * .5, '200 ft — flaps up'], [GEAR - .02 + 400 / 440 * .5, '400 ft — climb power']];
-          const call = calls.filter(c => p >= c[0]).pop();
-          camZ += dt * (3 + ias / 104 * 60);
-          // out the window: the camera rises with altitude, so the runway sinks below as we climb
-          const H = 400, CX = 165, hy = 150 + pitch * 95, eye = 1 + alt / 28, C = 600 * eye, Z0 = C / (H - hy);
-          const yAt = z => hy + C / z, half = z => .74 * 600 / z;
-          const quad = (z1, z2, a1, a2, color) => {
-            z1 = Math.max(z1, Z0); if (z2 <= z1) return '';
-            const y1 = yAt(z1), y2 = yAt(z2), h1 = half(z1), h2 = half(z2);
-            return `<div style="position:absolute;inset:0;background:${color};clip-path:polygon(${CX + a1 * h1}px ${y1}px,${CX + a2 * h1}px ${y1}px,${CX + a2 * h2}px ${y2}px,${CX + a1 * h2}px ${y2}px)"></div>`;
-          };
-          let html = quad(Z0, 1400, -1, 1, '#2E3440')
-            + quad(Z0, 1400, -.97, -.92, '#E9ECF1') + quad(Z0, 1400, .92, .97, '#E9ECF1');
-          const rep = (period, start, len, fn) => { const n0 = Math.floor((camZ - start) / period); for (let n = n0; n < n0 + 50; n++) { const z = start + n * period - camZ; if (z + len > Z0 && z < 900) html += fn(z, z + len); } };
-          rep(12, 0, 6, (a, b) => a + camZ < 24 ? '' : quad(a, b, -.035, .035, '#F4F5F7'));
-          rep(50, 30, 9, (a, b) => quad(a, b, -.62, -.42, '#E9ECF1') + quad(a, b, .42, .62, '#E9ECF1'));
-          rep(150, 70, 16, (a, b) => quad(a, b, -.5, -.28, '#F4F5F7') + quad(a, b, .28, .5, '#F4F5F7'));
-          for (let k = 0; k < 8; k++) { const a = 1 + k * 1.3 - camZ, b = a + .9; if (b > Z0) html += quad(a, b, -.86 + k * .01, -.6, '#F4F5F7') + quad(a, b, .6, .86 - k * .01, '#F4F5F7'); }
-          const nz1 = 13 - camZ, nz2 = 20 - camZ;
-          if (nz2 > Z0) { const y1 = yAt(Math.max(nz1, Z0)), y2 = yAt(nz2); html += `<div class="ld-cond" style="position:absolute;left:${CX - 60}px;width:120px;top:${y2}px;height:${y1 - y2}px;display:flex;align-items:center;justify-content:center;color:rgba(244,245,247,.9);font-weight:700;font-size:${(y1 - y2) * 1.1}px;line-height:1;transform:scaleX(${Math.min(2.4, half(Math.max(nz1, Z0)) / 70)})">26</div>`; }
-          for (let n = Math.floor(camZ / 10); n < Math.floor(camZ / 10) + 60; n++) {
-            const z = n * 10 - camZ; if (z <= Z0 || z > 900) continue;
-            const y = yAt(z), s = Math.max(1.5, 84 / z), h = half(z) * 1.04;
-            html += `<div style="position:absolute;left:${CX - h - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;border-radius:50%;background:#FFF3C4;box-shadow:0 0 ${s * 2}px #F2C35A"></div><div style="position:absolute;left:${CX + h - s / 2}px;top:${y - s / 2}px;width:${s}px;height:${s}px;border-radius:50%;background:#FFF3C4;box-shadow:0 0 ${s * 2}px #F2C35A"></div>`;
-          }
-          $('pvRw').innerHTML = html;
-          $('pvSky').style.height = hy + 'px'; $('pvGnd').style.top = hy + 'px';
-          // G1000 airspeed tape (3 px per knot): arcs, red line Vmca, blue line Vyse, R bug at 86
-          const k = 3, cy = 120, Y = s => cy - (s - ias) * k;
-          let tape = `<div style="position:absolute;left:66px;width:5px;top:${Y(140)}px;height:${80 * k}px;background:#22C55E"></div>`
-            + `<div style="position:absolute;left:62px;width:3px;top:${Y(95)}px;height:${55 * k}px;background:#F4F5F7"></div>`
-            + `<div style="position:absolute;left:60px;width:14px;height:3px;top:${Y(72) - 1}px;background:#EF4444"></div>`
-            + `<div style="position:absolute;left:60px;width:14px;height:3px;top:${Y(107) - 1}px;background:#3B82F6"></div>`
-            + `<div style="position:absolute;left:60px;width:12px;height:2px;top:${Y(86) - 1}px;background:#22D3EE"></div><div style="position:absolute;left:48px;top:${Y(86) - 7}px;font-size:11px;font-weight:700;color:#22D3EE">R</div>`;
-          for (let n = Math.max(0, Math.floor((ias - 45) / 5) * 5); n <= ias + 45; n += 5) {
-            const y = Y(n), major = n % 10 === 0;
-            tape += `<div style="position:absolute;left:${major ? 46 : 52}px;width:${major ? 14 : 8}px;height:1.5px;top:${y}px;background:#fff"></div>`;
-            if (major && n >= 20) tape += `<div style="position:absolute;left:4px;width:38px;text-align:right;top:${y - 9}px;font-size:16px;font-weight:700;color:#fff">${n}</div>`;
-          }
-          if (!live) tape += `<div style="position:absolute;left:58px;width:3px;top:${cy - (air ? 18 : 36)}px;height:${air ? 18 : 36}px;background:#E040FB"></div>`;
-          $('pvTape').innerHTML = tape;
-          // V-speed references, in small letters beside the tape once past Vr
-          const vsOn = ias >= 86 ? Math.min(1, (ias - 86) / 3) : 0;
-          $('pvVs').innerHTML = VSPEEDS.map(([l, s, c]) => `<div style="position:absolute;left:2px;top:${Y(s) - 6}px;font-size:10px;font-weight:700;color:${c};opacity:${vsOn};text-shadow:0 1px 2px #000;white-space:nowrap">${l} ${s}</div>`).join('');
-          $('pvIas').textContent = Math.round(ias);
-          $('pvTas').textContent = Math.round(ias * 1.02) + 'KT';
-          // G1000 altitude tape (0.6 px per foot): ticks every 20 ft, numbers every 100 ft
-          const ka = .6, AY = a => cy - (a - alt) * ka;
-          let at = '';
-          for (let a = Math.max(-100, Math.floor((alt - 220) / 20) * 20); a <= alt + 220; a += 20) {
-            const y = AY(a), major = a % 100 === 0;
-            at += `<div style="position:absolute;left:0;width:${major ? 14 : 8}px;height:1.5px;top:${y}px;background:#fff"></div>`;
-            if (major) at += `<div style="position:absolute;left:16px;width:50px;text-align:right;top:${y - 9}px;font-size:15px;font-weight:700;color:#fff">${a}</div>`;
-          }
-          $('pvAltT').innerHTML = at;
-          $('pvAlt').textContent = Math.round(alt / 10) * 10;
-          $('pvVsi').textContent = fpm ? '+' + fpm : '0';
-          // callouts as subtitles
-          $('pvCap').innerHTML = call ? `<span style="background:rgba(0,0,0,.66);color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;font-weight:700;padding:6px 12px;border-radius:6px">${call[1]}</span>` : '';
-          common(p, live, 'Takeoff', 'Climb power — you are live', 'Tasks, shopping and audits are up to date');
-        };
-      })() },
+    // Monday — "Stardust": silver dust swirls in the spotlight and gathers into the eagle, which sets as chrome,
+    // then its own colours bloom outward through the metal and a glint slides across it
+    1: { build: r => {
+        LD.minShow = HX_REDUCED ? 0 : 8.4;
+        r.innerHTML = hxScene(`<div class="hx-lay hx-chrome" id="sdChrome" style="opacity:0">${hxMetal()}</div><div class="hx-lay hx-color" id="sdColor" style="opacity:0">${hxMetal()}</div>`, '<canvas id="sdCv"></canvas>');
+        hxFit(r); hxLoadPixels();
+        const cv = $('sdCv'), dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = 390 * dpr; cv.height = 844 * dpr; cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+      },
+      update: (p, live, lt, sec) => {
+        const t = HX_REDUCED ? 99 : sec, CX = 195, CY = 354, LAND = 3.6, g = $('sdCv').getContext('2d');
+        g.clearRect(0, 0, 390, 844);
+        const n = Math.min(HX_PIX.length, 1400), fade = 1 - hxSeg(t, 4.2, 5.4), melt = 1 - .85 * hxSio(hxSeg(t, LAND, LAND + 1.2));
+        if (fade > 0) for (let i = 0; i < n; i++) {
+          const q = HX_PIX[Math.floor(i * HX_PIX.length / n)], s0 = .9 + hxRnd(i, 1) * 1.6, k = hxEio(hxSeg(t, s0, s0 + 2.2));
+          const a0 = hxRnd(i, 2) * 6.283, r0 = 120 + hxRnd(i, 3) * 280, drift = (1 - k) * t * .25;
+          const sx = CX + Math.cos(a0 + drift) * r0, sy = CY + Math.sin(a0 + drift) * r0 * 1.25, tx = 75 + q[0], ty = 258 + q[1], sw = (1 - k) * 1.8;
+          let x = sx + (tx - sx) * k, y = sy + (ty - sy) * k; const dx = x - CX, dy = y - CY;
+          x = CX + dx * Math.cos(sw) - dy * Math.sin(sw); y = CY + dx * Math.sin(sw) + dy * Math.cos(sw);
+          const landed = k > .985, big = hxRnd(i, 6) > .93 && !landed;
+          g.globalAlpha = hxSeg(t, .3 + hxRnd(i, 5), 1 + hxRnd(i, 5)) * fade * (landed ? .9 * melt : .55 + .45 * Math.sin(t * (4 + hxRnd(i, 4) * 5) + i));
+          g.fillStyle = landed ? '#f4f6fa' : (hxRnd(i, 8) > .5 ? '#e9eef8' : '#c9d0dc');
+          g.shadowBlur = big ? 6 : 0; g.shadowColor = 'rgba(220,230,255,.9)';
+          g.beginPath(); g.arc(x, y, landed ? 1.1 : big ? 2.2 : 1.2 + hxRnd(i, 7) * .8, 0, 6.283); g.fill();
+        }
+        g.shadowBlur = 0; g.globalAlpha = 1;
+        const solid = hxSio(hxSeg(t, LAND, LAND + 1.4)), bloom = hxEio(hxSeg(t, 5.4, 7.4)), R = bloom * 78;
+        $('sdChrome').style.opacity = solid.toFixed(3);
+        const col = $('sdColor'), m = `radial-gradient(circle at 50% 46%,#000 ${R.toFixed(1)}%,transparent ${(R + 14).toFixed(1)}%)`;
+        col.style.opacity = bloom > 0 ? 1 : 0; col.style.webkitMaskImage = col.style.maskImage = bloom >= 1 ? 'none' : m;
+        hxGlint(-30 + 160 * hxEio(hxSeg(t, 7.2, 9.2)));
+        $('hxReflImg').style.filter = `grayscale(${(1 - bloom).toFixed(2)}) saturate(1.1) brightness(.8)`;
+        hxCommon(t, p, live, solid, 7.2);
+      } },
     // Tuesday — a YKF → LIVE boarding pass prints its barcode, then gets stamped BOARDED
     2: { build: r => {
           const W = [3,1,2,1,3,2,1,1,3,1,2,2,1,3,1,2,1,3,2,1,1,2,3,1,2,1,3,1,1,2,3,2,1,2,1,3,1,2,2,1,3,1,2,1];
@@ -1674,27 +1673,27 @@ body::before{
         $('wBar').style.width = pct(p); $('wBar').style.background = live ? GREEN : GOLD;
         common(p, live, 'Climbing through the clouds', 'Above the clouds — you are live', 'Tasks, shopping and audits are up to date');
       } },
-    // Sunday — gears roll the hangar door up on the Metroliner
+    // Sunday — "Origami": the eagle builds itself — each triangle glides in from the dark, turning, and clicks into
+    // place; then the snake and staff appear and it turns to polished metal
     0: { build: r => {
-          const gear = (id, css, size) => `<svg id="${id}" width="${size}" height="${size}" viewBox="0 0 40 40" style="position:absolute;${css}"><circle cx="20" cy="20" r="14" fill="none" stroke="#9AA6BA" stroke-width="7" stroke-dasharray="5 3.8"/><circle cx="20" cy="20" r="10" fill="#9AA6BA"/><circle cx="20" cy="20" r="4" fill="#1B2538"/></svg>`;
-          r.innerHTML = shell(`<div style="position:relative;width:320px;height:240px">
-            <div style="position:absolute;left:0;right:0;top:0;height:76px;border-radius:160px 160px 0 0;background:linear-gradient(#2A3852,#1B2538);border:2px solid #3A4A68;border-bottom:none"></div>
-            <div style="position:absolute;left:18px;right:18px;top:62px;height:4px;border-radius:2px;background:repeating-linear-gradient(90deg,#6B7890 0 6px,#3A4A68 6px 9px)"></div>
-            ${gear('hgL', 'left:8px;top:44px', 40)}${gear('hgR', 'right:8px;top:44px', 40)}${gear('hgM', 'left:147px;top:24px', 26)}
-            <div style="position:absolute;left:10px;right:10px;top:76px;bottom:0;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,#3B4A66 0%,#161E2E 75%);border-left:2px solid #3A4A68;border-right:2px solid #3A4A68">
-              <img src="${METRO}" alt="" style="position:absolute;left:50%;bottom:16px;width:220px;margin-left:-110px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.6))">
-              <div id="hgDoor" style="position:absolute;left:0;right:0;top:0;height:100%;background:repeating-linear-gradient(180deg,#2C3A55 0 18px,#1E293F 18px 20px);border-bottom:3px solid #4A5B7E;box-shadow:0 6px 14px rgba(0,0,0,.45)"></div></div></div>
-            <div style="margin-top:22px;width:260px;height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden"><div id="hgBar" style="height:100%;border-radius:3px"></div></div>`, false);
-        },
-      update: (p, live) => {
-        const turn = p * 900, col = live ? GREEN : '#9AA6BA';
-        $('hgDoor').style.transform = `translateY(-${Math.round(p * 100)}%)`;
-        [['hgL', 1], ['hgR', -1], ['hgM', -1.5]].forEach(([id, k]) => {
-          const g = $(id); g.style.transform = `rotate(${turn * k}deg)`;
-          g.querySelectorAll('circle').forEach((c, i) => { if (i === 0) c.setAttribute('stroke', col); else if (i === 1) c.setAttribute('fill', col); });
-        });
-        $('hgBar').style.width = pct(p); $('hgBar').style.background = live ? GREEN : GOLD;
-        common(p, live, 'Opening the hangar', 'Door up — you are live', 'Tasks, shopping and audits are up to date');
+        LD.minShow = HX_REDUCED ? 0 : 7.6;
+        r.innerHTML = hxScene(`<div class="hx-lay hx-color" id="ogMetal" style="opacity:0">${hxMetal()}</div><div class="hx-lay" id="ogSvg">${GROOMIES_SVG.replace('<svg ', '<svg width="240" height="192" ')}</div>`);
+        hxFit(r);
+        const all = [...$('ogSvg').querySelectorAll('polygon,path,rect,circle')], FAC = ['#5B8FE0', '#FFFFFF', '#3E4BA8'];
+        OG.facets = all.filter(e => e.tagName === 'polygon' && FAC.includes((e.getAttribute('fill') || '').toUpperCase()));
+        OG.rest = all.filter(e => !OG.facets.includes(e));
+        OG.facets.forEach(e => { e.style.transformBox = 'fill-box'; e.style.transformOrigin = 'center'; });
+      },
+      update: (p, live, lt, sec) => {
+        const t = HX_REDUCED ? 99 : sec;
+        OG.facets.forEach((e, i) => { const s0 = .8 + hxRnd(i, 9) * 2.2, k = hxEio(hxSeg(t, s0, s0 + 1.5)), a = hxRnd(i, 1) * 6.283, d = 260 * (1 - k);
+          e.style.transform = `translate(${(Math.cos(a) * d).toFixed(1)}px,${(Math.sin(a) * d).toFixed(1)}px) rotate(${((hxRnd(i, 2) * 2 - 1) * 260 * (1 - k)).toFixed(1)}deg) scale(${(.5 + .5 * k).toFixed(3)})`;
+          e.style.opacity = hxSeg(t, s0, s0 + .5).toFixed(3); });
+        OG.rest.forEach(e => e.style.opacity = hxSio(hxSeg(t, 4.4, 5.4)).toFixed(3));
+        const sw = hxSeg(t, 5.6, 6.4); $('ogSvg').style.opacity = (1 - sw).toFixed(3); $('ogMetal').style.opacity = sw.toFixed(3);
+        hxGlint(-30 + 160 * hxEio(hxSeg(t, 6.2, 8.2)));
+        $('hxReflImg').style.filter = 'saturate(1.1) brightness(.8)';
+        hxCommon(t, p, live, hxSeg(t, 4.4, 6), 6.2);
       } },
   };
 
@@ -2384,9 +2383,11 @@ function appReady(timedOut) {
     if (timedOut) setTimeout(() => toast(navigator.onLine === false ? '⚠️ Offline — changes will sync later' : '⏳ Still syncing — data will update in a moment'), 400);
   };
   if (!L || timedOut) { finish(); return; }
-  // keep the animation up long enough to be read, then show its "live" moment before opening
-  const wait = Math.max(0, 1200 - (performance.now() - L.t0));
-  setTimeout(() => { L.live = true; setTimeout(finish, 900); }, wait);
+  // keep the animation up long enough to be read (longer when the day's screen asks for it, LD.minShow),
+  // then show its "live" moment before opening. A long one can be skipped with a tap now that everything has loaded.
+  const el = performance.now() - L.t0, wait = Math.max(0, 1200 - el, (L.minShow || 0) * 1000 - el);
+  const go = setTimeout(() => { L.live = true; setTimeout(finish, 900); }, wait);
+  if (wait > 1500) document.getElementById('splash')?.addEventListener('click', () => { clearTimeout(go); finish(); }, {once: true});
 }
 // ── BOOT ───────────────────────────────────────────────────────────
 // Hard failsafe: no matter what throws or hangs above, force the splash
