@@ -1,3 +1,12 @@
 name = "bouncie-proxy"
 main = "index.js"
 compatibility_date = "2024-01-01"
+account_id = "abbb68904cb1a78e08cbace22cc9be44"
+workers_dev = true
+# keep any variables set in the Cloudflare dashboard (secrets are kept anyway)
+keep_vars = true
+
+# where the rotating Bouncie tokens live — must stay bound, or the Worker can't reach Bouncie
+[[kv_namespaces]]
+binding = "BOUNCIE_KV"
+id = "5008305c6208499bafab5e5292355a77"

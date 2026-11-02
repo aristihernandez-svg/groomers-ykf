@@ -2268,10 +2268,64 @@ async function copyCarNfcLink(key) {
   openModal('NFC link', `<p style="font-size:13px;color:var(--t2);margin:0 0 8px">Press and hold the link, then Copy.</p><input readonly value="${link}" onfocus="this.select()" style="font-size:13px">`, closeModal);
   document.getElementById('mSave').textContent = 'Done';
 }
+// ── Link an added car to its Bouncie tracker ──
+// Someone with the company's Bouncie account plugs the tracker into the car and adds it in the Bouncie app; then here
+// they pick it from the trackers no car uses yet (the Worker's /devices). The link is saved on the car's entry
+// (bouncieImei) and sent to the Worker with every refresh (?add=key:imei), so the car gets fuel, km, battery and engine.
+function bouncieAddParam() {
+  const pairs = CREW_CARS.filter(c => c.custom && c.bouncieImei).map(c => c.key + ':' + c.bouncieImei);
+  return pairs.length ? '?add=' + encodeURIComponent(pairs.join(',')) : '';
+}
+function bouncieLinkHtml(key) {
+  const car = carByKey(key); if (!car || !car.custom || !BOUNCIE_WORKER_URL) return '';
+  return `<div style="padding:6px 14px 0"><button onclick="openBouncieLink('${key}')" style="width:100%;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:8px">
+    <span style="font-size:16px">📡</span><span style="flex:1">${car.bouncieImei ? `Bouncie GPS · <span style="color:var(--green)">${_hdEsc(car.bouncieName || 'linked')}</span>` : 'Link to Bouncie GPS'}</span><span style="color:var(--t3)">›</span></button></div>`;
+}
+async function openBouncieLink(key) {
+  const car = carByKey(key); if (!car) return;
+  openModal('📡 Bouncie GPS — ' + car.name, '<div id="bxBody" style="font-size:13px;color:var(--t2)">Loading the trackers on the Bouncie account…</div>', closeModal);
+  document.getElementById('mSave').textContent = 'Close';
+  let devices;
+  try {
+    const res = await fetch(BOUNCIE_WORKER_URL + '/devices');
+    if (res.status === 404) throw new Error('off');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    devices = await res.json();
+  } catch (e) {
+    const box = document.getElementById('bxBody');
+    if (box) box.innerHTML = e.message === 'off' ? "Linking to Bouncie isn't switched on yet." : '⚠️ Could not reach Bouncie — check the connection and try again.';
+    return;
+  }
+  const usedBy = {}; CREW_CARS.concat(RETIRED_CARS).forEach(c => { if (c.custom && c.bouncieImei && c.key !== key) usedBy[c.bouncieImei] = c.name; });
+  const free = devices.filter(d => !d.linkedTo);
+  const box = document.getElementById('bxBody'); if (!box) return;
+  box.innerHTML = `<p style="margin:0 0 10px;line-height:1.5">Plug the tracker into this car and add it to the company's Bouncie account in the Bouncie app first. Then pick it here — the car will show its fuel, km, battery and engine like the others.</p>
+    ${free.length ? free.map(d => { const mine = d.imei === car.bouncieImei, other = usedBy[d.imei];
+      return `<button ${other ? 'disabled' : `onclick="linkBouncie('${key}','${d.imei}')"`} data-name="${_hdEsc(d.name)}" style="width:100%;margin-bottom:6px;padding:10px 12px;border-radius:10px;text-align:left;cursor:${other ? 'default' : 'pointer'};border:1.5px solid ${mine ? 'var(--green)' : 'var(--border2)'};background:${mine ? 'rgba(39,174,96,.1)' : 'var(--glass2)'};color:var(--t1);opacity:${other ? .45 : 1}">
+        <div style="font-size:14px;font-weight:800">${_hdEsc(d.name)}${mine ? ' ✓' : ''}</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:2px">${[d.year, d.make, d.model].filter(Boolean).map(_hdEsc).join(' ')}${d.vinEnd ? ' · VIN …' + _hdEsc(d.vinEnd) : ''}${other ? ' · used by ' + _hdEsc(other) : ''}</div></button>`; }).join('')
+      : '<div style="padding:10px 0">Every tracker on the account is already linked to a car. Add the new tracker in the Bouncie app first.</div>'}
+    ${car.bouncieImei ? `<button onclick="linkBouncie('${key}',null)" style="width:100%;margin-top:6px;padding:10px;border-radius:10px;border:1px solid rgba(231,76,60,.4);background:transparent;color:var(--red);font-weight:700;cursor:pointer">Unlink from Bouncie</button>` : ''}`;
+}
+async function linkBouncie(key, imei) {
+  if (!db) { toast('No connection'); return; }
+  const btn = imei && document.querySelector(`#bxBody button[onclick*="'${imei}'"]`), name = btn ? btn.dataset.name : null;
+  const ref = db.collection('appConfig').doc('customCrewCars');
+  try {
+    await db.runTransaction(async tx => {   // fresh read, only this car's two fields change
+      const snap = await tx.get(ref), list = ((snap.exists && snap.data().cars) || []).map(c => c.key === key ? {...c, bouncieImei: imei || null, bouncieName: imei ? name : null} : c);
+      tx.set(ref, {cars: list}, {merge: true});
+    });
+    const car = carByKey(key); if (car) { car.bouncieImei = imei || null; car.bouncieName = imei ? name : null; }
+    if (!imei) delete S.bouncieData[key];
+    closeModal(); toast(imei ? `📡 Linked to ${name} — reading its GPS…` : 'Unlinked from Bouncie');
+    fetchBouncieData();
+  } catch (e) { console.log('Bouncie link failed:', e); toast('⚠️ Failed — check connection'); }
+}
 // Edit / Remove, shown on the pages of cars added from the app
 function customCarAdminHtml(key) {
   const car = carByKey(key); if (!car || !car.custom) return '';
-  return `<div style="display:flex;gap:8px;padding:6px 14px 0">
+  return bouncieLinkHtml(key) + `<div style="display:flex;gap:8px;padding:6px 14px 0">
     <button onclick="openAddCarFlow('${key}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer">✏️ Edit car</button>
     <button onclick="removeCustomCarPrompt('${key}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:var(--red);font-size:13px;font-weight:700;cursor:pointer">Remove car</button>
   </div>`;
@@ -5758,7 +5812,7 @@ function carSquareIcon(car, size=48, radius=10) {
 async function fetchBouncieData() {
   if (!BOUNCIE_WORKER_URL) return;
   try {
-    const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles');
+    const res = await fetch(BOUNCIE_WORKER_URL + '/vehicles' + bouncieAddParam());   // + cars added in the app and linked to a tracker
     if (!res.ok) throw new Error('HTTP ' + res.status);
     S.bouncieData = await res.json();
     S.bouncieSyncFailed = false;
@@ -6011,6 +6065,8 @@ function renderCrewCarsList(el) {
       : `<div style="margin:36px 20px;text-align:center;color:#7A88A0;font-size:14px">No cars here right now 🎉</div>`;
     // add a car straight from here (the same form as Audits → Crew Cars → + Add a car)
     if (typeof openAddCarFlow === 'function') html += `<div style="padding:4px 14px 16px"><button onclick="openAddCarFlow()" style="width:100%;padding:13px;border-radius:14px;border:1.5px dashed #2A3A55;background:transparent;color:#9AB0D0;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px;line-height:1">+</span> Add a car</button></div>`;
+    // cars removed from the app can come back from here too (YAV has no audits page)
+    if (typeof RETIRED_CARS !== 'undefined' && RETIRED_CARS.length) html += `<div style="padding:0 14px 16px"><div style="font-size:10.5px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:#5E7090;margin-bottom:6px">Removed cars</div>${RETIRED_CARS.map(c => `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid #1E2A40;border-radius:10px;margin-bottom:6px;opacity:.75"><span style="font-size:13.5px;font-weight:700;color:#C8D4E8">${_carEsc(c.name)}</span><button onclick="setCustomCarRetired('${c.key}',false)" style="font-size:12px;font-weight:800;color:#8FB4FF;background:none;border:none;cursor:pointer">Bring back</button></div>`).join('')}</div>`;
 
   } else {
     // ── Audits tab: existing grid ──

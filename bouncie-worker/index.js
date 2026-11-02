@@ -86,8 +86,19 @@ export default {
     if (url.pathname === '/vehicles') {
       try {
         const token = await getAccessToken(env);
-        const results = await fetchAllVehicles(token);
+        const results = await fetchAllVehicles(token, parseAddedCars(url.searchParams.get('add')));
         return Response.json(results, { headers: CORS });
+      } catch (e) {
+        return Response.json({ error: e.message }, { status: 502, headers: CORS });
+      }
+    }
+
+    // Every tracker on the Bouncie account, so the app's "Link to Bouncie" can offer the ones not linked to a car yet.
+    // Names/makes/models only — never location.
+    if (url.pathname === '/devices') {
+      try {
+        const token = await getAccessToken(env);
+        return Response.json(await listDevices(token), { headers: CORS });
       } catch (e) {
         return Response.json({ error: e.message }, { status: 502, headers: CORS });
       }
@@ -216,11 +227,49 @@ async function putWithRetry(kv, key, value, retries = 2) {
   }
 }
 
-async function fetchAllVehicles(token) {
+// Cars added from the app and linked there to a tracker: the app sends them as ?add=key:imei,key:imei.
+// Only well-formed pairs, at most 20, and never one that would replace a car listed in VEHICLE_MAP.
+function parseAddedCars(param) {
+  const out = {};
+  for (const pair of String(param || '').split(',').slice(0, 20)) {
+    const [key, imei] = pair.split(':');
+    if (/^[a-z0-9]{1,24}$/i.test(key || '') && /^\d{10,20}$/.test(imei || '') && !VEHICLE_MAP[key]) out[key] = { imei, name: key };
+  }
+  return out;
+}
+
+async function listDevices(token) {
+  const linked = Object.fromEntries(Object.entries(VEHICLE_MAP).filter(([, v]) => v.imei).map(([k, v]) => [v.imei, k]));
+  const devices = [];
+  for (let skip = 0; skip < 500; skip += 100) {
+    const res = await fetch(`https://api.bouncie.dev/v1/vehicles?limit=100&skip=${skip}`,
+      { headers: { Authorization: token, 'Content-Type': 'application/json' } });
+    if (!res.ok) throw new Error(`Bouncie API ${res.status}`);
+    const page = await res.json();
+    const list = Array.isArray(page) ? page : [];
+    for (const v of list) {
+      if (!v || !v.imei) continue;
+      const m = v.model || {};
+      devices.push({
+        imei:     String(v.imei),
+        name:     v.nickName || [m.year, m.make, m.name].filter(Boolean).join(' ') || 'Unnamed tracker',
+        make:     m.make || null,
+        model:    m.name || null,
+        year:     m.year || null,
+        vinEnd:   v.vin ? String(v.vin).slice(-4) : null,
+        linkedTo: linked[String(v.imei)] || null,
+      });
+    }
+    if (list.length < 100) break;
+  }
+  return devices;
+}
+
+async function fetchAllVehicles(token, added = {}) {
   const results = {};
 
   await Promise.all(
-    Object.entries(VEHICLE_MAP).map(async ([key, v]) => {
+    Object.entries({ ...VEHICLE_MAP, ...added }).map(async ([key, v]) => {
       if (!v.imei) {
         results[key] = { status: 'unconfigured' };
         return;
