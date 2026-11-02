@@ -2241,7 +2241,25 @@ async function setCustomCarRetired(key, retired) {
 // "Copy NFC link": the car's own check-in link, to paste into NFC Tools when writing its sticker (tap = opens that car)
 function carCheckinLink(key) { return new URL('crew-access.html?car=' + encodeURIComponent(key), location.href).href; }
 function nfcLinkHtml(key) {
-  return `<div style="padding:6px 14px 0"><button onclick="copyCarNfcLink('${key}')" style="width:100%;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer">📲 Copy NFC link</button></div>`;
+  return `<div style="display:flex;gap:8px;padding:6px 14px 0">
+    <button onclick="copyCarNfcLink('${key}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer">📲 Copy NFC link</button>
+    <button onclick="showNfcHowTo()" style="padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-size:13px;font-weight:700;cursor:pointer">❔ How to</button>
+  </div>`;
+}
+// The NFC sticker guide (same for every car)
+function showNfcHowTo() {
+  const step = (n, title, body) => `<div style="display:flex;gap:10px;margin-bottom:12px"><div style="width:24px;height:24px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</div>
+    <div style="font-size:13px;color:var(--t2);line-height:1.5"><b style="color:var(--t1)">${title}</b><br>${body}</div></div>`;
+  openModal('📲 Set up a car\'s NFC sticker', `<div style="padding-top:2px">
+    <p style="font-size:13px;color:var(--t2);line-height:1.5;margin:0 0 14px">A sticker in the car opens its check-in page when someone holds their phone near it — like the QR code, without scanning. You need the free <b style="color:var(--t1)">NFC Tools</b> app (iPhone 7 or newer; on Android, turn NFC on in Settings).</p>
+    ${step(1, 'Copy the link', 'On this car\'s page tap <b>📲 Copy NFC link</b>.')}
+    ${step(2, 'Write the sticker', 'NFC Tools → <b>Write</b> → <b>Add a record</b> → <b>URL / URI</b> → paste → OK → <b>Write</b>. Hold the sticker flat on the phone (iPhone: near the top, by the camera; Android: middle of the back) until it says it\'s done. If there\'s a separate "https://" box, paste only what comes after https://.')}
+    ${step(3, 'Test it', 'Hold a phone near the sticker. It must open <b>this car</b> (its name and "Take the car"). If it opens the car list instead, write it again — it can be rewritten until it\'s locked.')}
+    ${step(4, 'Lock it', 'Only once it works: NFC Tools → <b>Other</b> → <b>Lock tag</b> → hold the sticker to the phone. Nobody can change it after that — it can\'t be undone.')}
+    ${step(5, 'Stick it in the car', '<b>Not on metal</b> (it blocks the signal): use glass or plastic — a side window corner, the plastic dash or console, or the key tag. Next to the QR code is ideal, with a small "Tap phone here" label.')}
+    <p style="font-size:12px;color:var(--t3);line-height:1.5;margin:4px 0 0">Spare stickers: if one gets damaged or the car is replaced, write a new one the same way. A new car added in the app gets its own link here too.</p>
+  </div>`, closeModal);
+  document.getElementById('mSave').textContent = 'Got it';
 }
 async function copyCarNfcLink(key) {
   const link = carCheckinLink(key);
