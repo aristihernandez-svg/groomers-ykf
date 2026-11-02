@@ -5813,6 +5813,136 @@ function syncBouncieBaseline(key) {
   render();
 }
 
+// ── ENGINE FAULT CODES ─────────────────────────────────────────
+// Bouncie sends the check-engine light (milOn) and, when the car reports them, its fault codes (dtcList). A code can
+// arrive as text ("P0420") or as an object ({code, name|description}). We show Bouncie's own description when it gives
+// one, otherwise a plain-English one for the common standard codes, otherwise what the code's family means.
+const DTC_TEXT = {
+  P0011: 'Camshaft timing over-advanced (bank 1)', P0012: 'Camshaft timing over-retarded (bank 1)', P0014: 'Exhaust camshaft timing over-advanced (bank 1)',
+  P0016: 'Crankshaft / camshaft position mismatch (bank 1)', P0017: 'Crankshaft / exhaust camshaft position mismatch (bank 1)',
+  P0101: 'Mass air flow sensor reading out of range', P0102: 'Mass air flow sensor reading low', P0103: 'Mass air flow sensor reading high',
+  P0106: 'Manifold pressure (MAP) sensor reading out of range', P0113: 'Intake air temperature sensor reading high',
+  P0116: 'Engine coolant temperature sensor out of range', P0117: 'Engine coolant temperature sensor reading low', P0118: 'Engine coolant temperature sensor reading high',
+  P0121: 'Throttle position sensor out of range', P0122: 'Throttle position sensor reading low', P0123: 'Throttle position sensor reading high',
+  P0125: 'Engine takes too long to warm up', P0128: 'Coolant thermostat — engine running cooler than it should',
+  P0131: 'Oxygen sensor reading low (bank 1, sensor 1)', P0133: 'Oxygen sensor responding slowly (bank 1, sensor 1)', P0135: 'Oxygen sensor heater problem (bank 1, sensor 1)',
+  P0137: 'Oxygen sensor reading low (bank 1, sensor 2)', P0138: 'Oxygen sensor reading high (bank 1, sensor 2)', P0141: 'Oxygen sensor heater problem (bank 1, sensor 2)',
+  P0155: 'Oxygen sensor heater problem (bank 2, sensor 1)', P0161: 'Oxygen sensor heater problem (bank 2, sensor 2)',
+  P0171: 'Engine running too lean (bank 1) — often a vacuum leak', P0172: 'Engine running too rich (bank 1)',
+  P0174: 'Engine running too lean (bank 2) — often a vacuum leak', P0175: 'Engine running too rich (bank 2)',
+  P0201: 'Fuel injector circuit — cylinder 1', P0202: 'Fuel injector circuit — cylinder 2', P0203: 'Fuel injector circuit — cylinder 3', P0204: 'Fuel injector circuit — cylinder 4',
+  P0221: 'Throttle position sensor B out of range', P0222: 'Throttle position sensor B reading low', P0223: 'Throttle position sensor B reading high',
+  P0300: 'Random / multiple cylinder misfire', P0301: 'Cylinder 1 misfire', P0302: 'Cylinder 2 misfire', P0303: 'Cylinder 3 misfire', P0304: 'Cylinder 4 misfire',
+  P0305: 'Cylinder 5 misfire', P0306: 'Cylinder 6 misfire', P0307: 'Cylinder 7 misfire', P0308: 'Cylinder 8 misfire',
+  P0325: 'Knock sensor circuit (bank 1)', P0335: 'Crankshaft position sensor circuit', P0340: 'Camshaft position sensor circuit (bank 1)',
+  P0351: 'Ignition coil A circuit', P0352: 'Ignition coil B circuit', P0353: 'Ignition coil C circuit', P0354: 'Ignition coil D circuit',
+  P0401: 'EGR flow too low', P0411: 'Secondary air injection — incorrect flow',
+  P0420: 'Catalytic converter not working efficiently (bank 1)', P0430: 'Catalytic converter not working efficiently (bank 2)',
+  P0440: 'Fuel vapour (EVAP) system problem', P0441: 'EVAP system — incorrect purge flow', P0442: 'EVAP system — small leak (often the gas cap)',
+  P0446: 'EVAP vent control circuit', P0455: 'EVAP system — large leak (check the gas cap)', P0456: 'EVAP system — very small leak (often the gas cap)', P0457: 'EVAP leak — gas cap loose or off',
+  P0500: 'Vehicle speed sensor problem', P0505: 'Idle air control system problem', P0506: 'Idle speed lower than expected', P0507: 'Idle speed higher than expected',
+  P0562: 'System voltage low (battery / charging)', P0563: 'System voltage high (charging system)',
+  P0601: 'Engine computer memory error', P0603: 'Engine computer memory reset error', P0606: 'Engine computer processor fault',
+  P0700: 'Transmission control system problem', P0705: 'Transmission range (gear position) sensor', P0715: 'Transmission input speed sensor',
+  P0720: 'Transmission output speed sensor', P0730: 'Transmission — incorrect gear ratio', P0740: 'Torque converter clutch circuit', P0750: 'Transmission shift solenoid A',
+  P2096: 'Fuel trim too lean after the catalytic converter (bank 1)', P2097: 'Fuel trim too rich after the catalytic converter (bank 1)',
+  P2101: 'Throttle actuator control motor range', P2135: 'Throttle position sensors disagree',
+  U0100: 'Lost communication with the engine computer', U0101: 'Lost communication with the transmission computer', U0121: 'Lost communication with the ABS module',
+};
+function dtcInfo(x) {
+  const code = String(typeof x === 'string' ? x : (x && (x.code || x.dtc)) || '').trim().toUpperCase();
+  const given = x && typeof x === 'object' ? [].concat(x.name || x.description || x.desc || []).filter(Boolean).join(' · ') : '';
+  if (given) return {code, text: given};
+  if (DTC_TEXT[code]) return {code, text: DTC_TEXT[code]};
+  // not in the list: say what the code's family covers
+  const fam = {B: 'Body (airbags, lights, comfort)', C: 'Chassis (brakes, steering, suspension)', U: 'Communication between the car\'s computers'}[code[0]];
+  if (fam) return {code, text: fam + ' problem'};
+  const area = {'0': 'Fuel & air', '1': 'Fuel & air', '2': 'Fuel & air', '3': 'Ignition / misfire', '4': 'Emissions control', '5': 'Speed / idle control', '6': 'Engine computer', '7': 'Transmission', '8': 'Transmission', '9': 'Transmission'}[code[2]];
+  return {code, text: (area ? area + ' problem' : 'Engine problem') + (code[1] === '1' ? ' (maker-specific code)' : '')};
+}
+// what to show for the check-engine light: each code with its meaning, or an honest "no code sent"
+function engineFaults(b) {
+  const list = (b && Array.isArray(b.dtcList) ? b.dtcList : []).map(dtcInfo).filter(d => d.code);
+  return list.length ? list.map(d => `${d.code} · ${d.text}`) : ['Bouncie didn\'t send a fault code — have it scanned'];
+}
+
+// ── CREW CARS PAGE: hero carousel ─────────────────────────────
+// One big card per car (swipe, or tap a thumbnail to jump), cars needing attention first. The rings on top show
+// how many cars are out / need attention / are low on fuel out of the whole fleet; tapping one shows only those
+// cars, "All cars" (the first ring) or tapping the same ring again shows every car.
+function ccView(car, todayIso) {
+  const d = carData(car.key), b = S.bouncieData[car.key], bOk = !!(BOUNCIE_WORKER_URL && b && b.status === 'ok');
+  const ckm = parseInt(d.currentKm) || 0, nsKm = parseInt(d.nextServiceKm) || 0;
+  const svc = ckm > 0 && nsKm > 0 ? Math.max(0, nsKm - ckm) : null;
+  const fs = FUEL_STOPS.find(s => s.value === d.fuel);
+  const fuelPct = bOk && b.fuelLevel != null ? b.fuelLevel / 100 : (fs ? fs.pct : null);
+  const mil = bOk && b.milOn, batt = bOk && (b.battery === 'low' || b.battery === 'critical' || b.battery === 'shutdown');
+  const dmg = !!(d.damage && d.damage.open), oil = svc !== null && svc <= 500, lowFuel = fuelPct !== null && fuelPct <= 0.25;
+  const papers = [d.regExpiry && d.regExpiry < todayIso ? 'Registration expired' : null, d.insuranceExpiry && d.insuranceExpiry < todayIso ? 'Insurance expired' : null].filter(Boolean);
+  const tags = [];
+  if (dmg) tags.push(['🚨 Damage', 'r']);
+  if (mil) engineFaults(b).forEach(t => tags.push(['⚠️ Check engine · ' + t, 'r']));
+  if (batt) tags.push(['🔋 Battery ' + b.battery, 'r']);
+  if (lowFuel) tags.push(['⛽ Low fuel', 'r']);
+  if (oil) tags.push(['🛢️ Oil due in ' + svc + ' km', 'a']);
+  papers.forEach(p => tags.push(['📄 ' + p, 'r']));
+  const status = (mil || batt || lowFuel || dmg || papers.length) ? 'Alert' : oil ? 'Service' : 'OK';
+  return {car, d, b, bOk, ckm, nsKm, svc, mil, batt, dmg, oil, lowFuel, papers, tags, status,
+    alert: status !== 'OK', out: !!(d.trip && d.trip.out),
+    fuelPct, fuelTxt: bOk && b.fuelLevel != null ? Math.round(b.fuelLevel) + '%' : (d.fuel || '—'),
+    fuelCol: fuelPct === null ? '#5E7090' : fuelPct <= 0.15 ? '#EF4444' : fuelPct <= 0.25 ? '#F59E0B' : '#22C55E',
+    svcPct: svc === null ? 0 : Math.min(100, Math.max(0, Math.round((10000 - svc) / 10000 * 100))),
+    svcCol: svc === null ? '#5E7090' : svc <= 500 ? '#EF4444' : svc <= 2000 ? '#F59E0B' : '#3B82F6'};
+}
+const CC_FILTERS = [
+  {k: null,   label: 'All cars',  icon: '🚗', col: '#5B8FE8', test: () => true},
+  {k: 'out',  label: 'Out',       icon: '🔑', col: '#F5B041', test: v => v.out},
+  {k: 'attn', label: 'Attention', icon: '⚠️', col: '#F87171', test: v => v.alert},
+  {k: 'fuel', label: 'Low fuel',  icon: '⛽', col: '#FBB040', test: v => v.lowFuel},
+];
+function setCcFilter(k) { S.ccFilter = (S.ccFilter === k && k !== null) ? null : k; render(); }
+function ccJump(key) { const el = document.querySelector(`#ccTrack [data-car="${key}"]`); if (el) el.scrollIntoView({behavior: 'smooth', inline: 'center', block: 'nearest'}); }
+const ccStCol = s => s === 'Alert' ? '#F87171' : s === 'Service' ? '#FBB040' : '#4ADE80';
+function ccRingsHtml(views) {
+  const total = views.length || 1;
+  // no take/return check-in in this app (no trips) → no Out ring
+  const rings = CC_FILTERS.filter(f => f.k !== 'out' || typeof carTripLine === 'function');
+  return `<div style="display:flex;justify-content:space-around;padding:4px 8px 12px">${rings.map(f => {
+    const n = views.filter(f.test).length, on = (S.ccFilter || null) === f.k, dim = S.ccFilter && !on, p = n / total * 100;
+    return `<button onclick="setCcFilter(${f.k ? `'${f.k}'` : 'null'})" aria-pressed="${on}" style="font:inherit;color:inherit;background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:0;-webkit-tap-highlight-color:transparent">
+      <svg width="58" height="58" viewBox="0 0 58 58" style="opacity:${dim ? .45 : 1};transition:opacity .2s"><circle cx="29" cy="29" r="23" fill="${on ? f.col + '22' : 'none'}" stroke="#1C2638" stroke-width="6"/>
+        ${n ? `<circle cx="29" cy="29" r="23" fill="none" stroke="${f.col}" stroke-width="6" stroke-linecap="round" pathLength="100" stroke-dasharray="${p.toFixed(1)} 100" transform="rotate(-90 29 29)"/>` : ''}
+        <text x="29" y="34" text-anchor="middle" font-size="16" font-weight="900" fill="${f.col}" font-family="inherit">${n}</text></svg>
+      <span style="font-size:10px;font-weight:800;color:${on ? f.col : '#7A88A0'}">${f.icon} ${f.label}</span></button>`; }).join('')}</div>`;
+}
+function ccCardHtml(v) {
+  const {car} = v, plate = car.plate ? ' · ' + _carEsc(car.plate) : '';
+  const lights = v.bOk ? [['Battery', !v.batt, '<rect x="2" y="7" width="16" height="10" rx="2"/><path d="M21 11v2"/>'], ['Engine', !v.mil, '<rect x="3" y="8" width="13" height="8" rx="2"/><path d="M16 10h2l2 2-2 2h-2M7 8V6M11 8V6"/>']]
+    .map(([l, ok, p]) => `<span style="display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:${ok ? '#22C55E' : '#EF4444'}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">${p}</svg>${l}</span>`).join('')
+    : `<span style="font-size:10.5px;color:#5E7090;font-weight:600">No GPS on this car</span>`;
+  return `<div data-car="${car.key}" onclick="openCarDetail('${car.key}')" style="flex:0 0 calc(100% - 56px);max-width:420px;scroll-snap-align:center;border-radius:22px;overflow:hidden;background:#0E1626;border:1px solid ${v.alert ? 'rgba(239,68,68,.45)' : '#1A2840'};cursor:pointer">
+    <div style="position:relative;height:150px;background:linear-gradient(160deg,${car.color},${car.color2})">
+      <img src="${car.img}" alt="${_carEsc(car.name)}" style="position:absolute;inset:12px;width:calc(100% - 24px);height:126px;object-fit:contain;filter:drop-shadow(0 6px 12px rgba(0,0,0,.4))" onerror="this.style.opacity='.3'">
+      <span style="position:absolute;top:10px;left:10px;font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.45);color:${ccStCol(v.status)}">${v.status}</span></div>
+    <div style="padding:12px 14px 14px">
+      <div style="font-size:19px;font-weight:900;color:#F2F6FC">${_carEsc(car.name)}</div>
+      <div style="font-size:11px;color:#6B7A92">${_carEsc(car.label || 'Crew car')}${plate}</div>
+      ${typeof carTripLine === 'function' ? `<div style="margin-top:5px">${carTripLine(v.d).replace('font-size:11px', 'font-size:12.5px')}</div>` : ''}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div style="border-radius:12px;background:#121C2E;padding:9px 11px"><div style="font-size:9.5px;color:#5E7090;font-weight:800;letter-spacing:.5px">FUEL</div>
+          <div style="font-size:21px;font-weight:900;color:${v.fuelCol}">${_carEsc(v.fuelTxt)}</div>
+          <div style="height:4px;border-radius:2px;background:#1E2840;overflow:hidden"><i style="display:block;height:100%;width:${v.fuelPct === null ? 0 : Math.round(v.fuelPct * 100)}%;background:${v.fuelCol}"></i></div></div>
+        <div style="border-radius:12px;background:#121C2E;padding:9px 11px"><div style="font-size:9.5px;color:#5E7090;font-weight:800;letter-spacing:.5px">ODOMETER</div>
+          <div style="font-size:19px;font-weight:800;color:#E8EEF8;font-variant-numeric:tabular-nums">${v.ckm > 0 ? v.ckm.toLocaleString() : '—'}</div><div style="font-size:9.5px;color:#5E7090">km</div></div></div>
+      <div style="border-radius:12px;background:#121C2E;padding:9px 11px;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;font-size:9.5px;font-weight:800;letter-spacing:.5px"><span style="color:#5E7090">NEXT SERVICE</span><span style="color:${v.svcCol}">${v.svc === null ? '—' : v.svc.toLocaleString() + ' km left'}</span></div>
+        <div style="position:relative;height:5px;border-radius:3px;background:#1E2840;margin-top:6px"><i style="position:absolute;left:0;top:0;bottom:0;border-radius:3px;width:${v.svcPct}%;background:${v.svcCol}"></i></div>
+        <div style="font-size:9.5px;color:#5E7090;margin-top:4px">${v.svc === null ? 'No service km set' : 'at ' + v.nsKm.toLocaleString() + ' km'}</div></div>
+      <div style="display:flex;gap:14px;margin-top:10px;align-items:center">${lights}</div>
+      ${v.tags.length ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">${v.tags.map(([t, lvl]) => `<span style="font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:7px;line-height:1.35;${lvl === 'r' ? 'background:rgba(239,68,68,.15);color:#F87171' : 'background:rgba(245,158,11,.16);color:#FBB040'}">${_carEsc(t)}</span>`).join('')}</div>` : ''}
+    </div></div>`;
+}
+
 function renderCrewCarsList(el) {
   const isCarsTab = S.tab === 'cars';
   if(isCarsTab) {
@@ -5868,148 +5998,17 @@ function renderCrewCarsList(el) {
   const todayIso=localDateISO();
 
   if(isCarsTab) {
-    // ── NEW CARD DESIGN ──
-    const _spannerSvg=(color,sz=13)=>`<svg width="${sz}" height="${sz}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>`;
-    const _fc=p=>p===null?'#2A4A6A':p<=0.15?'#EF4444':p<=0.25?'#F59E0B':'#22C55E';
-    const _hasAlert=car=>{
-      const d=carData(car.key),b=S.bouncieData[car.key];
-      const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
-      const ckm=parseInt(d.currentKm)||0,nsKm=parseInt(d.nextServiceKm)||0;
-      const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
-      const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
-      return (ckm>0&&nsKm>0&&(nsKm-ckm)<=500)||(fuelPct!==null&&fuelPct<=0.25)||
-             (bOk&&b.milOn)||(bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown'))||
-             !!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso)||!!(d.damage&&d.damage.open);
-    };
-    const _buildCard=car=>{
-      const d=carData(car.key);
-      const b=S.bouncieData[car.key];
-      const bOk=BOUNCIE_WORKER_URL&&b&&b.status==='ok';
-      const ckm=parseInt(d.currentKm)||0,nsKm=parseInt(d.nextServiceKm)||0;
-      const oilWarn=ckm>0&&nsKm>0&&(nsKm-ckm)<=500;
-      const fs=FUEL_STOPS.find(s=>s.value===d.fuel);
-      const fuelPct=bOk&&b.fuelLevel!=null?b.fuelLevel/100:(fs?fs.pct:null);
-      const fuelPctNum=fuelPct!==null?Math.round(fuelPct*100):null;
-      const fuelAlert=fuelPct!==null&&fuelPct<=0.25;
-      const fuelLabel=bOk&&b.fuelLevel!=null?Math.round(b.fuelLevel)+'%':(d.fuel||'—');
-      const milAlert=bOk&&b.milOn;
-      const battAlert=bOk&&(b.battery==='low'||b.battery==='critical'||b.battery==='shutdown');
-      const dmgAlert=!!(d.damage&&d.damage.open);
-      const anyAlert=oilWarn||fuelAlert||milAlert||battAlert||dmgAlert||!!(d.regExpiry&&d.regExpiry<todayIso)||!!(d.insuranceExpiry&&d.insuranceExpiry<todayIso);
-      const svcRemain=ckm>0&&nsKm>0?Math.max(0,nsKm-ckm):null;
-      const svcPct=svcRemain!==null?Math.min(100,Math.max(0,Math.round((10000-(nsKm-ckm))/10000*100))):0;
-      const svcCol=svcRemain===null?'#2A4A6A':svcRemain<=500?'#EF4444':svcRemain<=2000?'#F59E0B':'#3B82F6';
-      const trackPct=Math.min(Math.max(svcPct,4),92);
-      const fc=_fc(fuelPct);
-      const fpNum=fuelPctNum??0;
-      const cardBorder=anyAlert?'rgba(239,68,68,.42)':'#1A2840';
-      const cardBg=anyAlert?'linear-gradient(110deg,#160F14,#130C18)':'linear-gradient(110deg,#0D1828,#0B1625)';
-      const chip=milAlert||battAlert||fuelAlert||dmgAlert?
-        `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(239,68,68,.18);color:#F87171;flex-shrink:0;margin-left:6px;white-space:nowrap">Alert</span>`:
-        oilWarn?`<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(245,158,11,.18);color:#FBB040;flex-shrink:0;margin-left:6px;white-space:nowrap">Service</span>`:
-        `<span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;background:rgba(34,197,94,.12);color:#4ADE80;flex-shrink:0;margin-left:6px;white-space:nowrap">OK</span>`;
-      const tagItems=[];
-      if(dmgAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">🚨 Damage</span>`);
-      if(milAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">⚠️ MIL ${b.dtcList?.join(' ')||''}</span>`);
-      if(battAlert) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(239,68,68,.15);color:#F87171">🔋 Battery ${b.battery}</span>`);
-      if(oilWarn) tagItems.push(`<span style="font-size:10px;font-weight:700;padding:3px 8px;border-radius:6px;background:rgba(245,158,11,.18);color:#FBB040">🛢️ Oil due in ${svcRemain} km</span>`);
-      const tags=tagItems.length?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">${tagItems.join('')}</div>`:'';
-      let statusIcons='';
-      if(bOk){
-        const batOk=!battAlert;
-        const batCol=batOk?'#22C55E':'#EF4444';
-        const engOk=!milAlert;
-        const engCol=engOk?'#22C55E':'#EF4444';
-        const batSvg=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${batCol}" stroke-width="2.2" stroke-linecap="round"><rect x="1" y="7" width="17" height="10" rx="2"/><path d="M23 11v2" stroke="${batCol}" stroke-width="2.5"/><rect x="3" y="9" width="${batOk?11:3}" height="6" rx="1" fill="${batCol}" stroke="none"/></svg>`;
-        const engSvg=`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${engCol}" stroke-width="2" stroke-linecap="round"><rect x="3" y="8" width="13" height="8" rx="2"/><path d="M16 10h2l2 2-2 2h-2M7 8V6M11 8V6M3 12H1"/></svg>`;
-        const siStyle=col=>`width:30px;height:30px;border-radius:50%;background:${col}15;border:1.5px solid ${col}28;display:flex;align-items:center;justify-content:center;position:relative`;
-        const badge=(col,ok)=>`<div style="position:absolute;bottom:-2px;right:-2px;width:12px;height:12px;border-radius:50%;background:${col};border:1.5px solid #080D14;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#fff">${ok?'✓':'!'}</div>`;
-        statusIcons=`<div style="display:flex;gap:10px;align-items:flex-end">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div style="${siStyle(batCol)}">${batSvg}${badge(batCol,batOk)}</div>
-            <div style="font-size:9px;font-weight:700;color:${batCol}">Battery</div>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
-            <div style="${siStyle(engCol)}">${engSvg}${badge(engCol,engOk)}</div>
-            <div style="font-size:9px;font-weight:700;color:${engCol}">Engine</div>
-          </div>
-        </div>`;
-      }
-      const fuelRail=`<div style="flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:12px 10px;border-left:1px solid ${fc}18;background:${fc}06">
-        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
-          <div style="position:relative;width:52px;height:52px;border-radius:14px;background:#111D2E;overflow:hidden;border:1px solid ${fc}25">
-            <div style="position:absolute;bottom:0;left:0;right:0;height:${fpNum}%;background:${fc}28"></div>
-            <div style="position:absolute;bottom:${fpNum}%;left:0;right:0;height:2px;background:${fc}55"></div>
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="${fc}" stroke-width="1.8" stroke-linecap="round"><path d="M3 22V6a2 2 0 012-2h8a2 2 0 012 2v4h1a2 2 0 012 2v3a1 1 0 001 1 1 1 0 001-1v-5l-3-3"/><path d="M3 11h12"/></svg>
-            </div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-size:13px;font-weight:900;letter-spacing:-.3px;color:${fc}">${fuelPctNum!==null?fuelPctNum+'%':fuelLabel}</div>
-            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${fc};opacity:.5">Fuel</div>
-          </div>
-        </div>
-      </div>`;
-      const raceStrip=svcRemain!==null?`<div style="border-top:1px solid #1A2840;padding:9px 13px 11px;background:${svcCol}06">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div style="display:flex;align-items:center;gap:5px">
-            ${_spannerSvg(svcCol,13)}
-            <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:${svcCol}">Next Service</span>
-          </div>
-          <div style="text-align:right">
-            <span style="font-size:15px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:-.4px;color:${svcCol}">${Number(svcRemain).toLocaleString()}</span>
-            <span style="font-size:10px;font-weight:600;margin-left:1px;color:${svcCol}88">km left</span>
-            <div style="font-size:9px;color:${svcCol}66">at ${Number(nsKm).toLocaleString()} km</div>
-          </div>
-        </div>
-        <div style="position:relative;height:30px;display:flex;align-items:center">
-          <div style="position:absolute;left:0;right:0;height:6px;background:#1A2840;border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${svcPct}%;border-radius:3px;background:linear-gradient(90deg,#3B82F640,${svcCol})"></div>
-          </div>
-          <div style="position:absolute;top:50%;transform:translate(-50%,-50%);left:${trackPct}%;pointer-events:none">
-            <img src="${car.img}" style="width:26px;height:26px;object-fit:contain;transform:${car.facesRight?'none':'scaleX(-1)'};filter:drop-shadow(0 1px 4px rgba(0,0,0,.7))" onerror="this.style.display='none'">
-          </div>
-        </div>
-      </div>`:'';
-      return `<div onclick="openCarDetail('${car.key}')" style="border-radius:18px;overflow:hidden;border:1px solid ${cardBorder};margin:0 12px 10px;cursor:pointer;background:${cardBg}">
-        <div style="display:flex;min-height:92px">
-          <div style="width:62px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:12px 5px;background:linear-gradient(145deg,${car.color}28,${car.color}0E)">
-            <img src="${car.img}" style="width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 1px 4px rgba(0,0,0,.6))" onerror="this.style.opacity='.3'">
-            <div style="font-size:7px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.75;color:${car.color}">${car.label}</div>
-            ${car.plate?`<div style="font-size:7px;font-weight:700;color:#2A4060;letter-spacing:.3px">${car.plate}</div>`:''}
-          </div>
-          <div style="flex:1;min-width:0;padding:12px 8px;display:flex;flex-direction:column;justify-content:space-between">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:7px">
-              <div style="min-width:0">
-                <div style="font-size:14px;font-weight:800;color:#EAF2FF;letter-spacing:-.2px">${car.name}</div>
-                ${carTripLine(d)}
-              </div>
-              ${chip}
-            </div>
-            <div style="display:flex;align-items:flex-end;justify-content:space-between">
-              <div>
-                <div style="font-size:10px;color:#2A4A6A;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:2px">Odometer</div>
-                <div style="font-size:19px;font-weight:800;color:#C8DCF0;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1">${ckm>0?Number(ckm).toLocaleString():'—'}<span style="font-size:10px;color:#2A4060;font-weight:600;margin-left:2px">km</span></div>
-              </div>
-              ${statusIcons}
-            </div>
-            ${tags}
-          </div>
-          ${fuelRail}
-        </div>
-        ${raceStrip}
-      </div>`;
-    };
-    const alertCars=CREW_CARS.filter(c=>_hasAlert(c));
-    const clearCars=CREW_CARS.filter(c=>!_hasAlert(c));
-    const secHdr=(label,color)=>`<div style="font-size:10px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;display:flex;align-items:center;gap:8px;margin:0 14px 10px;color:${color}">${label}<span style="flex:1;height:1px;background:#1A2840;display:block"></span></div>`;
-    if(alertCars.length){
-      html+=secHdr('⚠️ Needs Attention','#EF4444');
-      alertCars.forEach(c=>{html+=_buildCard(c);});
-      html+=`<div style="height:14px"></div>`;
-    }
-    html+=secHdr('✅ All Clear','#22C55E');
-    clearCars.forEach(c=>{html+=_buildCard(c);});
+    // ── Hero carousel: one big card per car, cars needing attention first; the fleet rings filter it (ccView, ccCardHtml) ──
+    const views = CREW_CARS.map(c => ccView(c, todayIso));
+    const ordered = [...views.filter(v => v.alert), ...views.filter(v => !v.alert)];
+    const flt = CC_FILTERS.find(x => x.k === (S.ccFilter || null)) || CC_FILTERS[0];
+    const shown = ordered.filter(flt.test);
+    html += ccRingsHtml(views);
+    html += shown.length
+      ? `<style>#ccTrack::-webkit-scrollbar{display:none}</style>
+        <div id="ccTrack" style="display:flex;${shown.length === 1 ? 'justify-content:center;' : ''}gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 28px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch">${shown.map(ccCardHtml).join('')}</div>
+        <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:0 12px 10px">${shown.map(v => `<button onclick="ccJump('${v.car.key}')" aria-label="${_carEsc(v.car.name)}" style="width:44px;height:32px;border-radius:10px;background:#111A28;display:flex;align-items:center;justify-content:center;border:1.5px solid ${ccStCol(v.status)}66;padding:0;cursor:pointer"><img src="${v.car.img}" alt="" style="width:36px;height:22px;object-fit:contain"></button>`).join('')}</div>`
+      : `<div style="margin:36px 20px;text-align:center;color:#7A88A0;font-size:14px">No cars here right now 🎉</div>`;
 
   } else {
     // ── Audits tab: existing grid ──
@@ -6206,7 +6205,7 @@ function renderCarDetail(el, key) {
 
   // ── Status: problems, the key, damage, crew note, last use, live readings ──
   const problems=[];
-  if(_milAlert) problems.push(`⚠️ Check engine${_b.dtcList?.length?': '+_b.dtcList.join(', '):''}`);
+  if(_milAlert) engineFaults(_b).forEach(t=>problems.push('⚠️ Check engine · '+t));
   if(_battAlert) problems.push(`🔋 Battery ${_b.battery}`);
   const out=!!(d.trip&&d.trip.out);
   const backBy=d.trip&&d.trip.returnedBy?d.trip.returnedBy:(d.lastUse&&d.lastUse.name)||'';

@@ -90,7 +90,8 @@ async function main() {
 
     // Check engine light (Bouncie MIL)
     if (bOk && b.milOn) {
-      const codes = (b.dtcList || []).length ? ` (codes: ${b.dtcList.join(', ')})` : '';
+      const codeList = (b.dtcList || []).map(x => typeof x === 'string' ? x : (x && x.code) || '').filter(Boolean);   // codes can come as text or {code, name}
+      const codes = codeList.length ? ` (codes: ${codeList.join(', ')})` : '';
       alerts.push({ key, car: name, type: 'engine', message: `🚨 ${name} check engine light is ON!${codes}` });
     }
 
