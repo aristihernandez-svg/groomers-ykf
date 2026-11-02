@@ -68,9 +68,14 @@ async function main() {
   const cars = carSnap.data();
   const bouncie = await fetchBouncieData();
 
+  // Cars added from the app (appConfig/customCrewCars, removed ones marked retired) get the same alerts
+  const addedSnap = await db.collection('appConfig').doc('customCrewCars').get().catch(() => null);
+  const carNames = {...CAR_NAMES};
+  ((addedSnap && addedSnap.exists && addedSnap.data().cars) || []).filter(c => !c.retired).forEach(c => { carNames[c.key] = c.name; });
+
   // Build alerts
   const alerts = [];
-  for (const [key, name] of Object.entries(CAR_NAMES)) {
+  for (const [key, name] of Object.entries(carNames)) {
     const d = cars[key];
     if (!d) continue;
     const b = bouncie[key];

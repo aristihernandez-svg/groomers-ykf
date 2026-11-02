@@ -20,6 +20,13 @@ webpush.setVapidDetails(
 
 const CREW_CAR_KEYS = ['escape', 'elantra', 'micra', 'impala', 'whtruck', 'brtruck', 'kubota', 'civic'];
 
+// Cars added from the app live in appConfig/customCrewCars (removed ones are marked retired)
+async function allCrewCarKeys(db) {
+  const snap = await db.collection('appConfig').doc('customCrewCars').get().catch(() => null);
+  const added = ((snap && snap.exists && snap.data().cars) || []).filter(c => !c.retired).map(c => c.key);
+  return [...CREW_CAR_KEYS, ...added.filter(k => !CREW_CAR_KEYS.includes(k))];
+}
+
 const AIRCRAFT_METRO    = ['CPX', 'TIM', 'IOC', 'IOB', 'IOJ', 'IOA', 'IOH', 'KKC'];
 const AIRCRAFT_WESTWIND = ['IAW', 'XDP', 'XAW'];
 const AIRCRAFT_ASTRA    = ['FDAX'];
@@ -110,7 +117,7 @@ async function main() {
   // cars switched off for this month (out of service) don't count, same as in the app
   const carOffSnap = await db.collection('carsState').doc('disabled').get();
   const carsOff = new Set(((carOffSnap.exists ? carOffSnap.data().data : {}) || {})[month] || []);
-  const pendingCars = CREW_CAR_KEYS.filter(k => !carsOff.has(k) && !doneCars.has(k));
+  const pendingCars = (await allCrewCarKeys(db)).filter(k => !carsOff.has(k) && !doneCars.has(k));
 
   const pendingAircraft   = await getPendingAircraft(db, month);
   const pendingFacilities = await getPendingFacilities(db, month);

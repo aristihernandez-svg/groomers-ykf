@@ -319,6 +319,21 @@ if(_urlCar && CREW_CARS.find(c=>c.key===_urlCar)) {
   view = _urlCar;
 }
 render();
+
+// Cars added from the app (Audits → Crew Cars → "+ Add a car") live in appConfig/customCrewCars, each picture in
+// appConfig/crewCarImg_<key>; removed ones are marked retired. They join the list here too, QR deep links included.
+const CAR_IMG_BLANK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M8 42c0-6 3-9 9-10l14-12c3-2 6-3 10-3h30c4 0 7 1 10 4l11 11c9 1 18 3 20 7v7c0 2-2 4-4 4H12c-2 0-4-2-4-4z" fill="#8A9AB2"/><circle cx="32" cy="48" r="8" fill="#2A3A52"/><circle cx="92" cy="48" r="8" fill="#2A3A52"/></svg>');
+db.collection('appConfig').doc('customCrewCars').get().then(async snap => {
+  const added = ((snap.exists && snap.data().cars) || []).filter(c => !c.retired && !CREW_CARS.some(x => x.key === c.key));
+  for (const c of added) {
+    let img = CAR_IMG_BLANK;
+    try { const d = await db.collection('appConfig').doc('crewCarImg_' + c.key).get(); if (d.exists && d.data().img) img = d.data().img; } catch (e) {}
+    CREW_CARS.push({key: c.key, name: c.name, color: c.color, color2: c.color2, label: c.label, img});
+  }
+  if (!added.length) return;
+  if (_urlCar && view === 'list' && CREW_CARS.find(c => c.key === _urlCar)) view = _urlCar;
+  render();
+}).catch(e => console.log('Added cars failed to load:', e));
 </script>
 </body>
 </html>

@@ -2102,7 +2102,271 @@ const PROC_VIDEOS = {
   o2:'',westwind:'',metro:'', // paste YouTube URLs here
 };
 
-const CREW_CARS = BASE_CONFIG.crewCars;
+// ── CREW CARS ADDED FROM THE APP ───────────────────────────────
+// Audits → Crew Cars → "+ Add a car". A new car's details live in appConfig/customCrewCars ({cars:[…]}) and its
+// picture — a cut-out PNG in the same style as the built-in cars — in its own doc, appConfig/crewCarImg_<key>.
+// They join CREW_CARS, so every screen, audit, PDF, record, reminder and the QR check-in treat them like the others.
+// Removing one only marks it retired: it leaves the lists, but past records keep its name (RETIRED_CARS).
+const CREW_CARS = [...BASE_CONFIG.crewCars];
+const RETIRED_CARS = [];
+const CAR_IMG_BLANK = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 60"><path d="M8 42c0-6 3-9 9-10l14-12c3-2 6-3 10-3h30c4 0 7 1 10 4l11 11c9 1 18 3 20 7v7c0 2-2 4-4 4H12c-2 0-4-2-4-4z" fill="#8A9AB2"/><circle cx="32" cy="48" r="8" fill="#2A3A52"/><circle cx="92" cy="48" r="8" fill="#2A3A52"/><path d="M36 30l9-8h14v8zM65 22h10l8 8H65z" fill="#C8D4E4"/></svg>');
+let _carImgs = {};   // key -> {img, at}
+function applyCustomCars(list) {
+  for (let i = CREW_CARS.length - 1; i >= 0; i--) if (CREW_CARS[i].custom) CREW_CARS.splice(i, 1);
+  RETIRED_CARS.length = 0;
+  (list || []).forEach(c => (c.retired ? RETIRED_CARS : CREW_CARS).push({...c, custom: true, img: (_carImgs[c.key] || {}).img || CAR_IMG_BLANK}));
+}
+function carByKey(key) { return CREW_CARS.find(c => c.key === key) || RETIRED_CARS.find(c => c.key === key); }
+// full address of a car picture, for PDFs (built-in pictures are files; added ones are already complete)
+function carImgSrc(car) { return /^(data:|https?:)/.test(car.img || '') ? car.img : location.origin + location.pathname.replace('index.html', '') + car.img; }
+// every car to show for a given month: today's list, plus removed cars that have an audit that month
+function carsForMonth(month) { return [...CREW_CARS, ...RETIRED_CARS.filter(c => S.monthlyCarAudits[month + '-' + c.key])]; }
+try { const c = JSON.parse(localStorage.getItem('gykf_customCars') || 'null'); if (c) { _carImgs = c.imgs || {}; applyCustomCars(c.cars); } } catch (e) {}
+
+function loadCustomCars() {
+  if (!db || loadCustomCars.on) return;
+  loadCustomCars.on = true;
+  db.collection('appConfig').doc('customCrewCars').onSnapshot(async snap => {
+    const list = (snap.exists && snap.data().cars) || [];
+    // fetch a picture only when it's new or was changed since this phone last saw it
+    await Promise.all(list.filter(c => !_carImgs[c.key] || _carImgs[c.key].at !== c.imgAt).map(c =>
+      db.collection('appConfig').doc('crewCarImg_' + c.key).get()
+        .then(d => { if (d.exists && d.data().img) _carImgs[c.key] = {img: d.data().img, at: d.data().at || null}; }).catch(() => {})));
+    applyCustomCars(list);
+    try { localStorage.setItem('gykf_customCars', JSON.stringify({cars: list, imgs: _carImgs})); } catch (e) {}
+    CREW_CARS.forEach(listenCarAudit);
+    render();
+  }, e => console.log('customCrewCars listener error:', e));
+}
+
+// ── Add / edit form ──
+const CAR_TYPES = ['SUV', 'Sedan', 'Hatchback', 'Pickup', 'Van', 'UTV'];
+let _newCar = null;   // the form while it's open
+function openAddCarFlow(editKey) {
+  const ed = editKey ? carByKey(editKey) : null;
+  _newCar = ed
+    ? {key: ed.key, name: ed.name, label: ed.label, fuel: ed.fuel || 'gasoline', plate: ed.plate || '', img: ed.img === CAR_IMG_BLANK ? null : ed.img, color: ed.color, color2: ed.color2, facesRight: !!ed.facesRight, imgChanged: false}
+    : {key: null, name: '', label: 'Sedan', fuel: 'gasoline', plate: '', img: null, color: '#5B6B82', color2: '#8A9AB2', facesRight: false, imgChanged: false};
+  openModal(ed ? '✏️ Edit ' + ed.name : '🚗 Add a crew car', '<div id="ncBody"></div>', saveNewCar);
+  document.getElementById('mSave').textContent = ed ? 'Save changes' : 'Add car';
+  renderNewCarForm();
+}
+// the same hero as the car's own page, so you see exactly how it will look
+function carPreviewHtml() {
+  const n = _newCar;
+  return `<div style="position:relative;height:150px;border-radius:14px;overflow:hidden;margin-bottom:6px;background:linear-gradient(160deg,${n.color},${n.color2})">
+    <img src="${n.img || CAR_IMG_BLANK}" alt="" style="width:100%;height:100%;object-fit:contain;padding:12px;filter:drop-shadow(0 4px 16px rgba(0,0,0,0.4));${n.img ? '' : 'opacity:.45'}">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,0.62) 0%,rgba(0,0,0,0.08) 60%)"></div>
+    <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 14px">
+      <div style="font-size:19px;font-weight:800;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,0.4)">${_hdEsc(n.name || 'New car')}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:2px"><span style="font-size:12px;color:rgba(255,255,255,0.85)">${_hdEsc(n.label)} · ${n.fuel === 'diesel' ? 'Diesel' : n.fuel === 'electric' ? 'Electric' : 'Gasoline'}</span>
+        ${n.plate ? `<span style="font-size:11px;font-weight:800;letter-spacing:1.5px;color:#111;background:#f5e642;border-radius:4px;padding:2px 7px;border:1.5px solid rgba(0,0,0,0.25)">${_hdEsc(n.plate)}</span>` : ''}</div>
+    </div></div>`;
+}
+function renderNewCarForm() {
+  const n = _newCar, box = document.getElementById('ncBody'); if (!box) return;
+  const chip = (on, label, fn) => `<button type="button" onclick="${fn}" style="padding:7px 12px;border-radius:999px;border:1px solid ${on ? 'var(--accent)' : 'var(--border2)'};background:${on ? 'var(--accent-dim)' : 'var(--glass2)'};color:${on ? 'var(--accent)' : 'var(--t2)'};font-size:12.5px;font-weight:700;cursor:pointer">${label}</button>`;
+  const refresh = `document.getElementById('ncPreview').innerHTML=carPreviewHtml()`;
+  box.innerHTML = `<div id="ncPreview">${carPreviewHtml()}</div>
+    <label>Picture</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" onclick="pickCarPhoto()" style="flex:1;min-width:150px;padding:11px;border-radius:var(--radius-sm);border:1.5px dashed var(--border2);background:var(--glass2);color:var(--t1);font-size:13.5px;font-weight:700;cursor:pointer">📷 ${n.img ? 'Change photo' : 'Take or choose a photo'}</button>
+      ${n.img ? `<button type="button" onclick="_newCar.facesRight=!_newCar.facesRight;renderNewCarForm()" style="padding:11px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t2);font-size:12.5px;font-weight:700;cursor:pointer">Faces ${n.facesRight ? 'right →' : '← left'}</button>` : ''}
+    </div>
+    <div style="font-size:11.5px;color:var(--t3);margin-top:5px;line-height:1.4">Best: the whole car from the side. You'll tap the car and the app cuts it out, like the other cars.</div>
+    <label>Car name</label>
+    <input id="ncName" value="${_hdEsc(n.name)}" placeholder="e.g. Toyota RAV4" maxlength="32" oninput="_newCar.name=this.value;${refresh}">
+    <label>Type</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${CAR_TYPES.map(t => chip(n.label === t, t, `_newCar.label='${t}';renderNewCarForm()`)).join('')}</div>
+    <label>Plate <span style="font-weight:400;color:var(--t3)">(optional)</span></label>
+    <input id="ncPlate" value="${_hdEsc(n.plate)}" placeholder="e.g. ABCD 123" maxlength="10" oninput="_newCar.plate=this.value.toUpperCase();${refresh}">
+    <label>Fuel</label>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">${[['gasoline', 'Gasoline'], ['diesel', 'Diesel'], ['electric', 'Electric']].map(([v, l]) => chip(n.fuel === v, l, `_newCar.fuel='${v}';renderNewCarForm()`)).join('')}</div>`;
+}
+function newCarKey(name) {
+  const base = (name.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 14)) || 'car';
+  const taken = new Set([...BASE_CONFIG.crewCars, ...CREW_CARS, ...RETIRED_CARS].map(c => c.key));
+  let k = base, i = 2; while (taken.has(k)) k = base + i++;
+  return k;
+}
+async function saveNewCar() {
+  const n = _newCar; if (!n) return;
+  n.name = n.name.trim();
+  if (!n.name) { toast('Give the car a name'); document.getElementById('ncName')?.focus(); return; }
+  if (!db) { toast('No connection — try again when online'); return; }
+  const btn = document.getElementById('mSave'); btn.disabled = true; btn.textContent = 'Saving…';
+  const isNew = !n.key, key = n.key || newCarKey(n.name), now = Date.now();
+  try {
+    let imgAt = (_carImgs[key] || {}).at || null;
+    if (n.img && (isNew || n.imgChanged)) {
+      imgAt = now;
+      await db.collection('appConfig').doc('crewCarImg_' + key).set({img: n.img, at: imgAt});
+      _carImgs[key] = {img: n.img, at: imgAt};
+    }
+    const entry = {key, name: n.name, label: n.label, fuel: n.fuel, plate: n.plate.trim(), color: n.color, color2: n.color2, facesRight: !!n.facesRight, imgAt};
+    // fresh read + only this car's entry changes, so two phones adding cars at once can't overwrite each other
+    const ref = db.collection('appConfig').doc('customCrewCars');
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(ref), list = ((snap.exists && snap.data().cars) || []).slice(), i = list.findIndex(c => c.key === key);
+      if (i >= 0) list[i] = {...list[i], ...entry}; else list.push({...entry, addedAt: now, retired: false});
+      tx.set(ref, {cars: list}, {merge: true});
+    });
+    closeModal(); _newCar = null;
+    toast(isNew ? `✅ ${entry.name} added — ready for this month's audit` : `✅ ${entry.name} updated`);
+  } catch (e) {
+    console.log('Save car failed:', e); toast('⚠️ Could not save — check the connection');
+    btn.disabled = false; btn.textContent = isNew ? 'Add car' : 'Save changes';
+  }
+}
+function removeCustomCarPrompt(key) {
+  const car = carByKey(key); if (!car) return;
+  openModal(`Remove ${car.name}?`,
+    `<p style="font-size:14px;color:var(--t1);line-height:1.5;margin:0">${_hdEsc(car.name)} will leave the crew cars and the monthly audits. Its past audits and their PDFs stay in Records, and you can bring it back from the Crew Cars audit page.</p>`,
+    () => setCustomCarRetired(key, true));
+  document.getElementById('mSave').textContent = 'Remove';
+}
+async function setCustomCarRetired(key, retired) {
+  if (!db) { toast('No connection'); return; }
+  const ref = db.collection('appConfig').doc('customCrewCars');
+  try {
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(ref), list = ((snap.exists && snap.data().cars) || []).map(c => c.key === key ? {...c, retired} : c);
+      tx.set(ref, {cars: list}, {merge: true});
+    });
+    closeModal();
+    if (retired && S.crewCarsView === key) backToCarList();
+    toast(retired ? 'Car removed — its records are kept' : '✅ Car is back');
+  } catch (e) { console.log('Retire car failed:', e); toast('⚠️ Failed — check connection'); }
+}
+// Edit / Remove, shown on the pages of cars added from the app
+function customCarAdminHtml(key) {
+  const car = carByKey(key); if (!car || !car.custom) return '';
+  return `<div style="display:flex;gap:8px;padding:6px 14px 0">
+    <button onclick="openAddCarFlow('${key}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer">✏️ Edit car</button>
+    <button onclick="removeCustomCarPrompt('${key}')" style="flex:1;padding:11px;border-radius:var(--radius-sm);border:1px solid rgba(231,76,60,0.4);background:rgba(231,76,60,0.08);color:var(--red);font-size:13px;font-weight:700;cursor:pointer">Remove car</button>
+  </div>`;
+}
+
+// ── Photo → cut-out: tap the car and Google's open-source MediaPipe segmenter (Apache-2.0) cuts it out, in the
+// browser (nothing is uploaded until you save). Its ~16 MB is downloaded once, the first time a car is added. ──
+const MP_VER = '0.10.14';
+let _carSeg = null;
+async function getCarSegmenter() {
+  if (_carSeg) return _carSeg;
+  const v = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/vision_bundle.mjs`);
+  const files = await v.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${MP_VER}/wasm`);
+  _carSeg = await v.InteractiveSegmenter.createFromOptions(files, {
+    baseOptions: {modelAssetPath: 'https://storage.googleapis.com/mediapipe-models/interactive_segmenter/magic_touch/float32/1/magic_touch.tflite', delegate: 'CPU'},
+    outputCategoryMask: false, outputConfidenceMasks: true});
+  return _carSeg;
+}
+let _cut = null;   // {src canvas, w, h, result}
+function pickCarPhoto() {
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = () => { const f = inp.files && inp.files[0]; if (!f) return;
+    const url = URL.createObjectURL(f), im = new Image();
+    im.onload = () => { const k = Math.min(1, 1024 / Math.max(im.width, im.height)), c = document.createElement('canvas');
+      c.width = Math.round(im.width * k); c.height = Math.round(im.height * k); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url); openCarCutout(c); };
+    im.onerror = () => toast('⚠️ Could not open that picture');
+    im.src = url; };
+  inp.click();
+}
+function openCarCutout(canvas) {
+  _cut = {src: canvas, result: null};
+  document.getElementById('carCut')?.remove();
+  const ov = document.createElement('div'); ov.id = 'carCut';
+  ov.style.cssText = 'position:fixed;inset:0;z-index:10001;background:#05070C;display:flex;flex-direction:column;color:#fff;font-family:inherit';
+  ov.innerHTML = `<div style="padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 10px;display:flex;align-items:center;gap:10px">
+      <b style="flex:1;font-size:16px">Cut out the car</b>
+      <button onclick="closeCarCutout()" style="background:rgba(255,255,255,.12);border:none;color:#fff;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer">Cancel</button></div>
+    <div id="ccMsg" style="padding:0 16px 10px;font-size:13.5px;color:#B8C4D8;line-height:1.45">Getting the cut-out tool ready… (only the first time, about 16 MB)</div>
+    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 12px">
+      <div id="ccStage" style="position:relative;max-width:100%;max-height:100%"></div></div>
+    <div id="ccBtns" style="padding:12px 16px calc(env(safe-area-inset-bottom,0px) + 14px);display:flex;gap:8px;flex-wrap:wrap"></div>`;
+  document.body.appendChild(ov);
+  const view = document.createElement('canvas'); view.width = canvas.width; view.height = canvas.height; view.id = 'ccView';
+  view.style.cssText = 'display:block;max-width:100%;max-height:calc(100vh - 230px);border-radius:12px;touch-action:manipulation';
+  view.getContext('2d').drawImage(canvas, 0, 0); document.getElementById('ccStage').appendChild(view);
+  carCutButtons();
+  getCarSegmenter().then(() => { const m = document.getElementById('ccMsg'); if (m) m.textContent = 'Tap the middle of the car.'; })
+    .catch(e => { console.log('Segmenter failed to load:', e); const m = document.getElementById('ccMsg');
+      if (m) m.textContent = "The cut-out tool couldn't load (no internet?). You can still use the photo as it is."; });
+  view.onclick = e => { const r = view.getBoundingClientRect(); carCutAt((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height); };
+}
+function closeCarCutout() { document.getElementById('carCut')?.remove(); _cut = null; }
+function carCutButtons() {
+  const b = document.getElementById('ccBtns'); if (!b) return;
+  const btn = (label, fn, main) => `<button onclick="${fn}" style="flex:1;min-width:120px;padding:13px;border-radius:12px;border:${main ? 'none' : '1px solid rgba(255,255,255,.18)'};background:${main ? 'var(--accent)' : 'transparent'};color:#fff;font-size:14px;font-weight:700;cursor:pointer">${label}</button>`;
+  b.innerHTML = _cut && _cut.result ? btn('Tap again', 'carCutReset()') + btn('✓ Use this', 'carCutUse()', true) : btn('Use the whole photo', 'carCutWhole()');
+}
+function carCutReset() { const v = document.getElementById('ccView'); if (!v || !_cut) return; v.getContext('2d').drawImage(_cut.src, 0, 0); _cut.result = null; carCutButtons();
+  const m = document.getElementById('ccMsg'); if (m) m.textContent = 'Tap the middle of the car.'; }
+async function carCutAt(nx, ny) {
+  if (!_cut) return;
+  const m = document.getElementById('ccMsg');
+  let seg; try { seg = await getCarSegmenter(); } catch (e) { return; }
+  if (m) m.textContent = 'Cutting out…';
+  const {src} = _cut, W = src.width, H = src.height;
+  let conf = null, mw = 0, mh = 0;
+  try {
+    seg.segment(src, {keypoint: {x: nx, y: ny}}, res => {
+      const masks = res.confidenceMasks || [];
+      // pick the mask that says "this is the thing you tapped"
+      let best = null, bestV = -1;
+      masks.forEach(mk => { const a = mk.getAsFloat32Array(), v = a[Math.min(mk.height - 1, Math.floor(ny * mk.height)) * mk.width + Math.min(mk.width - 1, Math.floor(nx * mk.width))];
+        if (v > bestV) { bestV = v; best = {a: Float32Array.from(a), w: mk.width, h: mk.height}; } });
+      if (best) { conf = best.a; mw = best.w; mh = best.h; }
+    });
+  } catch (e) { console.log('Cut-out failed:', e); }
+  if (!conf) { if (m) m.textContent = "That didn't work — tap the middle of the car again, or use the whole photo."; return; }
+  // keep only the part connected to where you tapped (drops stray bits), with soft edges
+  const keep = new Uint8Array(mw * mh), sx = Math.floor(nx * mw), sy = Math.floor(ny * mh), q = [sy * mw + sx];
+  if (conf[q[0]] > .5) keep[q[0]] = 1;
+  while (q.length) { const p = q.pop(), x = p % mw, y = (p - x) / mw;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const xx = x + dx, yy = y + dy; if (xx < 0 || yy < 0 || xx >= mw || yy >= mh) continue;
+      const j = yy * mw + xx; if (!keep[j] && conf[j] > .5) { keep[j] = 1; q.push(j); } } }
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  const g = out.getContext('2d'); g.drawImage(src, 0, 0);
+  const img = g.getImageData(0, 0, W, H), d = img.data;
+  let x0 = W, y0 = H, x1 = -1, y1 = -1, r = 0, gg = 0, bb = 0, n = 0;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const mx = Math.min(mw - 1, Math.floor(x * mw / W)), my = Math.min(mh - 1, Math.floor(y * mh / H)), mi = my * mw + mx;
+    const near = keep[mi] || (conf[mi] > .3 && ((mx > 0 && keep[mi - 1]) || (mx < mw - 1 && keep[mi + 1]) || (my > 0 && keep[mi - mw]) || (my < mh - 1 && keep[mi + mw])));
+    const a = near ? Math.max(0, Math.min(1, (conf[mi] - .3) / .4)) : 0, k = (y * W + x) * 4;
+    d[k + 3] = Math.round(a * 255);
+    if (a > .5) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; r += d[k]; gg += d[k + 1]; bb += d[k + 2]; n++; }
+  }
+  if (n < 200) { if (m) m.textContent = 'Nothing found there — tap the middle of the car.'; return; }
+  g.putImageData(img, 0, 0);
+  // crop to the car with a little room around it, and keep the file small enough for the database
+  const pad = Math.round(Math.max(x1 - x0, y1 - y0) * .04), cx = Math.max(0, x0 - pad), cy = Math.max(0, y0 - pad), cw = Math.min(W, x1 + pad) - cx, ch = Math.min(H, y1 + pad) - cy;
+  let png = '';
+  for (const maxW of [560, 460, 380]) { const k = Math.min(1, maxW / cw, (maxW * .7) / ch), c = document.createElement('canvas');
+    c.width = Math.round(cw * k); c.height = Math.round(ch * k); c.getContext('2d').drawImage(out, cx, cy, cw, ch, 0, 0, c.width, c.height);
+    png = c.toDataURL('image/png'); if (png.length < 700000) break; }
+  // the car's colours, for its background gradient like the other cars
+  const hex = v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0');
+  const ar = r / n, ag = gg / n, ab = bb / n, mean = (ar + ag + ab) / 3, sat = 1.35, dark = .78;
+  const col = [ar, ag, ab].map(v => (mean + (v - mean) * sat) * dark), col2 = col.map(v => v + (255 - v) * .3);
+  _cut.result = {png, color: '#' + col.map(hex).join(''), color2: '#' + col2.map(hex).join('')};
+  const v = document.getElementById('ccView'), vg = v.getContext('2d');
+  vg.fillStyle = '#0B1120'; vg.fillRect(0, 0, W, H); vg.globalAlpha = .25; vg.drawImage(src, 0, 0); vg.globalAlpha = 1; vg.drawImage(out, 0, 0);
+  if (m) m.textContent = 'Happy with it? If part of the car is missing, tap again on that part of the car.';
+  carCutButtons();
+}
+function carCutUse() {
+  if (!_cut || !_cut.result || !_newCar) return;
+  Object.assign(_newCar, {img: _cut.result.png, color: _cut.result.color, color2: _cut.result.color2, imgChanged: true});
+  closeCarCutout(); renderNewCarForm();
+}
+function carCutWhole() {
+  if (!_cut || !_newCar) return;
+  const s = _cut.src, k = Math.min(1, 560 / s.width), c = document.createElement('canvas');
+  c.width = Math.round(s.width * k); c.height = Math.round(s.height * k); c.getContext('2d').drawImage(s, 0, 0, c.width, c.height);
+  Object.assign(_newCar, {img: c.toDataURL('image/jpeg', .82), imgChanged: true});
+  closeCarCutout(); renderNewCarForm();
+}
 
 // Bouncie GPS proxy — per-base Cloudflare Worker URL, set in baseConfig.js
 // Leave empty to disable Bouncie tracking (no errors, chip just won't appear)
@@ -2573,6 +2837,7 @@ async function bootApp() {
         // so its per-car onSnapshot listeners never actually attach — this repeats
         // it here, after Firebase is ready, so cars get real live sync same as
         // every other audit type instead of only ever reflecting stale localStorage.
+        loadCustomCars();
         loadCarAudits();
         loadCrewHouseAudit();
         loadHangarAudit();
@@ -5101,27 +5366,32 @@ function loadCarAudits() {
   if(!db) return;
   // Individual per-car document listeners — same pattern as facility audits (crewhouse/hangar)
   // fires instantly on any write to that specific doc, not a collection query
-  CREW_CARS.forEach(car=>{
-    const docKey=auditDocKey(car.key);
-    db.collection('auditCars').doc(docKey).onSnapshot(doc=>{
-      // Someone typing in this car's audit (overall report, an issue note, a photo note): every save comes
-      // back here, and redrawing the page replaced the box and closed the keyboard at each letter. Keep
-      // what they're typing, apply the rest, and redraw once they leave the field (carAuditFieldDone).
-      const ae = document.activeElement;
-      const typing = !!(ae && ae.dataset && ae.dataset.acCar === car.key);
-      const mine = typing ? JSON.parse(JSON.stringify(S.monthlyCarAudits[docKey] || {})) : null;
-      if(doc.exists) S.monthlyCarAudits[docKey]=auditNameKeep('car-' + car.key, {...S.monthlyCarAudits[docKey],...doc.data()}, 'groomer');
-      if(typing) {
-        const cur = S.monthlyCarAudits[docKey], f = ae.dataset.acField || '';
-        if(f === 'comments') cur.comments = mine.comments;
-        else if(f.startsWith('photo:')) { const i = +f.slice(6); if(cur.photos && cur.photos[i] && mine.photos && mine.photos[i]) cur.photos[i] = {...cur.photos[i], note: mine.photos[i].note}; }
-        else if(f.startsWith('check:')) { const k = f.slice(6); if(mine.checks && mine.checks[k]) cur.checks = {...(cur.checks || {}), [k]: {...((cur.checks || {})[k] || {}), note: mine.checks[k].note}}; }
-      }
-      try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
-      updateAuditBadge();
-      if(!(ae && ae.dataset && ae.dataset.acCar)) render();   // typing in any car audit field: redraw once they leave it
-    }, e=>console.log('loadCarAudits onSnapshot failed:',car.key,e));
-  });
+  CREW_CARS.forEach(listenCarAudit);
+}
+// One live listener per car, once — cars added from the app get theirs when they arrive (loadCustomCars)
+const _carAuditListening = new Set();
+function listenCarAudit(car) {
+  if(!db || _carAuditListening.has(car.key)) return;
+  _carAuditListening.add(car.key);
+  const docKey=auditDocKey(car.key);
+  db.collection('auditCars').doc(docKey).onSnapshot(doc=>{
+    // Someone typing in this car's audit (overall report, an issue note, a photo note): every save comes
+    // back here, and redrawing the page replaced the box and closed the keyboard at each letter. Keep
+    // what they're typing, apply the rest, and redraw once they leave the field (carAuditFieldDone).
+    const ae = document.activeElement;
+    const typing = !!(ae && ae.dataset && ae.dataset.acCar === car.key);
+    const mine = typing ? JSON.parse(JSON.stringify(S.monthlyCarAudits[docKey] || {})) : null;
+    if(doc.exists) S.monthlyCarAudits[docKey]=auditNameKeep('car-' + car.key, {...S.monthlyCarAudits[docKey],...doc.data()}, 'groomer');
+    if(typing) {
+      const cur = S.monthlyCarAudits[docKey], f = ae.dataset.acField || '';
+      if(f === 'comments') cur.comments = mine.comments;
+      else if(f.startsWith('photo:')) { const i = +f.slice(6); if(cur.photos && cur.photos[i] && mine.photos && mine.photos[i]) cur.photos[i] = {...cur.photos[i], note: mine.photos[i].note}; }
+      else if(f.startsWith('check:')) { const k = f.slice(6); if(mine.checks && mine.checks[k]) cur.checks = {...(cur.checks || {}), [k]: {...((cur.checks || {})[k] || {}), note: mine.checks[k].note}}; }
+    }
+    try { localStorage.setItem('gykf_caudits',JSON.stringify(S.monthlyCarAudits)); } catch(e){}
+    updateAuditBadge();
+    if(!(ae && ae.dataset && ae.dataset.acCar)) render();   // typing in any car audit field: redraw once they leave it
+  }, e=>console.log('loadCarAudits onSnapshot failed:',car.key,e));
 }
 function carAuditSetName(carKey, val) {
   S.auditGroomer = val;
@@ -5755,8 +6025,15 @@ function renderCrewCarsList(el) {
           </div>
         </div>`);
     });
-    if(auditGridCards.length){
-      html+=`<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${auditGridCards.join('')}</div>`;
+    auditGridCards.push(`<div onclick="openAddCarFlow()" role="button" aria-label="Add a crew car"
+          style="border:1.5px dashed var(--border2);border-radius:12px;padding:14px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--t2);min-height:92px">
+          <span style="font-size:28px;line-height:1;font-weight:300">+</span><span style="font-size:13px;font-weight:700">Add a car</span></div>`);
+    html+=`<div style="padding:8px 14px;display:grid;grid-template-columns:1fr 1fr;gap:10px">${auditGridCards.join('')}</div>`;
+    if(RETIRED_CARS.length){
+      html+=`<div style="padding:4px 14px 8px"><div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1.2px;text-transform:uppercase;margin-bottom:6px">Removed cars</div>
+        ${RETIRED_CARS.map(c=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--border2);border-radius:10px;margin-bottom:6px;opacity:.7">
+          <span style="font-size:13.5px;font-weight:700;color:var(--t1)">${_hdEsc(c.name)}</span>
+          <button onclick="setCustomCarRetired('${c.key}',false)" style="font-size:12px;font-weight:700;color:var(--accent);background:none;border:none;cursor:pointer">Bring back</button></div>`).join('')}</div>`;
     }
     html+=`<div style="padding:10px 16px 4px">
       <div style="font-size:11px;color:var(--t3);line-height:1.8">🟢 Up to date &nbsp;🟡 Over 2 weeks &nbsp;🔴 Over 4 weeks or never logged</div>
@@ -5988,6 +6265,7 @@ function renderCarDetail(el, key) {
         `<button class="${tab===k?'on':''}" onclick="S.carTab='${k}';renderCarDetail(document.getElementById('content'),'${key}')">${l}${dot(a)}</button>`).join('')}
     </div></div>
     ${tab==='service'?servicePane:tab==='papers'?papersPane:statusPane}
+    ${customCarAdminHtml(key)}
     <div style="height:80px"></div>`;
 }
 
@@ -5999,6 +6277,7 @@ function renderCarAudit(el, key) {
   document.getElementById('fab').style.display='none';
   let html=``;
   html+=auditSectionHTML(key);
+  html+=customCarAdminHtml(key);
   html+=`<div style="height:80px"></div>`;
   el.innerHTML=html;
   setTimeout(()=>refreshAuditPhotos(key), 0);
@@ -6534,7 +6813,7 @@ function buildCarSectionHtml(car, d, isFirst=true) {
     return `
       <div style="border:1px solid #C8D4E8;margin-bottom:10px;break-inside:avoid${isFirst?'':';page-break-before:always;break-before:page'}">
         <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#F0F4FA;border-bottom:1px solid #C8D4E8">
-          <img src="${location.origin+location.pathname.replace('index.html','')}${car.img}" style="width:50px;height:34px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">
+          <img src="${carImgSrc(car)}" style="width:50px;height:34px;object-fit:contain;flex-shrink:0" onerror="this.style.display='none'">
           <div style="flex:1">
             <div style="font-size:11px;font-weight:800;color:#1A3A6A">${car.name}</div>
             <div style="font-size:7.5px;color:#666;margin-top:1px">${car.label} · ${car.fuel==='diesel'?'Diesel':'Gasoline'} · ${carSummary}</div>
@@ -6566,7 +6845,7 @@ function generateAuditPDF(month, silent) {
   const generatedFmt=new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
   const logoSrc=location.origin+location.pathname.replace('index.html','')+'cars/Skycare_logo-removebg-preview.png';
   let carSections='';
-  CREW_CARS.forEach((car,i)=>{
+  carsForMonth(month).forEach((car,i)=>{
     const d=S.monthlyCarAudits[month+'-'+car.key]||{};
     carSections+=buildCarSectionHtml(car, d, i===0);
   });
@@ -6680,7 +6959,7 @@ function renderPastAuditView(el, month) {
       <button onclick="deleteAuditMonth('${month}')" style="padding:13px 14px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--red);font-size:13px;font-weight:600;cursor:pointer">🗑</button>
     </div>`;
 
-  CREW_CARS.forEach(car=>{
+  carsForMonth(month).forEach(car=>{
     const d=S.monthlyCarAudits[month+'-'+car.key]||{};
     const photos=d.photos||[];
     html+=`<div style="border-bottom:1px solid var(--border);padding:12px 14px">
@@ -7481,11 +7760,12 @@ function renderAuditsLanding(el) {
   if(!S.auditsTab) S.auditsTab='todo';
 
   // Slideshow CSS: 1s per car
-  if(!document.getElementById('cc-slide-style')){
+  if(document.getElementById('cc-slide-style')?.dataset.n !== String(CREW_CARS.length)){
+    document.getElementById('cc-slide-style')?.remove();
     const n=CREW_CARS.length, dur=n*1;
     const pct=(1/dur*100).toFixed(2), fo=(1/dur*100+1).toFixed(2);
     const s=document.createElement('style');
-    s.id='cc-slide-style';
+    s.id='cc-slide-style'; s.dataset.n=String(n);
     s.textContent=`@keyframes ccSlide{0%{opacity:0}2%{opacity:1}${pct}%{opacity:1}${fo}%{opacity:0}100%{opacity:0}}`;
     document.head.appendChild(s);
   }
@@ -7944,7 +8224,7 @@ function renderRecordsView(el) {
   const facilityOrder = ['crewhouse','hangar','msds','parking','ykfbase'];
   const facilityNames = {crewhouse:'Crew House', hangar:'Hangar & Office', msds:'MSDS', parking:'Parking Lot MX', ykfbase:'YKF Base'};
   const typeLabels    = {metro:'Metro SW3/SW4', westwind:'Westwind WW24', astra:'Astra AJ25'};
-  const carNames      = Object.fromEntries(CREW_CARS.map(c=>[c.key,c.name]));
+  const carNames      = Object.fromEntries([...CREW_CARS, ...RETIRED_CARS].map(c=>[c.key,c.name]));
 
   const pdfLink = (rec) => rec.pdfUrl
     ? `<a href="${rec.pdfUrl}" target="_blank" onclick="event.stopPropagation()" style="display:flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;background:var(--navy2,#0B1628);border:1px solid var(--accent-border,#1a3050);font-size:10px;font-weight:700;color:var(--accent);text-decoration:none;flex-shrink:0">📄 PDF</a>`
@@ -11064,7 +11344,7 @@ function auditBundleSources(month) {
   Object.values(S.auditRecords).forEach(rec => {
     if (rec.monthLabel !== month || !rec.pdfUrl) return;
     let name;
-    if (rec.type === 'cars') name = (CREW_CARS.find(c=>c.key===rec.carKey)||{}).name || rec.carKey;
+    if (rec.type === 'cars') name = (carByKey(rec.carKey)||{}).name || rec.carKey;
     else if (rec.type === 'aircraft') name = rec.reg;
     else name = facilityNames[rec.type] || rec.type;
     out.push({name, url: rec.pdfUrl, o: order[rec.type] ?? 9});
