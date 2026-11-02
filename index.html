@@ -2238,6 +2238,18 @@ async function setCustomCarRetired(key, retired) {
     toast(retired ? 'Car removed — its records are kept' : '✅ Car is back');
   } catch (e) { console.log('Retire car failed:', e); toast('⚠️ Failed — check connection'); }
 }
+// "Copy NFC link": the car's own check-in link, to paste into NFC Tools when writing its sticker (tap = opens that car)
+function carCheckinLink(key) { return new URL('crew-access.html?car=' + encodeURIComponent(key), location.href).href; }
+function nfcLinkHtml(key) {
+  return `<div style="padding:6px 14px 0"><button onclick="copyCarNfcLink('${key}')" style="width:100%;padding:11px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-weight:700;cursor:pointer">📲 Copy NFC link</button></div>`;
+}
+async function copyCarNfcLink(key) {
+  const link = carCheckinLink(key);
+  try { await navigator.clipboard.writeText(link); toast('📋 Link copied — paste it in NFC Tools'); return; } catch (e) {}
+  // the phone wouldn't copy it: show it so it can be copied by hand
+  openModal('NFC link', `<p style="font-size:13px;color:var(--t2);margin:0 0 8px">Press and hold the link, then Copy.</p><input readonly value="${link}" onfocus="this.select()" style="font-size:13px">`, closeModal);
+  document.getElementById('mSave').textContent = 'Done';
+}
 // Edit / Remove, shown on the pages of cars added from the app
 function customCarAdminHtml(key) {
   const car = carByKey(key); if (!car || !car.custom) return '';
@@ -6265,6 +6277,7 @@ function renderCarDetail(el, key) {
         `<button class="${tab===k?'on':''}" onclick="S.carTab='${k}';renderCarDetail(document.getElementById('content'),'${key}')">${l}${dot(a)}</button>`).join('')}
     </div></div>
     ${tab==='service'?servicePane:tab==='papers'?papersPane:statusPane}
+    ${nfcLinkHtml(key)}
     ${customCarAdminHtml(key)}
     <div style="height:80px"></div>`;
 }
