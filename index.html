@@ -6009,6 +6009,8 @@ function renderCrewCarsList(el) {
         <div id="ccTrack" style="display:flex;${shown.length === 1 ? 'justify-content:center;' : ''}gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:2px 28px 14px;scrollbar-width:none;-webkit-overflow-scrolling:touch">${shown.map(ccCardHtml).join('')}</div>
         <div style="display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:0 12px 10px">${shown.map(v => `<button onclick="ccJump('${v.car.key}')" aria-label="${_carEsc(v.car.name)}" style="width:44px;height:32px;border-radius:10px;background:#111A28;display:flex;align-items:center;justify-content:center;border:1.5px solid ${ccStCol(v.status)}66;padding:0;cursor:pointer"><img src="${v.car.img}" alt="" style="width:36px;height:22px;object-fit:contain"></button>`).join('')}</div>`
       : `<div style="margin:36px 20px;text-align:center;color:#7A88A0;font-size:14px">No cars here right now 🎉</div>`;
+    // add a car straight from here (the same form as Audits → Crew Cars → + Add a car)
+    if (typeof openAddCarFlow === 'function') html += `<div style="padding:4px 14px 16px"><button onclick="openAddCarFlow()" style="width:100%;padding:13px;border-radius:14px;border:1.5px dashed #2A3A55;background:transparent;color:#9AB0D0;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><span style="font-size:20px;line-height:1">+</span> Add a car</button></div>`;
 
   } else {
     // ── Audits tab: existing grid ──
