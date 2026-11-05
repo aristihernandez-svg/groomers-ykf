@@ -8,12 +8,13 @@ service firebase.storage {
     match /audits/{allPaths=**} {
       allow read, create, update: if true;
     }
-    // Procedure videos (Procedures → Edit → Upload video): anyone can watch; only new video files
-    // under 200 MB can be added; nothing here can be replaced or deleted.
+    // Procedures: uploaded videos (under 200 MB) and each step's photo (under 15 MB). Anyone can view;
+    // files can only be added — nothing here can be replaced or deleted. The AI videos are saved by the
+    // video maker job, which runs with admin rights, not these rules.
     match /procedures/{key}/{file} {
       allow read: if true;
-      allow create: if request.resource.contentType.matches('video/.*')
-                    && request.resource.size < 200 * 1024 * 1024;
+      allow create: if (request.resource.contentType.matches('video/.*') && request.resource.size < 200 * 1024 * 1024)
+                    || (request.resource.contentType.matches('image/.*') && request.resource.size < 15 * 1024 * 1024);
     }
   }
 }

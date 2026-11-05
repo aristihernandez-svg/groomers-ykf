@@ -1,0 +1,14 @@
+{
+  "name": "groomer-ykf-functions",
+  "description": "YKF cloud jobs: the procedure video maker (procvideo.js)",
+  "private": true,
+  "main": "index.js",
+  "engines": { "node": "22" },
+  "dependencies": {
+    "firebase-admin": "^13.0.0",
+    "firebase-functions": "^6.1.0",
+    "@google-cloud/text-to-speech": "^7.2.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "@expo-google-fonts/inter": "^0.4.2"
+  }
+}

@@ -1526,35 +1526,79 @@ body::before{
 .home-app b{font-size:11px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 
 
-/* ── Procedure steps: numbered timeline (editor in Add/Edit Procedure, and the open procedure) ── */
-.se{position:relative;padding-left:34px;margin-top:4px}
-.se::before,.ptl::before{content:'';position:absolute;left:13px;top:14px;bottom:30px;width:2px;background:color-mix(in srgb,var(--accent) 30%,transparent)}
-.se-i{position:relative;padding:3px 0 7px;background:var(--bg3);border-radius:10px;transition:transform .18s ease,box-shadow .18s}
-.se-i.drag{transition:none;z-index:5;box-shadow:0 10px 26px rgba(0,0,0,.45)}
-.se-dot{position:absolute;left:-34px;top:4px;width:28px;height:28px;border-radius:50%;background:var(--bg3);border:2px solid var(--accent);color:var(--accent2);font-weight:800;font-size:11.5px;line-height:24px;text-align:center;touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none}
-.se-i.g .se-dot{border-color:#E8C86A;color:#E8C86A}
-.se-i.drag .se-dot{cursor:grabbing;background:var(--accent);color:#fff}
-.se textarea{display:block;width:100%;resize:none;overflow:hidden;background:none;border:none;border-bottom:1px solid transparent;border-radius:0;outline:none;color:var(--t1);font-family:inherit;font-weight:600;font-size:14px;line-height:1.4;padding:6px 0 3px;margin:0;min-height:0;box-shadow:none}
-.se textarea:focus{border-bottom-color:var(--accent)}
-.se textarea.se-n{font-weight:500;font-size:12.5px;color:var(--t2);padding-top:0}
-.se-meta{display:flex;gap:14px;align-items:center;margin-top:2px}
+/* ── Procedure steps: a photo and its text, in the editor and on the procedure ── */
+.se{display:flex;flex-direction:column;margin-top:2px}
+.se-i{display:grid;grid-template-columns:64px 1fr;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid var(--border);background:var(--bg3);transition:transform .18s ease,box-shadow .18s}
+.se-i.drag{transition:none;z-index:5;position:relative;box-shadow:0 10px 26px rgba(0,0,0,.45);border-radius:10px}
+.se-ph,.pst-ph{position:relative;width:64px;height:54px;border-radius:10px;overflow:hidden;background:var(--glass2);display:grid;place-items:center;cursor:pointer;flex-shrink:0}
+.se-ph img,.pst-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.se-ph.noph{background:repeating-linear-gradient(45deg,var(--glass) 0 7px,var(--glass2) 7px 14px);border:1.5px dashed var(--border2)}
+.se-ph.noph span{font-size:15px;opacity:.8;margin-top:-8px}
+.se-ph.noph small{position:absolute;bottom:4px;left:0;right:0;text-align:center;font-size:8.5px;font-weight:700;color:var(--t3)}
+.se-ph b,.pst-ph b{position:absolute;left:4px;top:4px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:rgba(0,0,0,.65);color:#fff;font-size:10px;font-weight:800;line-height:18px;text-align:center}
+.se-i.g .se-ph b,.pst-i.g .pst-ph b{background:#E8C86A;color:#241A0C}
+.se-ph .spin{width:20px;height:20px;border-radius:50%;border:2.5px solid var(--border2);border-top-color:var(--accent);animation:sespin .8s linear infinite}
+@keyframes sespin{to{transform:rotate(360deg)}}
+.se textarea{display:block;width:100%;resize:none;overflow:hidden;background:var(--glass2);border:1px solid var(--border2);border-radius:9px;outline:none;color:var(--t1);font-family:inherit;font-weight:600;font-size:13.5px;line-height:1.38;padding:7px 9px;margin:0;min-height:0;box-shadow:none}
+.se textarea:focus{border-color:var(--accent)}
+.se textarea.se-n{font-weight:500;font-size:12px;color:var(--t2);margin-top:5px}
+.se-meta{display:flex;gap:14px;align-items:center;margin-top:5px}
 .se-meta button{background:none;border:none;padding:2px 0;font-family:inherit;font-weight:700;font-size:11px;color:var(--t3);cursor:pointer}
 .se-meta button.on{color:#E8C86A}
-.se-meta .se-grip{margin-left:auto;font-size:15px;letter-spacing:-2px;color:var(--t4);touch-action:none;cursor:grab}
-.se-add{display:flex;gap:10px;align-items:center;margin-left:-34px;padding:4px 0 2px;background:none;border:none;color:var(--accent2);font-family:inherit;font-weight:700;font-size:13px;cursor:pointer}
-.se-add span{width:28px;height:28px;border-radius:50%;border:2px dashed color-mix(in srgb,var(--accent) 55%,transparent);display:grid;place-items:center}
+.se-meta .se-grip{margin-left:auto;font-size:16px;letter-spacing:-2px;color:var(--t4);touch-action:none;cursor:grab;padding:0 2px}
+.se-add{margin-top:10px;border:1px dashed var(--border2);border-radius:12px;padding:11px;text-align:center;font-family:inherit;font-weight:700;font-size:13px;color:var(--accent2);background:none;width:100%;cursor:pointer}
 .se-hint{font-size:11px;color:var(--t4);margin-top:6px}
-.ptl{position:relative;margin:0 14px;padding-left:40px}
-.ptl::before{left:15px;bottom:22px}
-.ptl-i{position:relative;padding:6px 0 14px;cursor:pointer;-webkit-tap-highlight-color:transparent}
-.ptl-dot{position:absolute;left:-40px;top:3px;width:32px;height:32px;border-radius:50%;background:var(--bg);border:2px solid var(--accent);color:var(--accent2);font-size:12.5px;font-weight:800;display:grid;place-items:center;transition:background .15s}
-.ptl-i.g .ptl-dot{border-color:#E8C86A;color:#E8C86A}
-.ptl-i.done .ptl-dot{background:var(--green);border-color:var(--green);color:#fff}
-.ptl-tx{font-size:14px;line-height:1.45;color:var(--t1);padding-top:5px}
-.ptl-i.done .ptl-tx{color:var(--done-text);text-decoration:line-through}
-.ptl-tx em{font-style:normal;font-size:10.5px;font-weight:800;color:#E8C86A;margin-left:6px;white-space:nowrap}
-.ptl-tx small{display:block;font-size:12px;color:var(--t3);margin-top:2px;text-decoration:none}
-@media (prefers-reduced-motion:reduce){.se-i{transition:none}}
+.se-voice{margin-top:14px}
+.se-voice label{margin-bottom:6px}
+.se-voice div{display:flex;gap:6px;flex-wrap:wrap}
+.se-voice button{font-family:inherit;font-size:12px;font-weight:700;padding:7px 11px;border-radius:20px;background:var(--glass2);color:var(--t2);border:1px solid var(--border2);cursor:pointer}
+.se-voice button.on{background:rgba(139,92,246,.18);color:#C9B8FF;border-color:rgba(167,139,250,.55)}
+.sps{position:fixed;inset:0;z-index:10050;background:rgba(0,0,0,.55);display:flex;align-items:flex-end}
+.sps-b{width:100%;max-width:480px;margin:0 auto;background:var(--bg3);border-radius:20px 20px 0 0;padding:14px 16px calc(18px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:6px}
+.sps-b h4{font-size:15px;font-weight:800;color:var(--t1);margin:2px 0 4px}
+.sps-b img{width:100%;max-height:220px;object-fit:cover;border-radius:12px;margin-bottom:4px}
+.sps-b button{text-align:left;padding:13px 6px;border:none;border-bottom:1px solid var(--border);background:none;color:var(--t1);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.sps-b button.red{color:var(--red)}
+.sps-b button:last-child{border-bottom:none;text-align:center;color:var(--t2)}
+.pst{margin:0 14px}
+.pst-i{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pst-ph{width:72px;height:58px}
+.pst-ph span{font-size:16px;opacity:.5}
+.pst-i.done .pst-ph::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;background:rgba(46,204,138,.72);color:#fff;font-size:24px;font-weight:800}
+.pst-tx{font-size:14px;line-height:1.42;color:var(--t1);min-width:0}
+.pst-i.done .pst-tx{color:var(--done-text);text-decoration:line-through}
+.pst-tx em{font-style:normal;font-size:10.5px;font-weight:800;color:#E8C86A;margin-left:6px;white-space:nowrap}
+.pst-tx small{display:block;font-size:12px;color:var(--t3);margin-top:2px}
+.pvb{margin:12px 14px 0;border-radius:14px;padding:12px;background:linear-gradient(135deg,rgba(124,58,237,.16),rgba(74,158,255,.12));border:1px solid rgba(167,139,250,.35)}
+.pvb b{display:block;font-size:13.5px;color:var(--t1)}
+.pvb p{font-size:11.5px;color:var(--t2);margin:3px 0 10px;line-height:1.45}
+.pvb .bar{height:5px;border-radius:3px;background:var(--border2);overflow:hidden;margin:-4px 0 10px}
+.pvb .bar i{display:block;height:100%;background:var(--green)}
+.pvb .go{width:100%;padding:12px;border-radius:12px;border:none;font-family:inherit;font-size:13.5px;font-weight:700;color:#fff;background:linear-gradient(135deg,#7C3AED,#4A9EFF);cursor:pointer}
+.pvb .go.off{background:var(--glass2);color:var(--t2);border:1px solid var(--border2)}
+.pvb .chk{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.pvb .chk div{display:flex;gap:10px;align-items:center;font-size:12.5px;color:var(--t3)}
+.pvb .chk i{width:18px;height:18px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;font-style:normal;font-size:10px;border:2px solid var(--border2)}
+.pvb .chk div.done{color:var(--t1)}.pvb .chk div.done i{background:var(--green);border-color:var(--green);color:#fff}
+.pvb .chk div.now{color:var(--t1);font-weight:700}.pvb .chk div.now i{border-color:#A78BFA;border-top-color:transparent;animation:sespin 1s linear infinite}
+.pvb.err{background:rgba(232,64,64,.08);border-color:rgba(232,64,64,.35)}
+.pvw{margin:12px 14px 0}
+.pvw video{display:block;width:100%;max-height:70vh;border-radius:14px;background:#000}
+.pvw-m{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:11.5px;color:var(--t3)}
+.pvw-m b{color:#C9B8FF}
+.pvw-m button{background:none;border:none;color:var(--accent2);font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.stv{position:fixed;inset:0;z-index:10060;background:#000;display:flex;flex-direction:column;color:#fff;touch-action:pan-y}
+.stv-h{display:flex;justify-content:space-between;align-items:center;padding:calc(env(safe-area-inset-top,0px) + 14px) 16px 10px;font-size:13px;font-weight:700;color:#C7CBD6}
+.stv-h button{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:36px;height:36px;font-size:18px;cursor:pointer}
+.stv-im{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+.stv-im img{max-width:100%;max-height:100%;object-fit:contain}
+.stv-c{padding:12px 18px calc(env(safe-area-inset-bottom,0px) + 22px)}
+.stv-c b{font-size:16px;line-height:1.35}
+.stv-c small{display:block;font-size:12.5px;color:#9AA3B5;margin-top:3px}
+.stv-d{display:flex;gap:5px;justify-content:center;margin-top:12px}
+.stv-d i{width:6px;height:6px;border-radius:50%;background:#3A3F4C}
+.stv-d i.on{background:#fff;width:16px;border-radius:3px}
+@media (prefers-reduced-motion:reduce){.se-i{transition:none}.se-ph .spin,.pvb .chk div.now i{animation:none}}
 </style>
 </head>
 <body>
@@ -12128,20 +12172,16 @@ function renderProcDetail(el, key) {
 
     ${p.warn?`<div class="pwarn" style="margin:12px 14px 0">${p.warn}</div>`:''}
 
+    ${procVideoHtml(key, p)}
     ${p.video && isVideoFile(p.video)
       ? `<div style="padding:12px 14px 0"><video class="proc-video" src="${p.video}" controls playsinline preload="metadata"></video></div>`
       : p.video
       ? `<div style="padding:12px 14px 0"><a class="video-btn" href="${p.video}" target="_blank"><span class="vicon">▶️</span><span>Watch procedure video</span></a></div>`
-      : `<div style="padding:12px 14px 0"><div class="video-btn" style="opacity:0.4;cursor:default"><span class="vicon">▶️</span><span>Video coming soon</span></div></div>`}
+      : ''}
 
     <div style="padding:14px 14px 6px;font-size:10px;font-weight:700;color:var(--t2);letter-spacing:1.5px;text-transform:uppercase">Steps</div>`;
 
-  html+=`<div class="ptl">${p.steps.map((s,i)=>{ const dn = p.done.includes(i);
-    return `<div class="ptl-i ${dn?'done':''} ${s.g?'g':''}" onclick="toggleStep('${key}',${i})">
-      <span class="ptl-dot">${dn?'✓':i+1}</span>
-      <div class="ptl-tx">${_hdEsc(s.t)}${s.g && !/✦/.test(s.t)?'<em>✦ 2nd groomer</em>':''}${s.n?`<small>${_hdEsc(s.n)}</small>`:''}</div>
-    </div>`; }).join('')}</div>`;
-
+  html+=procStepsHtml(key, p);
   html+=`
     <div style="padding:14px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="proc-act-btn" onclick="resetProc('${key}')" style="flex:1">🔄 Reset steps</button>
@@ -13569,23 +13609,35 @@ function parseStepsText(text) {
     return {t:(t||'').trim(), n:(n||'').trim()};
   });
 }
-// ── Procedure steps editor: a numbered timeline. Each step wraps onto as many lines as it needs, can carry a
-// note and a ✦ 2nd-groomer mark, and is dragged by its number (or the ⠿ grip) to a new place.
-let _se = [];
-function stepsEditorHtml(steps) {
-  _se = (steps || []).map(s => ({t: s.t || '', n: s.n || '', g: !!s.g}));
-  if(!_se.length) _se.push({t:'', n:'', g:false});
-  setTimeout(() => seDraw(), 0);
-  return `<div class="se" id="seBox"></div><div class="se-hint">Enter = next step · hold a number to drag it</div>`;
+// ── Procedure steps: each step is a photo and its text. A step's photo is uploaded as soon as it is picked
+// (procedures/<key>/step-….jpg, 1280 px) so saving stays quick; drag a step by its ⠿ grip to move it.
+let _se = [], _seFolder = '', _seVoice = {g:'f', l:'en'};
+function seBlank() { return {t:'', n:'', g:false, photo:'', photoPath:''}; }
+function stepsEditorHtml(steps, folder, voice) {
+  _se = (steps || []).map(s => ({t: s.t || '', n: s.n || '', g: !!s.g, photo: s.photo || '', photoPath: s.photoPath || ''}));
+  if(!_se.length) _se.push(seBlank());
+  _seFolder = folder || ('new-' + Date.now().toString(36));
+  _seVoice = {g: (voice && voice.g) || 'f', l: (voice && voice.l) || 'en'};
+  setTimeout(() => { seDraw(); seVoiceDraw(); }, 0);
+  return `<div class="se" id="seBox"></div><div class="se-hint">Tap a photo square to add the step's photo · Enter = next step · hold ⠿ to move a step</div>
+    <div class="se-voice"><label>Voice for the AI video</label><div id="seVoice"></div></div>`;
 }
+function seVoiceDraw() {
+  const el = document.getElementById('seVoice'); if(!el) return;
+  const b = (k, v, label) => `<button type="button" class="${_seVoice[k]===v?'on':''}" onclick="_seVoice.${k}='${v}';seVoiceDraw()">${label}</button>`;
+  el.innerHTML = b('g','f','🎙 Female') + b('g','m','🎙 Male') + b('l','en','English') + b('l','fr','Français');
+}
+function seVoiceVal() { return {g: _seVoice.g, l: _seVoice.l}; }
 function seDraw(focusIdx, focusNote) {
   const box = document.getElementById('seBox'); if(!box) return;
   box.innerHTML = _se.map((s, k) => `<div class="se-i ${s.g?'g':''}" data-k="${k}">
-      <span class="se-dot" onpointerdown="seDragStart(event,${k})">${k+1}</span>
-      <textarea class="se-t" rows="1" data-k="${k}" placeholder="Write step ${k+1}" oninput="seInput(this)" onkeydown="seKey(event,${k})">${_hdEsc(s.t)}</textarea>
-      ${s.n || s.showNote ? `<textarea class="se-n" rows="1" data-nk="${k}" placeholder="Note (optional)" oninput="seInput(this)">${_hdEsc(s.n)}</textarea>` : ''}
-      <div class="se-meta">${s.n || s.showNote ? '' : `<button type="button" onclick="seNote(${k})">+ note</button>`}<button type="button" class="${s.g?'on':''}" onclick="seG(${k})">✦ 2nd groomer</button><button type="button" onclick="seDel(${k})">remove</button><span class="se-grip" onpointerdown="seDragStart(event,${k})" aria-label="Drag to reorder">⠿</span></div>
-    </div>`).join('') + `<button type="button" class="se-add" onclick="seAdd(_se.length)"><span>+</span>Add a step</button>`;
+      <div class="se-ph ${s.photo||s.uploading?'':'noph'}" onclick="seOpenPhoto(${k})" role="button" aria-label="Photo for step ${k+1}">
+        ${s.uploading ? '<div class="spin"></div>' : s.photo ? `<img src="${s.photo}" alt="">` : '<span>📷</span><small>Add photo</small>'}<b>${k+1}</b></div>
+      <div style="min-width:0">
+        <textarea class="se-t" rows="1" data-k="${k}" placeholder="Write step ${k+1}…" oninput="seInput(this)" onkeydown="seKey(event,${k})">${_hdEsc(s.t)}</textarea>
+        ${s.n || s.showNote ? `<textarea class="se-n" rows="1" data-nk="${k}" placeholder="Note (optional)" oninput="seInput(this)">${_hdEsc(s.n)}</textarea>` : ''}
+        <div class="se-meta">${s.n || s.showNote ? '' : `<button type="button" onclick="seNote(${k})">+ note</button>`}<button type="button" class="${s.g?'on':''}" onclick="seG(${k})">✦ 2nd groomer</button><button type="button" onclick="seDel(${k})">remove</button><span class="se-grip" onpointerdown="seDragStart(event,${k})" aria-label="Drag to reorder">⠿</span></div>
+      </div></div>`).join('') + `<button type="button" class="se-add" onclick="seAdd(_se.length)">+ Add a step</button>`;
   box.querySelectorAll('textarea').forEach(seGrow);
   if(focusIdx != null) { const t = box.querySelector(focusNote ? `[data-nk="${focusIdx}"]` : `.se-t[data-k="${focusIdx}"]`); if(t) { t.focus(); t.setSelectionRange(t.value.length, t.value.length); } }
 }
@@ -13597,18 +13649,63 @@ function seInput(t) {
 }
 function seKey(e, k) {
   if(e.key === 'Enter') { e.preventDefault(); seAdd(k + 1); }
-  else if(e.key === 'Backspace' && !e.target.value && _se.length > 1) { e.preventDefault(); _se.splice(k, 1); seDraw(Math.max(0, k - 1)); }
+  else if(e.key === 'Backspace' && !e.target.value && _se.length > 1 && !_se[k].photo) { e.preventDefault(); _se.splice(k, 1); seDraw(Math.max(0, k - 1)); }
 }
-function seAdd(at) { _se.splice(at, 0, {t:'', n:'', g:false}); seDraw(at); }
+function seAdd(at) { _se.splice(at, 0, seBlank()); seDraw(at); }
 function seNote(k) { _se[k].showNote = true; seDraw(k, true); }
 function seG(k) { _se[k].g = !_se[k].g; seDraw(); }
-function seDel(k) { _se.splice(k, 1); if(!_se.length) _se.push({t:'', n:'', g:false}); seDraw(); }
-function seSteps() { return _se.map(s => ({t: s.t.trim(), n: s.n.trim(), ...(s.g ? {g:true} : {})})).filter(s => s.t); }
-// drag by the number: the step follows the finger, the others slide out of its way, it drops into the gap
+function seDel(k) { _se.splice(k, 1); if(!_se.length) _se.push(seBlank()); seDraw(); }
+function seBusy() { if(_se.some(s => s.uploading)) { toast('⏳ Wait for the photos to finish uploading'); return true; } return false; }
+function seSteps() {
+  return _se.map(s => ({t: s.t.trim(), n: s.n.trim(), ...(s.g ? {g:true} : {}), ...(s.photo ? {photo: s.photo, photoPath: s.photoPath || ''} : {})}))
+    .filter(s => s.t || s.photo).map(s => s.t ? s : {...s, t: 'Step'});
+}
+// a step's photo: take one, pick one, or remove it
+function seOpenPhoto(k) {
+  const s = _se[k]; if(!s || s.uploading) return;
+  closeSePhoto();
+  const d = document.createElement('div'); d.id = 'sePhotoSheet'; d.className = 'sps';
+  d.innerHTML = `<div class="sps-b" onclick="event.stopPropagation()"><h4>Step ${k+1} · photo</h4>${s.photo ? `<img src="${s.photo}" alt="">` : ''}
+    <button type="button" onclick="sePickPhoto(${k},true)">📷 Take a photo</button>
+    <button type="button" onclick="sePickPhoto(${k},false)">🖼 Choose from the phone</button>
+    ${s.photo ? `<button type="button" class="red" onclick="seRemovePhoto(${k})">🗑 Remove this photo</button>` : ''}
+    <button type="button" onclick="closeSePhoto()">Cancel</button></div>`;
+  d.addEventListener('click', closeSePhoto);
+  document.body.appendChild(d);
+}
+function closeSePhoto() { document.getElementById('sePhotoSheet')?.remove(); }
+function sePickPhoto(k, cam) {
+  closeSePhoto();
+  const id = cam ? 'seCamIn' : 'sePickIn';
+  let inp = document.getElementById(id);
+  if(!inp) {
+    inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.id = id; inp.style.display = 'none';
+    if(cam) inp.setAttribute('capture', 'environment');
+    inp.addEventListener('change', () => { const f = inp.files[0], row = _se[+inp.dataset.k]; inp.value = ''; if(f && row) seUploadPhoto(row, f); });
+    document.body.appendChild(inp);
+  }
+  inp.dataset.k = k; inp.click();
+}
+async function seUploadPhoto(s, file) {
+  if(!storage) { toast('No connection — the photo was not added'); return; }
+  s.uploading = true; seDraw();
+  try {
+    const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+    const small = await compressImage(dataUrl, 1280, 0.8);
+    const blob = await (await fetch(small)).blob();
+    const path = `procedures/${_seFolder}/step-${Date.now()}-${Math.random().toString(36).slice(2,6)}.jpg`;
+    const ref = storage.ref(path);
+    await ref.put(blob, {contentType: 'image/jpeg'});
+    s.photo = await ref.getDownloadURL(); s.photoPath = path;
+  } catch(e) { console.log('Step photo upload failed:', e); toast('⚠️ The photo did not upload — check the connection'); }
+  s.uploading = false; seDraw();
+}
+function seRemovePhoto(k) { closeSePhoto(); const s = _se[k]; if(s) { s.photo = ''; s.photoPath = ''; } seDraw(); }
+// drag by the ⠿ grip: the step follows the finger, the others slide out of its way, it drops into the gap
 function seDragStart(e, k) {
   e.preventDefault();
   const box = document.getElementById('seBox'), rows = [...box.querySelectorAll('.se-i')], row = rows[k];
-  const rects = rows.map(r => r.getBoundingClientRect()), h = rects[k].height + 0, y0 = e.clientY;
+  const rects = rows.map(r => r.getBoundingClientRect()), h = rects[k].height, y0 = e.clientY;
   let to = k;
   row.classList.add('drag');
   const move = ev => {
@@ -13622,6 +13719,103 @@ function seDragStart(e, k) {
     const [s] = _se.splice(k, 1); _se.splice(to, 0, s); seDraw();
   };
   document.addEventListener('pointermove', move); document.addEventListener('pointerup', up); document.addEventListener('pointercancel', up);
+}
+// ── On the procedure: the steps as photo + text; tap a step to tick it, tap its photo to see it full screen
+function procStepsHtml(key, p) {
+  return `<div class="pst">${p.steps.map((s,i) => { const dn = p.done.includes(i);
+    return `<div class="pst-i ${dn?'done':''} ${s.g?'g':''}" onclick="toggleStep('${key}',${i})">
+      <div class="pst-ph" ${s.photo?`onclick="event.stopPropagation();openStepViewer('${key}',${i})"`:''}>${s.photo?`<img src="${s.photo}" alt="" loading="lazy">`:'<span>📷</span>'}<b>${i+1}</b></div>
+      <div class="pst-tx">${_hdEsc(s.t)}${s.g && !/✦/.test(s.t)?'<em>✦ 2nd groomer</em>':''}${s.n?`<small>${_hdEsc(s.n)}</small>`:''}</div></div>`; }).join('')}</div>`;
+}
+function openStepViewer(key, idx) {
+  const p = S.procs[key]; if(!p) return;
+  const list = p.steps.map((s, i) => ({...s, i})).filter(s => s.photo); if(!list.length) return;
+  let at = Math.max(0, list.findIndex(s => s.i === idx));
+  document.getElementById('stepViewer')?.remove();
+  const v = document.createElement('div'); v.id = 'stepViewer'; v.className = 'stv';
+  const draw = () => { const s = list[at];
+    v.innerHTML = `<div class="stv-h"><span>Step ${s.i+1} of ${p.steps.length}</span><button type="button" aria-label="Close" onclick="document.getElementById('stepViewer').remove()">✕</button></div>
+      <div class="stv-im"><img src="${s.photo}" alt=""></div>
+      <div class="stv-c"><b>${_hdEsc(s.t)}</b>${s.n?`<small>${_hdEsc(s.n)}</small>`:''}<div class="stv-d">${list.map((x,k)=>`<i class="${k===at?'on':''}"></i>`).join('')}</div></div>`; };
+  let x0 = null;
+  v.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, {passive: true});
+  v.addEventListener('touchend', e => { if(x0 == null) return; const dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if(Math.abs(dx) > 50) { at = Math.min(list.length - 1, Math.max(0, at + (dx < 0 ? 1 : -1))); draw(); } });
+  v.addEventListener('click', e => { if(e.target.closest('button')) return; const half = e.clientX > window.innerWidth / 2; at = Math.min(list.length - 1, Math.max(0, at + (half ? 1 : -1))); draw(); });
+  draw(); document.body.appendChild(v);
+}
+// ── AI video: the AI writes one spoken line per step (here, through the Skycare AI helper), then the
+// procedure-video job (Cloud Function makeProcVideo) records the voice and builds the video over the
+// step photos and saves it to the procedure (aiVideo). Its progress shows in videoJob.
+const PROC_VIDEO_STAGES = [['writing','The AI writes the voiceover'],['queued','Sent to the video maker'],['voice','Recording the voice'],['building','Building the video'],['saving','Adding it to this procedure']];
+function procStepsSig(steps) {
+  const str = (steps||[]).map(s => (s.t||'') + '|' + (s.n||'') + '|' + (s.photo||'') + '|' + (s.g?1:0)).join('\n');
+  let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
+  return h.toString(36);
+}
+function procVideoHtml(key, p) {
+  const j = p.videoJob || {}, v = p.aiVideo;
+  const stage = PROC_VIDEO_STAGES.findIndex(x => x[0] === j.status);
+  const busy = stage >= 0 && Date.now() - (j.at || 0) < 20 * 60000;
+  const total = p.steps.length, have = p.steps.filter(s => s.photo).length, miss = total - have;
+  let html = '';
+  if(v && v.url) {
+    const stale = v.sig && v.sig !== procStepsSig(p.steps);
+    html += `<div class="pvw"><video src="${v.url}" controls playsinline preload="metadata"></video>
+      <div class="pvw-m"><span><b>✨ AI video</b>${v.secs ? ' · ' + Math.floor(v.secs/60) + ':' + String(Math.round(v.secs%60)).padStart(2,'0') : ''}${stale ? ' · the steps changed since' : ''}</span>${busy ? '' : `<button type="button" onclick="createProcVideo('${key}')">↻ Remake</button>`}</div></div>`;
+  }
+  if(busy) {
+    html += `<div class="pvb"><b>✨ ${v && v.url ? 'Making a new video' : 'Your video is being made'}</b><p>About a minute or two. You can leave this screen; the video appears here when it's ready.</p>
+      <div class="chk">${PROC_VIDEO_STAGES.map((x,i)=>`<div class="${i<stage?'done':i===stage?'now':''}"><i>${i<stage?'✓':''}</i>${x[1]}</div>`).join('')}</div></div>`;
+  } else if(j.status === 'error') {
+    html += `<div class="pvb err"><b>⚠️ The video wasn't made</b><p>${_hdEsc(j.msg || 'Something went wrong.')}</p><button type="button" class="go" onclick="createProcVideo('${key}')">Try again</button></div>`;
+  } else if(!(v && v.url) && total) {
+    html += `<div class="pvb"><b>✨ Make a video of this procedure</b>
+      <p>The AI writes the voiceover from the steps and records it, over each step's photo. ${have} of ${total} steps have a photo.</p>
+      <div class="bar"><i style="width:${Math.round(have/total*100)}%"></i></div>
+      ${miss ? `<button type="button" class="go off" onclick="editProcedure('${key}')">📷 Add ${miss} more photo${miss===1?'':'s'} first</button>` : `<button type="button" class="go" onclick="createProcVideo('${key}')">✨ Create video with AI</button>`}</div>`;
+  }
+  return html;
+}
+async function procVideoScript(p, lang) {
+  const steps = p.steps.map(s => ({text: s.t, note: s.n || '', secondGroomer: !!s.g}));
+  const body = {
+    model: 'claude-opus-5-5', max_tokens: 4000, output_config: {effort: 'low'},
+    system: 'You write the spoken voiceover for short training videos that show aircraft groomers (aircraft cleaners) how to do a procedure. While each step\'s photo is on screen, one line is read aloud by a text-to-speech voice.',
+    messages: [{role: 'user', content: `Procedure: ${p.title}${p.warn ? '\nSafety note: ' + p.warn : ''}
+Steps, in order: ${JSON.stringify(steps)}
+
+Write the voiceover in ${lang === 'fr' ? 'Canadian French' : 'English'}. Reply with only this JSON, nothing else:
+{"intro": "one short sentence that introduces the procedure (mention the safety note if there is one)", "lines": [exactly ${steps.length} strings, one per step, same order], "outro": "one short closing sentence"}
+Each line: one or two short spoken sentences, at most 25 words, friendly and clear. Say what to do, and include the note's key detail. When secondGroomer is true, make clear the second groomer does it. No step numbers, no emojis, no symbols, no abbreviations a voice would misread.`}],
+  };
+  const r = await fetch('https://skycare-worker.skycare.workers.dev/ai', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
+  if(!r.ok) throw new Error('AI helper answered ' + r.status);
+  const d = await r.json();
+  const text = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+  const j = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  const lines = p.steps.map((s, i) => String((j.lines || [])[i] || (s.t + (s.n ? '. ' + s.n : ''))).trim());
+  return {intro: String(j.intro || p.title).trim(), lines, outro: String(j.outro || '').trim()};
+}
+async function createProcVideo(key) {
+  const p = S.procs[key];
+  if(!p || !db) { toast('No connection'); return; }
+  if(!p.steps.length) { toast('Add the steps first'); return; }
+  const miss = p.steps.filter(s => !s.photo).length;
+  if(miss) { toast(`📷 ${miss} step${miss===1?'':'s'} still need${miss===1?'s':''} a photo`); return; }
+  if(!confirm(`Make a video of "${p.title}"?\n\nThe AI writes and reads the voiceover over your ${p.steps.length} photos. It takes a minute or two.`)) return;
+  const ref = db.collection('procedures').doc(key), at = Date.now();
+  const job = (status, msg='') => { p.videoJob = {status, at, msg}; if(S.procView === key) render(); return ref.set({videoJob: {status, at, msg}}, {merge: true}); };
+  try {
+    await job('writing');
+    const voice = p.videoVoice || {g: 'f', l: 'en'};
+    const script = await procVideoScript(p, voice.l);
+    await ref.set({videoRequest: {at, voice, intro: script.intro, lines: script.lines, outro: script.outro}, videoJob: {status: 'queued', at, msg: ''}}, {merge: true});
+    p.videoJob = {status: 'queued', at, msg: ''}; if(S.procView === key) render();
+  } catch(e) {
+    console.log('Create video failed:', e);
+    job('error', 'The AI could not write the voiceover. Check the connection and try again.').catch(() => {});
+  }
 }
 function stepsToText(steps) {
   return (steps||[]).map(s=>s.n ? `${s.t} | ${s.n}` : s.t).join('\n');
@@ -13682,6 +13876,7 @@ function openAddProcedure() {
       const icon=document.getElementById('pIcon').value.trim()||'✈';
       const warn=document.getElementById('pWarn').value.trim();
       const video=document.getElementById('pVideo').value.trim();
+      if(seBusy()) return;
       const steps=seSteps();
       const iconImg = S.pendingProcPhoto || null;
       S.pendingProcPhoto = null;
@@ -13689,7 +13884,7 @@ function openAddProcedure() {
       S.procs[key]={title,icon,warn,video,steps,iconImg,open:false,done:[]};
       closeModal(); render(); toast('Procedure added ✓');
       if(db) {
-        const data={title,icon,warn,video,steps};
+        const data={title,icon,warn,video,steps,videoVoice:seVoiceVal()};
         if(iconImg) data.iconImg=iconImg;
         db.collection('procedures').doc(key).set(data)
           .catch(e => console.log('Add procedure Firestore write failed:', e));
@@ -13743,22 +13938,23 @@ function editProcedure(key) {
      <button type="button" id="pVideoBtn" onclick="document.getElementById('pVideoFile').click()" style="margin-top:6px;width:100%;padding:11px;border-radius:var(--radius-sm);border:1px dashed var(--border2);background:var(--glass2);color:var(--t1);font:700 13px inherit;cursor:pointer">🎬 Upload a video from this phone</button>
      <input type="file" id="pVideoFile" accept="video/*" style="display:none" onchange="uploadProcVideo('${key}', this.files[0])">
      <label>Steps</label>
-     ${stepsEditorHtml(p.steps)}`,
+     ${stepsEditorHtml(p.steps, key, p.videoVoice)}`,
     ()=>{
       const title=document.getElementById('pTitle').value.trim();
       if(!title){toast('Add a title first');return;}
       const icon=document.getElementById('pIcon').value.trim()||'✈';
       const warn=document.getElementById('pWarn').value.trim();
       const video=document.getElementById('pVideo').value.trim();
+      if(seBusy()) return;
       const steps=seSteps();
       const iconImg = S.pendingProcPhoto !== undefined ? S.pendingProcPhoto : (p.iconImg || null);
       S.pendingProcPhoto = null;
-      S.procs[key]={...p,title,icon,warn,video,steps,iconImg};
+      S.procs[key]={...p,title,icon,warn,video,steps,iconImg,videoVoice:seVoiceVal()};
       closeModal(); render(); toast('Procedure updated ✓');
       if(db) {
-        const data={title,icon,warn,video,steps,iconImg:iconImg||firebase.firestore.FieldValue.delete()};
-        if(iconImg) data.iconImg=iconImg; else delete data.iconImg;
-        db.collection('procedures').doc(key).set(data)
+        // merge: keeps the AI video and its progress, which this form doesn't show
+        const data={title,icon,warn,video,steps,videoVoice:seVoiceVal(),iconImg:iconImg||firebase.firestore.FieldValue.delete()};
+        db.collection('procedures').doc(key).set(data,{merge:true})
           .catch(e => console.log('Edit procedure Firestore write failed:', e));
       }
     });
@@ -14980,7 +15176,7 @@ async function setupLiveSync() {
         const isCrewCarsHub= v.isCrewCarsHub|| existing?.isCrewCarsHub|| false;
         const isAuditsHub  = v.isAuditsHub  || existing?.isAuditsHub  || false;
         procs[d.id] = {title:v.title, icon:v.icon||'✈', warn:v.warn||'', video:v.video||'',
-          steps:v.steps||[], iconImg:v.iconImg||null,
+          steps:v.steps||[], iconImg:v.iconImg||null, aiVideo:v.aiVideo||null, videoJob:v.videoJob||null, videoVoice:v.videoVoice||null,
           open:existing?.open||false, done:existing?.done||[],
           isCrewCar, isCrewCarsHub, isAuditsHub};
       });
