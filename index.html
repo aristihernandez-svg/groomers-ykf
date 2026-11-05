@@ -1500,6 +1500,31 @@ body::before{
 .home-app .ha-ic svg{width:27px;height:27px}
 .home-app:active .ha-ic{transform:scale(.92)}
 .home-app b{font-size:11px;font-weight:600;color:#D7DBE4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
+/* ── Classic home = Spotlight (same as YXL): the aircraft on a dark stage, three status chips, app-icon tiles ── */
+.spot-stage{position:relative;height:286px;overflow:hidden;background:radial-gradient(60% 75% at 50% 0%,rgba(225,232,255,.20),rgba(225,232,255,.04) 55%,transparent 75%),var(--bg)}   /* the stage sits on the app's own background */
+.spot-beam{position:absolute;left:50%;top:-24px;width:560px;height:280px;margin-left:-280px;background:linear-gradient(rgba(230,236,255,.14),transparent 88%);clip-path:polygon(36% 0,64% 0,100% 100%,0 100%);pointer-events:none}
+.spot-floor{position:absolute;left:4%;right:4%;top:224px;height:26px;border-radius:50%;background:radial-gradient(closest-side,rgba(205,215,255,.18),transparent)}
+/* each picture fills a stage-wide box, the way the old banner did, sitting on the floor */
+.spot-stage .hero-img{position:absolute;inset:auto;left:12px;right:12px;top:34px;width:calc(100% - 24px);height:204px;object-fit:contain;object-position:center bottom;opacity:0;transition:opacity 1.2s ease;-webkit-box-reflect:below 0px linear-gradient(transparent 58%,rgba(255,255,255,.16))}
+.spot-stage .hero-img.active{opacity:1}
+.spot-stage .hero-img.eagle{left:28%;right:28%;width:44%;top:50px;height:180px}
+.spot-logo{position:absolute;left:0;right:0;bottom:10px;height:20px;margin:0 auto;filter:brightness(0) invert(1);opacity:.55}
+.spot-head{text-align:center;padding:6px 16px 0}
+.spot-head small{font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--t3)}
+.spot-head h2{font-size:24px;font-weight:800;margin-top:4px;color:var(--t1)}
+.spot-chips{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 14px 2px}
+.spot-chip{background:var(--glass2);border:1px solid var(--border2);border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer}
+.spot-chip b{display:block;font-size:19px;font-weight:800;color:var(--t1)}
+.spot-chip span{font-size:10.5px;color:var(--t2)}
+.spot-chip b.warn{color:#FFB648}.spot-chip b.go{color:#3DDC97}
+.home-apps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 6px}
+.home-app{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0}
+.home-app .ha-ic{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(0,0,0,.4);transition:transform .15s}
+.home-app .ha-ic svg{width:27px;height:27px}
+.home-app:active .ha-ic{transform:scale(.92)}
+.home-app b{font-size:11px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+
 </style>
 </head>
 <body>
@@ -3579,11 +3604,13 @@ async function renderHome(el) {
 
   const dateStr = new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'});
 
+  // the aircraft (and the Groomies eagle) take turns on the Spotlight stage
   const HERO_IMGS = [
-    {src:'cars/Westwind-removebg-preview.png',       fit:'contain', pad:'40px 30px'},
-    {src:'cars/Metroliner_logo-removebg-preview.png',fit:'contain', pad:'40px 30px'},
-    {src:'cars/Navajo_logo-removebg-preview.png',    fit:'contain', pad:'40px 30px'},
-    {src:'cars/Astra-removebg-preview.png',          fit:'contain', pad:'40px 30px'},
+    {src:'cars/Westwind-removebg-preview.png'},
+    {src:'cars/Metroliner_logo-removebg-preview.png'},
+    {src:'cars/Navajo_logo-removebg-preview.png'},
+    {src:'cars/Astra-removebg-preview.png'},
+    {src:'cars/groomies-emblem.svg', cls:'eagle'},
   ];
 
   const HOME_TILES = [
@@ -3625,17 +3652,18 @@ async function renderHome(el) {
       .home-tile:active{opacity:0.7;transform:scale(0.97)}
     </style>
 
-    ${(()=>{const _ht=new Date();const _isJessie=_ht.getMonth()===6&&_ht.getDate()===23;return `<div class="hero-wrap">
-      ${_isJessie
+    <div class="spot-stage"><div class="spot-beam"></div><div class="spot-floor"></div>
+      ${(()=>{const _ht=new Date();return _ht.getMonth()===6&&_ht.getDate()===23;})()
         ? `<img src="Jessie/IMG_0518.HEIC" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" alt="">`
-        : HERO_IMGS.map((img,i)=>`<img class="hero-img${i===0?' active kb':''}" src="${img.src}" id="hImg${i}" style="object-fit:${img.fit};padding:${img.pad};object-position:center top" alt="">`).join('')
-      }
-      <div class="hero-grad"></div>
-      <div class="hero-overlay">
-        <img src="cars/Skycare_logo-removebg-preview.png" alt="SkyCare" style="height:26px;filter:brightness(0) invert(1);opacity:0.9;display:block;margin:0 auto 6px">
-        <div style="font-size:12px;color:rgba(255,255,255,0.65);font-weight:600;letter-spacing:0.3px">${dateStr}</div>
-      </div>
-    </div>`;})()}
+        : HERO_IMGS.map((img,i)=>`<img class="hero-img${img.cls?' '+img.cls:''}${i===0?' active':''}" src="${img.src}" id="hImg${i}" alt="">`).join('')}
+    </div>
+    <div class="spot-head"><small>${dateStr}</small><h2>${homeGreeting()}, YKF</h2></div>
+    ${(()=>{ const st = homeStats();
+      return `<div class="spot-chips">
+        <div class="spot-chip" onclick="goTab('today')"><b class="${st.total-st.done?'warn':''}">${st.total?st.total-st.done:'—'}</b><span>${st.total?(st.total-st.done?'tasks left today':'all done today'):'no tasks today'}</span></div>
+        <div class="spot-chip" onclick="goTab('shopping')"><b>${(S.shopping||[]).filter(i=>i.checked).length}</b><span>to buy</span></div>
+        <div class="spot-chip" data-hfslot="spot" onclick="goTab('fleet')">${hdSpotChip()}</div></div>`; })()}
+    <div style="height:10px"></div>
 
     ${renderHandoffNotesHtml()}
     ${renderTodayEventsHtml()}
@@ -3664,11 +3692,8 @@ async function renderHome(el) {
     _heroSlideTimer = setInterval(() => {
       _hImgs[_hIdx].classList.remove('active','kb');
       _hIdx = (_hIdx + 1) % HERO_IMGS.length;
-      const next = _hImgs[_hIdx];
-      next.classList.add('active');
-      void next.offsetWidth; // force reflow for KB restart
-      next.classList.add('kb');
-    }, 2000);
+      _hImgs[_hIdx].classList.add('active');
+    }, 5000);   // Spotlight: a slow swap between the aircraft
   }
 
   // Design picker + live fleet info for the non-Classic layouts
@@ -3834,6 +3859,12 @@ function hdModel(w, st) {
 
 // ── live fleet info (read from fleetPositions/live, written by the alert job) ──
 // Widgets: the big fleet widget
+// Spotlight's third chip: the next arrival at CYKF, or what the fleet is doing
+function hdSpotChip() {
+  const f = homeFleetInfo(), p = S.homeFleet && S.homeFleet.inbound;
+  if (p && p.eta != null) return `<b class="go">${p.eta>=60?Math.floor(p.eta/60)+'h':p.eta+'m'}</b><span>${_hdEsc(p.tail||p.reg)} arriving</span>`;
+  return `<b>✈</b><span>${_hdEsc(f.reg)}</span>`;
+}
 function hdWidgetFleet() {
   const f = homeFleetInfo();
   return `<small>${f.inbound?'Inbound · CYKF':'Fleet · CYKF'}</small><b>${_hdEsc(f.reg)}</b><p>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · ')) || 'Live ADS-B'}</p><img src="${f.img}" alt="">`;
@@ -4077,7 +4108,7 @@ function homeDesignTilesHtml(d) {
 // ── the 🎨 picker ──
 function homeMiniHtml(id) {
   const m = {
-    classic:`<div class="hp-mini" style="background:#0B1120"><u style="left:0;right:0;top:0;height:18px;border-radius:0;background:linear-gradient(#1a2c52,#0B1120)"></u><u style="left:24px;top:6px;width:16px;height:7px;background:#cfd8e8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*20}px;top:24px;width:16px;height:15px;background:rgba(255,255,255,.12)"></u>`).join('')}</div>`,
+    classic:`<div class="hp-mini" style="background:#000"><u style="left:18px;top:0;width:28px;height:18px;border-radius:0;background:linear-gradient(rgba(230,236,255,.35),transparent);clip-path:polygon(35% 0,65% 0,100% 100%,0 100%)"></u><u style="left:14px;top:11px;width:36px;height:6px;background:#cfd8e8;border-radius:3px"></u>${['#14B8A6','#EF4444','#10B981','#3B82F6'].map((c,i)=>`<u style="left:${6+i*14}px;top:28px;width:10px;height:10px;background:${c}"></u>`).join('')}</div>`,
     widgets:`<div class="hp-mini" style="background:#000"><u style="left:4px;right:4px;top:4px;height:13px;background:linear-gradient(150deg,#1b4a90,#0b1d3a);border-radius:5px"></u><u style="left:4px;top:20px;width:27px;height:12px;background:#17181c;border-radius:5px"></u><u style="left:33px;top:20px;width:27px;height:12px;background:#06301F;border-radius:5px"></u>${['#14B8A6','#EF4444','#10B981','#3B82F6'].map((c,i)=>`<u style="left:${6+i*14}px;top:35px;width:8px;height:6px;background:${c}"></u>`).join('')}</div>`,
     bento:`<div class="hp-mini" style="background:#0B1120"><u style="left:4px;right:4px;top:4px;height:13px;background:#3a7bff;border-radius:5px"></u><u style="left:4px;top:20px;width:26px;height:20px;background:#141F3A;border:1px solid #2a3a60"></u><u style="left:33px;top:20px;width:27px;height:9px;background:#5b46ff"></u><u style="left:33px;top:31px;width:27px;height:9px;background:#e0567a"></u></div>`,
     brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
@@ -4123,7 +4154,7 @@ function homeAfterRender() {
   renderHomePicker();
   if(_homeActiveDesign === 'haunt') requestAnimationFrame(hhPlaceFx);
   if(_homeActiveDesign === 'xmas') requestAnimationFrame(hdXmasPlace);
-  if(_homeActiveDesign !== 'classic' && hdFleetOn()) {
+  if(hdFleetOn()) {
     homeFleetRefresh();
     _homeFleetTimer = setInterval(()=>{ if(S.tab==='home') homeFleetRefresh(); else { clearInterval(_homeFleetTimer); _homeFleetTimer=null; } }, 60000);
   }
@@ -4365,7 +4396,7 @@ function hdXmasTracker() {
     ${route}${chips.length ? `<div class="ft">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : '<div style="height:10px"></div>'}`;
 }
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {widgets:hdWidgetFleet, comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntGate, xmas:hdXmasTracker};
+const HD_LIVE = {spot:hdSpotChip, widgets:hdWidgetFleet, comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntGate, xmas:hdXmasTracker};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
@@ -11858,6 +11889,7 @@ function _buildTileGridHtml() {
         <button onclick="exitTileEditMode()" style="padding:7px 20px;border-radius:20px;background:var(--accent);color:#fff;border:none;font-size:13px;font-weight:700;cursor:pointer">Done</button>
        </div>` : '';
   if(_homeActiveDesign !== 'classic') return doneBtn + homeDesignTilesHtml(_homeActiveDesign);
+  return doneBtn + appIconTilesHtml(_tileOrder);   // Classic shows the tabs as app icons
   const tiles = (_tileOrder||[]).map((t,i)=>`
     <div class="home-tile${_tileEditMode?' tile-wobble':' tile-anim'}"
          id="ht-${t.id}" data-tile-id="${t.id}"
