@@ -1656,23 +1656,23 @@ body::before{
         $('bpStamp').style.transform = `rotate(-12deg) scale(${1.6 - s * .6})`;
         common(p, live, 'Printing your pass', 'Boarded — you are live', 'Tasks, shopping and audits are up to date');
       } },
-    // Thursday — Emerson circles the ring as it fills (Thursday is Emerson's day at work)
+    // Thursday — Emerson in the middle, a Metro flies once around him as the app loads (Thursday is Emerson's day at work)
     4: { build: r => r.innerHTML = shell(`<div style="position:relative;width:280px;height:280px">
           <svg width="280" height="280" viewBox="0 0 280 280" style="position:absolute;inset:0">
-            <circle cx="140" cy="140" r="110" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="10"/>
-            <circle id="rgArc" cx="140" cy="140" r="110" fill="none" stroke="#E8C86A" stroke-width="10" stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="691" transform="rotate(-90 140 140)"/>
-            <circle cx="140" cy="140" r="86" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="3 7"/></svg>
-          <div id="rgEm" style="position:absolute;width:50px;height:50px;border-radius:50%;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.55);border:3px solid #E8C86A"><img src="${EMERSON}" alt="Emerson" style="width:100%;height:100%;object-fit:cover"></div>
-          <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">
-            <div id="rgBig" style="font-size:52px;font-weight:900;letter-spacing:-1px;font-variant-numeric:tabular-nums"></div>
-            <div id="rgSub" style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7D8DA3;margin-top:2px"></div></div></div>`, true),
+            <circle cx="140" cy="140" r="110" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="2" stroke-dasharray="2 9" stroke-linecap="round"/>
+            <circle id="rgArc" cx="140" cy="140" r="110" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2" stroke-linecap="round" stroke-dasharray="691" stroke-dashoffset="691" transform="rotate(-90 140 140)"/></svg>
+          <div id="rgEm" style="position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border-radius:50%;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.6);border:4px solid #E8C86A"><img src="${EMERSON}" alt="Emerson" style="width:100%;height:100%;object-fit:cover"></div>
+          <img id="rgPlane" src="${METRO}" alt="" style="position:absolute;left:0;top:0;width:92px;filter:drop-shadow(0 4px 8px rgba(0,0,0,.6))"></div>
+        <div style="display:flex;align-items:baseline;justify-content:center;gap:8px;margin-top:6px">
+          <div id="rgBig" style="font-size:26px;font-weight:900;letter-spacing:-.5px;font-variant-numeric:tabular-nums"></div>
+          <div id="rgSub" style="font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#7D8DA3"></div></div>`, true),
       update: (p, live) => {
-        const a = (-90 + p * 360) * Math.PI / 180;
-        $('rgArc').setAttribute('stroke-dashoffset', Math.round(691 * (1 - p)));
-        $('rgArc').setAttribute('stroke', live ? GREEN : '#E8C86A');
-        const em = $('rgEm');
-        em.style.left = (140 + 110 * Math.cos(a) - 25) + 'px'; em.style.top = (140 + 110 * Math.sin(a) - 25) + 'px';
-        em.style.borderColor = live ? GREEN : '#E8C86A';
+        const deg = -90 + p * 360, a = deg * Math.PI / 180;
+        $('rgArc').setAttribute('stroke-dashoffset', Math.round(691 * (1 - p)));   // a faint contrail behind the plane
+        $('rgArc').setAttribute('stroke', live ? 'rgba(46,204,138,.45)' : 'rgba(255,255,255,.28)');
+        // the Metro picture faces right, so on a clockwise loop its nose points 90° past its spot on the circle
+        $('rgPlane').style.transform = `translate(${140 + 110 * Math.cos(a)}px,${140 + 110 * Math.sin(a)}px) translate(-50%,-50%) rotate(${deg + 90}deg)`;
+        $('rgEm').style.borderColor = live ? GREEN : '#E8C86A';
         $('rgBig').textContent = live ? 'LIVE' : pct(p); $('rgBig').style.color = live ? GREEN : '#F0F4FF';
         $('rgSub').textContent = live ? 'ready to go' : 'syncing';
         common(p, live, 'Syncing with the team', 'Everything is up to date', 'Tasks, shopping and audits are live');
