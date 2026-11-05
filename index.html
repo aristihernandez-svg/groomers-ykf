@@ -1471,6 +1471,35 @@ body::before{
 /* Fleet map tooltip */
 .fleet-tip{background:#0d1520!important;border:1px solid rgba(200,168,75,0.35)!important;color:#e2e8f0!important;font-size:11px!important;font-weight:500!important;box-shadow:0 2px 8px rgba(0,0,0,0.6)!important;border-radius:6px!important;padding:4px 8px!important}
 .fleet-tip::before{display:none!important}
+
+/* ── Widgets home design: fleet, task ring, cargo/shopping and today's event as phone widgets; tabs as app icons ── */
+.hd-widgets{background:#000;color:#F0F2F7;min-height:100%;padding:14px 14px 0}
+.hd-widgets .hd-top small{color:#7D8494}
+.wg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.wg{border-radius:22px;padding:13px;background:#111114;position:relative;overflow:hidden;min-height:132px;cursor:pointer}
+.wg small{font-size:10px;font-weight:800;letter-spacing:.08em;color:#8FA1BF;text-transform:uppercase}
+.wg b{display:block;font-size:23px;font-weight:800;margin-top:4px}
+.wg p{font-size:11.5px;color:#A9B0BE;margin-top:3px;line-height:1.4}
+.wg.wide{grid-column:span 2;min-height:140px;background:linear-gradient(150deg,#0C2347,#081325)}
+.wg.wide img{position:absolute;right:-26px;bottom:6px;width:62%;max-width:250px}
+.wg.wide p{max-width:46%}
+.wg-ring{width:72px;height:72px;border-radius:50%;background:conic-gradient(#3DDC97 calc(var(--p)*1%),#24262C 0);display:grid;place-items:center;margin-top:8px}
+.wg-ring i{width:56px;height:56px;border-radius:50%;background:#111114;display:grid;place-items:center;font-style:normal;font-size:15px;font-weight:800}
+.wg.cg{background:linear-gradient(160deg,#2B1D05,#141007)}
+.wg.cg b{color:#FFC861}
+.wg.sh{background:linear-gradient(160deg,#06301F,#07140E)}
+.wg.sh b{color:#5BE3A4}
+.wg.cal{grid-column:span 2;min-height:0;display:flex;gap:14px;align-items:center}
+.wg.cal .d{width:52px;flex-shrink:0;text-align:center;border-radius:12px;background:#1A1B20;padding:5px 0}
+.wg.cal .d small{color:#FF5A5A}
+.wg.cal .d b{margin:0;font-size:22px}
+.wg.cal b{font-size:15px}
+.home-apps{display:grid;grid-template-columns:repeat(4,1fr);gap:16px 6px}
+.home-app{display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;-webkit-tap-highlight-color:transparent;min-width:0}
+.home-app .ha-ic{width:58px;height:58px;border-radius:17px;display:grid;place-items:center;color:#fff;box-shadow:0 8px 18px rgba(0,0,0,.4);transition:transform .15s}
+.home-app .ha-ic svg{width:27px;height:27px}
+.home-app:active .ha-ic{transform:scale(.92)}
+.home-app b{font-size:11px;font-weight:600;color:#D7DBE4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 </style>
 </head>
 <body>
@@ -3708,7 +3737,7 @@ const HOME_DESIGNS = [
   {id:'comic',   label:'Comic Book'},
   {id:'lineup',  label:'Starting Lineup'},
   {id:'chart',   label:'Sectional Chart'},
-  {id:'passport',label:'Crew Passport'},
+  {id:'widgets', label:'Widgets'},
   {id:'xmas',    label:'Christmas Village', when:d=>d.getMonth()===11 || (d.getMonth()===0 && d.getDate()<=6)},   // Dec 1 – Jan 6 only
 ];
 const HOME_PLANE_IMGS = [
@@ -3804,6 +3833,11 @@ function hdModel(w, st) {
 }
 
 // ── live fleet info (read from fleetPositions/live, written by the alert job) ──
+// Widgets: the big fleet widget
+function hdWidgetFleet() {
+  const f = homeFleetInfo();
+  return `<small>${f.inbound?'Inbound · CYKF':'Fleet · CYKF'}</small><b>${_hdEsc(f.reg)}</b><p>${_hdEsc([f.line,f.sub].filter(Boolean).join(' · ')) || 'Live ADS-B'}</p><img src="${f.img}" alt="">`;
+}
 function homeFleetInfo() {
   const hf = S.homeFleet;
   const plane = {Metroliner:HOME_PLANE_IMGS[1], Westwind:HOME_PLANE_IMGS[0], Navajo:HOME_PLANE_IMGS[2], Astra:HOME_PLANE_IMGS[3]};
@@ -3945,6 +3979,21 @@ function homeDesignHtml(d, dateStr) {
   const dt = _hdEsc(dateStr);
   const prog = st.total ? `${st.done} of ${st.total} tasks done` : 'No tasks yet';
   const cards = design => HD_SLOTS[design].map(s=>hdSlotCard(design, s));
+  if(d==='widgets') {
+    const done = st.done ?? st.cur, evs = st.evs || calEventsOn(localDateISO()), ev = evs[0], now = new Date();
+    return `<div class="hd hd-widgets">
+    <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()}</h2></div>
+    <div class="wg-grid">
+      <div class="wg wide" data-hfslot="widgets" onclick="goTab('fleet')">${hdWidgetFleet()}</div>
+      <div class="wg" onclick="goTab('today')"><small>Today's tasks</small><div class="wg-ring" style="--p:${st.pct}"><i>${st.pct}%</i></div><p>${st.total ? (st.total-done) + ' left' : 'No tasks yet'}</p></div>
+      <div class="wg sh" onclick="goTab('shopping')"><small>Shopping</small><b>${(()=>{ const n=(S.shopping||[]).filter(i=>i.checked).length; return n ? n+' to buy' : 'All stocked'; })()}</b><p>${(S.shopping||[]).some(i=>i.checked) ? 'on the list' : 'Nothing needed'}</p></div>
+      <div class="wg cal" onclick="goTab('calendar')"><div class="d"><small>${now.toLocaleDateString('en-CA',{weekday:'short'}).toUpperCase()}</small><b>${now.getDate()}</b></div>
+        <div style="min-width:0"><small>${ev ? (evs.length>1 ? evs.length+' events today' : 'Today') : 'Calendar'}</small><b>${ev ? _hdEsc(ev.title) : 'Nothing scheduled'}</b>${ev && ev.sub ? `<p>${_hdEsc(ev.sub)}</p>` : ''}</div></div>
+    </div>
+    ${homeNotesHtml()}
+    <div id="homeTileWrap"></div>
+    ${homeFooterHtml()}</div>`;
+  }
   if(d==='bento') return `<div class="hd hd-bento">
     <div class="hd-top"><small>${dt}</small><h2>${homeGreeting()},<br>YKF crew</h2></div>
     ${homeNotesHtml()}
@@ -3988,6 +4037,12 @@ function homeDesignHtml(d, dateStr) {
   throw new Error('unknown home design '+d);
 }
 
+// Widgets design: the tabs as coloured app icons (same colours as the More menu)
+function appIconTilesHtml(list) {
+  const cls = _tileEditMode ? 'tile-wobble' : 'tile-anim';
+  return `<div class="home-apps">${(list||[]).map((t,i)=>{ const c = MORE_COLORS[t.id] || '#5B8FE8';
+    return `<div class="home-app ${cls}" ${_hdTileAttrs(t,i)}><span class="ha-ic" style="background:linear-gradient(150deg,${c},${c}99)">${t.svg}</span><b>${t.label}</b></div>`; }).join('')}</div>`;
+}
 function _hdTileAttrs(t, i, extraStyle) {
   return `id="ht-${t.id}" data-tile-id="${t.id}"
     style="${_tileEditMode?`animation-delay:${i*40}ms`:`animation-delay:${i*55}ms`};touch-action:none;position:relative;${extraStyle||''}"
@@ -3999,6 +4054,7 @@ function _hdTileAttrs(t, i, extraStyle) {
 function homeDesignTilesHtml(d) {
   const cls = _tileEditMode ? 'tile-wobble' : 'tile-anim';
   let list = _tileOrder || [];
+  if(d==='widgets') return appIconTilesHtml(list);
   const t4 = hdTiles4(d, list, cls);
   if(t4) return t4;
   const pal = {
@@ -4022,6 +4078,7 @@ function homeDesignTilesHtml(d) {
 function homeMiniHtml(id) {
   const m = {
     classic:`<div class="hp-mini" style="background:#0B1120"><u style="left:0;right:0;top:0;height:18px;border-radius:0;background:linear-gradient(#1a2c52,#0B1120)"></u><u style="left:24px;top:6px;width:16px;height:7px;background:#cfd8e8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*20}px;top:24px;width:16px;height:15px;background:rgba(255,255,255,.12)"></u>`).join('')}</div>`,
+    widgets:`<div class="hp-mini" style="background:#000"><u style="left:4px;right:4px;top:4px;height:13px;background:linear-gradient(150deg,#1b4a90,#0b1d3a);border-radius:5px"></u><u style="left:4px;top:20px;width:27px;height:12px;background:#17181c;border-radius:5px"></u><u style="left:33px;top:20px;width:27px;height:12px;background:#06301F;border-radius:5px"></u>${['#14B8A6','#EF4444','#10B981','#3B82F6'].map((c,i)=>`<u style="left:${6+i*14}px;top:35px;width:8px;height:6px;background:${c}"></u>`).join('')}</div>`,
     bento:`<div class="hp-mini" style="background:#0B1120"><u style="left:4px;right:4px;top:4px;height:13px;background:#3a7bff;border-radius:5px"></u><u style="left:4px;top:20px;width:26px;height:20px;background:#141F3A;border:1px solid #2a3a60"></u><u style="left:33px;top:20px;width:27px;height:9px;background:#5b46ff"></u><u style="left:33px;top:31px;width:27px;height:9px;background:#e0567a"></u></div>`,
     brutal:`<div class="hp-mini" style="background:#FFF0B8;border:2px solid #111"><u style="left:5px;top:5px;width:30px;height:9px;background:#FF5CA8;border:2px solid #111;border-radius:2px"></u><u style="left:5px;top:18px;right:5px;height:8px;background:#B6FF3B;border:2px solid #111;border-radius:3px"></u><u style="left:5px;top:30px;width:16px;height:9px;background:#7CB4FF;border:2px solid #111;border-radius:2px"></u><u style="left:25px;top:30px;width:16px;height:9px;background:#FF9A3C;border:2px solid #111;border-radius:2px"></u></div>`,
     neon:`<div class="hp-mini" style="background:linear-gradient(#0a0518,#2b0a4a)"><u style="left:19px;top:5px;width:26px;height:18px;border-radius:50%;background:linear-gradient(#ffe45c,#ff4fa8)"></u><u style="left:4px;right:4px;top:27px;height:2px;background:#ff4fa8;box-shadow:0 0 5px #ff4fa8"></u>${[0,1,2].map(i=>`<u style="left:${5+i*19}px;top:32px;width:15px;height:9px;border:1px solid ${['#ff4fa8','#29e0ff','#ffe45c'][i]};border-radius:3px;box-shadow:0 0 4px ${['#ff4fa8','#29e0ff','#ffe45c'][i]}"></u>`).join('')}</div>`,
@@ -4308,7 +4365,7 @@ function hdXmasTracker() {
     ${route}${chips.length ? `<div class="ft">${chips.map(c => `<span>${c}</span>`).join('')}</div>` : '<div style="height:10px"></div>'}`;
 }
 // Live parts that homeFleetPaint() redraws, by their data-hfslot key
-const HD_LIVE = {comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntGate, xmas:hdXmasTracker};
+const HD_LIVE = {widgets:hdWidgetFleet, comic:hdComicHero, lineup:hdLineupFleet, chart:hdChartMap, passport:hdRadar, passcap:hdRadarCap, haunt:hdHauntGate, xmas:hdXmasTracker};
 
 function hdLayout4(d, st, fleetOn) {
   const t = hdDateBits(), notes = S.handoffNotes||[], evs = hdEvents();
