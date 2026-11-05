@@ -5197,9 +5197,12 @@ function renderCalCharterDetail(el, id) {
     html += `<div style="font-size:13px;color:var(--t4);padding:8px 0 16px">No requested items yet — add one below as charter groups ask for things.</div>`;
   } else {
     items.forEach((it,i)=>{
-      html += `<div onclick="toggleCharterItem('${id}',${i})" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border2);cursor:pointer">
-        <span style="font-size:20px;color:${it.done?'var(--accent)':'var(--t4)'}">${it.done?'☑️':'⬜'}</span>
-        <span style="font-size:13px;color:${it.done?'var(--t4)':'var(--t1)'};text-decoration:${it.done?'line-through':'none'}">${it.text}</span>
+      html += `<div style="display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2)">
+        <div onclick="toggleCharterItem('${id}',${i})" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;padding:10px 0;cursor:pointer">
+          <span style="font-size:20px;color:${it.done?'var(--accent)':'var(--t4)'}">${it.done?'☑️':'⬜'}</span>
+          <span style="font-size:13px;color:${it.done?'var(--t4)':'var(--t1)'};text-decoration:${it.done?'line-through':'none'};overflow-wrap:anywhere">${_hdEsc(it.text)}</span>
+        </div>
+        <div onclick="editCharterItem('${id}',${i})" aria-label="Edit or remove" style="flex-shrink:0;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--t3);cursor:pointer">✏️</div>
       </div>`;
     });
   }
@@ -5207,19 +5210,38 @@ function renderCalCharterDetail(el, id) {
     <input id="charterNewItem" placeholder="Add a requested item" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-size:13px;font-family:inherit" onkeydown="if(event.key==='Enter')addCharterItem('${id}')">
     <div onclick="addCharterItem('${id}')" style="width:40px;height:40px;border-radius:10px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;cursor:pointer">+</div>
   </div>
-  <div style="font-size:11px;color:var(--t4);margin-top:16px">Each date keeps its own list</div>
+  <div style="font-size:11px;color:var(--t4);margin-top:16px">Each date keeps its own list · tap ✏️ to fix or remove an item</div>
   </div>`;
   el.innerHTML = html;
 }
+// Every change reads the charter's list fresh and changes only the one item, so two phones adding,
+// ticking or fixing items on the same charter at once never undo each other. An item is found by its
+// position and its text; if someone else moved it, by its text.
+function charterItemsTx(id, change, failMsg) {
+  if(!db) { toast('No connection'); return; }
+  const ref = db.collection('calendarEvents').doc(id);
+  db.runTransaction(async tx => {
+    const snap = await tx.get(ref);
+    if(!snap.exists) throw new Error('charter gone');
+    const items = change((snap.data().items || []).map(it => ({...it})));
+    if(items) tx.update(ref, {items});
+    return items;
+  }).then(items => {
+    const ev = S.calendarEvents.find(e=>e.id===id);
+    if(ev && items) ev.items = items;
+    if(S.calCharterView === id) render();
+  }).catch(e => { console.log(failMsg, e); toast('⚠️ Failed — check connection'); });
+}
+function charterItemIndex(items, idx, text) {
+  if(items[idx] && items[idx].text === text) return idx;
+  return items.findIndex(it => it.text === text);
+}
 function toggleCharterItem(id, idx) {
   const ev = S.calendarEvents.find(e=>e.id===id);
-  if(!ev) return;
-  const items = (ev.items||[]).map((it,i)=> i===idx ? {...it, done:!it.done} : it);
-  if(!db) { toast('No connection'); return; }
-  db.collection('calendarEvents').doc(id).update({items})
-    .catch(e=>{ console.log('Toggle charter item failed:', e); toast('⚠️ Failed — check connection'); });
-  ev.items = items;
-  render();
+  const it = ev && (ev.items||[])[idx]; if(!it) return;
+  const done = !it.done;
+  ev.items = ev.items.map((x,i)=> i===idx ? {...x, done} : x); render();   // shows at once; the save follows
+  charterItemsTx(id, items => { const k = charterItemIndex(items, idx, it.text); if(k < 0) return null; items[k].done = done; return items; }, 'Toggle charter item failed:');
 }
 function addCharterItem(id) {
   const inp = document.getElementById('charterNewItem');
@@ -5227,12 +5249,34 @@ function addCharterItem(id) {
   if(!text) return;
   const ev = S.calendarEvents.find(e=>e.id===id);
   if(!ev) return;
-  const items = [...(ev.items||[]), {text, done:false}];
-  if(!db) { toast('No connection'); return; }
-  db.collection('calendarEvents').doc(id).update({items})
-    .catch(e=>{ console.log('Add charter item failed:', e); toast('⚠️ Failed — check connection'); });
-  ev.items = items;
-  render();
+  ev.items = [...(ev.items||[]), {text, done:false}]; render();
+  charterItemsTx(id, items => [...items, {text, done:false}], 'Add charter item failed:');
+}
+// ✏️: fix the wording, or remove the item
+function editCharterItem(id, idx) {
+  const ev = S.calendarEvents.find(e=>e.id===id);
+  const it = ev && (ev.items||[])[idx]; if(!it) return;
+  openModal('✏️ Edit item',
+    `<label>Requested item</label><input id="mChItem" value="${_hdEsc(it.text)}" onkeydown="if(event.key==='Enter')mSubmit()">
+     <button type="button" class="ct-del" onclick="removeCharterItem('${id}',${idx})">🗑 Remove this item</button>`,
+    () => {
+      const text = document.getElementById('mChItem').value.trim();
+      if(!text) { toast('Type the item, or tap Remove'); return; }
+      closeModal();
+      if(text === it.text) return;
+      ev.items = ev.items.map((x,i)=> i===idx ? {...x, text} : x); render();
+      charterItemsTx(id, items => { const k = charterItemIndex(items, idx, it.text); if(k < 0) return null; items[k].text = text; return items; }, 'Edit charter item failed:');
+      toast('✏️ Item updated');
+    });
+}
+function removeCharterItem(id, idx) {
+  const ev = S.calendarEvents.find(e=>e.id===id);
+  const it = ev && (ev.items||[])[idx]; if(!it) return;
+  if(!confirm(`Remove "${it.text}" from this charter's list?`)) return;
+  closeModal();
+  ev.items = ev.items.filter((x,i)=> i!==idx); render();
+  charterItemsTx(id, items => { const k = charterItemIndex(items, idx, it.text); if(k < 0) return null; items.splice(k, 1); return items; }, 'Remove charter item failed:');
+  toast('🗑 Item removed');
 }
 
 // ── SHOPPING ───────────────────────────────────────────────────────
