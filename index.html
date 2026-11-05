@@ -13089,8 +13089,9 @@ function setupPhotoInput() {
     const file=e.target.files[0]; if(!file) return;
     const reader=new FileReader();
     reader.onload=async ev=>{
-      const maxDim = S.photoCtx==='proc' ? 200 : 1280;
-      const compressed=await compressImage(ev.target.result, maxDim);
+      // procedure tile photos show about 170 px wide on 3x phones: 640 px keeps them sharp (was 200 px, blurry)
+      const maxDim = S.photoCtx==='proc' ? 640 : 1280;
+      const compressed=await compressImage(ev.target.result, maxDim, S.photoCtx==='proc' ? 0.82 : 0.6);
       if(S.photoCtx==='audit' && auditPhotoTarget && storage) {
         await uploadAuditPhoto(compressed, auditPhotoTarget, auditPhotoSlot);
       } else {
