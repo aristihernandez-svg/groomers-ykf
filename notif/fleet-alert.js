@@ -50,6 +50,15 @@ const YAV_RESET_NM = 80;
 const YAV_VAPID_PUBLIC = 'BL-9QbyPlFMPIv8T_C_aeM4MTkv2Mb9ogKZLlQjk9IJeHbCGYNJKlThwgJyqdxbuDdCGQf7dR5sDeNSEyNsgAVA';
 const YAV_APP = 'https://aristihernandez-svg.github.io/groomers-yav/';
 
+// YXL (Sioux Lookout) works the same way as YAV, with YKF's 60 nm radius: measured only
+// from CYXL, sent to the YXL app's own subscribers (skycare-yxl) with YXL's own push key.
+const CYXL_LAT = 50.1139;
+const CYXL_LON = -91.9053;
+const YXL_ALERT_NM = 60;
+const YXL_RESET_NM = 120;
+const YXL_VAPID_PUBLIC = 'BDSgat8oU57pQUCVvCBBnGFLynP6cjFxbgErTGHFd2zq4vlzQc1kixFP9l82xzdo69UHAbGLiW871AhrGlsNIQc';
+const YXL_APP = 'https://aristihernandez-svg.github.io/groomers-yxl/';
+
 // Canadian registrations map to ICAO24 (Mode S) addresses arithmetically:
 // C-FAAA = C00001, C-GAAA = C00001 + 26^3. Checked against 64 live Canadian aircraft.
 function icao24For(reg) {
@@ -306,6 +315,80 @@ async function checkYav(live, prevLive) {
   }
 }
 
+// ── YXL ──────────────────────────────────────────────────────────────────────
+async function yxlSubscriptions() {
+  const subs = [];
+  let token = '';
+  do {
+    const r = await getJson('https://firestore.googleapis.com/v1/projects/skycare-yxl/databases/(default)/documents/pushSubscriptions?pageSize=300'
+      + (token ? '&pageToken=' + encodeURIComponent(token) : ''));
+    (r.documents || []).forEach(d => { const s = fsValue(d.fields?.sub); if (s?.endpoint && s.keys) subs.push(s); });
+    token = r.nextPageToken || '';
+  } while (token);
+  return subs;
+}
+async function sendToYxl(title, body, tag, type) {
+  if (!process.env.VAPID_PRIVATE_KEY_YXL) { console.log('YXL: no push key configured — not sending'); return; }
+  const subs = await yxlSubscriptions();
+  if (!subs.length) { console.log('YXL: no subscribers'); return; }
+  const icon = YXL_APP + 'cars/' + (type === 'Navajo' ? 'Navajo_logo-removebg-preview.png' : 'Metroliner_logo-removebg-preview.png');
+  const payload = JSON.stringify({ title, body, icon, badge: icon, tag, url: YXL_APP });
+  const opts = { vapidDetails: { subject: 'mailto:aristihernandez@gmail.com', publicKey: YXL_VAPID_PUBLIC, privateKey: process.env.VAPID_PRIVATE_KEY_YXL } };
+  const results = await Promise.allSettled(subs.map(s => webpush.sendNotification(s, payload, opts)));
+  const ok = results.filter(r => r.status === 'fulfilled').length;
+  console.log(`YXL push sent — ${ok} ok, ${results.length - ok} failed`);
+}
+// 60 nm arrival alert for CYXL (a copy of the YAV check above). Every distance here is from CYXL; alert state is
+// kept apart from YKF's (fleetNotificationsYXL) so the two bases never share a trigger.
+async function checkYxl(live, prevLive) {
+  try {
+    webpush.getVapidHeaders('https://fcm.googleapis.com', 'mailto:aristihernandez@gmail.com', YXL_VAPID_PUBLIC, process.env.VAPID_PRIVATE_KEY_YXL || '', 'aes128gcm');
+    console.log('YXL push key OK');
+  } catch (e) { console.error('YXL push key problem:', e.message); }
+  const now = Date.now();
+  for (const ac of Object.values(live)) {
+    const distNm = Math.round(haversineNm(ac.lat, ac.lon, CYXL_LAT, CYXL_LON));
+    const ref  = db.collection('fleetNotificationsYXL').doc(ac.tail);
+    const snap = await ref.get();
+    const prev = snap.exists ? snap.data() : null;
+    ac.leavingYxl = false;
+
+    // Under 50 kts it's rolling on a runway or taxiing, not "approaching" -- treat as on the ground.
+    if (ac.onGround || (ac.speedKts != null && ac.speedKts < 50)) {
+      if (prev?.active) {
+        console.log(`YXL: ${ac.reg} on the ground — re-arming`);
+        await ref.set({ active: false, distNm, resetAt: admin.firestore.FieldValue.serverTimestamp(), landed: true }, { merge: true });
+      }
+      continue;
+    }
+    const inbound = isInbound(ac, CYXL_LAT, CYXL_LON);
+    const move = comingOrGoing(ac, prevLive[ac.tail], CYXL_LAT, CYXL_LON);
+    ac.leavingYxl = move.verdict === 'leaving';
+    if (distNm <= YXL_ALERT_NM) {
+      const lastNotified = prev?.notifiedAt?.toMillis?.() || 0;
+      const alreadyActive = prev?.active === true && (now - lastNotified) < ALERT_EXPIRE_MS;
+      const tooClose = distNm < MIN_ALERT_NM;
+      if (!alreadyActive && !tooClose && inbound && move.verdict === 'arriving' && (now - lastNotified) > COOLDOWN_MS) {
+        const eta  = etaStr(distNm, ac.speedKts);
+        const body = [
+          `${distNm} nm from CYXL`,
+          ac.altFt ? ac.altFt.toLocaleString() + ' ft' : null,
+          ac.speedKts ? ac.speedKts + ' KTS' : null,
+          eta ? 'ETA ' + eta : null,
+        ].filter(Boolean).join(' · ');
+        console.log(`YXL ALERT: ${ac.reg} — ${body}`);
+        await sendToYxl(`✈ ${ac.reg} approaching CYXL`, body, `fleet-yxl-${ac.tail}`, ac.type);
+        await ref.set({ notifiedAt: admin.firestore.FieldValue.serverTimestamp(), active: true, distNm });
+      } else {
+        console.log(`YXL: ${ac.reg} ${distNm} nm — no alert (${alreadyActive ? 'already sent for this arrival' : tooClose ? 'inside 5 nm — departing or over the field' : !inbound ? 'not heading toward CYXL' : move.verdict !== 'arriving' ? (move.verdict === 'leaving' ? 'departing — ' : 'not sure yet — ') + move.why : 'cooldown'})`);
+      }
+    } else if (distNm > YXL_RESET_NM && prev?.active) {
+      console.log(`YXL: ${ac.reg} beyond ${YXL_RESET_NM} nm — resetting`);
+      await ref.set({ active: false, distNm, resetAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    }
+  }
+}
+
 // ── Main ─────────────────────────────────────────────────────────────────────
 async function main() {
   const h = easternHour();
@@ -446,13 +529,15 @@ async function main() {
 
   // YAV's own 40 nm alert — kept separate so a YAV problem can never stop YKF's
   try { await checkYav(live, prevLive); } catch (e) { console.error('YAV alert check failed:', e.message); }
+  // YXL's own 60 nm alert — separate the same way
+  try { await checkYxl(live, prevLive); } catch (e) { console.error('YXL alert check failed:', e.message); }
 
   // Write live positions to Firestore so the browser map can read them
   // without calling OpenSky directly (OpenSky blocks browser CORS requests)
   const positionData = {};
   FLEET.forEach(ac => {
     positionData[ac.tail] = live[ac.tail]
-      ? { ...live[ac.tail], leavingYkf: !!live[ac.tail].leavingYkf, leavingYav: !!live[ac.tail].leavingYav, updatedAt: admin.firestore.FieldValue.serverTimestamp() }
+      ? { ...live[ac.tail], leavingYkf: !!live[ac.tail].leavingYkf, leavingYav: !!live[ac.tail].leavingYav, leavingYxl: !!live[ac.tail].leavingYxl, updatedAt: admin.firestore.FieldValue.serverTimestamp() }
       : null;
   });
   await db.collection('fleetPositions').doc('live').set({
