@@ -19,9 +19,14 @@ const VOICES = {   // [preferred natural voice, fallback]
   'fr-f': ['fr-CA-Chirp3-HD-Aoede', 'fr-CA-Neural2-A'], 'fr-m': ['fr-CA-Chirp3-HD-Charon', 'fr-CA-Neural2-B'],
 };
 
+// a step's photos and videos, in order (older steps only have .photo)
+function stepMedia(s) {
+  if (s && Array.isArray(s.media) && s.media.length) return s.media.filter(m => m && m.url);
+  return s && s.photo ? [{ k: 'img', url: s.photo, path: s.photoPath || '' }] : [];
+}
 // same fingerprint the app uses to tell when a video no longer matches the steps
 function procStepsSig(steps) {
-  const str = (steps || []).map(s => (s.t || '') + '|' + (s.n || '') + '|' + (s.photo || '') + '|' + (s.g ? 1 : 0)).join('\n');
+  const str = (steps || []).map(s => (s.t || '') + '|' + (s.n || '') + '|' + stepMedia(s).map(m => m.url).join(',') + '|' + (s.g ? 1 : 0)).join('\n');
   let h = 5381; for (let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
   return h.toString(36);
 }
@@ -70,19 +75,27 @@ async function buildVideo(dir, ffmpeg, v) {
 
   // one segment per step: photo with a slow zoom, the dark fade, number, text, note, and the spoken line on top
   for (let i = 0; i < v.steps.length; i++) {
-    const s = v.steps[i], d = Math.max(3, (s.secs || 0) + 0.8), frames = Math.round(d * FPS);
+    const s = v.steps[i], items = s.items, n = items.length;
+    const d = Math.max(3, (s.secs || 0) + 0.8, n * 2.4), each = d / n;
     const txt = wrap(s.text, 30, 3), note = s.note ? wrap(s.note, 44, 2) : [];
     const textH = txt.length * 44 + (note.length ? 10 + note.length * 32 : 0) + (s.g ? 36 : 0);
     const yNum = H - 60 - textH - 96, yTxt = yNum + 100;
-    let vf = `[0:v]scale=${W * 2}:${H * 2}:force_original_aspect_ratio=increase,crop=${W * 2}:${H * 2},` +
-      `zoompan=z='1+0.09*on/${frames}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${frames}:s=${W}x${H}:fps=${FPS},setsar=1[ph];` +
-      `[ph][1:v]overlay=0:${H - 460}[bg];[bg]` +
+    const ins = [], parts = [];
+    items.forEach((m, j) => {
+      const f = Math.round(each * FPS);
+      if (m.k === 'vid') { ins.push('-stream_loop', '-1', '-t', String(each + 0.5), '-i', m.file);
+        parts.push(`[${j}:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=${FPS},trim=duration=${each.toFixed(3)},setpts=PTS-STARTPTS,setsar=1[m${j}]`); }
+      else { ins.push('-i', m.file);
+        parts.push(`[${j}:v]scale=${W * 2}:${H * 2}:force_original_aspect_ratio=increase,crop=${W * 2}:${H * 2},zoompan=z='1+0.09*on/${f}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${f}:s=${W}x${H}:fps=${FPS},setsar=1[m${j}]`); }
+    });
+    let vf = parts.join(';') + ';' + items.map((_, j) => `[m${j}]`).join('') + `concat=n=${n}:v=1:a=0[ph];` +
+      `[ph][${n}:v]overlay=0:${H - 460}[bg];[bg]` +
       dt(dir, `s${i}_n.txt`, [String(i + 1)], { font: 'bold.ttf', size: 92, color: s.g ? '0xE8C86A' : '0x4A9EFF', x: 40, y: yNum, shadow: true }) + ',' +
       dt(dir, `s${i}_t.txt`, txt, { font: 'bold.ttf', size: 36, x: 40, y: yTxt, ls: 8, shadow: true });
     if (note.length) vf += ',' + dt(dir, `s${i}_o.txt`, note, { font: 'med.ttf', size: 25, color: '0xC7D2E3', x: 40, y: yTxt + txt.length * 44 + 10, ls: 7 });
     if (s.g) vf += ',' + dt(dir, `s${i}_g.txt`, ['2ND GROOMER'], { font: 'semi.ttf', size: 20, color: '0xE8C86A', x: 40, y: H - 60 - 26 });
     vf += sub(`s${i}_s.txt`, s.line) + '[v]';
-    await run(ffmpeg, ['-i', s.img, '-i', 'fade.png', ...audioIn(s.audio, d), '-filter_complex', vf, '-map', '[v]', '-map', '2:a', '-af', 'apad', '-t', String(d), ...enc, `seg${i + 1}.mp4`], dir);
+    await run(ffmpeg, [...ins, '-i', 'fade.png', ...audioIn(s.audio, d), '-filter_complex', vf, '-map', '[v]', '-map', `${n + 1}:a`, '-af', 'apad', '-t', String(d), ...enc, `seg${i + 1}.mp4`], dir);
     segs.push([`seg${i + 1}.mp4`, d]);
   }
 
@@ -121,8 +134,8 @@ function makeProcVideoFunction() {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pv-'));
     try {
       const fresh = (await ref.get()).data() || {};
-      const steps = (fresh.steps || []).filter(s => s && s.photo);
-      if (!steps.length || steps.length !== (fresh.steps || []).length) throw Object.assign(new Error('missing photos'), { friendly: 'Every step needs a photo before a video can be made.' });
+      const steps = (fresh.steps || []).filter(s => s && stepMedia(s).length);
+      if (!steps.length || steps.length !== (fresh.steps || []).length) throw Object.assign(new Error('missing photos'), { friendly: 'Every step needs a photo or video before a video can be made.' });
       const bucket = admin.storage().bucket();
       // 1. voice
       const tts = new (require('@google-cloud/text-to-speech').TextToSpeechClient)();
@@ -147,11 +160,15 @@ function makeProcVideoFunction() {
       for (let i = 0; i < steps.length; i++) {
         const s = steps[i], line = String(lines[i] || s.t || '').trim();
         const a = await say(line, `l${i}.wav`);
-        // the step's photo
-        const img = `p${i}.jpg`;
-        if (s.photoPath) await bucket.file(s.photoPath).download({ destination: path.join(dir, img) });
-        else { const r = await fetch(s.photo); if (!r.ok) throw new Error('photo ' + r.status); fs.writeFileSync(path.join(dir, img), Buffer.from(await r.arrayBuffer())); }
-        v.steps.push({ img, text: s.t, note: s.n || '', g: !!s.g, line, ...a });
+        // the step's photos and videos
+        const items = [];
+        for (const [j, m] of stepMedia(s).slice(0, 6).entries()) {
+          const file = `p${i}_${j}.${m.k === 'vid' ? 'mp4' : 'jpg'}`;
+          if (m.path) await bucket.file(m.path).download({ destination: path.join(dir, file) });
+          else { const r = await fetch(m.url); if (!r.ok) throw new Error('media ' + r.status); fs.writeFileSync(path.join(dir, file), Buffer.from(await r.arrayBuffer())); }
+          items.push({ k: m.k === 'vid' ? 'vid' : 'img', file });
+        }
+        v.steps.push({ items, text: s.t, note: s.n || '', g: !!s.g, line, ...a });
       }
       // 2. video
       await stage('building');
@@ -175,4 +192,4 @@ function makeProcVideoFunction() {
     }
   });
 }
-module.exports = { buildVideo, wrap, procStepsSig, makeProcVideoFunction };
+module.exports = { buildVideo, wrap, procStepsSig, stepMedia, makeProcVideoFunction };
