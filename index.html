@@ -3240,6 +3240,20 @@ function render() {
   }
 }
 
+// A redraw (live updates, the GPS refresh…) must not stop a video that is playing: the playing <video> is put
+// back in place of its freshly drawn copy. Moving it within the same task doesn't pause it.
+const _renderPage = render;
+render = function() {
+  const box = document.getElementById('content');
+  const playing = box ? [...box.querySelectorAll('video')].filter(v => (!v.paused && !v.ended) || v.webkitDisplayingFullscreen || document.fullscreenElement === v) : [];
+  const out = _renderPage.apply(this, arguments);
+  playing.forEach(v => {
+    const twin = [...box.querySelectorAll('video')].find(n => n !== v && n.getAttribute('src') === v.getAttribute('src'));
+    if(twin) twin.replaceWith(v);
+  });
+  return out;
+};
+
 // ── DARK MODE ──────────────────────────────────────────────────────
 
 
@@ -6094,12 +6108,12 @@ async function fetchBouncieData() {
     S.bouncieData = await res.json();
     S.bouncieSyncFailed = false;
     applyBouncieOdometer();
-    render();
+    if(['cars','home','audits'].includes(S.tab)) render();   // only pages that show the cars
   } catch(e) {
     console.log('Bouncie fetch failed:', e);
     S.bouncieSyncFailed = true;
     toast('⚠️ GPS sync unavailable — showing last known values');
-    render();
+    if(['cars','home','audits'].includes(S.tab)) render();   // only pages that show the cars
   }
 }
 
