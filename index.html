@@ -13679,7 +13679,7 @@ function seG(k) { _se[k].g = !_se[k].g; seDraw(); }
 function seDel(k) { _se.splice(k, 1); if(!_se.length) _se.push(seBlank()); seDraw(); }
 function seBusy() { if(_se.some(s => s.uploading)) { toast('⏳ Wait for the photos and videos to finish uploading'); return true; } return false; }
 function seSteps() {
-  return _se.map(s => { const media = s.media.map(m => ({k: m.k, url: m.url, path: m.path || ''})), img = media.find(m => m.k === 'img');
+  return _se.map(s => { const media = s.media.map(m => ({k: m.k, url: m.url, path: m.path || '', ...(m.start ? {start: m.start} : {}), ...(m.len ? {len: m.len} : {})})), img = media.find(m => m.k === 'img');
       return {t: s.t.trim(), n: s.n.trim(), ...(s.g ? {g:true} : {}), ...(media.length ? {media, photo: img ? img.url : '', photoPath: img ? img.path : ''} : {})}; })
     .filter(s => s.t || s.media).map(s => s.t ? s : {...s, t: 'Step'});
 }
@@ -13827,7 +13827,7 @@ Steps, in order: ${JSON.stringify(steps)}
 
 Write the voiceover in ${lang === 'fr' ? 'Canadian French' : 'English'}. Reply with only this JSON, nothing else:
 {"intro": "one short sentence that introduces the procedure (mention the safety note if there is one)", "lines": [exactly ${steps.length} strings, one per step, same order], "outro": "one short closing sentence"}
-Each line: one or two short spoken sentences, at most 25 words, friendly and clear. Say what to do, and include the note's key detail. When secondGroomer is true, make clear the second groomer does it. No step numbers, no emojis, no symbols, no abbreviations a voice would misread.`}],
+Each line: two or three short spoken sentences, at most 45 words, friendly and clear. Say what to do and how, explain why when the note gives a reason, and include the note's details. When secondGroomer is true, make clear the second groomer does it. No step numbers, no emojis, no symbols, no abbreviations a voice would misread.`}],
   };
   const r = await fetch('https://skycare-worker.skycare.workers.dev/ai', {method: 'POST', headers: {'content-type': 'application/json'}, body: JSON.stringify(body)});
   if(!r.ok) throw new Error('AI helper answered ' + r.status);

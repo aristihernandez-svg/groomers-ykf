@@ -1,8 +1,8 @@
 // Procedure videos ("✨ Create video with AI" on a procedure). The app writes the voiceover with the AI
 // (videoRequest: intro, one line per step, outro, voice) on procedures/<id>; this job then:
 //   1. records each line with Google Text-to-Speech (a natural Chirp 3 HD voice, female or male, English or French),
-//   2. builds a 720×900 video with ffmpeg: a title card, then each step's photo with a slow zoom, its number,
-//      text, note and ✦ tag, and the spoken line as a subtitle; an end card,
+//   2. builds a 720×900 video with ffmpeg: a title card, then each step's photos (slow zoom) and clips (muted,
+//      from their start point), with its number, text, note and ✦ tag; an end card,
 //   3. saves it to Storage (procedures/<id>/ai-video-….mp4) and to the procedure (aiVideo),
 // reporting each stage in videoJob so the app can show the progress. Nothing is ever deleted.
 const fs = require('fs'), os = require('os'), path = require('path'), crypto = require('crypto');
@@ -46,6 +46,12 @@ function run(ffmpeg, args, cwd) {
     (err, out, errOut) => err ? rej(new Error('ffmpeg: ' + (errOut || err.message).slice(-600))) : res()));
 }
 const wavSecs = buf => Math.max(0, (buf.length - 44) / (24000 * 2));
+// a clip's length in seconds (ffmpeg prints it when asked to read a file with no output)
+function clipSecs(ffmpeg, dir, name) {
+  return new Promise(res => execFile(ffmpeg, ["-hide_banner", "-i", name], { cwd: dir }, (err, out, errOut) => {
+    const m = /Duration: (\d+):(\d+):([\d.]+)/.exec(errOut || ''); res(m ? (+m[1]) * 3600 + (+m[2]) * 60 + (+m[3]) : 8);
+  }));
+}
 // a drawtext filter that reads its text from a file (no escaping problems), placed in the work folder
 function dt(dir, name, lines, o) {
   fs.writeFileSync(path.join(dir, name), lines.join('\n'));
@@ -69,21 +75,27 @@ async function buildVideo(dir, ffmpeg, v) {
   { const d = Math.max(3, (v.intro.secs || 0) + 0.9), t = wrap(v.title, 20, 3);
     const vf = [dt(dir, 't_k.txt', ['PROCEDURE'], { font: 'semi.ttf', size: 20, color: '0x7FA8F0', x: '(w-text_w)/2', y: 340 }),
       dt(dir, 't_t.txt', t, { font: 'bold.ttf', size: 54, x: '(w-text_w)/2', y: 384, ls: 12 }),
-      dt(dir, 't_b.txt', ['SKYCARE  ·  GROOMIES'], { font: 'semi.ttf', size: 18, color: '0x8A96AB', x: '(w-text_w)/2', y: H - 90 })].join(',') + sub('t_s.txt', v.intro.line);
+      dt(dir, 't_b.txt', ['SKYCARE  ·  GROOMIES'], { font: 'semi.ttf', size: 18, color: '0x8A96AB', x: '(w-text_w)/2', y: H - 90 })].join(',');   // no subtitles: they covered the photos (Nov 2026)
     await run(ffmpeg, [...cardBg(d), ...audioIn(v.intro.audio, d), '-vf', vf, '-af', 'apad', '-t', String(d), ...enc, 'seg0.mp4'], dir);
     segs.push(['seg0.mp4', d]); }
 
-  // one segment per step: photo with a slow zoom, the dark fade, number, text, note, and the spoken line on top
+  // one segment per step: its photos (slow zoom) and clips, the dark fade, number, text and note.
+  // Clips get real screen time (up to 8 s from their start point, or m.len); photos about 3 s. If the voice
+  // runs longer than that, everything is stretched to fit it.
   for (let i = 0; i < v.steps.length; i++) {
     const s = v.steps[i], items = s.items, n = items.length;
-    const d = Math.max(3, (s.secs || 0) + 0.8, n * 2.4), each = d / n;
+    const want = [];
+    for (const m of items) want.push(m.k === 'vid' ? Math.min(m.len || 8, Math.max(3, (await clipSecs(ffmpeg, dir, m.file)) - (m.start || 0))) : 3);
+    const need = Math.max(3, (s.secs || 0) + 1.2), sum = want.reduce((a, b) => a + b, 0), k = sum < need ? need / sum : 1;
+    const durs = want.map(x => x * k), d = durs.reduce((a, b) => a + b, 0);
     const txt = wrap(s.text, 30, 3), note = s.note ? wrap(s.note, 44, 2) : [];
     const textH = txt.length * 44 + (note.length ? 10 + note.length * 32 : 0) + (s.g ? 36 : 0);
     const yNum = H - 60 - textH - 96, yTxt = yNum + 100;
     const ins = [], parts = [];
     items.forEach((m, j) => {
-      const f = Math.round(each * FPS);
-      if (m.k === 'vid') { ins.push('-stream_loop', '-1', '-t', String(each + 0.5), '-i', m.file);
+      const each = durs[j], f = Math.round(each * FPS);
+      // a clip can start at a chosen point (m.start, seconds) so its best part is the one shown
+      if (m.k === 'vid') { ins.push('-ss', String(m.start || 0), '-stream_loop', '-1', '-t', String(each + 0.5), '-i', m.file);
         parts.push(`[${j}:v]scale=${W}:${H}:force_original_aspect_ratio=increase,crop=${W}:${H},fps=${FPS},trim=duration=${each.toFixed(3)},setpts=PTS-STARTPTS,setsar=1[m${j}]`); }
       else { ins.push('-i', m.file);
         parts.push(`[${j}:v]scale=${W * 2}:${H * 2}:force_original_aspect_ratio=increase,crop=${W * 2}:${H * 2},zoompan=z='1+0.09*on/${f}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=${f}:s=${W}x${H}:fps=${FPS},setsar=1[m${j}]`); }
@@ -94,7 +106,7 @@ async function buildVideo(dir, ffmpeg, v) {
       dt(dir, `s${i}_t.txt`, txt, { font: 'bold.ttf', size: 36, x: 40, y: yTxt, ls: 8, shadow: true });
     if (note.length) vf += ',' + dt(dir, `s${i}_o.txt`, note, { font: 'med.ttf', size: 25, color: '0xC7D2E3', x: 40, y: yTxt + txt.length * 44 + 10, ls: 7 });
     if (s.g) vf += ',' + dt(dir, `s${i}_g.txt`, ['2ND GROOMER'], { font: 'semi.ttf', size: 20, color: '0xE8C86A', x: 40, y: H - 60 - 26 });
-    vf += sub(`s${i}_s.txt`, s.line) + '[v]';
+    vf += '[v]';
     await run(ffmpeg, [...ins, '-i', 'fade.png', ...audioIn(s.audio, d), '-filter_complex', vf, '-map', '[v]', '-map', `${n + 1}:a`, '-af', 'apad', '-t', String(d), ...enc, `seg${i + 1}.mp4`], dir);
     segs.push([`seg${i + 1}.mp4`, d]);
   }
@@ -103,7 +115,7 @@ async function buildVideo(dir, ffmpeg, v) {
   { const d = Math.max(2.6, (v.outro.secs || 0) + 1.0), n = v.steps.length + 1;
     const vf = [dt(dir, 'e_t.txt', ['GROOMIES'], { font: 'bold.ttf', size: 46, x: '(w-text_w)/2', y: 390 }),
       dt(dir, 'e_b.txt', [v.title.toUpperCase().slice(0, 40)], { font: 'semi.ttf', size: 20, color: '0x7FA8F0', x: '(w-text_w)/2', y: 456 }),
-      dt(dir, 'e_s.txt', ['SKYCARE'], { font: 'semi.ttf', size: 18, color: '0x8A96AB', x: '(w-text_w)/2', y: H - 90 })].join(',') + sub('e_x.txt', v.outro.line);
+      dt(dir, 'e_s.txt', ['SKYCARE'], { font: 'semi.ttf', size: 18, color: '0x8A96AB', x: '(w-text_w)/2', y: H - 90 })].join(',');
     await run(ffmpeg, [...cardBg(d), ...audioIn(v.outro.audio, d), '-vf', vf, '-af', 'apad', '-t', String(d), ...enc, `seg${n}.mp4`], dir);
     segs.push([`seg${n}.mp4`, d]); }
 
@@ -166,7 +178,7 @@ function makeProcVideoFunction() {
           const file = `p${i}_${j}.${m.k === 'vid' ? 'mp4' : 'jpg'}`;
           if (m.path) await bucket.file(m.path).download({ destination: path.join(dir, file) });
           else { const r = await fetch(m.url); if (!r.ok) throw new Error('media ' + r.status); fs.writeFileSync(path.join(dir, file), Buffer.from(await r.arrayBuffer())); }
-          items.push({ k: m.k === 'vid' ? 'vid' : 'img', file });
+          items.push({ k: m.k === 'vid' ? 'vid' : 'img', file, start: +m.start || 0 });
         }
         v.steps.push({ items, text: s.t, note: s.n || '', g: !!s.g, line, ...a });
       }
