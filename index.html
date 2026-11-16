@@ -13793,6 +13793,13 @@ function procStepsSig(steps) {
   let h = 5381; for(let i = 0; i < str.length; i++) h = ((h << 5) + h + str.charCodeAt(i)) >>> 0;
   return h.toString(36);
 }
+// the phone's own full-screen player (on iPhone the small button inside the video doesn't always work in the app)
+function procVideoFull(btn) {
+  const v = btn.closest('.pvw') && btn.closest('.pvw').querySelector('video'); if(!v) return;
+  if(v.webkitEnterFullscreen) { try { v.webkitEnterFullscreen(); } catch(e) {} }
+  else { const fsr = v.requestFullscreen || v.webkitRequestFullscreen; if(fsr) fsr.call(v).catch?.(() => {}); }
+  v.play().catch(() => {});
+}
 function procVideoHtml(key, p) {
   const j = p.videoJob || {}, v = p.aiVideo;
   const stage = PROC_VIDEO_STAGES.findIndex(x => x[0] === j.status);
@@ -13802,7 +13809,7 @@ function procVideoHtml(key, p) {
   if(v && v.url) {
     const stale = v.sig && v.sig !== procStepsSig(p.steps);
     html += `<div class="pvw"><video src="${v.url}" controls playsinline preload="metadata"></video>
-      <div class="pvw-m"><span><b>✨ AI video</b>${v.secs ? ' · ' + Math.floor(v.secs/60) + ':' + String(Math.round(v.secs%60)).padStart(2,'0') : ''}${stale ? ' · the steps changed since' : ''}</span>${busy ? '' : `<button type="button" onclick="createProcVideo('${key}')">↻ Remake</button>`}</div></div>`;
+      <div class="pvw-m"><span><b>✨ AI video</b>${v.secs ? ' · ' + Math.floor(v.secs/60) + ':' + String(Math.round(v.secs%60)).padStart(2,'0') : ''}${stale ? ' · the steps changed since' : ''}</span><span style="display:flex;gap:14px"><button type="button" onclick="procVideoFull(this)">⛶ Full screen</button>${busy ? '' : `<button type="button" onclick="createProcVideo('${key}')">↻ Remake</button>`}</span></div></div>`;
   }
   if(busy) {
     html += `<div class="pvb"><b>✨ ${v && v.url ? 'Making a new video' : 'Your video is being made'}</b><p>About a minute or two. You can leave this screen; the video appears here when it's ready.</p>

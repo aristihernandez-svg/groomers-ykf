@@ -66,8 +66,8 @@ async function buildVideo(dir, ffmpeg, v) {
   // a dark fade under the captions, made once
   await run(ffmpeg, ['-f', 'lavfi', '-i', `color=black:s=${W}x460,format=rgba,geq=r=0:g=0:b=0:a='min(255\\,255*(Y/360))*0.9'`, '-frames:v', '1', 'fade.png'], dir);
   const segs = [];
-  const enc = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '96k', '-ar', '24000', '-ac', '1'];
-  const audioIn = (a, d) => a ? ['-i', a] : ['-f', 'lavfi', '-t', String(d), '-i', 'anullsrc=r=24000:cl=mono'];
+  const enc = ['-c:v', 'libx264', '-preset', 'veryfast', '-crf', '26', '-pix_fmt', 'yuv420p', '-r', String(FPS), '-c:a', 'aac', '-b:a', '128k', '-ar', '44100', '-ac', '2'];   // standard 44.1 kHz stereo: plays on every phone
+  const audioIn = (a, d) => a ? ['-i', a] : ['-f', 'lavfi', '-t', String(d), '-i', 'anullsrc=r=44100:cl=stereo'];
   const cardBg = d => ['-f', 'lavfi', '-i', `color=c=0x0B1120:s=${W}x${H}:d=${d}:r=${FPS}`];
   const sub = (name, text) => text ? ',' + dt(dir, name, wrap(text, 40, 4), { font: 'med.ttf', size: 26, x: '(w-text_w)/2', y: 46, box: true, ls: 10 }) : '';
 
