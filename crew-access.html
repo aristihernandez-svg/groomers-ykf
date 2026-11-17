@@ -130,7 +130,11 @@ function toast(msg) {
   t.textContent=msg; t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2800);
 }
-function render() { view==='list' ? renderList() : renderDetail(view); }
+function render() {
+  // a link (NFC chip or QR) to a car added in the app: wait for the added cars instead of flashing the car list
+  if(view==='list' && _waitCar) { document.getElementById('app').innerHTML='<div style="padding:60px 20px;text-align:center;color:var(--t3);font-size:14px">Opening the car…</div>'; return; }
+  view==='list' ? renderList() : renderDetail(view);
+}
 
 // ── List ──
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -315,6 +319,7 @@ function goBack() {
 
 // ── Boot: jump straight to car if ?car=key in URL ──
 const _urlCar = new URLSearchParams(location.search).get('car');
+let _waitCar = !!_urlCar && !CREW_CARS.find(c=>c.key===_urlCar);   // a car added in the app: known once they load
 if(_urlCar && CREW_CARS.find(c=>c.key===_urlCar)) {
   view = _urlCar;
 }
@@ -330,10 +335,10 @@ db.collection('appConfig').doc('customCrewCars').get().then(async snap => {
     try { const d = await db.collection('appConfig').doc('crewCarImg_' + c.key).get(); if (d.exists && d.data().img) img = d.data().img; } catch (e) {}
     CREW_CARS.push({key: c.key, name: c.name, color: c.color, color2: c.color2, label: c.label, img});
   }
-  if (!added.length) return;
+  _waitCar = false;
   if (_urlCar && view === 'list' && CREW_CARS.find(c => c.key === _urlCar)) view = _urlCar;
   render();
-}).catch(e => console.log('Added cars failed to load:', e));
+}).catch(e => { console.log('Added cars failed to load:', e); _waitCar = false; render(); });
 </script>
 </body>
 </html>
