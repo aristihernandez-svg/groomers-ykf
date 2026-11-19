@@ -65,7 +65,8 @@ textarea{resize:none;min-height:80px;font-size:14px;line-height:1.5}
 .fin p{font-size:13.5px;color:var(--t2);margin-top:8px;line-height:1.55}
 .help{margin:24px 14px 0;border-radius:var(--radius);background:var(--glass);border:1px solid var(--border2);padding:16px}
 .help small{display:block;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--t3)}
-.help .who{font-size:14px;color:var(--t2);margin-top:6px;line-height:1.45}
+.help .who{font-size:18px;font-weight:800;color:var(--t1);margin-top:8px;line-height:1.35;text-wrap:balance}
+.help .who b{color:#6FB4FF;font-weight:800}
 .help .num{margin-top:12px;display:block;text-align:center;padding:14px;border-radius:12px;background:#0E1626;border:1px solid var(--border2);font-size:24px;font-weight:800;letter-spacing:.5px;color:#fff;-webkit-user-select:all;user-select:all;text-decoration:none;font-variant-numeric:tabular-nums}
 .help .acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
 .help .acts a,.help .acts button{display:flex;flex-direction:column;align-items:center;gap:5px;padding:11px 4px;border-radius:12px;border:1px solid var(--border2);background:var(--glass2);color:var(--t1);font-family:inherit;font-size:12px;font-weight:700;text-decoration:none;cursor:pointer}
@@ -241,11 +242,11 @@ function finish(kind, title, line) {
   const icon = kind === 'out' ? '🔑' : kind === 'dmg' ? '🚨' : '✅';
   const vcard = 'BEGIN:VCARD\nVERSION:3.0\nFN:Groomers\nORG:Skycare\nTEL;TYPE=CELL:' + GROOMERS_PHONE.tel + '\nEND:VCARD\n';
   document.getElementById('app').innerHTML = `<div class="fin"><div class="fin-ic ${kind}">${icon}</div><h2>${title}</h2><p>${line}</p></div>
-    <div class="help"><small>Need help?</small><div class="who">If you have any issues with the car, call the Groomers.</div>
+    <div class="help"><small>Need help?</small><div class="who">If you have any issues with the car, call <b>the Groomers</b>.</div>
       <a class="num" href="tel:${GROOMERS_PHONE.tel}">📞 ${GROOMERS_PHONE.label}</a>
-      <div class="acts"><a class="call" href="tel:${GROOMERS_PHONE.tel}"><i>📞</i>Call</a>
-        <button type="button" onclick="copyGroomersPhone()"><i>📋</i>Copy number</button>
-        <a href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcard)}" download="Groomers.vcf"><i>👤</i>Save contact</a></div></div>
+      <div class="acts"><a class="call" href="tel:${GROOMERS_PHONE.tel}"><i>☎️</i>Call</a>
+        <button type="button" onclick="copyGroomersPhone()"><i>📑</i>Copy number</button>
+        <a href="data:text/vcard;charset=utf-8,${encodeURIComponent(vcard)}" download="Groomers.vcf"><i>📇</i>Save contact</a></div></div>
     <div class="fin-close">${_carLink ? "That's all. You can close this page." : '<a href="#" onclick="goBack();return false" style="color:var(--accent);font-weight:700;text-decoration:none">‹ Back to the cars</a>'}</div>`;
   window.scrollTo(0, 0);
 }
